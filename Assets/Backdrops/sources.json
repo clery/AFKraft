@@ -1,0 +1,89 @@
+{
+  "aspect": 4,
+  "screenshots": [
+    {
+      "id": "elwynn",
+      "name": "Elwynn Forest",
+      "source_page": "https://gamer-guides.com/wow-hardcore/elwynn-forest/",
+      "source_image": "https://gamer-guides.com/wp-content/uploads/2025/09/Elywnn-Forest-Scenery.png",
+      "focal_y": 0.56
+    },
+    {
+      "id": "durotar",
+      "name": "Durotar",
+      "source_page": "https://www.wowhead.com/classic/zone=14/durotar",
+      "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/1024918-durotar-tiragarde-keep-view.jpg",
+      "focal_y": 0.53
+    },
+    {
+      "id": "westfall",
+      "name": "Westfall",
+      "source_page": "https://www.wowhead.com/de/achievement=802/erkundet-westfall",
+      "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/151050-erkundet-westfall.jpg",
+      "focal_y": 0.43
+    },
+    {
+      "id": "barrens",
+      "name": "The Barrens",
+      "source_page": "https://wowfan.cz/clanek/the-barrens",
+      "source_image": "https://wowfan.cz/pic/gameinfo/lokace/thebarrens.jpg",
+      "focal_y": 0.5
+    },
+    {
+      "id": "redridge",
+      "name": "Redridge Mountains",
+      "source_page": "https://www.pcgamer.com/every-zone-in-vanilla-world-of-warcraft-ranked/2/",
+      "source_image": "https://cdn.mos.cms.futurecdn.net/ApZ6eJpTEz4fcMNjrW5u8-1200-80.jpg",
+      "focal_y": 0.35
+    },
+    {
+      "id": "ashenvale",
+      "name": "Ashenvale",
+      "source_page": "https://www.wowfan.cz/clanek/ashenvale-forest",
+      "source_image": "https://www.wowfan.cz/pic/lokace/ashenvale/11.jpg",
+      "focal_y": 0.5
+    },
+    {
+      "id": "duskwood",
+      "name": "Duskwood",
+      "source_page": "https://www.wowhead.com/cata/zone=10/duskwood",
+      "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/1170905-duskwood.jpg",
+      "focal_y": 0.5
+    },
+    {
+      "id": "wetlands",
+      "name": "Wetlands",
+      "source_page": "https://www.wowhead.com/de/zone=11/sumpfland",
+      "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/908693-sumpfland.jpg",
+      "focal_y": 0.47
+    },
+    {
+      "id": "stranglethorn",
+      "name": "Stranglethorn Vale",
+      "source_page": "https://www.wowhead.com/wotlk/zone=33/stranglethorn-vale",
+      "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/169545-.jpg",
+      "focal_y": 0.5
+    },
+    {
+      "id": "desolace",
+      "name": "Desolace",
+      "source_page": "https://wowfan.cz/clanek/desolace",
+      "source_image": "https://wowfan.cz/pic/lokace/desolace/07.jpg",
+      "focal_y": 0.48
+    },
+    {
+      "id": "tanaris",
+      "name": "Tanaris",
+      "source_page": "https://www.wowhead.com/cata/achievement=851/explore-tanaris",
+      "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/165117-.jpg",
+      "focal_y": 0.55
+    },
+    {
+      "id": "winterspring",
+      "name": "Winterspring",
+      "source_page": "https://www.wowhead.com/winterspring",
+      "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/693092-winterspring.jpg",
+      "focal_y": 0.55
+    }
+  ]
+}

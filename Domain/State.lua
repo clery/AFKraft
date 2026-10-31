@@ -1,0 +1,169 @@
+local _, W = ...
+local C = W.Content
+local G = {}
+W.Game = G
+local floor = math.floor
+
+local function copy(t)
+    if type(t) ~= "table" then
+        return t
+    end
+    local r = {}
+    for k, v in pairs(t) do
+        r[k] = copy(v)
+    end
+    return r
+end
+G.Copy = copy
+
+function G.Random(state, n)
+    state.seed = (state.seed * 16807) % 2147483647
+    return floor(state.seed / 2147483647 * n) + 1
+end
+
+function G.Emit(state, kind, data)
+    if not state.events then
+        state.events = {}
+    end
+    data = data or {}
+    data.kind = kind
+    if W.OnGameEvent then
+        W.OnGameEvent(state, data)
+    end
+    state.events[#state.events + 1] = data
+    if #state.events > 60 then
+        table.remove(state.events, 1)
+    end
+end
+
+function G.New(now)
+    return {
+        version = C.version,
+        seed = floor(now) % 2147483646 + 1,
+        heroes = {},
+        inventory = {},
+        nextItem = 1,
+        essence = 0,
+        adventure = { rank = 1, xp = 0, totalXP = 0, sources = {} },
+        gold = 0,
+        legacy = 0,
+        prestiges = 0,
+        materials = { timber = 0, hide = 0, ore = 0, relic = 0 },
+        discoveries = {},
+        recipes = {},
+        best = 1,
+        runBest = 1,
+        zone = "elwynn",
+        stage = 1,
+        safe = {},
+        battle = nil,
+        clock = 0,
+        encounter = 0,
+        paused = false,
+        lastTime = now,
+        salvage = { minQuality = 2, keepUpgrades = true, keepEffects = true },
+        ui = { compact = false, locked = false, tab = "adventure" },
+        settings = {
+            chatAnnouncements = true,
+            combatText = true,
+            soundEnabled = true,
+            soundCombat = true,
+            soundSpells = true,
+            soundDeaths = true,
+            soundEncounters = true,
+            soundProgression = true,
+            soundEquipment = true,
+            soundTravel = true,
+        },
+        stats = { kills = 0, victories = 0, salvaged = 0, essence = 0 },
+        identities = {},
+        seenRewards = {},
+        rewardOrder = {},
+        log = { "A new legend begins. Choose your companions." },
+    }
+end
+
+function G.Log(state, message, quiet)
+    state.log[#state.log + 1] = message
+    if #state.log > 24 then
+        table.remove(state.log, 1)
+    end
+    if not quiet and W.OnLog then
+        W.OnLog(state, message)
+    end
+end
+
+function G.Load(db, now)
+    if type(db) ~= "table" then
+        return G.New(now)
+    end
+    local migrated = db.version == 1
+    if migrated then
+        -- Previously paid Essence and hero XP are retained, not awarded again.
+        db = copy(db)
+        db.version = C.version
+        db.adventure = { rank = 1, xp = 0, totalXP = 0, sources = {} }
+    elseif db.version ~= C.version then
+        return nil, "This save belongs to an unsupported version. It has not been changed."
+    end
+    local defaults = G.New(now)
+    for k, v in pairs(defaults) do
+        if db[k] == nil then
+            db[k] = copy(v)
+        elseif type(db[k]) ~= type(v) then
+            return nil,
+                "The saved adventure has an invalid " .. k .. " field. It has not been reset."
+        end
+    end
+    for key, value in pairs(defaults.settings) do
+        if type(db.settings[key]) ~= "boolean" then
+            db.settings[key] = value
+        end
+    end
+    if not C.zoneByID[db.zone] then
+        return nil, "The saved destination is unknown. Your adventure has not been reset."
+    end
+    local progress = db.adventure
+    local function whole(value)
+        return type(value) == "number"
+            and value >= 0
+            and value < math.huge
+            and value == floor(value)
+    end
+    local function points(value)
+        return type(value) == "number" and whole(value * 4)
+    end
+    if
+        not whole(progress.rank)
+        or not points(progress.xp)
+        or not points(progress.totalXP)
+        or progress.rank ~= 1 + floor(progress.totalXP / C.adventure.xpPerRank)
+        or progress.xp ~= progress.totalXP % C.adventure.xpPerRank
+        or type(progress.sources) ~= "table"
+    then
+        return nil, "The saved Adventure XP is invalid. Your adventure has not been reset."
+    end
+    if migrated then
+        G.Log(db, "Adventure XP unlocked. Existing Essence and hero progression retained.")
+    end
+    -- A terminal encounter cannot normally be saved: Step resolves it in the
+    -- same call. Older versions could throw after partially applying victory
+    -- rewards. Discard that finished encounter instead of replaying its payout.
+    if type(db.battle) == "table" and type(db.battle.enemies) == "table" then
+        local finished = #db.battle.enemies > 0
+        for _, enemy in ipairs(db.battle.enemies) do
+            if type(enemy.hp) ~= "number" or enemy.hp > 0 then
+                finished = false
+                break
+            end
+        end
+        if finished then
+            db.battle = nil
+            db.rest = 0
+            G.Log(db, "The party regrouped and is ready to continue.")
+        end
+    end
+    db.paused, db.pauseAfter = false, nil
+    db.events = nil
+    return db
+end

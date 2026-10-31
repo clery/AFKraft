@@ -1,0 +1,223 @@
+local _, W = ...
+local A = {
+    status = "Quest, level, boss, eligible kill, and gathering rewards active.",
+    xpSequence = 0,
+}
+W.Client = A
+local version = GetBuildInfo and GetBuildInfo() or ""
+A.flavor = version:match("^1%.60%.") and "forever" or "retail"
+A.profiles = {
+    retail = {
+        continents = { kalimdor = 12, eastern = 13 },
+        mapIDs = {
+            elwynn = 37,
+            durotar = 1,
+            westfall = 52,
+            barrens = 10,
+            redridge = 49,
+            ashenvale = 63,
+            duskwood = 47,
+            wetlands = 56,
+            stranglethorn = 50,
+            desolace = 66,
+            tanaris = 71,
+            winterspring = 83,
+        },
+    },
+    -- Fill verified Forever map IDs here; do not reuse Retail IDs silently.
+    forever = { mapIDs = {} },
+}
+A.profile = A.profiles[A.flavor]
+
+local function readable(v)
+    return not issecretvalue or not issecretvalue(v)
+end
+
+function A.Now()
+    return GetServerTime and GetServerTime() or time()
+end
+
+function A.Identity()
+    local _, class = UnitClass("player")
+    return {
+        name = UnitName("player") or "Adventurer",
+        class = class or "WARRIOR",
+        guid = UnitGUID("player") or "local-player",
+    }
+end
+
+function A.MapTiles(zoneID)
+    if not C_Map or not C_Map.GetMapArtLayers then
+        return nil
+    end
+    local id = A.MapID(zoneID)
+    if not id then
+        return nil
+    end
+    local ok, layers = pcall(C_Map.GetMapArtLayers, id)
+    if not ok or not layers or not layers[1] then
+        return nil
+    end
+    local ok2, textures = pcall(C_Map.GetMapArtLayerTextures, id, 1)
+    if ok2 then
+        return textures, layers[1]
+    end
+end
+
+function A.ModelSpec(hero, zoneID, enemyName)
+    if hero then
+        if hero.guid == A.Identity().guid then
+            return { key = "player:" .. hero.guid, unit = "player" }
+        end
+        local class = W.ModelAssets.classes[hero.class]
+        local id = class and class[hero.appearance]
+            or W.ModelAssets.appearances[hero.appearance]
+            or class and class.default
+        if id then
+            return { key = "companion:" .. id, creatureID = id }
+        end
+        return nil
+    end
+    local zone, assets = W.Content.zoneByID[zoneID], W.ModelAssets.zones[zoneID]
+    if not zone or not assets then
+        return nil
+    end
+    local id = enemyName == zone.boss and assets.boss or nil
+    for i, name in ipairs(zone.enemies) do
+        if enemyName == name then
+            id = assets.enemies[i]
+            break
+        end
+    end
+    if id then
+        return { key = "enemy:" .. id, creatureID = id, framing = W.ModelAssets.framing[id] }
+    end
+end
+
+function A.FrameModel(model, enemy, spec)
+    model:SetPortraitZoom(0)
+    model:SetCamDistanceScale(spec and spec.framing and spec.framing.cameraDistance or 1.15)
+    model:SetFacing(enemy and -1.05 or 1.05)
+end
+
+function A.AnimateModel(model, animation)
+    return pcall(function()
+        if not model.HasAnimation or model:HasAnimation(animation) then
+            model:SetAnimation(animation)
+        end
+    end)
+end
+
+function A.ConfigureModel(model, spec, enemy)
+    if not spec then
+        return false
+    end
+    return pcall(function()
+        model:ClearModel()
+        if spec.unit then
+            model:SetUnit(spec.unit)
+        else
+            model:SetCreature(spec.creatureID)
+        end
+        A.FrameModel(model, enemy, spec)
+    end)
+end
+
+function A.Register(frame)
+    -- Protected event registration can report ADDON_ACTION_FORBIDDEN even inside
+    -- pcall. Subscribe only to public reward signals; never probe combat-log access.
+    for _, event in ipairs({
+        "QUEST_TURNED_IN",
+        "PLAYER_LEVEL_UP",
+        "BOSS_KILL",
+        "CHAT_MSG_COMBAT_XP_GAIN",
+        "PLAYER_TARGET_CHANGED",
+        "UPDATE_MOUSEOVER_UNIT",
+        "NAME_PLATE_UNIT_ADDED",
+        "NAME_PLATE_UNIT_REMOVED",
+        "UNIT_HEALTH",
+        "UNIT_FLAGS",
+        "UNIT_THREAT_LIST_UPDATE",
+        "UNIT_SPELLCAST_SENT",
+        "UNIT_SPELLCAST_SUCCEEDED",
+        "UNIT_SPELLCAST_FAILED",
+        "UNIT_SPELLCAST_INTERRUPTED",
+        "CHAT_MSG_SKILL",
+    }) do
+        frame:RegisterEvent(event, "OnGameEvent")
+    end
+    if W.DungeonRewards then
+        W.DungeonRewards.Register(frame)
+    end
+end
+
+function A.Event(s, event, ...)
+    local G = W.Game
+    if W.KillRewards then
+        W.KillRewards.Event(s, event, ...)
+        W.GatheringRewards.Event(s, event, ...)
+    end
+    if W.DungeonRewards then
+        W.DungeonRewards.Event(s, event, ...)
+    end
+    if event == "QUEST_TURNED_IN" then
+        local questID = ...
+        if readable(questID) and type(questID) == "number" then
+            -- Repeatable quests can reward again; suppress only duplicate delivery.
+            G.ActivityReward(
+                s,
+                "quest:" .. questID .. ":" .. math.floor(A.Now() / 2),
+                "quest",
+                "Quest completed"
+            )
+        end
+    elseif event == "PLAYER_LEVEL_UP" then
+        local level = ...
+        if readable(level) and type(level) == "number" then
+            G.ActivityReward(
+                s,
+                "level:" .. A.Identity().guid .. ":" .. level,
+                "level",
+                "Character level " .. level
+            )
+        end
+    elseif event == "BOSS_KILL" then
+        local id, name = ...
+        if readable(id) and type(id) == "number" then
+            if W.DungeonRewards and W.DungeonRewards.BossEligible(id, name) then
+                G.ActivityReward(
+                    s,
+                    "boss:" .. id .. ":" .. math.floor(A.Now() / 30),
+                    "boss",
+                    "Boss defeated"
+                )
+            end
+            s.discoveries["boss:" .. id] = true
+        end
+    elseif event == "CHAT_MSG_COMBAT_XP_GAIN" then
+        if W.KillRewards and W.KillRewards.AtCap() then
+            return
+        end
+        local message = ...
+        if not readable(message) or type(message) ~= "string" or message == "" then
+            return
+        end
+        -- Each delivery is one combat-XP award. A sequence keeps simultaneous
+        -- kills distinct without parsing localized text or reading combat logs.
+        A.xpSequence = A.xpSequence + 1
+        G.ActivityReward(
+            s,
+            "combat-xp:" .. A.Identity().guid .. ":" .. A.Now() .. ":" .. A.xpSequence,
+            "kill",
+            "Combat experience"
+        )
+    end
+end
+
+function A.Sample(state)
+    W.KillRewards.Tick(state)
+    W.GatheringRewards.Sample()
+    if W.DungeonRewards then
+        W.DungeonRewards.Tick()
+    end
+end

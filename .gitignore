@@ -1,0 +1,11 @@
+# Generated development output
+artifacts/
+log/
+meta/
+.cache/
+__pycache__/
+*.log
+*.luac
+.DS_Store
+.idea/
+.vscode/

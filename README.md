@@ -1,0 +1,102 @@
+# WoWIdle
+
+**Your adventures. Their growing legend.**
+
+WoWIdle is an idle party RPG inside World of Warcraft. Build a company of five heroes, watch them battle through Azeroth, and help them grow while you play your own character. Collect equipment, craft upgrades, experiment with builds, and start new adventures with a lasting inheritance.
+
+**Early playable prototype.** Retail is the current development and testing client. WoW Forever is the intended content target, but its release build still needs integration verification.
+
+## Getting started
+
+1. Place the addon folder, named `WoWIdle`, in your client's `Interface/AddOns` directory. The folder should contain `WoWIdle.toc` directly.
+2. Enable **WoWIdle** in the character selection AddOns list, then log in. If you installed it while the game was running, restart the client.
+3. Enter `/wowidle` or `/wi` to open the adventure.
+4. Select an empty companion card to recruit a hero by class. Open **Party** to manage the selected hero's equipment and build.
+5. Let your heroes fight, collect their rewards, and choose new destinations from the **World map** as they unlock.
+
+Required libraries are included; you do not need to install them separately.
+
+## A party of your own
+
+Your adventure has five hero slots and nine original class identities. Choose your companions' classes freely, including duplicates, and combine damage, healing, and survival to tackle harder encounters.
+
+Combat runs automatically. Heroes use their abilities according to configurable priorities, while talents and equipment shape their strengths. You can equip items, train, and adjust talents or priorities during a battle. Equipment changes preserve current health proportions and cooldowns.
+
+Your heroes' levels, equipment, and combat belong to the minigame. Their growth is separate from your real character's power, gear, and talents. Minigame gold, materials, and equipment are used within WoWIdle.
+
+## Adventure through Azeroth
+
+Choose destinations on clickable maps of **Kalimdor** and the **Eastern Kingdoms**. The current prototype includes twelve starter zones with enemy groups, local resources, and milestone bosses. Your idle destination is independent of your real character's location.
+
+Battles earn hero experience, gold, equipment, and crafting materials. Push forward when your party is ready, or keep farming to improve its gear. After a defeat, the party falls back to a safe encounter. Traveling abandons the current encounter without its rewards and preserves your heroes' current health.
+
+Close the window with Escape when you want to return to WoW; the adventure continues while the addon is running.
+
+## Your WoW adventures fuel theirs
+
+Eligible activities on your real character fill a shared, account-wide **Adventure XP** bar. Every **100 Adventure XP** awards **60 Essence**, which you can spend on training, crafting, and equipment improvements.
+
+| Activity | Adventure XP |
+| --- | ---: |
+| Eligible enemy kill | 1 |
+| Eligible herb or ore gather | 4 |
+| Eligible skinning | 0.25 |
+| Quest completion | 20 |
+| Eligible boss | 25 |
+| Confirmed eligible dungeon completion | 40 bonus |
+| Character level gained | 5 bonus |
+
+Hover the Adventure bar for activity rewards. Hero experience comes from idle battles; Adventure XP supplies Essence for their upgrades.
+
+Ordinary questing, combat, and gathering can support progression; dungeons are optional. Gray enemies and legacy boss farming do not qualify. Gathering must have a skill-up-eligible difficulty, and dungeon completion bonuses require an explicit client completion signal. Eligible bosses can still reward XP during manual dungeon runs.
+
+Credit depends on information available from the client. Some kills or gathers cannot be confirmed and will not award XP. Reward detection and balance are still being tested.
+
+## Equipment, crafting, and loot
+
+Each hero has six equipment slots: a weapon, armor, headgear, an accessory, and two trinkets. Use the shared inventory to compare drops and equip upgrades. Identical ordinary items stack, and inventory is sorted by effective power, strongest first.
+
+In **Party**, select an equipment slot to compare items and preview the cost of an upgrade. Choose **Upgrade** to purchase it. Training raises a hero's level cap, letting further idle experience take them higher.
+
+Crafting turns materials and Essence into targeted equipment. Configure salvage rules in the minigame to handle unwanted loot and protect items you want to keep. Talents and conditional ability priorities let you refine each hero's role as your party develops.
+
+## Prestige and heirlooms
+
+Defeat a **level 8 milestone boss** to unlock prestige. Open **Legacy** to preview the rewards and reset consequences before confirming.
+
+Prestige starts a new run: hero levels and allocated talents reset, ordinary equipment and purchased run upgrades are lost, and gold, zone materials, and destination progress start over. Your heroes keep their identities and classes.
+
+Adventure rank, partial Adventure XP, unspent Essence, discoveries, unlocked recipes, Legacy currency, and heirlooms carry forward. Spent Essence is not refunded. Heirlooms scale with a hero's current idle level, giving future runs a useful foundation.
+
+## Coming back later
+
+Progress is saved account-wide, so your characters share one adventure. When you return, WoWIdle calculates up to **24 hours** of offline farming from your last safe encounter and presents a summary. New bosses and destination choices wait for you to return.
+
+No addon code runs while WoW is closed; catch-up rewards are calculated when the addon next loads.
+
+## Window controls and options
+
+Use the top-right controls to switch between **compact**, **windowed**, and **fullscreen** views. Drag a window's top edge to move it and its bottom-right grip to resize it. Compact mode has an optional lock; management opens a larger view for equipment and builds.
+
+Open **Settings → AddOns → WoWIdle** to adjust display preferences, window locking, the minimap button, chat announcements, floating combat text, and audio. Preferences are saved account-wide and apply immediately. Loot rules remain in the minigame.
+
+Audio can be muted entirely or by category, including combat, encounters, progression, loot, and travel. Sounds play only while the adventure window is visible, use WoW's sound-effects volume, and stay silent during offline catch-up.
+
+| Command | Action |
+| --- | --- |
+| `/wowidle` | Toggle the adventure window |
+| `/wi` | Toggle the adventure window |
+
+## Current development
+
+The prototype already includes automatic party combat, zone travel, equipment, crafting, salvage, talents, ability priorities, offline catch-up, prestige, and scaling heirlooms.
+
+Full class-specific talent trees, the complete launch-zone roster, final dungeon-completion mappings, and prestige pacing are still in development. Current talents share a mechanical foundation with class-specific ability names and roles. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
+
+For design details and contribution guidance, see [the game design](DESIGN.md), [balance notes](BALANCE.md), [architecture](ARCHITECTURE.md), and [development tooling](TOOLING.md).
+
+## License and credits
+
+WoWIdle uses an **All Rights Reserved** notice, matching ArtisanFinder. See [LICENSE](LICENSE).
+
+Bundled third-party libraries retain their own licenses and notices; see [embedded libraries](Libs/README.md). Landscape artwork sources and credits are listed in [backdrop credits](Assets/Backdrops/SOURCES.md). The project notice does not replace those third-party terms.
