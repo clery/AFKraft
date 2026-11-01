@@ -57,6 +57,9 @@ function Scene:BeginRegroup()
 end
 
 local function modelAlpha(unit, now)
+    if not unit.modelReady and unit.model.loadingAppearance then
+        return 1
+    end
     local entrance = math.min(1, math.max(0, (now - (unit.appeared or now - 1)) / 0.35))
     -- Separate PlayerModel viewports can retain depth occlusion when faded.
     -- Corpses remain opaque until their death presentation ends, then are hidden.
@@ -79,13 +82,20 @@ local function modelLoaded(unit, enemy)
         end
         local ok, framed = pcall(W.Client.FrameModel, unit.model, enemy, unit.modelSpec)
         unit.modelReady = ok and framed == true
+        if not ok then
+            unit.modelError = framed
+        elseif unit.modelReady then
+            unit.modelError = nil
+        end
         if not unit.modelReady then
+            updateModelVisibility(unit, GetTime())
             return
         end
         W.Client.AnimateModel(
             unit.model,
             unit.dead and (unit.deathTime and 1 or 6) or baseAnimation(unit)
         )
+        updateModelVisibility(unit, GetTime())
     end
 end
 

@@ -220,7 +220,7 @@ function A.ConfigureModel(model, spec, enemy)
             model.adventureActor:ClearModel()
             model.adventureActor:SetAlpha(0)
             model.adventureScene:Show()
-            model.appearanceSource:SetAlpha(0)
+            A.PrepareAppearanceLoad(model)
             local source = model.appearanceSource
             source:SetAutoDress(false)
             source:SetUseTransmogSkin(false)

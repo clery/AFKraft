@@ -92,6 +92,26 @@ function A.ModelRadius(bottom, top, viewportWidth, viewportHeight, scale, yaw)
     )
 end
 
+-- NPC models may defer resource preparation under a fully transparent parent.
+-- Give the loader a drawable one-pixel viewport until its file is available.
+function A.PrepareAppearanceLoad(model)
+    model.loadingAppearance = true
+    local source = model.appearanceSource
+    source:ClearAllPoints()
+    source:SetPoint("BOTTOM", model, "BOTTOM", 0, 0)
+    source:SetSize(1, 1)
+    source:SetAlpha(1)
+    model:SetAlpha(1)
+end
+
+local function finishAppearanceLoad(model)
+    if model.loadingAppearance then
+        model.loadingAppearance = false
+        model.appearanceSource:ClearAllPoints()
+        model.appearanceSource:SetAllPoints(model)
+    end
+end
+
 function A.CreateAdventureModel(parent, loaded)
     -- Native character models retain complete NPC skins and player outfit data.
     -- Creature enemies use the separately fitted scene actor.
@@ -139,6 +159,10 @@ function A.CreateAdventureModel(parent, loaded)
     end)
     source:SetScript("OnShow", function()
         if model.nativeAppearance then
+            local file = source:GetModelFileID()
+            if not finite(file) or file <= 0 then
+                A.PrepareAppearanceLoad(model)
+            end
             model.equipmentAppliedKey = nil
             scene:Show()
             A.AwaitAdventureModel(model)
@@ -210,6 +234,7 @@ function A.FrameAdventureModel(model, enemy, spec)
         if not finite(file) or file <= 0 then
             return false
         end
+        finishAppearanceLoad(model)
         if model.measurementFile ~= file then
             model.measurementFile = file
             actor:SetScale(1)
@@ -290,6 +315,8 @@ function A.FrameAdventureModel(model, enemy, spec)
     end
     actor:SetAlpha(1)
     actor:Show()
+    finishAppearanceLoad(model)
+    model.appearanceSource:SetAlpha(0)
     scene:SetScript("OnUpdate", nil)
     scene:Show()
     return true

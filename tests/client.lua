@@ -420,8 +420,19 @@ case(
         local client = adapter("12.1.5")
         local flags, sourceAlpha, actorAlpha, hidden, animation = {}, 0, 0, false, nil
         local dressed, undressed, tried = 0, 0, {}
+        local fileID
         local source = {
-            ClearModel = function() end,
+            ClearModel = function()
+                fileID = nil
+            end,
+            ClearAllPoints = function() end,
+            SetPoint = function() end,
+            SetSize = function(_, width, height)
+                flags.warm = width == 1 and height == 1
+            end,
+            SetAllPoints = function()
+                flags.warm = false
+            end,
             SetAlpha = function(_, alpha)
                 sourceAlpha = alpha
             end,
@@ -445,9 +456,13 @@ case(
                         and flags.hidden
                 )
                 assert(flags.preview == false)
+                assert(flags.warm and flags.parentAlpha == 1)
+                fileID = 42
             end,
             SetCreature = function(_, id)
                 assert(id == 911 and flags.auto == false and flags.skin == false)
+                assert(flags.warm and flags.parentAlpha == 1)
+                fileID = 42
             end,
             Dress = function()
                 dressed = dressed + 1
@@ -460,7 +475,7 @@ case(
                 tried[#tried + 1] = link
             end,
             GetModelFileID = function()
-                return 42
+                return fileID
             end,
             GetWidth = function()
                 return 360
@@ -479,6 +494,9 @@ case(
             end,
         }
         local model = {
+            SetAlpha = function(_, alpha)
+                flags.parentAlpha = alpha
+            end,
             appearanceSource = source,
             adventureActor = {
                 ClearModel = function() end,
@@ -527,6 +545,7 @@ case(
         }, false))
         assert(dressed == 0 and undressed == 1 and tried[1] == "item:25" and tried[2] == "item:821")
         assert(sourceAlpha == 1 and actorAlpha == 0 and hidden)
+        assert(model.loadingAppearance == false and flags.warm == false)
         assert(model.spacingRadius > 80)
         assert(client.AnimateModel(model, 16) and animation == 16)
         model.adventureActor.IsLoaded = function()
@@ -541,6 +560,13 @@ case(
         )
         assert(dressed == 0 and undressed == 2 and #tried == 0)
         assert(sourceAlpha == 1 and actorAlpha == 0 and hidden)
+        client.PrepareAppearanceLoad(model)
+        fileID = nil
+        assert(not client.FrameAdventureModel(model, false, { key = "companion:911" }))
+        assert(model.loadingAppearance and flags.warm and flags.parentAlpha == 1)
+        fileID = 42
+        assert(client.FrameAdventureModel(model, false, { key = "companion:911" }))
+        assert(model.loadingAppearance == false and flags.warm == false)
     end
 )
 
@@ -620,6 +646,7 @@ case("Actor framing waits for geometry and stays fixed through animation", funct
     local visible = false
     local model = {
         adventureActor = actor,
+        appearanceSource = { SetAlpha = function() end },
         adventureScene = {
             SetScript = function() end,
             GetWidth = function()
