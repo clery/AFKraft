@@ -418,8 +418,7 @@ function Scene:Refresh(s)
     end
 end
 
--- Separate crowded overhead bars horizontally, then stack only actual overlaps.
--- Enemy plates follow their owner's rendered coordinates rather than fixed rows.
+-- Keep overhead bars above their owners, with horizontal spacing when crowded.
 local function sortByPosition(a, b)
     return a.x < b.x or (a.x == b.x and a.index < b.index)
 end
@@ -438,43 +437,24 @@ function Scene:PlaceNameplates()
         order[i] = nil
     end
     table.sort(order, sortByPosition)
-    for row = 1, 2 do
-        local previous = -132
-        for i = row, count, 2 do
-            local unit = order[i]
-            unit.plateX = math.max(8, unit.x, previous + 140)
-            previous = unit.plateX
-        end
-        local nextX = 1280
-        local last = count - ((count - row) % 2)
-        for i = last, row, -2 do
-            local unit = order[i]
-            unit.plateX = math.min(unit.plateX, nextX - 140)
-            nextX = unit.plateX
-            local y = unit.index <= 5 and 82 + (row - 1) * 40 or (unit.y or 110) - 28
-            -- Earlier rows are already placed. Move above a conflicting plate;
-            -- restart the bounded scan because that move may meet another one.
-            local changed = true
-            while changed do
-                changed = false
-                for j, other in ipairs(order) do
-                    local otherRow = (j - 1) % 2 + 1
-                    if otherRow < row or (otherRow == row and j > i) then
-                        if
-                            math.abs(unit.plateX - other.plateX) < 140
-                            and math.abs(y - other.lastPlateY) < 40
-                        then
-                            y = other.lastPlateY - 40
-                            changed = true
-                        end
-                    end
-                end
-            end
-            if unit.plateX ~= unit.lastPlateX or y ~= unit.lastPlateY then
-                unit.plate:ClearAllPoints()
-                unit.plate:SetPoint("TOPLEFT", self.nameplates, "TOPLEFT", unit.plateX, -y)
-                unit.lastPlateX, unit.lastPlateY = unit.plateX, y
-            end
+    -- Keep the health bar relative to its rendered owner. Resolve congestion along
+    -- the horizontal axis so no row pushes a bar down onto a character or up
+    -- into the scene heading. All eight plates fit within the stage width.
+    local previous = -132
+    for _, unit in ipairs(order) do
+        unit.plateX = math.max(8, unit.x, previous + 140)
+        previous = unit.plateX
+    end
+    local nextX = 1280
+    for i = count, 1, -1 do
+        local unit = order[i]
+        unit.plateX = math.min(unit.plateX, nextX - 140)
+        nextX = unit.plateX
+        local y = (unit.y or 110) - 28
+        if unit.plateX ~= unit.lastPlateX or y ~= unit.lastPlateY then
+            unit.plate:ClearAllPoints()
+            unit.plate:SetPoint("TOPLEFT", self.nameplates, "TOPLEFT", unit.plateX, -y)
+            unit.lastPlateX, unit.lastPlateY = unit.plateX, y
         end
     end
 end

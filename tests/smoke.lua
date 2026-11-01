@@ -561,27 +561,47 @@ test("Adventure models follow combat positions with roomy transparent viewports"
     assertTrue(front.hp:IsShown())
 end)
 
-test("Enemy nameplates follow their displayed model vertically", function()
+test("Player and enemy nameplates follow their displayed models vertically", function()
     local scene = WoWIdle.Scene.Create(UIParent)
     for _, unit in ipairs(scene.units) do
         unit:Hide()
     end
-    local enemy = scene.units[6]
-    enemy.x, enemy.y = 600, 110
-    enemy:Show()
-    scene:PlaceNameplates()
-    local _, _, _, x, y = enemy.plate:GetPoint()
-    assertEquals(600, x)
-    assertEquals(-82, y)
-    enemy.y = 130
-    scene:PlaceNameplates()
-    local _, _, _, movedX, movedY = enemy.plate:GetPoint()
-    assertEquals(x, movedX)
-    assertEquals(y - 20, movedY)
-    enemy.y = 95
-    scene:PlaceNameplates()
-    local _, _, _, _, raisedY = enemy.plate:GetPoint()
-    assertEquals(-67, raisedY)
+    for _, index in ipairs({ 1, 5, 6, 8 }) do
+        local unit = scene.units[index]
+        unit.x, unit.y = 600, 110
+        unit:Show()
+        scene:PlaceNameplates()
+        local _, _, _, x, y = unit.plate:GetPoint()
+        assertEquals(600, x)
+        assertEquals(-82, y)
+        unit.y = 130
+        scene:PlaceNameplates()
+        local _, _, _, movedX, movedY = unit.plate:GetPoint()
+        assertEquals(x, movedX)
+        assertEquals(y - 20, movedY)
+        unit.y = 95
+        scene:PlaceNameplates()
+        local _, _, _, _, raisedY = unit.plate:GetPoint()
+        assertEquals(-67, raisedY)
+        unit:Hide()
+    end
+    -- A crowded company must retain its overhead height in every layout.
+    for _, compact in ipairs({ false, true }) do
+        scene:Layout(compact, false)
+        for i, unit in ipairs(scene.units) do
+            unit.x, unit.y = 500 + i * 10, 96 + i * 4
+            unit:Show()
+        end
+        scene:PlaceNameplates()
+        for i, unit in ipairs(scene.plateOrder) do
+            local _, _, _, x, y = unit.plate:GetPoint()
+            assertEquals(28 - unit.y, y)
+            assertTrue(x >= 8 and x + 132 <= 1284)
+            if i > 1 then
+                assertTrue(x - scene.plateOrder[i - 1].plateX >= 140)
+            end
+        end
+    end
     scene.frame:Hide()
 end)
 
