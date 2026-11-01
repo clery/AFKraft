@@ -49,14 +49,87 @@ function G.Replace(state, index, identity)
     return true
 end
 
-function G.ItemPower(item, hero)
+function G.ItemStats(item, hero, extraUpgrade)
+    local stats = {}
     if not item then
-        return 0
+        return stats
+    end
+    local scale = 1 + ((item.upgrade or 0) + (extraUpgrade or 0)) * 0.1
+    if item.heirloom then
+        local template = C.itemByID[item.itemID]
+        scale = scale * (hero and hero.level or 1) / (template and template.level or 1)
+    end
+    for _, key in ipairs(C.itemStatOrder) do
+        local value = item.stats and item.stats[key]
+        if type(value) == "number" and value >= 0 and value < math.huge then
+            stats[key] = value * scale
+        end
+    end
+    return stats
+end
+
+local itemWeights = {
+    stamina = 0.6,
+    spirit = 0.4,
+    haste = 0.8,
+    armor = 0.04,
+    weaponDPS = 1.5,
+    attackPower = 0.5,
+    spellPower = 0.8,
+    healingPower = 0.5,
+    healthRegen = 1,
+    arcaneResistance = 0,
+    fireResistance = 0,
+    frostResistance = 0,
+    natureResistance = 0,
+    shadowResistance = 0,
+}
+
+function G.ItemPower(item, hero, extraUpgrade)
+    local stats = G.ItemStats(item, hero, extraUpgrade)
+    local primary = hero and C.primaryStats[hero.class]
+    local power = 0
+
+    for key, value in pairs(stats) do
+        power = power + value * (itemWeights[key] or (key == primary and 1 or 0))
+    end
+    return floor(power * 10 + 0.5) / 10
+end
+
+function G.ItemDescription(item, hero)
+    if not item then
+        return "Empty slot"
+    end
+    local lines = {}
+    local stats = G.ItemStats(item, hero)
+    for _, key in ipairs(C.itemStatOrder) do
+        if stats[key] and stats[key] > 0 then
+            lines[#lines + 1] = string.format("+%.1f %s", stats[key], C.itemStatNames[key])
+        end
+    end
+    if item.itemID then
+        lines[#lines + 1] = "Classic item #"
+            .. item.itemID
+            .. " · WoW level "
+            .. item.requiredLevel
     end
     if item.heirloom then
-        return 3 + hero.level * 2 + (item.upgrade or 0) * 2
+        lines[#lines + 1] = "Idle heirloom: stats scale with hero level."
     end
-    return item.power + (item.upgrade or 0) * 2
+    if (item.upgrade or 0) > 0 then
+        lines[#lines + 1] = "Idle enhancement: +" .. item.upgrade * 10 .. "% stats."
+    end
+    lines[#lines + 1] = "Power is an idle class-weighted estimate."
+    if item.itemID == 833 then
+        lines[#lines + 1] = "Passive regeneration applies; on-use heal is not simulated."
+    end
+    if item.itemID == 13040 then
+        lines[#lines + 1] = "Shadowbolt proc is not simulated."
+    end
+    if item.itemID == 13009 then
+        lines[#lines + 1] = "Resistances are informational until damage schools are supported."
+    end
+    return table.concat(lines, "\n")
 end
 
 -- Resolve old shared IDs to class-owned nodes, refunding unknown saved selections.
@@ -106,23 +179,38 @@ function G.ApplyTalentStats(hero, stats)
 end
 
 function G.Stats(state, hero)
-    local power, armor, heal = 0, 0, 0
-    for slot, item in pairs(hero.gear) do
-        local p = G.ItemPower(item, hero)
-        if slot == 2 or slot == 3 then
-            armor = armor + p
-        else
-            power = power + p
+    local total, heal = {}, 0
+    for _, item in pairs(hero.gear) do
+        for key, value in pairs(G.ItemStats(item, hero)) do
+            total[key] = (total[key] or 0) + value
         end
         if item.effect == "renewal" then
             heal = heal + 0.06
         end
     end
+    local primary = total[C.primaryStats[hero.class]] or 0
+    local offense = primary * 0.65 + (total.weaponDPS or 0) + (total.attackPower or 0) * 0.325
     local mult = 1 + state.prestiges * 0.04
     return G.ApplyTalentStats(hero, {
-        hp = floor((105 + hero.level * 19 + armor * 6) * mult),
-        damage = (9 + hero.level * 3 + power * 0.65) * mult,
-        healing = (15 + hero.level * 5 + power * 0.6) * (1 + heal) * mult,
+        attributes = total,
+        hp = math.floor((105 + hero.level * 19 + (total.stamina or 0) * 10) * mult),
+        damage = (9 + hero.level * 3 + offense + (total.spellPower or 0) * 0.65) * mult,
+        healing = (
+            15
+            + hero.level * 5
+            + (total.intellect or 0) * 0.8
+            + (total.spirit or 0) * 0.6
+            + (total.healingPower or 0)
+            + (total.spellPower or 0) * 0.6
+        )
+            * (1 + heal)
+            * mult,
+        haste = 1 + (total.haste or 0) / 100,
+        mitigation = math.min(
+            0.6,
+            (total.armor or 0) / (500 + hero.level * 50 + (total.armor or 0))
+        ),
+        regen = (total.healthRegen or 0) / 5,
     })
 end
 

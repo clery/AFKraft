@@ -207,6 +207,7 @@ case("Inventory sorts by effective power with stable ties and original indices",
     s.heroes[1].level, s.heroes[1].rank = 12, 3
     s.inventory =
         { G.Item(s, 1, 1, 1), G.Item(s, 1, 5, 3), G.Item(s, 1, 1, 3, true), G.Item(s, 1, 5, 3) }
+    s.inventory[3].upgrade = 20
     local entries = G.InventoryEntries(s, s.heroes[1], 1)
     equal(entries[1].index, 3)
     equal(entries[2].index, 2)
@@ -224,7 +225,7 @@ case("Inventory combines hero requirements, quality, slot and trait filters", fu
     local usable = G.Item(s, 1, 3, 3)
     local locked = G.Item(s, 1, 9, 3)
     local legacy = G.Item(s, 2, 9, 3, true)
-    usable.protected, usable.upgrade = true, 1
+    usable.protected, usable.upgrade, usable.quality, usable.effect = true, 1, 3, "renewal"
     s.inventory = { usable, locked, legacy, G.Item(s, 1, 2, 1) }
     equal(#G.InventoryEntries(s, hero, 0, { availability = "usable" }), 3)
     equal(G.InventoryEntries(s, hero, 0, { availability = "locked" })[1].item, locked)
@@ -274,6 +275,7 @@ case("Auto equip selects usable effective power and preserves stacks and other h
     local upgraded = G.Item(s, 2, 1, 1)
     upgraded.upgrade = 10
     local heirloom = G.Item(s, 3, 99, 1, true)
+    heirloom.stats = { stamina = 1000 }
     local tied = G.Item(s, 4, 1, 2)
     hero.gear[4] = G.Copy(tied)
     local current = hero.gear[4]
@@ -417,9 +419,11 @@ case("Salvage rules retain protected, new-effect, and upgrade loot", function()
     G.Loot(s, protected)
     equal(#s.inventory, 1)
     s.salvage.keepUpgrades = false
-    G.Loot(s, G.Item(s, 2, 1, 3))
+    local effectItem = G.Item(s, 2, 1, 3)
+    effectItem.effect = "renewal"
+    G.Loot(s, effectItem)
     equal(#s.inventory, 2)
-    G.Loot(s, G.Item(s, 2, 1, 3))
+    G.Loot(s, G.Copy(effectItem))
     equal(s.stats.salvaged, 1)
     local heirloom = G.Item(s, 3, 1, 1, true)
     assert(not G.Salvage(s, heirloom))

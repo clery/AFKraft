@@ -120,9 +120,10 @@ local function victory(state, battle)
     state.stats.victories = state.stats.victories + 1
     state.stats.kills = state.stats.kills + #battle.enemies
     if G.Random(state, 100) <= 35 or battle.boss then
-        local roll = G.Random(state, 100)
-        local quality = roll > 96 and 4 or roll > 75 and 3 or roll > 35 and 2 or 1
-        G.Loot(state, G.Item(state, G.Random(state, 6), battle.level, quality, false))
+        local item = G.ZoneLoot(state, battle.level)
+        if item then
+            G.Loot(state, item)
+        end
     end
     local previousSafe = state.safe[state.zone] or 0
     state.safe[state.zone] = max(state.safe[state.zone] or 0, battle.stage)

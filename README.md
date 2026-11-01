@@ -54,7 +54,9 @@ Credit depends on information available from the client. Some kills or gathers c
 
 ## Equipment, crafting, and loot
 
-Each hero has six equipment slots: a weapon, armor, headgear, an accessory, and two trinkets. Use the shared inventory to compare drops and equip upgrades. Identical ordinary items stack, and inventory is sorted by effective power, strongest first.
+Each hero has six equipment slots: a weapon, armor, headgear, an accessory, and two trinkets. Use the shared inventory to compare drops and equip upgrades. Drops use real Classic-era WoW item names, icons, rarity, and fixed stat snapshots in curated pools for each destination. Power is calculated from the item’s stats for the selected hero’s class; ordinary drops do not gain raw power from encounter level. Strength, agility, and intellect support offense, stamina raises health, armor reduces incoming damage, and spirit supports healing. Haste support is ready for future items. Hover equipment to see its stats and compare the equipped item. Identical ordinary items stack, and inventory is sorted by effective power, strongest first.
+
+Each purchased enhancement adds 10% of the item’s base stats. Heirlooms use the same item identities with separate idle level scaling. WoW requirements are mapped to idle requirements, and weapon and armor proficiencies remain simplified. Loot pools and drop rates are adapted for the minigame. See [item sources and stat rules](Content/ITEMS.md) for the catalog, calculations, and currently unsupported item effects.
 
 In **Party**, select an equipment slot to compare items and preview the cost of an upgrade. Choose **Upgrade** to purchase it. Training raises a hero's level cap, letting further idle experience take them higher.
 

@@ -39,6 +39,7 @@ end
 function G.New(now)
     return {
         version = C.version,
+        itemStatsVersion = 1,
         seed = floor(now) % 2147483646 + 1,
         heroes = {},
         inventory = {},
@@ -106,6 +107,7 @@ function G.Load(db, now)
     elseif db.version ~= C.version then
         return nil, "This save belongs to an unsupported version. It has not been changed."
     end
+    local needsItemMigration = db.itemStatsVersion ~= 1
     local defaults = G.New(now)
     for k, v in pairs(defaults) do
         if db[k] == nil then
@@ -162,6 +164,33 @@ function G.Load(db, now)
             db.rest = 0
             G.Log(db, "The party regrouped and is ready to continue.")
         end
+    end
+    local function migrateItem(item)
+        if type(item) ~= "table" or type(item.stats) == "table" then
+            return
+        end
+        local power = type(item.power) == "number" and item.power or 0
+        if power < 0 or power >= math.huge or power ~= power then
+            power = 0
+        end
+        -- Preserve old gear rather than replacing paid upgrades or protected stacks.
+        item.stats = (item.slot == 2 or item.slot == 3)
+                and { stamina = power * 0.6, armor = power * 16 }
+            or { weaponDPS = power * 0.65 }
+        item.power = nil
+    end
+    for _, item in ipairs(db.inventory) do
+        migrateItem(item)
+    end
+    for _, hero in ipairs(db.heroes) do
+        for _, item in pairs(hero.gear or {}) do
+            migrateItem(item)
+        end
+    end
+    if needsItemMigration then
+        db.battle = nil
+        db.rest = 0
+        db.itemStatsVersion = 1
     end
     db.paused, db.pauseAfter = false, nil
     db.events = nil

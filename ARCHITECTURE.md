@@ -5,6 +5,7 @@
 | Directory | Responsibility | May depend on |
 | --- | --- | --- |
 | `Content.lua` | Stable class, zone, equipment, and talent definitions | Lua only |
+| `Content/Items.lua` | Fixed Classic item snapshots, stat labels, class attributes, and curated destination pools | Lua only |
 | `Domain/` | State, party rules, inventory transactions, prestige, rewards | Content and Lua |
 | `Simulation/` | Deterministic combat and bounded offline catch-up | Domain and content |
 | `Compatibility/` | Client APIs, event normalization, map IDs, model IDs | WoW APIs and domain commands |

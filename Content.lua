@@ -698,7 +698,6 @@ C.priorityNames = { heal = "Recovery first", special = "Special first", attack =
 C.qualityNames = { "Common", "Uncommon", "Rare", "Epic" }
 C.qualityColors =
     { { 0.75, 0.76, 0.77 }, { 0.34, 0.85, 0.48 }, { 0.36, 0.64, 1 }, { 0.76, 0.46, 1 } }
-C.itemNames = { "Wayfarer's", "Pathfinder's", "Runeworn", "Dawnforged" }
 C.version = 2
 C.adventure = { xpPerRank = 100, essencePerRank = 60 }
 C.activityOrder = { "kill", "gather", "skinning", "quest", "boss", "dungeon", "level" }

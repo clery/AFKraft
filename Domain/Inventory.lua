@@ -2,27 +2,74 @@ local _, W = ...
 local C, G = W.Content, W.Game
 local copy = G.Copy
 
-function G.Item(state, slot, level, quality, heirloom)
-    local item = {
-        uid = state.nextItem,
-        slot = slot,
-        level = level,
-        quality = quality,
-        power = 2 + level * 2 + quality * 2,
-        upgrade = 0,
-        heirloom = heirloom,
-    }
-    state.nextItem = state.nextItem + 1
-    item.name = (heirloom and "Legacy " or C.itemNames[quality] .. " ") .. C.slots[slot]
-    if quality >= 3 then
-        item.effect = "renewal"
+-- Crafting and migrated saves choose the closest catalog entry for their slot.
+function G.Item(state, slot, level, quality, heirloom, template)
+    if not template then
+        local distance
+        for _, candidate in ipairs(C.items) do
+            if candidate.slot == (slot == 6 and 5 or slot) then
+                local score = math.abs(candidate.level - level) * 10
+                    + math.abs(candidate.quality - quality)
+                    + (not heirloom and candidate.level > level and 100000 or 0)
+                if not distance or score < distance then
+                    template, distance = candidate, score
+                end
+            end
+        end
     end
+    if not template then
+        return nil
+    end
+    local item = copy(template)
+    item.uid, item.slot, item.upgrade, item.heirloom = state.nextItem, slot, 0, heirloom
+    -- These are idle requirements; the original WoW requirement remains available.
+    item.level = level
+    state.nextItem = state.nextItem + 1
     return item
+end
+
+function G.ZoneLoot(state, level)
+    local pool = C.zoneItems[state.zone]
+    local candidates = {}
+    for _, id in ipairs(pool) do
+        local template = C.itemByID[id]
+        if template.level <= level then
+            -- Uncommon finds are more frequent than rare finds.
+            local weight = template.quality == 3 and 1 or 4
+            for _ = 1, weight do
+                candidates[#candidates + 1] = template
+            end
+        end
+    end
+    if #candidates == 0 then
+        return nil
+    end
+    local template = candidates[G.Random(state, #candidates)]
+    local slot = template.slot
+    if slot == 5 then
+        slot = G.Random(state, 2) == 1 and 5 or 6
+    end
+    return G.Item(state, slot, template.level, template.quality, false, template)
+end
+
+function G.SameItem(a, b)
+    if a.itemID ~= b.itemID or a.name ~= b.name then
+        return false
+    end
+    for _, key in ipairs(C.itemStatOrder) do
+        if (a.stats or {})[key] ~= (b.stats or {})[key] then
+            return false
+        end
+    end
+    return true
 end
 
 function G.IsUpgrade(state, item)
     for _, hero in ipairs(state.heroes) do
-        if G.ItemPower(item, hero) > G.ItemPower(hero.gear[item.slot], hero) then
+        if
+            (item.heirloom or item.level <= hero.level)
+            and G.ItemPower(item, hero) > G.ItemPower(hero.gear[item.slot], hero)
+        then
             return true
         end
     end
@@ -60,6 +107,7 @@ function G.Loot(state, item)
                 if
                     not existing.protected
                     and not existing.heirloom
+                    and G.SameItem(existing, item)
                     and existing.slot == item.slot
                     and existing.level == item.level
                     and existing.quality == item.quality
@@ -155,10 +203,17 @@ function G.Craft(state, index, slot, material, heirloom)
     then
         return false, "You need more Essence, gold, or materials."
     end
+    local item = G.Item(state, slot, heirloom and 1 or hero.level, 3, heirloom)
+    if not item then
+        return false, "No equipment recipe is available for this slot."
+    end
+    if not heirloom and C.itemByID[item.itemID].level > hero.level then
+        state.nextItem = state.nextItem - 1
+        return false, "Reach idle level " .. C.itemByID[item.itemID].level .. " to craft this slot."
+    end
     state.essence = state.essence - cost.essence
     state.gold = state.gold - cost.gold
     state.materials[material] = state.materials[material] - cost.material
-    local item = G.Item(state, slot, heirloom and 1 or hero.level, 3, heirloom)
     state.inventory[#state.inventory + 1] = item
     G.Log(state, "Crafted " .. item.name .. " for " .. hero.name .. ".")
     G.Emit(state, "craft")

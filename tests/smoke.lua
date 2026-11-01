@@ -113,10 +113,10 @@ test("Selecting equipment is free and upgrading uses the displayed quote", funct
     assertEquals(1, ui.gearSlot)
     assertEquals(1, ui.bagFilter)
     assertEquals(1000, state.essence)
-    local quote, power = W.Game.UpgradeCost(hero.gear[1]), W.Game.ItemPower(hero.gear[1], hero)
+    local quote, power = W.Game.UpgradeCost(hero.gear[1]), W.Game.ItemPower(hero.gear[1], hero, 1)
     local upgrade
     for button in ui.panel._pool.primary:EnumerateActive() do
-        if button:IsShown() and button.text:GetText() == "Upgrade +2 power" then
+        if button:IsShown() and button.text:GetText() == "Upgrade +10% stats" then
             upgrade = button
         end
     end
@@ -124,7 +124,7 @@ test("Selecting equipment is free and upgrading uses the displayed quote", funct
     upgrade:GetScript("OnClick")(upgrade)
     assertEquals(1000 - quote.essence, state.essence)
     assertEquals(1000 - quote.gold, state.gold)
-    assertEquals(power + 2, W.Game.ItemPower(hero.gear[1], hero))
+    assertEquals(power, W.Game.ItemPower(hero.gear[1], hero))
 end)
 
 test("Full and compact Adventure bars share rank rewards without granting hero XP", function()

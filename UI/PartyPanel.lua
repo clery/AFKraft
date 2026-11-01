@@ -111,6 +111,11 @@ local function equipment(ui, p, s, hero, index)
         12,
         hero.level >= G.LevelCap(hero) and T.gold or T.muted
     )
+    local attributeLines = {}
+    for _, key in ipairs(C.itemStatOrder) do
+        attributeLines[#attributeLines + 1] =
+            string.format("%s: %.1f", C.itemStatNames[key], stats.attributes[key] or 0)
+    end
     local training = G.TrainingCost(hero)
     local train = U.Button(p, "Raise cap to " .. (G.LevelCap(hero) + 4), 332, 0, 240, 34, function()
         if W.Action(G.Train, index) then
@@ -121,10 +126,11 @@ local function equipment(ui, p, s, hero, index)
     line(p, costText(s, training), 332, 37, 240, 11)
     U.Tooltip(
         train,
-        "Raise the level cap",
+        "Raise the level cap · Equipment stats",
         "Current cap: "
             .. G.LevelCap(hero)
-            .. ". Training raises the cap by four. Heroes gain experience in idle battles; Adventure XP ranks award the Essence for training."
+            .. ". Training raises the cap by four. Heroes gain experience in idle battles; Adventure XP ranks award the Essence for training.\n\n"
+            .. table.concat(attributeLines, "\n")
     )
 
     local selectedSlot = ui.gearSlot or 1
@@ -137,25 +143,18 @@ local function equipment(ui, p, s, hero, index)
         end, slot == selectedSlot)
         b.text:Hide()
         U.Begin(b)
-        U.Icon(b, slotIcons[slot], 12, 15, 36)
+        U.Icon(b, item and item.icon or slotIcons[slot], 12, 15, 36):SetParent(b.content or b)
         line(b, name, 62, 9, 204, 14, slot == selectedSlot and T.gold or T.text)
-        line(
-            b,
-            item
-                    and (G.ItemPower(item, hero) .. " power" .. ((item.upgrade or 0) > 0 and "  ·  +" .. item.upgrade or ""))
-                or "Empty slot",
-            62,
-            36,
-            204,
-            12,
-            item and T.text or T.muted
-        )
+        line(b, item and item.name or "Empty slot", 62, 36, 204, 12, item and T.text or T.muted)
         U.EndBuild(b)
         U.Tooltip(
             b,
             item and item.name or name,
             item
-                    and (C.qualityNames[item.quality] .. " · " .. G.ItemPower(item, hero) .. " power\nSelect to view upgrades and matching inventory.")
+                    and (C.qualityNames[item.quality] .. " · " .. G.ItemPower(item, hero) .. " power\n" .. G.ItemDescription(
+                        item,
+                        hero
+                    ) .. "\nSelect to view upgrades and matching inventory.")
                 or "Select this slot to find matching equipment in the shared inventory."
         )
     end
@@ -168,7 +167,7 @@ local function equipment(ui, p, s, hero, index)
             p,
             G.ItemPower(item, hero)
                 .. " to "
-                .. (G.ItemPower(item, hero) + 2)
+                .. G.ItemPower(item, hero, 1)
                 .. " power  ·  "
                 .. costText(s, cost),
             0,
@@ -176,16 +175,16 @@ local function equipment(ui, p, s, hero, index)
             572,
             12
         )
-        local upgrade = U.Button(p, "Upgrade +2 power", 332, 346, 240, 34, function()
+        local upgrade = U.Button(p, "Upgrade +10% stats", 332, 346, 240, 34, function()
             if W.Action(G.Upgrade, index, selectedSlot) then
-                W.Notify(hero.name .. "’s " .. C.slots[selectedSlot] .. " gained 2 power.")
+                W.Notify(hero.name .. "’s " .. C.slots[selectedSlot] .. " gained 10% base stats.")
             end
         end, false, "primary")
         U.Enabled(upgrade, affordable(s, cost))
         U.Tooltip(
             upgrade,
             "Improve this item",
-            "Gain 2 power. The cost is shown before purchase. Changes take effect immediately."
+            "Adds 10% of the base item stats. The power preview uses this hero’s class. Changes take effect immediately."
         )
     else
         line(
@@ -386,7 +385,7 @@ local function inventory(ui, p, s, hero, index)
             b.text:Hide()
             U.Begin(b)
             U.Enabled(b, levelOK)
-            U.Icon(b, slotIcons[item.slot], 12, 7, 32)
+            U.Icon(b, item.icon or slotIcons[item.slot], 12, 7, 32):SetParent(b.content or b)
             line(
                 b,
                 item.name .. ((item.count or 1) > 1 and "  ×" .. item.count or ""),
@@ -435,11 +434,14 @@ local function inventory(ui, p, s, hero, index)
                 C.qualityNames[item.quality]
                     .. " · "
                     .. power
-                    .. " power\nCurrently equipped: "
+                    .. " power\n"
+                    .. G.ItemDescription(item, hero)
+                    .. "\nCurrently equipped: "
                     .. (previous and previous.name or "Empty")
                     .. " ("
                     .. G.ItemPower(previous, hero)
                     .. " power).\n"
+                    .. (previous and G.ItemDescription(previous, hero) .. "\n" or "")
                     .. (
                         not levelOK and "Requires idle level " .. item.level .. "."
                         or "Click to equip. Your previous item returns to inventory."
