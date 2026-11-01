@@ -315,89 +315,384 @@ C.appearances = {
     WARLOCK = { "human_male", "human_female", "orc_female", "undead_male" },
     DRUID = { "nightelf_male", "nightelf_female", "tauren_male", "tauren_female" },
 }
-C.talents = {
-    {
-        id = "cleave",
-        name = "Sweeping strikes",
-        text = "Basic attacks and strikes hit every enemy.",
-        icon = "Ability_Whirlwind",
-        path = 1,
-        row = 1,
-        column = 2,
+-- Idle talents are class-owned content, independent of client spell IDs.
+-- Add a node to a specialization below; its effect is handled by the shared simulator.
+C.talentEffects = {
+    cleave = { value = true, text = "Basic attacks and strikes hit every enemy." },
+    execute = { value = true, text = "Strikes deal 50% more damage below 35% enemy health." },
+    haste = {
+        value = true,
+        text = "Offensive abilities have a 4.2 second base cooldown instead of 6 seconds.",
     },
-    {
-        id = "execute",
-        name = "Finishing instinct",
-        text = "Deal 50% more damage to enemies below 35% health.",
-        icon = "INV_Sword_48",
-        path = 1,
-        row = 1,
-        column = 3,
+    sustain = { value = true, text = "Healing abilities restore 60% more health." },
+    renew = { value = true, text = "Restore an additional 8% health after victory." },
+    leech = { value = true, text = "Offensive abilities restore 12% of their damage as health." },
+    guard = { value = true, text = "Draw enemy attention and take 25% less damage." },
+    thorns = { value = true, text = "Reflect 30% of received damage." },
+    control = {
+        value = true,
+        text = "Offensive abilities delay each target's next attack by 1 second.",
     },
-    {
-        id = "haste",
-        name = "Gathering momentum",
-        text = "Special abilities recover 30% faster.",
-        icon = "Ability_Rogue_SliceDice",
-        path = 1,
-        row = 2,
-        column = 2,
+    damage = { value = 0.12, text = "Deal 12% more damage." },
+    healing = { value = 0.2, text = "Healing power increased by 20%." },
+    health = { value = 0.15, text = "Maximum health increased by 15%." },
+    speed = { value = 0.1, text = "Basic attacks and ability cooldowns progress 10% faster." },
+    mitigation = {
+        value = 0.08,
+        text = "Reduce incoming damage by an additional 8%, up to 75% total armor reduction.",
     },
-    {
-        id = "sustain",
-        name = "Restorative practice",
-        text = "Healing abilities are 60% stronger.",
-        icon = "Spell_Holy_Renew",
-        path = 2,
-        row = 1,
-        column = 2,
+    regen = { value = 0.005, text = "Regenerate 0.5% of maximum health per second." },
+}
+C.talentEffectIcons = {
+    cleave = "Ability_Whirlwind",
+    execute = "INV_Sword_48",
+    haste = "Ability_Rogue_SliceDice",
+    sustain = "Spell_Holy_Renew",
+    renew = "Spell_Nature_Rejuvenation",
+    leech = "Spell_Shadow_LifeDrain02",
+    guard = "Ability_Defend",
+    thorns = "Ability_Warrior_Riposte",
+    control = "Spell_Frost_FrostNova",
+}
+C.talentSpecs = {
+    WARRIOR = {
+        {
+            "Sweeping Strikes/cleave",
+            "Mortal Wounds/execute",
+            "Battle Tempo/haste",
+            "Weapon Mastery/damage",
+            "Seasoned Soldier/health",
+            "Deep Wounds/damage",
+            "Second Wind/renew",
+            "Colossus Smash/damage",
+        },
+        {
+            "Bloodthirst/leech",
+            "Enraged Recovery/sustain",
+            "Flurry/speed",
+            "Unbridled Wrath/damage",
+            "Blood Craze/regen",
+            "Piercing Howl/control",
+            "Recklessness/execute",
+            "Titan's Grip/damage",
+        },
+        {
+            "Shield Wall/guard",
+            "Retaliation/thorns",
+            "Last Stand/health",
+            "Shield Discipline/mitigation",
+            "Revenge/damage",
+            "Warbringer/control",
+            "Field Dressing/sustain",
+            "Unbreakable/health",
+        },
     },
-    {
-        id = "renew",
-        name = "A moment of respite",
-        text = "Restore 8% health after each victory.",
-        icon = "Spell_Nature_Rejuvenation",
-        path = 2,
-        row = 1,
-        column = 3,
+    PALADIN = {
+        {
+            "Divine Favor/sustain",
+            "Beacon of Light/healing",
+            "Illumination/haste",
+            "Blessed Recovery/renew",
+            "Holy Guidance/healing",
+            "Sacred Duty/health",
+            "Light's Grace/speed",
+            "Divine Purpose/healing",
+        },
+        {
+            "Righteous Fury/guard",
+            "Holy Shield/thorns",
+            "Sanctuary/mitigation",
+            "Avenger's Shield/control",
+            "Redoubt/health",
+            "Consecrated Ground/cleave",
+            "Ardent Defender/regen",
+            "Guardian of Kings/mitigation",
+        },
+        {
+            "Crusade/damage",
+            "Judgement of Light/leech",
+            "Hammer of Wrath/execute",
+            "Zeal/speed",
+            "Conviction/damage",
+            "Art of War/haste",
+            "Selfless Healer/healing",
+            "Avenging Wrath/damage",
+        },
     },
-    {
-        id = "leech",
-        name = "Battle renewal",
-        text = "Attacks restore health equal to 12% of damage.",
-        icon = "Spell_Shadow_LifeDrain02",
-        path = 2,
-        row = 2,
-        column = 3,
+    HUNTER = {
+        {
+            "Spirit Bond/regen",
+            "Bestial Wrath/damage",
+            "Frenzy/speed",
+            "Beast Cleave/cleave",
+            "Mend Companion/sustain",
+            "Thick Hide/mitigation",
+            "Predator's Thirst/leech",
+            "Aspect of the Wild/health",
+        },
+        {
+            "Careful Aim/damage",
+            "Kill Shot/execute",
+            "Rapid Fire/haste",
+            "Trueshot/speed",
+            "Concussive Shot/control",
+            "Master Marksman/damage",
+            "Camouflage/renew",
+            "Steady Focus/damage",
+        },
+        {
+            "Survivalist/health",
+            "Explosive Trap/thorns",
+            "Misdirection/guard",
+            "Exhilaration/healing",
+            "Wildfire/damage",
+            "Harpoon/control",
+            "Trailblazer/speed",
+            "Wilderness Medicine/renew",
+        },
     },
-    {
-        id = "guard",
-        name = "Stand your ground",
-        text = "Take 25% less damage and draw enemy attention.",
-        icon = "Ability_Defend",
-        path = 3,
-        row = 1,
-        column = 2,
+    ROGUE = {
+        {
+            "Deadly Poison/damage",
+            "Venomous Wounds/leech",
+            "Seal Fate/haste",
+            "Cut to the Chase/speed",
+            "Dispatch/execute",
+            "Alchemical Recovery/sustain",
+            "Master Poisoner/damage",
+            "Leeching Poison/regen",
+        },
+        {
+            "Blade Flurry/cleave",
+            "Riposte/thorns",
+            "Combat Potency/speed",
+            "Adrenaline Rush/haste",
+            "Combat Readiness/guard",
+            "Iron Stomach/health",
+            "Blade Master/damage",
+            "Enduring Brawler/mitigation",
+        },
+        {
+            "Shadowstep/control",
+            "Premeditation/damage",
+            "Recuperate/renew",
+            "Elusiveness/mitigation",
+            "Shadow Dance/execute",
+            "Soothing Darkness/healing",
+            "Master of Shadows/speed",
+            "Cheat Death/health",
+        },
     },
-    {
-        id = "thorns",
-        name = "Retaliation",
-        text = "Reflect 30% of received damage at attackers.",
-        icon = "Ability_Warrior_Riposte",
-        path = 3,
-        row = 1,
-        column = 3,
+    PRIEST = {
+        {
+            "Atonement/leech",
+            "Power Word Shield/guard",
+            "Borrowed Time/haste",
+            "Reflective Shield/thorns",
+            "Grace/healing",
+            "Pain Suppression/mitigation",
+            "Evangelism/damage",
+            "Power Infusion/speed",
+        },
+        {
+            "Renew/renew",
+            "Divine Hymn/sustain",
+            "Holy Concentration/healing",
+            "Surge of Light/speed",
+            "Blessed Resilience/health",
+            "Lightwell/regen",
+            "Serendipity/haste",
+            "Guardian Spirit/healing",
+        },
+        {
+            "Mind Sear/cleave",
+            "Shadow Word Death/execute",
+            "Psychic Scream/control",
+            "Darkness/damage",
+            "Vampiric Embrace/leech",
+            "Shadowform/mitigation",
+            "Twist of Fate/damage",
+            "Void Torrent/speed",
+        },
     },
-    {
-        id = "control",
-        name = "Disrupting force",
-        text = "Specials delay the next enemy attack by 1 second.",
-        icon = "Spell_Frost_FrostNova",
-        path = 3,
-        row = 2,
-        column = 2,
+    SHAMAN = {
+        {
+            "Chain Lightning/cleave",
+            "Elemental Fury/damage",
+            "Lava Surge/haste",
+            "Thunderstorm/control",
+            "Elemental Warding/mitigation",
+            "Aftershock/speed",
+            "Stormkeeper/execute",
+            "Ascendance/damage",
+        },
+        {
+            "Stormstrike/damage",
+            "Flametongue/leech",
+            "Windfury/speed",
+            "Lightning Shield/thorns",
+            "Feral Spirit/guard",
+            "Maelstrom Weapon/haste",
+            "Shamanistic Rage/health",
+            "Earthen Strength/mitigation",
+        },
+        {
+            "Riptide/renew",
+            "Tidal Waves/sustain",
+            "Earthliving/healing",
+            "Healing Stream/regen",
+            "Nature's Swiftness/speed",
+            "Ancestral Vigor/health",
+            "Deep Healing/healing",
+            "Spirit Link/mitigation",
+        },
+    },
+    MAGE = {
+        {
+            "Arcane Power/damage",
+            "Arcane Echo/cleave",
+            "Presence of Mind/haste",
+            "Nether Precision/execute",
+            "Prismatic Barrier/guard",
+            "Mana Shield/health",
+            "Arcane Meditation/renew",
+            "Temporal Mending/sustain",
+        },
+        {
+            "Ignite/damage",
+            "Hot Streak/speed",
+            "Cauterize/regen",
+            "Molten Armor/thorns",
+            "Combustion/execute",
+            "Flame On/haste",
+            "Phoenix Warmth/healing",
+            "Pyromaniac/damage",
+        },
+        {
+            "Frostbite/control",
+            "Ice Barrier/mitigation",
+            "Shatter/damage",
+            "Cold Snap/haste",
+            "Ice Floes/speed",
+            "Frost Channeling/leech",
+            "Winter's Resilience/health",
+            "Glacial Spike/damage",
+        },
+    },
+    WARLOCK = {
+        {
+            "Drain Life/leech",
+            "Soul Siphon/sustain",
+            "Nightfall/haste",
+            "Haunt/damage",
+            "Drain Soul/execute",
+            "Dark Regeneration/renew",
+            "Siphon Life/regen",
+            "Unstable Affliction/damage",
+        },
+        {
+            "Soul Link/guard",
+            "Demon Armor/mitigation",
+            "Fel Vitality/health",
+            "Demonic Reprisal/thorns",
+            "Demonic Frenzy/speed",
+            "Felstorm/cleave",
+            "Health Funnel/healing",
+            "Demonic Pact/damage",
+        },
+        {
+            "Shadowfury/control",
+            "Backdraft/speed",
+            "Chaos Bolt/damage",
+            "Shadowburn/execute",
+            "Ember Tap/healing",
+            "Fire and Brimstone/cleave",
+            "Soul Leech/leech",
+            "Infernal Power/damage",
+        },
+    },
+    DRUID = {
+        {
+            "Starfall/cleave",
+            "Eclipse/damage",
+            "Nature's Grace/speed",
+            "Typhoon/control",
+            "Moonkin Form/mitigation",
+            "Shooting Stars/haste",
+            "Celestial Alignment/execute",
+            "Astral Communion/renew",
+        },
+        {
+            "Savage Roar/damage",
+            "Predatory Strikes/leech",
+            "Leader of the Pack/regen",
+            "Thick Hide/guard",
+            "Bristling Fur/thorns",
+            "Heart of the Wild/health",
+            "Tiger's Fury/speed",
+            "Survival Instincts/mitigation",
+        },
+        {
+            "Rejuvenation/renew",
+            "Swiftmend/sustain",
+            "Lifebloom/healing",
+            "Living Seed/regen",
+            "Gift of Nature/healing",
+            "Nature's Swiftness/haste",
+            "Ironbark/mitigation",
+            "Tree of Life/health",
+        },
     },
 }
+C.talentsByClass, C.talentByClassID, C.legacyTalentIDs = {}, {}, {}
+for _, class in ipairs(C.classes) do
+    local talents, byID, legacy = {}, {}, {}
+    for path, entries in ipairs(C.talentSpecs[class.id]) do
+        for position, entry in ipairs(entries) do
+            local name, effect = entry:match("^(.-)/(.+)$")
+            -- Repeated motifs add power rather than creating a second boolean unlock.
+            if legacy[effect] then
+                local upgrades = {
+                    cleave = "damage",
+                    execute = "damage",
+                    haste = "speed",
+                    sustain = "healing",
+                    renew = "regen",
+                    leech = "regen",
+                    guard = "mitigation",
+                    thorns = "mitigation",
+                    control = "speed",
+                }
+                effect = upgrades[effect] or effect
+            end
+            local definition = C.talentEffects[effect]
+            local id = class.id:lower() .. "_" .. path .. "_" .. position
+            -- Effect IDs retain saved choices and existing combat integrations per class.
+            if definition.value == true and not legacy[effect] then
+                id = effect
+            end
+            local talent = {
+                id = id,
+                name = name,
+                effect = effect,
+                value = definition.value,
+                text = definition.text,
+                icon = C.talentEffectIcons[effect] or class.icon,
+                path = path,
+                row = math.floor((position - 1) / 2) + 1,
+                column = (position - 1) % 2 + 2,
+            }
+            talents[#talents + 1], byID[id] = talent, talent
+            if definition.value == true and not legacy[effect] then
+                legacy[effect] = id
+            end
+        end
+    end
+    C.talentsByClass[class.id], C.talentByClassID[class.id], C.legacyTalentIDs[class.id] =
+        talents, byID, legacy
+end
+-- Historical alias for Warrior content; consumers should use talentsByClass.
+C.talents = C.talentsByClass.WARRIOR
 C.priorityModes = { "heal", "special", "attack" }
 C.priorityNames = { heal = "Recovery first", special = "Special first", attack = "Strike first" }
 C.qualityNames = { "Common", "Uncommon", "Rare", "Epic" }

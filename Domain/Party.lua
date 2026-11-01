@@ -59,6 +59,52 @@ function G.ItemPower(item, hero)
     return item.power + (item.upgrade or 0) * 2
 end
 
+-- Resolve old shared IDs to class-owned nodes, refunding unknown saved selections.
+function G.TalentList(hero)
+    local byID = C.talentByClassID[hero.class] or {}
+    local legacy = C.legacyTalentIDs[hero.class] or {}
+    if type(hero.talents) ~= "table" then
+        hero.talents = {}
+    end
+    local selected = hero.talents
+    for id, learned in pairs(selected) do
+        if not byID[id] or learned ~= true then
+            selected[id] = nil
+            local replacement = legacy[id]
+            if learned == true and replacement then
+                selected[replacement] = true
+            end
+        end
+    end
+    return C.talentsByClass[hero.class] or {}
+end
+
+function G.TalentEffects(hero)
+    local effects = {}
+    for _, talent in ipairs(G.TalentList(hero)) do
+        if hero.talents[talent.id] then
+            if talent.value == true then
+                effects[talent.effect] = true
+            else
+                effects[talent.effect] = (effects[talent.effect] or 0) + talent.value
+            end
+        end
+    end
+    return effects
+end
+
+-- Apply talent modifiers after base equipment stats so both stat models stay compatible.
+function G.ApplyTalentStats(hero, stats)
+    local talents = G.TalentEffects(hero)
+    stats.hp = floor(stats.hp * (1 + (talents.health or 0)))
+    stats.damage = stats.damage * (1 + (talents.damage or 0))
+    stats.healing = stats.healing * (1 + (talents.healing or 0))
+    stats.haste = (stats.haste or 1) * (1 + (talents.speed or 0))
+    stats.mitigation = min(0.75, (stats.mitigation or 0) + (talents.mitigation or 0))
+    stats.regen = (stats.regen or 0) + stats.hp * (talents.regen or 0)
+    return stats
+end
+
 function G.Stats(state, hero)
     local power, armor, heal = 0, 0, 0
     for slot, item in pairs(hero.gear) do
@@ -73,21 +119,22 @@ function G.Stats(state, hero)
         end
     end
     local mult = 1 + state.prestiges * 0.04
-    return {
+    return G.ApplyTalentStats(hero, {
         hp = floor((105 + hero.level * 19 + armor * 6) * mult),
         damage = (9 + hero.level * 3 + power * 0.65) * mult,
         healing = (15 + hero.level * 5 + power * 0.6) * (1 + heal) * mult,
-    }
+    })
 end
 
 function G.Points(hero)
     local count = 0
+    local talents = G.TalentList(hero)
     for _, v in pairs(hero.talents) do
         if v then
             count = count + 1
         end
     end
-    return max(0, min(9, floor((hero.level + 1) / 2)) - count)
+    return max(0, min(#talents, floor((hero.level + 1) / 2)) - count)
 end
 
 function G.LevelCap(hero)
@@ -150,23 +197,21 @@ function G.Talent(state, index, id)
     if not hero then
         return false
     end
-    local valid = false
-    for _, t in ipairs(C.talents) do
-        if t.id == id then
-            valid = true
-        end
-    end
-    if not valid then
+    G.TalentList(hero)
+    id = C.legacyTalentIDs[hero.class][id] or id
+    if not C.talentByClassID[hero.class][id] then
         return false
     end
     if hero.talents[id] then
         hero.talents[id] = nil
+        G.RefreshHero(state, index)
         return true
     end
     if G.Points(hero) < 1 then
         return false, "Gain more idle levels to earn talent points."
     end
     hero.talents[id] = true
+    G.RefreshHero(state, index)
     G.Emit(state, "unlock")
     state.discoveries["talent:" .. hero.class .. ":" .. id] = true
     return true
@@ -208,6 +253,7 @@ function G.RefreshHero(state, index)
     unit.name, unit.maxHP = hero.name, stats.hp
     unit.hp = math.min(stats.hp, math.max(0, health * stats.hp))
     unit.damage, unit.healing = stats.damage, stats.healing
+    unit.haste, unit.mitigation, unit.regen = stats.haste, stats.mitigation, stats.regen
 end
 
 function G.ExperienceResult(hero, amount)

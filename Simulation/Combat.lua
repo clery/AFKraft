@@ -31,6 +31,9 @@ function G.StartBattle(state)
             maxHP = stats.hp,
             damage = stats.damage,
             healing = stats.healing,
+            haste = stats.haste,
+            mitigation = stats.mitigation,
+            regen = stats.regen,
             cd = 0,
             attackCD = i * 0.1,
             shield = 0,
@@ -177,8 +180,9 @@ function G.Step(state, seconds)
             if #enemies == 0 then
                 break
             end
-            unit.cd = max(0, unit.cd - seconds)
-            unit.attackCD = max(0, unit.attackCD - seconds)
+            unit.hp = min(unit.maxHP, unit.hp + (unit.regen or 0) * seconds)
+            unit.cd = max(0, unit.cd - seconds * (unit.haste or 1))
+            unit.attackCD = max(0, unit.attackCD - seconds * (unit.haste or 1))
             local allies = living(battle.heroes)
             local lowest = allies[1]
             for _, a in ipairs(allies) do
@@ -256,7 +260,9 @@ function G.Step(state, seconds)
                     end
                 end
                 local talent = state.heroes[target.id].talents
-                local amount = enemy.damage * (talent.guard and 0.75 or 1)
+                local amount = enemy.damage
+                    * (talent.guard and 0.75 or 1)
+                    * (1 - (target.mitigation or 0))
                 if talent.guard then
                     G.Emit(state, "defense")
                 end

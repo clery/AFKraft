@@ -444,7 +444,8 @@ test("Talent icons preserve choices and scroll through expanded trees", function
     W.UI:SetTab("talents")
     assertTrue(trees == W.UI.talentTrees)
     assertTrue(node == tree.buttons.cleave)
-    assertEquals(0, tree.scroll:GetVerticalScroll())
+    local _, restoredMaximum = tree.slider:GetMinMaxValues()
+    assertEquals(restoredMaximum, tree.scroll:GetVerticalScroll())
 end)
 
 test("Adventure nameplates follow formations and enemies enter from the right", function()
@@ -499,4 +500,34 @@ test("Adventure nameplates follow formations and enemies enter from the right", 
     W.UI:ApplyMode()
     assertTrue(enemy.name:IsShown())
     assertTrue(front.hp:IsShown())
+end)
+
+test("Talent trees change with class and keep class selections independent", function()
+    local W = WoWIdle
+    W.Initialize()
+    local state = W.Game.New(W.Client.Now())
+    W.Game.AddHero(state, "WARRIOR")
+    W.Game.AddHero(state, "MAGE")
+    W.state, W.UI.selected = state, 1
+    W.UI.frame:Show()
+    W.UI:SetTab("talents")
+    local tree = W.UI.talentTrees.trees[1]
+    local warrior = tree.buttons.warrior_1_4
+    warrior:GetScript("OnClick")(warrior)
+    W.UI.selected = 2
+    W.UI:Refresh()
+    assertEquals("Arcane", tree.title:GetText())
+    assertFalse(warrior:IsShown())
+    local mage = tree.buttons.mage_1_1
+    assertTrue(mage:IsShown())
+    assertEquals("Arcane Power", mage.label:GetText())
+    mage:GetScript("OnClick")(mage)
+    assertTrue(state.heroes[2].talents.mage_1_1)
+    assertTrue(state.heroes[1].talents.warrior_1_4)
+    assertFalse(state.heroes[2].talents.warrior_1_4 == true)
+    W.UI.selected = 1
+    W.UI:Refresh()
+    assertEquals("Arms", tree.title:GetText())
+    assertTrue(warrior:IsShown())
+    assertFalse(mage:IsShown())
 end)

@@ -56,6 +56,7 @@ local function drawNode(tree, talent, hero, index)
         U.Rect(b, 22, 34, 28, 16, { 0, 0, 0 }, 0.95, "OVERLAY")
         b.rank = U.SingleLine(U.Text(b, "", 19, 33, 12, T.green), 32, 18, "CENTER")
         b.rank:SetDrawLayer("OVERLAY", 7)
+        b.label = U.SingleLine(U.Text(b, "", -48, 51, 11, T.text), 140, 18, "CENTER")
         b:SetScript("OnHide", function(self)
             if GameTooltip:IsOwned(self) then
                 GameTooltip:Hide()
@@ -67,10 +68,11 @@ local function drawNode(tree, talent, hero, index)
     local available = G.Points(hero) > 0
     local color = learned and T.gold or available and T.green or T.muted
     b:ClearAllPoints()
-    b:SetPoint("TOPLEFT", 30 + (talent.column - 1) * 82, -16 - (talent.row - 1) * 82)
+    b:SetPoint("TOPLEFT", 64 + (talent.column - 2) * 158, -16 - (talent.row - 1) * 82)
     b:SetBackdropBorderColor(unpack(color))
     b.icon:SetDesaturated(not learned and not available)
     b.icon:SetAlpha((learned or available) and 1 or 0.45)
+    b.label:SetText(talent.name)
     b.rank:SetText(learned and "1/1" or "0/1")
     b.rank:SetTextColor(unpack(color))
     b:SetScript("OnClick", function()
@@ -108,13 +110,14 @@ function P.Draw(ui, parent, hero, index)
         end
         ui.talentTrees = frame
     end
+    local talents = G.TalentList(hero)
     ui.talentTrees:Show()
     for path, tree in ipairs(ui.talentTrees.trees) do
         local spent, count, rows = 0, 0, 1
         for _, b in pairs(tree.buttons) do
             b:Hide()
         end
-        for _, talent in ipairs(C.talents) do
+        for _, talent in ipairs(talents) do
             if talent.path == path then
                 count = count + 1
                 spent = spent + (hero.talents[talent.id] and 1 or 0)
