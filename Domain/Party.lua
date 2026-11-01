@@ -307,6 +307,34 @@ function G.Configure(state, index, key, value)
     return true
 end
 
+function G.CanTalent(hero, talent)
+    local previous, peers, nextRow = false, 0, false
+    for _, node in ipairs(G.TalentList(hero)) do
+        if node.path == talent.path and hero.talents[node.id] then
+            if node.row == talent.row - 1 then
+                previous = true
+            elseif node.row == talent.row then
+                peers = peers + 1
+            elseif node.row == talent.row + 1 then
+                nextRow = true
+            end
+        end
+    end
+    if hero.talents[talent.id] then
+        if peers == 1 and nextRow then
+            return false, "Unlearn talents in the next row first."
+        end
+        return true
+    end
+    if talent.row > 1 and not previous then
+        return false, "Spend at least one point in the previous row of this specialization first."
+    end
+    if G.Points(hero) < 1 then
+        return false, "Gain more idle levels to earn talent points."
+    end
+    return true
+end
+
 function G.Talent(state, index, id)
     local hero = state.heroes[index]
     if not hero then
@@ -317,13 +345,14 @@ function G.Talent(state, index, id)
     if not C.talentByClassID[hero.class][id] then
         return false
     end
+    local allowed, reason = G.CanTalent(hero, C.talentByClassID[hero.class][id])
+    if not allowed then
+        return false, reason
+    end
     if hero.talents[id] then
         hero.talents[id] = nil
         G.RefreshHero(state, index)
         return true
-    end
-    if G.Points(hero) < 1 then
-        return false, "Gain more idle levels to earn talent points."
     end
     hero.talents[id] = true
     state.guide.talent = true

@@ -65,7 +65,7 @@ local function drawNode(tree, talent, hero, index)
         tree.buttons[talent.id] = b
     end
     local learned = hero.talents[talent.id]
-    local available = G.Points(hero) > 0
+    local available, reason = G.CanTalent(hero, talent)
     local color = learned and T.gold or available and T.green or T.muted
     b:ClearAllPoints()
     b:SetPoint("TOPLEFT", 64 + (talent.column - 2) * 158, -16 - (talent.row - 1) * 82)
@@ -91,7 +91,8 @@ local function drawNode(tree, talent, hero, index)
             .. talent.text
             .. "\n\n"
             .. (
-                learned and "Click to unlearn and recover the point."
+                not available and reason
+                or learned and "Click to unlearn and recover the point."
                 or available and "Click to spend one talent point."
                 or "Gain more idle levels to earn talent points."
             )
