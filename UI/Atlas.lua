@@ -18,10 +18,7 @@ local function describe(self, zone)
             .. "  ·  Frontier "
             .. zone.level
             .. "  ·  "
-            .. (
-                G.IsUnlocked(W.state, zone) and "Click the region or its marker to travel."
-                or unlockText(zone)
-            )
+            .. (G.IsUnlocked(W.state, zone) and "Click the region to travel." or unlockText(zone))
     )
     self.action.text:SetText(
         W.state.zone == zone.id and "Current destination" or "Travel to " .. zone.name
@@ -34,6 +31,19 @@ local function travel(self, zone)
         describe(self, zone)
         W.Notify("Your company is traveling through " .. zone.name .. ".")
     end
+end
+
+local function zoneTooltip(map, zone)
+    GameTooltip:SetOwner(map, "ANCHOR_CURSOR")
+    GameTooltip:SetText(zone.name, unpack(T.gold))
+    GameTooltip:AddLine(C.materials[zone.material] .. " · Frontier " .. zone.level, 0.8, 0.8, 0.7)
+    GameTooltip:AddLine(
+        G.IsUnlocked(W.state, zone) and "Click to travel" or unlockText(zone),
+        0.8,
+        0.8,
+        0.7
+    )
+    GameTooltip:Show()
 end
 
 local function cursorPosition(map)
@@ -106,15 +116,27 @@ local function createMap(self, parent, id, name, x)
         end
         frame.elapsed = 0
         local nx, ny = cursorPosition(frame)
-        frame.hovered = A.ZoneAtPosition(id, nx, ny)
+        local zone = A.ZoneAtPosition(id, nx, ny)
         highlight(frame, nx, ny)
-        if frame.hovered then
-            describe(self, frame.hovered)
+        if zone ~= frame.hovered then
+            frame.hovered = zone
+            if zone then
+                describe(self, zone)
+                zoneTooltip(frame, zone)
+            elseif GameTooltip:IsOwned(frame) then
+                GameTooltip:Hide()
+            end
         end
     end)
-    map:SetScript("OnLeave", function()
+    local function clearHover()
+        map.hovered = nil
         map.highlight:Hide()
-    end)
+        if GameTooltip:IsOwned(map) then
+            GameTooltip:Hide()
+        end
+    end
+    map:SetScript("OnLeave", clearHover)
+    map:SetScript("OnHide", clearHover)
     map:SetScript("OnMouseUp", function(_, button)
         if button == "LeftButton" then
             local nx, ny = cursorPosition(map)
@@ -159,7 +181,7 @@ local function updatePins(self, map)
     for _, zone in ipairs(C.zones) do
         local x, y = A.ZonePosition(zone.id, map.id)
         local pin = map.pins[zone.id]
-        if x and y then
+        if x and y and W.AtlasPinDebug and W.AtlasPinDebug.enabled then
             if not pin then
                 pin = CreateFrame("Button", nil, map)
                 map.pins[zone.id] = pin
@@ -214,7 +236,7 @@ function Atlas.Draw(ui)
         U.Text(self.frame, "Choose your next horizon", 0, 0, 24, T.gold)
         U.Text(
             self.frame,
-            "Travel at any time. Marked regions are the destinations in your company’s current adventure.",
+            "Hover a destination to inspect it. Click an unlocked region to travel at any time.",
             0,
             39,
             13,
@@ -241,10 +263,4 @@ function Atlas.Draw(ui)
     local step, _, destination = W.Panels.GuideStep(W.state)
     local guided = not W.state.guide.dismissed and step == 4
     describe(self, guided and destination or self.focus)
-    ui.guideTravelTarget = nil
-    if guided then
-        for _, map in ipairs(self.maps) do
-            ui.guideTravelTarget = ui.guideTravelTarget or map.pins[destination.id]
-        end
-    end
 end

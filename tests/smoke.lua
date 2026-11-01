@@ -210,7 +210,7 @@ test("Every destination has a screenshot backdrop and missing assets fall back s
 end)
 
 test(
-    "Continent markers travel during combat and locked destinations preserve the encounter",
+    "Continent regions travel during combat and locked destinations preserve the encounter",
     function()
         local W = WoWIdle
         local state = W.Game.New(W.Client.Now())
@@ -222,28 +222,30 @@ test(
         assertFalse(W.UI.scene.frame:IsShown())
         assertFalse(W.UI.cards[1]:IsShown())
         local maps = W.UI.atlas.maps
-        local durotar, winterspring, count
-        count = 0
-        for _, map in ipairs(maps) do
-            for id, pin in pairs(map.pins) do
-                if pin:IsShown() then
-                    count = count + 1
-                end
-                if id == "durotar" then
-                    durotar = pin
-                end
-                if id == "winterspring" then
-                    winterspring = pin
-                end
+        local map = maps[1]
+        for _, continent in ipairs(maps) do
+            for _, pin in pairs(continent.pins) do
+                assertFalse(pin:IsShown())
             end
         end
-        assertEquals(12, count)
-        assertNotNil(durotar)
-        assertNotNil(winterspring)
+        local original = GetCursorPosition
+        local function click(zoneID)
+            local x, y = W.Client.ZonePosition(zoneID, map.id)
+            GetCursorPosition = function()
+                local scale = map:GetEffectiveScale()
+                return (map:GetLeft() + x * map:GetWidth()) * scale,
+                    (map:GetTop() - y * map:GetHeight()) * scale
+            end
+            map:GetScript("OnMouseUp")(map, "LeftButton")
+        end
         local encounter = state.battle
-        winterspring:GetScript("OnClick")(winterspring)
-        assertEquals(encounter, state.battle)
-        durotar:GetScript("OnClick")(durotar)
+        local ok, message = pcall(function()
+            click("winterspring")
+            assertEquals(encounter, state.battle)
+            click("durotar")
+        end)
+        GetCursorPosition = original
+        assertTrue(ok, message)
         assertEquals("durotar", state.zone)
         assertTrue(state.battle == nil)
         assertEquals(0, state.gold)
@@ -252,13 +254,13 @@ test(
     end
 )
 
-test("Clicking painted regions away from markers selects destinations at UI scale", function()
+test("Hovering and clicking painted regions uses tooltips and travel at UI scale", function()
     local W = WoWIdle
     W.state = W.Game.New(W.Client.Now())
     W.Game.AddHero(W.state, "WARRIOR")
     W.UI:SetTab("atlas")
     local map = W.UI.atlas.maps[1]
-    local original = GetCursorPosition
+    local original, mouseOver = GetCursorPosition, map.IsMouseOver
     local x, y = W.Client.ZonePosition("durotar", "kalimdor")
     local ok, message = pcall(function()
         GetCursorPosition = function()
@@ -266,14 +268,27 @@ test("Clicking painted regions away from markers selects destinations at UI scal
             return (map:GetLeft() + (x + 0.018) * map:GetWidth()) * scale,
                 (map:GetTop() - (y + 0.020) * map:GetHeight()) * scale
         end
+        map.IsMouseOver = function()
+            return true
+        end
+        map:GetScript("OnUpdate")(map, 0.05)
+        assertEquals("durotar", map.hovered.id)
+        assertTrue(GameTooltip:IsOwned(map))
+        assertTrue(GameTooltip:IsShown())
+        map:GetScript("OnLeave")(map)
+        assertTrue(map.hovered == nil)
+        assertFalse(GameTooltip:IsShown())
+        map:GetScript("OnUpdate")(map, 0.05)
+        assertTrue(GameTooltip:IsShown())
         map:GetScript("OnMouseUp")(map, "RightButton")
         assertEquals("elwynn", W.state.zone)
         map:GetScript("OnMouseUp")(map, "LeftButton")
         assertEquals("durotar", W.state.zone)
     end)
-    GetCursorPosition = original
+    GetCursorPosition, map.IsMouseOver = original, mouseOver
     assertTrue(ok, message)
     W.UI:SetTab("adventure")
+    assertFalse(GameTooltip:IsShown())
 end)
 
 test("Defeated models play death and damage text rises with a frame-rate fade", function()
