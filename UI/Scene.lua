@@ -4,13 +4,49 @@ local Scene = {}
 W.Scene = Scene
 
 local function baseAnimation(unit)
+    if unit.celebrateUntil and GetTime() < unit.celebrateUntil then
+        return W.Client.animations.cheer
+    end
     return (unit.moving or unit.travelling) and 5 or 0
+end
+
+-- A critically damped spring preserves velocity when quarter-second targets
+-- change. Unlike chasing at extra speed, it never catches up and waits for a tick.
+local function smoothCoordinate(current, velocity, target, elapsed)
+    if math.abs(current - target) < 0.001 and math.abs(velocity) < 0.01 then
+        return target, 0
+    end
+    local frequency = 14
+    local change = current - target
+    local decay = math.exp(-frequency * elapsed)
+    local carry = (velocity + frequency * change) * elapsed
+    return target + (change + carry) * decay, (velocity - frequency * carry) * decay
+end
+
+function Scene.MoveUnit(unit, elapsed)
+    unit.x, unit.velocityX = smoothCoordinate(unit.x, unit.velocityX or 0, unit.targetX, elapsed)
+    unit.y, unit.velocityY = smoothCoordinate(unit.y, unit.velocityY or 0, unit.targetY, elapsed)
+    local dx, dy = unit.targetX - unit.x, unit.targetY - unit.y
+    return dx * dx + dy * dy > 0.04 or math.abs(unit.velocityX) + math.abs(unit.velocityY) > 0.5
+end
+
+local function modelAlpha(unit, now)
+    local entrance = math.min(1, math.max(0, (now - (unit.appeared or now - 1)) / 0.35))
+    local death = unit.dead
+            and unit.defeatedAt
+            and 1 - math.min(0.7, math.max(0, now - unit.defeatedAt - 1.5) * 0.7)
+        or 1
+    return unit.modelReady and entrance * death or 0
 end
 
 local function modelLoaded(unit, enemy)
     local id = unit.model:GetModelFileID()
+    local wasReady = unit.modelReady
     unit.modelReady = type(id) == "number" and id > 0
     if unit.modelReady then
+        if not wasReady then
+            unit.appeared = GetTime()
+        end
         pcall(W.Client.FrameModel, unit.model, enemy, unit.modelSpec)
         W.Client.AnimateModel(
             unit.model,
@@ -65,6 +101,7 @@ function Scene.Create(parent)
     self.nameplates = CreateFrame("Frame", nil, content)
     self.nameplates:SetAllPoints(content)
     self.nameplates:SetFrameLevel(content:GetFrameLevel() + 200)
+    self.effects = W.CombatEffects.Create(content)
     self.units = {}
     self.plateOrder = {}
     for i = 1, 8 do
@@ -123,6 +160,9 @@ function Scene.Create(parent)
 end
 
 function Scene:Layout(compact, management)
+    if self.compact ~= compact or self.management ~= management then
+        self.effects:Clear()
+    end
     self.compact, self.management = compact, management
     local f = self.frame
     f:ClearAllPoints()
@@ -154,10 +194,14 @@ end
 function Scene:Refresh(s)
     local z = C.zoneByID[s.zone]
     if self.renderState ~= s or self.zone ~= s.zone then
+        self.effects:Clear()
         self.lastBattle = nil
         self.renderState, self.zone = s, s.zone
     end
     local freshBattle = s.battle and s.battle ~= self.lastBattle
+    if freshBattle then
+        self.effects:Clear()
+    end
     if s.battle then
         self.lastBattle = s.battle
     end
@@ -189,12 +233,18 @@ function Scene:Refresh(s)
             if freshBattle then
                 unit.dead, unit.deathTime, unit.animTime = false, nil, nil
                 unit.moving = nil
+                unit.recoilAt, unit.actionAt, unit.celebrateUntil = nil, nil, nil
+                if i > 5 then
+                    unit.velocityX, unit.velocityY = 0, 0
+                    unit.appeared = GetTime()
+                end
                 if unit.modelReady then
                     W.Client.AnimateModel(unit.model, 0)
                 end
             end
             local class = hero and C.classByID[hero.class]
             local combatant = hero and b and b.heroes[i] or enemy
+            unit.class = hero and hero.class
             unit.combatant = combatant
             unit.melee = combatant and combatant.melee or false
             unit.travelling = hero ~= nil and self.travelling
@@ -215,6 +265,7 @@ function Scene:Refresh(s)
             if unit.modelKey ~= key then
                 unit.modelReady = false
                 unit.modelKey = key
+                unit.appeared = GetTime()
                 -- Set before ConfigureModel: loading may finish synchronously or later.
                 unit.modelSpec = spec
                 unit.floatAnimation:Stop()
@@ -245,16 +296,18 @@ function Scene:Refresh(s)
             unit.hp:SetValue(maxHP > 0 and math.max(0, hp / maxHP) or 0)
             if hp <= 0 and not unit.dead then
                 unit.dead, unit.deathTime = true, GetTime()
+                unit.defeatedAt = unit.deathTime
+                unit.velocityX, unit.velocityY = 0, 0
                 unit.animTime, unit.pendingAnimation = nil, nil
                 if unit.modelReady then
                     W.Client.AnimateModel(unit.model, 1)
                 end
             elseif hp > 0 and unit.dead then
-                unit.dead, unit.deathTime = false, nil
+                unit.dead, unit.deathTime, unit.defeatedAt = false, nil, nil
                 W.Client.AnimateModel(unit.model, 0)
             end
             unit.model:SetShown(true)
-            unit.model:SetAlpha(unit.modelReady and 1 or 0)
+            unit.model:SetAlpha(modelAlpha(unit, GetTime()))
             unit.sigil:SetShown(not unit.modelReady and hp > 0)
             unit.sigil:SetTexture(
                 "Interface\\Icons\\" .. (class and class.icon or "Ability_Creature_Cursed_02")
@@ -266,14 +319,19 @@ function Scene:Refresh(s)
     if s.events then
         if not self.management then
             for _, event in ipairs(s.events) do
+                self.effects:Event(self.units, s, event)
                 if event.kind == "hit" or event.kind == "heal" then
                     local unit = self.units[event.target + (event.enemy and 5 or 0)]
                     -- Basic swings and enemy attacks also animate, even with combat text off.
                     if event.kind == "hit" then
                         local source = self.units[(event.source or 0) + (event.enemy and 0 or 5)]
                         if source and not source.dead then
-                            source.pendingAnimation = source.melee and 16 or 53
+                            source.pendingAnimation =
+                                W.Client.AttackAnimation(source.class, source.melee)
                         end
+                    end
+                    if unit and event.kind == "hit" and not unit.dead then
+                        unit.recoilAt = GetTime()
                     end
                     if unit and unit:IsShown() and s.settings.combatText then
                         unit.floating:SetText((event.kind == "heal" and "+" or "-") .. event.amount)
@@ -284,6 +342,14 @@ function Scene:Refresh(s)
                         unit.floating:SetAlpha(1)
                         unit.floatAnimation:Play()
                     end
+                elseif event.kind == "victory" then
+                    for i = 1, 5 do
+                        local unit = self.units[i]
+                        if unit:IsShown() and not unit.dead then
+                            unit.pendingAnimation = W.Client.animations.cheer
+                            unit.celebrateUntil = GetTime() + 1.6
+                        end
+                    end
                 elseif event.kind == "levelup" and event.target then
                     local unit = self.units[event.target]
                     if unit and event.target <= 5 and unit:IsVisible() then
@@ -292,8 +358,8 @@ function Scene:Refresh(s)
                 elseif event.kind == "cast" then
                     local unit = self.units[event.source]
                     if unit and not unit.dead then
-                        unit.pendingAnimation = (event.action == "heal" or not unit.melee) and 53
-                            or 16
+                        unit.pendingAnimation =
+                            W.Client.AttackAnimation(unit.class, unit.melee, event.action)
                     end
                 end
             end
@@ -362,15 +428,16 @@ function Scene:Animate()
             unit.targetID, unit.targetEnemy = unit.combatant.targetID, unit.combatant.targetEnemy
         end
         if unit:IsShown() and unit.targetX then
-            local dx, dy = unit.targetX - unit.x, unit.targetY - unit.y
-            local distance = math.sqrt(dx * dx + dy * dy)
-            local moving = not unit.dead
-                and (distance > 0.5 or (unit.combatant and unit.combatant.moving))
-            if not unit.dead and distance > 0.5 then
-                local step = math.min(1, elapsed * P.speed * 1.5 / distance)
-                unit.x, unit.y = unit.x + dx * step, unit.y + dy * step
-                unit:ClearAllPoints()
-                unit:SetPoint("TOPLEFT", unit.x, -unit.y)
+            local moving = false
+            if not unit.dead then
+                local x, y = unit.x, unit.y
+                moving = Scene.MoveUnit(unit, elapsed)
+                    or (not self.travelling and unit.combatant and unit.combatant.moving)
+                    or false
+                if x ~= unit.x or y ~= unit.y then
+                    unit:ClearAllPoints()
+                    unit:SetPoint("TOPLEFT", unit.x, -unit.y)
+                end
             end
             if moving ~= unit.moving or unit.travelAnimation ~= unit.travelling then
                 unit.moving, unit.travelAnimation = moving, unit.travelling
@@ -382,18 +449,50 @@ function Scene:Animate()
         end
         if unit.pendingAnimation and not unit.moving and unit.modelReady and not unit.dead then
             W.Client.AnimateModel(unit.model, unit.pendingAnimation)
+            if unit.pendingAnimation ~= W.Client.animations.cheer then
+                unit.actionAt = now
+            end
             unit.pendingAnimation, unit.animTime = nil, now
+        end
+        if unit.celebrateUntil and now >= unit.celebrateUntil then
+            unit.celebrateUntil, unit.animTime = nil, nil
+            if unit.pendingAnimation == W.Client.animations.cheer then
+                unit.pendingAnimation = nil
+            end
+            if not unit.dead then
+                W.Client.AnimateModel(unit.model, baseAnimation(unit))
+            end
+        end
+        unit.model:SetAlpha(modelAlpha(unit, now))
+        -- Reactions offset only the viewport, never the simulation coordinates.
+        local offset = 0
+        if not unit.dead and unit:IsShown() then
+            local actionAge = unit.actionAt and now - unit.actionAt or 1
+            local recoilAge = unit.recoilAt and now - unit.recoilAt or 1
+            if actionAge < 0.4 then
+                offset = math.sin(actionAge / 0.4 * math.pi) * (unit.melee and 9 or -3)
+            end
+            if recoilAge < 0.3 then
+                offset = offset - math.sin(recoilAge / 0.3 * math.pi) * 6
+            end
+            offset = offset * (unit.index <= 5 and 1 or -1)
+        end
+        if offset ~= unit.visualOffset then
+            unit.viewport:ClearAllPoints()
+            unit.viewport:SetPoint("BOTTOM", unit, "BOTTOM", offset, 0)
+            unit.visualOffset = offset
         end
         if unit.deathTime and now - unit.deathTime >= 1.5 then
             W.Client.AnimateModel(unit.model, 6)
             unit.deathTime = nil
         end
-        if unit.animTime and now - unit.animTime > 1 then
+        if unit.animTime and now - unit.animTime > (unit.celebrateUntil and 1.6 or 1) then
             if not unit.dead then
                 W.Client.AnimateModel(unit.model, baseAnimation(unit))
             end
             unit.animTime = nil
         end
     end
+    self.effects:Animate(now)
     self:PlaceNameplates()
 end

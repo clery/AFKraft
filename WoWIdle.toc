@@ -42,6 +42,7 @@ UI\Widgets.lua
 UI\AdventureBar.lua
 UI\Scenery.lua
 UI\Backdrop.lua
+UI\CombatEffects.lua
 UI\Scene.lua
 UI\PartyPanel.lua
 UI\Atlas.lua

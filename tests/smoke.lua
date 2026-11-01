@@ -512,6 +512,11 @@ test("Adventure models follow combat positions with roomy transparent viewports"
         end
     end
     assertTrue(enemy.x < start)
+    -- The spring deliberately trails moving targets; it settles without snapping.
+    for _ = 1, 30 do
+        scene.lastAnimation = GetTime() - 0.05
+        scene:Animate()
+    end
     assertEquals(state.battle.enemies[1], enemy.combatant)
     assertTrue(math.abs(enemy.x - enemy.combatant.x) < 1)
     assertEquals(enemy.combatant.targetID, enemy.targetID)
@@ -572,4 +577,195 @@ test("Talent trees change with class and keep class selections independent", fun
     assertEquals("Arms", tree.title:GetText())
     assertTrue(warrior:IsShown())
     assertFalse(mage:IsShown())
+end)
+
+test("Class effects follow recipients, stay bounded and clear across scene transitions", function()
+    local W = WoWIdle
+    local state = W.Game.New(W.Client.Now())
+    for _, class in ipairs({ "MAGE", "HUNTER", "PRIEST" }) do
+        W.Game.AddHero(state, class)
+    end
+    W.state = state
+    W.Game.StartBattle(state)
+    W.UI:SetTab("adventure")
+    local scene = W.UI.scene
+    scene:Refresh(state)
+    scene.effects:Clear()
+    state.settings.combatText = false
+    state.events = {
+        { kind = "hit", source = 1, target = 1, enemy = true, amount = 10 },
+        { kind = "hit", source = 2, target = 2, enemy = true, amount = 10 },
+        { kind = "heal", source = 3, target = 1, amount = 10 },
+    }
+    scene:Refresh(state)
+    local pool = scene.effects.pool
+    assertEquals("bolt", pool[1].kind)
+    assertEquals("arrow", pool[2].kind)
+    assertEquals("shield", pool[3].kind)
+    assertEquals(scene.units[1], pool[3].target)
+    for _, effect in ipairs(pool) do
+        if effect.active then
+            effect.started = GetTime() - effect.duration * 0.5
+        end
+    end
+    scene.effects:Animate(GetTime())
+    assertTrue(pool[3].frame:GetAlpha() > 0.9)
+    for _ = 1, 60 do
+        scene.effects:Play(scene.units[1], scene.units[6], "bolt", { 0.4, 0.85, 1 })
+    end
+    assertEquals(32, #pool)
+    scene.effects:Animate(GetTime() + 2)
+    for _, effect in ipairs(pool) do
+        assertFalse(effect.active)
+        assertFalse(effect.frame:IsShown())
+    end
+    scene.effects:Play(scene.units[3], scene.units[1], "shield", { 1, 0.9, 0.55 })
+    assertEquals(32, #pool)
+    scene:Layout(true, false)
+    assertFalse(pool[1].active)
+    state.settings.combatText = true
+end)
+
+test("Hunter poses fall back without requiring bow animations on companion models", function()
+    local W = WoWIdle
+    assertEquals(46, W.Client.AttackAnimation("HUNTER", false))
+    assertEquals(53, W.Client.AttackAnimation("HUNTER", false, "heal"))
+    assertEquals(16, W.Client.AttackAnimation("WARRIOR", true))
+    local played
+    local model = {
+        HasAnimation = function(_, id)
+            return id == 53
+        end,
+        SetAnimation = function(_, id)
+            played = id
+        end,
+    }
+    assertTrue(W.Client.AnimateModel(model, 46))
+    assertEquals(53, played)
+end)
+
+test(
+    "Movement keeps velocity across simulation ticks and converges at different frame rates",
+    function()
+        local move = WoWIdle.Scene.MoveUnit
+        local slow = { x = 0, y = 100, targetX = 80, targetY = 110 }
+        local fast = { x = 0, y = 100, targetX = 80, targetY = 110 }
+        for _ = 1, 15 do
+            move(slow, 1 / 60)
+        end
+        for _ = 1, 30 do
+            move(fast, 1 / 120)
+        end
+        assertTrue(slow.x > 0 and slow.x < 80)
+        assertTrue(slow.velocityX > 0)
+        assertTrue(math.abs(slow.x - fast.x) < 0.0001)
+        assertTrue(math.abs(slow.velocityX - fast.velocityX) < 0.0001)
+        local x, velocity = slow.x, slow.velocityX
+        slow.targetX = 160
+        move(slow, 0)
+        assertEquals(x, slow.x)
+        assertEquals(velocity, slow.velocityX)
+        move(slow, 1 / 120)
+        assertTrue(slow.x > x and slow.x - x < 5)
+        assertTrue(slow.velocityX > 0)
+        for _ = 1, 240 do
+            move(slow, 1 / 120)
+            assertTrue(slow.x <= 160)
+        end
+        assertTrue(math.abs(slow.x - 160) < 0.01)
+        assertTrue(math.abs(slow.y - 110) < 0.01)
+        x = slow.x
+        move(slow, 0)
+        assertEquals(x, slow.x)
+    end
+)
+
+test("New combat effects reuse projectiles for impacts and celebrate living heroes", function()
+    local W = WoWIdle
+    local state = W.Game.New(W.Client.Now())
+    for _, class in ipairs({ "WARRIOR", "SHAMAN", "DRUID", "WARLOCK" }) do
+        W.Game.AddHero(state, class)
+    end
+    W.state = state
+    W.Game.StartBattle(state)
+    W.UI:SetTab("adventure")
+    local scene = W.UI.scene
+    scene:Refresh(state)
+    local effects = scene.effects
+    effects:Clear()
+    local kinds = { "slash", "lightning", "leaf", "shadow" }
+    for i, kind in ipairs(kinds) do
+        effects:Event(scene.units, state, { kind = "hit", source = i, target = 1, enemy = true })
+        assertEquals(kind, effects.pool[i].kind)
+    end
+    local leaf = effects.pool[3]
+    leaf.started = GetTime() - leaf.duration - 0.1
+    local count = #effects.pool
+    effects:Animate(GetTime())
+    assertEquals("impact", leaf.kind)
+    assertTrue(leaf.active)
+    assertEquals(count, #effects.pool)
+    effects:Animate(GetTime() + 3)
+    assertFalse(leaf.active)
+    effects:Clear()
+    scene.units[1].dead = true
+    effects:Event(scene.units, state, { kind = "victory" })
+    local active = 0
+    for _, effect in ipairs(effects.pool) do
+        if effect.active then
+            active = active + 1
+            assertEquals("sparkle", effect.kind)
+            assertTrue(effect.target ~= scene.units[1])
+        end
+    end
+    assertEquals(3, active)
+    state.events = { { kind = "cast", source = 2, action = "special" } }
+    scene:Refresh(state)
+    local burst
+    for _, effect in ipairs(effects.pool) do
+        burst = burst or (effect.active and effect.kind == "burst")
+    end
+    assertTrue(burst)
+    effects:Clear()
+end)
+
+test("Model reactions leave encounter coordinates alone and celebrations return to idle", function()
+    local W = WoWIdle
+    local state = W.Game.New(W.Client.Now())
+    W.Game.AddHero(state, "WARRIOR")
+    W.state = state
+    W.Game.StartBattle(state)
+    W.UI:SetTab("adventure")
+    local scene = W.UI.scene
+    scene:Refresh(state)
+    local unit = scene.units[1]
+    unit.x, unit.y = unit.combatant.x, unit.combatant.y
+    unit.velocityX, unit.velocityY = 0, 0
+    unit.modelReady = true
+    unit.appeared = GetTime() - 0.175
+    state.events = { { kind = "hit", source = 1, target = 1, amount = 1, enemy = false } }
+    scene:Refresh(state)
+    unit.recoilAt, unit.actionAt = GetTime() - 0.15, nil
+    local x, y = unit.combatant.x, unit.combatant.y
+    scene:Animate()
+    assertTrue(unit.visualOffset < -5)
+    assertEquals(x, unit.x)
+    assertEquals(y, unit.y)
+    assertEquals(x, unit.combatant.x)
+    assertTrue(unit.model:GetAlpha() > 0.4 and unit.model:GetAlpha() < 0.6)
+    state.events = { { kind = "victory" } }
+    scene:Refresh(state)
+    assertTrue(unit.celebrateUntil ~= nil)
+    unit.celebrateUntil = GetTime() - 1
+    scene:Animate()
+    assertEquals(nil, unit.celebrateUntil)
+    assertEquals(nil, unit.pendingAnimation)
+    assertEquals(nil, unit.animTime)
+    unit.combatant.hp = 0
+    scene:Refresh(state)
+    unit.defeatedAt = GetTime() - 2
+    unit.appeared = GetTime() - 3
+    scene:Animate()
+    assertTrue(unit.model:GetAlpha() > 0.3 and unit.model:GetAlpha() < 0.8)
+    assertEquals(0, unit.visualOffset)
 end)

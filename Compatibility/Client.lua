@@ -4,6 +4,7 @@ local A = {
     xpSequence = 0,
 }
 W.Client = A
+A.animations = { cheer = 68 }
 local version = GetBuildInfo and GetBuildInfo() or ""
 A.flavor = version:match("^1%.60%.") and "forever" or "retail"
 A.profiles = {
@@ -102,8 +103,19 @@ function A.FrameModel(model, enemy, spec)
     model:SetFacing(enemy and -1.05 or 1.05)
 end
 
+-- AnimationData sequences; individual creature models may lack the bow pose.
+function A.AttackAnimation(class, melee, action)
+    if action == "heal" then
+        return 53
+    end
+    return class == "HUNTER" and not melee and 46 or melee and 16 or 53
+end
+
 function A.AnimateModel(model, animation)
     return pcall(function()
+        if animation == 46 and model.HasAnimation and not model:HasAnimation(animation) then
+            animation = 53
+        end
         if not model.HasAnimation or model:HasAnimation(animation) then
             model:SetAnimation(animation)
         end
