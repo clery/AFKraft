@@ -40,7 +40,7 @@ function P.Target(state, battle, enemy)
             local hero = state.heroes[unit.id]
             local talents = hero
                 and (W.Game.TalentEffects and W.Game.TalentEffects(hero) or hero.talents)
-            if talents and talents.guard then
+            if talents and (talents.guard or talents.soulLink) then
                 return unit
             end
             if unit.x > first.x then

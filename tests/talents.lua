@@ -101,7 +101,8 @@ case("Legacy builds retain all nine selections in every class", function()
         assert(G.Points(loaded.heroes[1]) == 15)
         local effects = G.TalentEffects(h)
         for _, id in ipairs(legacy) do
-            assert(h.talents[id] and effects[id])
+            local node = C.talentByClassID[class.id][C.legacyTalentIDs[class.id][id]]
+            assert(h.talents[id] and node and effects[node.effect])
         end
         for i = #C.talentsByClass[class.id], 1, -1 do
             local node = C.talentsByClass[class.id][i]
@@ -215,6 +216,229 @@ case("Speed and regeneration talents change live simulation ticks", function()
     G.Step(state, 0.25)
     assert(h.talents.warrior_2_3 and unit.cd < 2.75 and unit.attackCD < 2.75)
     assert(unit.hp > before)
+end)
+
+local function encounter(class, effect)
+    local state, h = hero(class)
+    for _, node in ipairs(G.TalentList(h)) do
+        if node.effect == effect then
+            h.talents[node.id] = true
+        end
+    end
+    assert(G.TalentEffects(h)[effect])
+    G.StartBattle(state)
+    local unit, enemy = state.battle.heroes[1], state.battle.enemies[1]
+    unit.x, unit.y, enemy.x, enemy.y = 600, 100, 700, 100
+    unit.hp = unit.maxHP * 0.25
+    enemy.hp, enemy.maxHP, enemy.attackCD = 100000, 100000, 100
+    unit.attackCD = 100
+    h.priority = "attack"
+    return state, h, unit, enemy
+end
+
+case(
+    "Each specialization owns a distinct signature mechanic and preserves saved node IDs",
+    function()
+        local seen, count = {}, 0
+        for _, class in ipairs(C.classes) do
+            for name, mechanic in pairs(C.classTalentMechanics[class.id]) do
+                assert(not seen[mechanic[1]])
+                seen[mechanic[1]], count = true, count + 1
+                local found
+                for _, node in ipairs(C.talentsByClass[class.id]) do
+                    if node.name == name then
+                        assert(node.effect == mechanic[1] and node.text == mechanic[2])
+                        found = true
+                    end
+                end
+                assert(found)
+            end
+        end
+        assert(count == 27)
+    end
+)
+
+case("Class strikes apply bleeds, burns, drains, and conditional damage", function()
+    for _, spec in ipairs({
+        { "WARRIOR", "wounds" },
+        { "HUNTER", "trap" },
+        { "MAGE", "ignite" },
+    }) do
+        local s, h, unit, enemy = encounter(spec[1], spec[2])
+        if spec[2] == "trap" then
+            h.priority, h.specialCount = "special", 1
+        end
+        G.Step(s, 0.25)
+        assert(enemy.dots[1] and enemy.dots[1].remaining >= 3)
+        local hp = enemy.hp
+        unit.cd, unit.attackCD = 100, 100
+        G.Step(s, 0.25)
+        assert(enemy.hp < hp)
+    end
+    for _, spec in ipairs({
+        { "HUNTER", "aim", 1.45 },
+        { "ROGUE", "opener", 2 },
+        { "PRIEST", "deathWord", 1.8 },
+        { "DRUID", "predator", 1.35 },
+    }) do
+        local s, _, unit, enemy = encounter(spec[1], spec[2])
+        if spec[2] == "deathWord" then
+            enemy.maxHP = enemy.hp * 10
+        elseif spec[2] == "predator" then
+            enemy.dots = { [1] = { damage = 0, remaining = 5, physical = true } }
+        end
+        local hp = enemy.hp
+        G.Step(s, 0.25)
+        assert(hp - enemy.hp == math.floor(unit.damage * 1.7 * spec[3]))
+    end
+    for _, spec in ipairs({ { "WARRIOR", "bloodthirst" }, { "WARLOCK", "drain" } }) do
+        local s, _, unit = encounter(spec[1], spec[2])
+        local hp = unit.hp
+        G.Step(s, 0.25)
+        assert(unit.hp > hp)
+    end
+end)
+
+case("Class basic attacks trigger pets, poison, Windfury, cooldown recovery and frost", function()
+    for _, spec in ipairs({
+        { "HUNTER", "beast" },
+        { "ROGUE", "poison" },
+        { "ROGUE", "potency" },
+        { "SHAMAN", "windfury" },
+        { "MAGE", "frost" },
+    }) do
+        local s, _, unit, enemy = encounter(spec[1], spec[2])
+        unit.cd, unit.attackCD, unit.swings = 10, 0, 2
+        local hp = enemy.hp
+        G.Step(s, 0.25)
+        local multiplier = spec[2] == "beast" and 1.25 or spec[2] == "windfury" and 2 or 1
+        assert(hp - enemy.hp == math.floor(unit.damage * multiplier))
+        if spec[2] == "poison" then
+            assert(enemy.dots[1].physical)
+        elseif spec[2] == "potency" then
+            assert(unit.cd < 9.5)
+        elseif spec[2] == "frost" then
+            assert(enemy.attackCD > 100)
+        end
+    end
+end)
+
+case("Healing talents deliver shields, group healing, faster tides and rejuvenation", function()
+    for _, spec in ipairs({
+        { "PALADIN", "holyShield" },
+        { "PRIEST", "hymn" },
+        { "SHAMAN", "tides" },
+        { "DRUID", "rejuvenation" },
+    }) do
+        local s, h, unit = encounter(spec[1], spec[2])
+        h.priority, h.healBelow = "heal", 100
+        unit.hp = 1
+        if spec[2] == "hymn" then
+            s.battle.heroes[2] = G.Copy(unit)
+            s.battle.heroes[2].id = 2
+            s.heroes[2] = G.Copy(h)
+            s.battle.heroes[2].hp = unit.maxHP * 0.8
+            s.battle.heroes[2].cd = 100
+        end
+        G.Step(s, 0.25)
+        if spec[2] == "holyShield" then
+            assert(unit.shield > 0)
+        elseif spec[2] == "hymn" then
+            assert(s.battle.heroes[2].hp > unit.maxHP * 0.8)
+        elseif spec[2] == "tides" then
+            assert(unit.cd == 4)
+        else
+            assert(unit.rejuvenation == 6)
+            local hp = unit.hp
+            G.Step(s, 0.25)
+            assert(unit.hp > hp)
+        end
+    end
+end)
+
+case("Class strikes chain, ramp, empower specials, and delay enemies", function()
+    for _, spec in ipairs({
+        { "SHAMAN", "chain" },
+        { "MAGE", "arcane" },
+        { "DRUID", "starfall" },
+        { "WARLOCK", "shadowfury" },
+    }) do
+        local s, h, unit, enemy = encounter(spec[1], spec[2])
+        if spec[2] == "chain" then
+            s.battle.enemies[2] = G.Copy(enemy)
+            s.battle.enemies[2].id = 2
+        elseif spec[2] == "starfall" or spec[2] == "shadowfury" then
+            h.priority, h.specialCount = "special", 1
+        end
+        local hp = enemy.hp
+        G.Step(s, 0.25)
+        if spec[2] == "chain" then
+            assert(s.battle.enemies[2].hp < hp)
+        elseif spec[2] == "arcane" then
+            local damage = hp - enemy.hp
+            unit.cd = 0
+            hp = enemy.hp
+            G.Step(s, 0.25)
+            assert(hp - enemy.hp > damage)
+        elseif spec[2] == "starfall" then
+            assert(unit.cd == 5 and hp - enemy.hp == math.floor(unit.damage * 0.95 * 1.4))
+        else
+            assert(enemy.attackCD > 101)
+        end
+    end
+end)
+
+case("Support strikes and Beacon heal allies without reviving fallen heroes", function()
+    for _, spec in ipairs({
+        { "PALADIN", "judgement" },
+        { "PRIEST", "atonement" },
+        { "PALADIN", "beacon" },
+    }) do
+        local s, h, unit = encounter(spec[1], spec[2])
+        s.heroes[2], s.heroes[3] = G.Copy(h), G.Copy(h)
+        local ally, fallen = G.Copy(unit), G.Copy(unit)
+        ally.id, ally.hp, ally.cd, ally.attackCD = 2, 1, 100, 100
+        fallen.id, fallen.hp = 3, 0
+        s.battle.heroes[2], s.battle.heroes[3] = ally, fallen
+        if spec[2] == "beacon" then
+            h.priority, h.healBelow = "heal", 100
+        end
+        local hp = unit.hp
+        G.Step(s, 0.25)
+        assert(ally.hp > 1 and fallen.hp == 0)
+        if spec[2] == "beacon" then
+            assert(unit.hp > hp)
+        end
+    end
+end)
+
+case("Revenge recovers cooldowns and Soul Link changes damage and targeting", function()
+    for _, spec in ipairs({ { "WARRIOR", "revenge" }, { "WARLOCK", "soulLink" } }) do
+        local s, _, unit, enemy = encounter(spec[1], spec[2])
+        unit.hp, unit.cd, unit.attackCD = unit.maxHP, 10, 100
+        enemy.attackCD = 0
+        local hp = unit.hp
+        G.Step(s, 0.25)
+        if spec[2] == "revenge" then
+            assert(unit.cd < 9)
+        else
+            assert(hp - unit.hp == math.floor(enemy.damage * 0.8 * (1 - unit.mitigation)))
+            assert(W.CombatPosition.Target(s, s.battle, true) == unit)
+        end
+    end
+end)
+
+case("Periodic damage expires, preserves fractional ticks, and survives reload", function()
+    local s, _, unit, enemy = encounter("WARRIOR", "wounds")
+    G.Step(s, 0.25)
+    unit.cd, unit.attackCD = 100, 100
+    local hp = enemy.hp
+    local total = math.floor(enemy.dots[1].damage * enemy.dots[1].remaining)
+    assert(G.Load(s, 1000))
+    for _ = 1, 17 do
+        G.Step(s, 0.25)
+    end
+    assert(not next(enemy.dots) and hp - enemy.hp == total)
 end)
 
 return cases

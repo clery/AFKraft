@@ -661,6 +661,126 @@ C.talentSpecs = {
         },
     },
 }
+-- Signature talents retain their saved node IDs while replacing shared effects.
+C.classTalentMechanics = {
+    WARRIOR = {
+        ["Mortal Wounds"] = {
+            "wounds",
+            "Strikes make the target bleed for 18% weapon damage per second for 4 seconds.",
+        },
+        ["Bloodthirst"] = {
+            "bloodthirst",
+            "Strikes restore 8% maximum health while below half health.",
+        },
+        ["Retaliation"] = {
+            "revenge",
+            "Taking a hit reduces your remaining ability cooldown by 1 second.",
+        },
+    },
+    PALADIN = {
+        ["Beacon of Light"] = {
+            "beacon",
+            "Healing an ally also restores 40% of that healing to yourself.",
+        },
+        ["Holy Shield"] = {
+            "holyShield",
+            "Healing grants the recipient an absorb shield equal to 30% of healing power.",
+        },
+        ["Judgement of Light"] = {
+            "judgement",
+            "Strikes heal the most injured living ally for 20% of damage dealt.",
+        },
+    },
+    HUNTER = {
+        ["Bestial Wrath"] = {
+            "beast",
+            "Each basic attack triggers a companion hit for 25% weapon damage.",
+        },
+        ["Careful Aim"] = { "aim", "Strikes deal 45% more damage to enemies above 80% health." },
+        ["Explosive Trap"] = {
+            "trap",
+            "Special attacks burn each target for 25% weapon damage per second for 3 seconds.",
+        },
+    },
+    ROGUE = {
+        ["Deadly Poison"] = {
+            "poison",
+            "Basic attacks poison the target for 12% weapon damage per second for 6 seconds.",
+        },
+        ["Combat Potency"] = {
+            "potency",
+            "Basic attacks reduce your remaining ability cooldown by 0.5 seconds.",
+        },
+        ["Premeditation"] = { "opener", "Your first strike each encounter deals double damage." },
+    },
+    PRIEST = {
+        ["Atonement"] = {
+            "atonement",
+            "Basic attacks and strikes restore 15% of damage dealt to the most injured living ally.",
+        },
+        ["Divine Hymn"] = {
+            "hymn",
+            "Healing also restores 25% healing power to every other living ally.",
+        },
+        ["Shadow Word Death"] = {
+            "deathWord",
+            "Strikes deal 80% more damage below 20% enemy health.",
+        },
+    },
+    SHAMAN = {
+        ["Chain Lightning"] = {
+            "chain",
+            "Strikes arc to other enemies in range for 35% weapon damage.",
+        },
+        ["Windfury"] = {
+            "windfury",
+            "Every third basic attack deals an additional 100% weapon damage.",
+        },
+        ["Tidal Waves"] = {
+            "tides",
+            "Healing has a 4 second base cooldown while the recipient remains below half health.",
+        },
+    },
+    MAGE = {
+        ["Arcane Power"] = {
+            "arcane",
+            "Each successive offensive cast gains 5% damage, up to 30% per encounter.",
+        },
+        ["Ignite"] = {
+            "ignite",
+            "Strikes burn the target for 20% of damage dealt per second for 3 seconds.",
+        },
+        ["Frostbite"] = { "frost", "Basic attacks delay the target's next attack by 0.3 seconds." },
+    },
+    WARLOCK = {
+        ["Drain Life"] = {
+            "drain",
+            "Strikes restore 30% of damage dealt as health, doubled below 35% health.",
+        },
+        ["Soul Link"] = {
+            "soulLink",
+            "Take 20% less damage while above half health; draw enemy attention.",
+        },
+        ["Shadowfury"] = {
+            "shadowfury",
+            "Special attacks delay each target's next attack by 2 seconds.",
+        },
+    },
+    DRUID = {
+        ["Starfall"] = {
+            "starfall",
+            "Special attacks deal 40% more damage and have a 5 second base cooldown.",
+        },
+        ["Predatory Strikes"] = {
+            "predator",
+            "Strikes deal 35% more damage against bleeding or poisoned enemies.",
+        },
+        ["Rejuvenation"] = {
+            "rejuvenation",
+            "Healing also restores 1% of the recipient's maximum health per second for 6 seconds.",
+        },
+    },
+}
 C.talentsByClass, C.talentByClassID, C.legacyTalentIDs = {}, {}, {}
 for _, class in ipairs(C.classes) do
     local talents, byID, legacy = {}, {}, {}
@@ -688,6 +808,15 @@ for _, class in ipairs(C.classes) do
             if definition.value == true and not legacy[effect] then
                 id = effect
             end
+            if definition.value == true and not legacy[effect] then
+                legacy[effect] = id
+            end
+            local mechanic = C.classTalentMechanics[class.id][name]
+            if mechanic then
+                effect = mechanic[1]
+                C.talentEffects[effect] = { value = true, text = mechanic[2] }
+                definition = C.talentEffects[effect]
+            end
             local talent = {
                 id = id,
                 name = name,
@@ -700,9 +829,6 @@ for _, class in ipairs(C.classes) do
                 column = (position - 1) % 2 + 2,
             }
             talents[#talents + 1], byID[id] = talent, talent
-            if definition.value == true and not legacy[effect] then
-                legacy[effect] = id
-            end
         end
     end
     C.talentsByClass[class.id], C.talentByClassID[class.id], C.legacyTalentIDs[class.id] =
