@@ -69,7 +69,7 @@ test("Starter guide can be dismissed and reopened without losing completed lesso
     s.inventory[1] = W.Game.Item(s, 1, 1, 2)
     ui:Refresh()
     assertEquals(2, W.Panels.GuideStep(s))
-    click(find(ui, "Dismiss guide"))
+    HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
     assertTrue(s.guide.dismissed)
     W.state = assert(W.Game.Load(s, W.Client.Now()))
     ui:Refresh(false)
@@ -78,7 +78,7 @@ test("Starter guide can be dismissed and reopened without losing completed lesso
     s.stats.victories = 1
     ui:Refresh(false)
     assertEquals(2, W.Panels.GuideStep(s))
-    click(find(ui, "Equip rewards"))
+    click(ui.tabs.party)
     assertEquals("party", s.ui.tab)
     assertTrue(W.Game.Equip(s, 1, 1))
     assertEquals(3, W.Panels.GuideStep(s))
@@ -105,24 +105,56 @@ test("Starter lessons skip unavailable actions and point at live controls", func
     s.heroes[1].level = 2
     assertEquals(3, W.Panels.GuideStep(s))
     ui:Refresh(false)
-    assertEquals(ui.tabs.talents, ui.guideTarget:GetParent())
+    assertEquals(ui.tabs.talents, ui.guideTarget)
     ui:SetTab("talents")
-    assertEquals(ui.talentTrees, ui.guideTarget:GetParent())
+    assertEquals(ui.talentTrees.trees[1], ui.guideTarget)
+    for path = 1, 3 do
+        assertEquals(ui.talentTrees.trees[path], ui.guideTarget)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+    end
     local talent = W.Game.TalentList(s.heroes[1])[1]
     ui.talentTrees.trees[talent.path].buttons[talent.id]:GetScript("OnClick")()
     assertTrue(s.guide.talent)
-    assertFalse(ui.guideTarget:IsShown())
+    assertTrue(ui.guideTarget == nil)
     s.heroes[1].level = 4
     ui:SetTab("adventure")
     assertEquals(2, W.Panels.GuideStep(s))
-    click(find(ui, "Equip rewards"))
+    click(ui.tabs.party)
+    ui.bagFilter = 6
+    ui:Refresh()
+    assertEquals(ui.guideInventoryTarget, ui.guideTarget)
+    click(ui.guideInventoryTarget)
     assertNotNil(ui.guideEquipTarget)
-    assertEquals(ui.guideEquipTarget, ui.guideTarget:GetParent())
+    assertEquals(ui.guideEquipTarget, ui.guideTarget)
     ui.guideEquipTarget:GetScript("OnClick")()
     assertTrue(s.guide.equipped)
     s.runBest = 4
     ui:SetTab("atlas")
     assertEquals(4, W.Panels.GuideStep(s))
+    assertEquals(ui.atlas.action, ui.guideTarget)
     assertTrue(ui.atlas.focus.level > W.Content.zoneByID[s.zone].level)
     assertTrue(W.Game.IsUnlocked(s, ui.atlas.focus))
 end)
+
+test(
+    "Native tutorial hides in compact mode and when closed, and survives ordinary refreshes",
+    function()
+        local _, s, ui = opening()
+        assertTrue(HelpTip:IsShowing(ui.guideOwner, ui.guideTip.text))
+        local info = ui.guideTip
+        ui:Refresh(false)
+        assertEquals(info, ui.guideTip)
+        ui:SetTab("talents")
+        assertEquals(1, ui.guideTree)
+        s.ui.compact = true
+        ui:ApplyMode()
+        assertTrue(ui.guideTip == nil)
+        s.ui.compact = false
+        ui:ApplyMode()
+        assertNotNil(ui.guideTip)
+        ui.frame:Hide()
+        assertTrue(ui.guideTip == nil)
+        ui.frame:Show()
+        assertNotNil(ui.guideTip)
+    end
+)

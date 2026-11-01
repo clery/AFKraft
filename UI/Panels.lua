@@ -67,99 +67,13 @@ function P.GuideStep(s)
     end
 end
 
-local function starterGuide(ui, p, s, step)
-    text(p, "YOUR FIRST ADVENTURE", 710, 0, 12, T.gold)
-    local labels = {
-        [2] = "Equip a usable reward from your shared inventory.",
-        [3] = "Explore three talent trees and spend your first point.",
-        [4] = "Visit an unlocked destination with a higher frontier.",
-    }
-    text(p, labels[step], 710, 35, 17, T.text, 580)
-    text(p, "New lessons appear when you have something to do.", 710, 92, 13, T.muted, 580)
-    button(p, "Dismiss guide", 710, 139, 210, function()
-        s.guide.dismissed = true
-        ui:Refresh()
-    end)
-end
-
--- A mouse-transparent outline points at the live control without blocking it.
-function P.GuideTarget(ui, target)
-    if not ui.guideTarget then
-        local frame = CreateFrame("Frame", nil, ui.expanded, "BackdropTemplate")
-        frame:EnableMouse(false)
-        frame:SetBackdrop({ edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 16 })
-        frame:SetBackdropBorderColor(unpack(T.gold))
-        ui.guideTarget = frame
-    end
-    local frame = ui.guideTarget
-    frame:Hide()
-    if target then
-        frame:SetParent(target)
-        frame:ClearAllPoints()
-        frame:SetPoint("TOPLEFT", target, "TOPLEFT", -4, 4)
-        frame:SetPoint("BOTTOMRIGHT", target, "BOTTOMRIGHT", 4, -4)
-        frame:SetFrameLevel(target:GetFrameLevel() + 5)
-        frame:Show()
-    end
-end
-
 function P.adventure(ui, p, s)
-    local points, talentHero, cappedHero, routes = P.Opportunities(s)
-    local title, detail, label, tab, hero
-    local availableStep, guideHero = P.GuideStep(s)
-    local guideStep = not s.guide.dismissed and availableStep
+    local title, detail, label, tab
     if #s.heroes < G.CompanionSlots(s) then
         title, detail, label, tab =
             "You found a companion!",
             "A new companion is ready to join. Choose their class in Party; they join the next encounter.",
             "Recruit companions",
-            "party"
-    elseif guideStep == 2 then
-        title, detail, label, tab, hero =
-            "Equip your first reward",
-            "Open Party, select your hero, then equip a drop from the shared inventory. Green power values show improvements.",
-            "Equip rewards",
-            "party",
-            guideHero
-    elseif guideStep == 3 then
-        title, detail, label, tab, hero =
-            "Choose your first talent",
-            "Spend a talent point to strengthen your hero. You can change talents freely at any time.",
-            "Choose a talent",
-            "talents",
-            guideHero
-    elseif guideStep == 4 then
-        title, detail, label, tab =
-            "Explore another destination",
-            "Open the World map and choose an unlocked region. Higher frontiers open after milestone bosses; your party travels separately from your WoW character.",
-            "Choose destination",
-            "atlas"
-    elseif talentHero then
-        title, detail, label, tab, hero =
-            "Shape your party’s talents",
-            points .. " unspent talent points across your company. Talents can be changed freely.",
-            "Spend talent points",
-            "talents",
-            talentHero
-    elseif cappedHero then
-        title, detail, label, tab, hero =
-            "Help " .. s.heroes[cappedHero].name .. " keep growing",
-            "This hero has reached their level cap. Review training costs in Party.",
-            "Review training",
-            "party",
-            cappedHero
-    elseif routes > 0 then
-        title, detail, label, tab =
-            "Explore a new destination",
-            routes
-                .. " higher-frontier destinations are available. Check their resources on the World map.",
-            "Choose destination",
-            "atlas"
-    elseif s.farming then
-        title, detail, label, tab =
-            "Prepare for the frontier",
-            "Your party is farming a safe encounter. Improve equipment, then retry the frontier.",
-            "Improve your party",
             "party"
     else
         title, detail, label, tab =
@@ -168,7 +82,7 @@ function P.adventure(ui, p, s)
             "Manage party",
             "party"
     end
-    text(p, "YOUR NEXT STEP", 0, 0, 12, T.gold)
+    text(p, "YOUR ADVENTURE", 0, 0, 12, T.gold)
     text(p, title, 0, 27, 23, T.text, 640)
     if s.farming then
         detail = (s.lastDefeat or "Your party is farming a safe encounter.")
@@ -176,18 +90,10 @@ function P.adventure(ui, p, s)
     end
     text(p, detail, 0, 65, 14, T.muted, 630)
     button(p, label, 0, 128, 240, function()
-        if hero then
-            ui.selected = hero
-        end
-        if guideStep == 2 then
-            ui.bagView, ui.bagFilter, ui.bagPage = nil, 0, 0
-        end
         ui.recruiting = label == "Recruit companions"
         ui:SetTab(tab)
     end, false, "primary")
-    if guideStep then
-        starterGuide(ui, p, s, guideStep)
-    else
+    do
         text(p, "YOUR LEGACY", 710, 0, 12, T.gold)
         local reward = G.PrestigeReward(s)
         text(
@@ -220,7 +126,7 @@ function P.adventure(ui, p, s)
                 ui:SetTab("legacy")
             end
         )
-        if P.GuideStep(s) then
+        if s.guide.dismissed and P.GuideStep(s) then
             button(p, "Show starter guide", 1030, 128, 266, function()
                 s.guide.dismissed = false
                 ui:Refresh()
@@ -238,18 +144,7 @@ end
 function P.talents(ui, p, s)
     local h, index = selected(ui, s)
     text(p, h.name .. "  /  " .. G.Points(h) .. " unspent talent points", 0, 0, 21, T.gold)
-    text(
-        p,
-        not s.guide.dismissed
-                and not s.guide.talent
-                and G.Points(h) > 0
-                and "Compare the three trees below. Hover a talent to learn more; click a green talent to spend a point."
-            or "Change talents at any time. Earn a point every two idle levels.",
-        0,
-        35,
-        13,
-        T.muted
-    )
+    text(p, "Change talents at any time. Earn a point every two idle levels.", 0, 35, 13, T.muted)
     W.TalentPanel.Draw(ui, p, h, index)
     text(p, "COMBAT PRIORITIES", 0, 372, 12, T.gold)
     local priorities, thresholds = {}, {}
@@ -714,8 +609,7 @@ function P.Draw(ui)
     if ui.talentTrees then
         ui.talentTrees:SetShown(s.ui.tab == "talents" and not W.catchup)
     end
-    P.GuideTarget(ui, nil)
-    ui.guideEquipTarget = nil
+    ui.guideEquipTarget, ui.guideInventoryTarget = nil, nil
     U.Begin(p)
     if W.catchup then
         text(p, "YOUR PARTY IS RETURNING", 0, 0, 22, T.gold)
@@ -725,17 +619,4 @@ function P.Draw(ui)
         (P[tab] or P.adventure)(ui, p, s)
     end
     U.EndBuild(p)
-    if not W.catchup and not s.guide.dismissed then
-        local step, hero = P.GuideStep(s)
-        local tab = step == 2 and "party" or step == 3 and "talents" or step == 4 and "atlas"
-        local target = tab and ui.tabs[tab]
-        if s.ui.tab == "party" and step == 2 and ui.selected == hero then
-            target = ui.guideEquipTarget or target
-        elseif s.ui.tab == "talents" and step == 3 and ui.selected == hero then
-            target = ui.talentTrees
-        elseif s.ui.tab == "atlas" and step == 4 then
-            target = ui.guideTravelTarget or ui.atlas.action
-        end
-        P.GuideTarget(ui, target)
-    end
 end

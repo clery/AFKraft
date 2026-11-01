@@ -342,6 +342,8 @@ local function inventory(ui, p, s, hero, index)
     end)
     local clear = U.Button(p, "Clear filters", 1152, 40, 144, 32, reset)
     U.Enabled(clear, active > 0)
+    ui.guideInventoryTarget = active > 0 and clear or nil
+    ui.guideInventoryLabel = "Clear filters"
     if ui.bagFiltersOpen then
         U.Rect(p, 608, 78, 688, 70, T.panel, 0.65)
         local function choice(key, title, choices, default, x)
@@ -538,6 +540,10 @@ local function inventory(ui, p, s, hero, index)
     end)
     U.Enabled(previous, page > 0)
     U.Enabled(nextPage, page < pages - 1)
+    if not ui.guideInventoryTarget then
+        ui.guideInventoryTarget = page < pages - 1 and nextPage or page > 0 and previous or nil
+        ui.guideInventoryLabel = page < pages - 1 and "Next" or "Previous"
+    end
     previous.text:SetJustifyH("CENTER")
     nextPage.text:SetJustifyH("CENTER")
     line(

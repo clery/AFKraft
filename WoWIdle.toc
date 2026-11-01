@@ -52,6 +52,7 @@ UI\Atlas.lua
 UI\AtlasDebug.lua
 UI\TalentPanel.lua
 UI\Panels.lua
+UI\Tutorial.lua
 UI\Shell.lua
 UI\Settings.lua
 UI\Minimap.lua

@@ -350,6 +350,7 @@ function UI:Refresh(redraw)
     local message = self.message and GetTime() < (self.messageUntil or 0) and self.message or nil
     self.footer:SetText(message or (W.catchup and "Resolving offline progress…" or ""))
     self.footer:SetShown(message ~= nil or W.catchup ~= nil)
+    W.Tutorial.Refresh(self)
     self.compactHint:SetText(message or self.compactHint:GetText())
 end
 
@@ -556,6 +557,7 @@ function W.CreateUI()
         end
     end)
     f:SetScript("OnHide", function()
+        W.Tutorial.Hide(ui)
         ui:SaveGeometry()
         ui.confirmPrestige = false
         if ui.map then
