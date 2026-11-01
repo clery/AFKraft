@@ -446,3 +446,57 @@ test("Talent icons preserve choices and scroll through expanded trees", function
     assertTrue(node == tree.buttons.cleave)
     assertEquals(0, tree.scroll:GetVerticalScroll())
 end)
+
+test("Adventure nameplates follow formations and enemies enter from the right", function()
+    local W = WoWIdle
+    W.Initialize()
+    local state = W.Game.New(W.Client.Now())
+    for _, id in ipairs({ "WARRIOR", "PRIEST", "MAGE", "HUNTER", "ROGUE" }) do
+        W.Game.AddHero(state, id)
+    end
+    W.state = state
+    state.settings.combatText = false
+    state.ui.compact, state.ui.locked = false, false
+    W.UI.frame:Show()
+    W.UI:SetTab("adventure")
+    W.Game.StartBattle(state)
+    W.UI:Refresh()
+    local scene = W.UI.scene
+    local front, ranged, enemy = scene.units[1], scene.units[2], scene.units[6]
+    assertTrue(front.melee)
+    assertFalse(ranged.melee)
+    assertTrue(front.targetX > ranged.targetX)
+    assertTrue(enemy.x > scene.frame:GetWidth())
+    local start = enemy.x
+    scene.lastAnimation = GetTime() - 0.05
+    scene:Animate()
+    assertTrue(enemy.x < start)
+    assertTrue(enemy.x > enemy.targetX)
+    assertTrue(enemy.moving)
+    for _ = 1, 100 do
+        scene.lastAnimation = GetTime() - 0.05
+        scene:Animate()
+    end
+    assertTrue(math.abs(enemy.x - enemy.targetX) < 1)
+    assertFalse(enemy.moving)
+    assertTrue(front.x < enemy.x)
+    local _, _, _, _, nameY = front.name:GetPoint()
+    local _, _, _, _, healthY = front.hp:GetPoint()
+    local _, _, _, _, modelY = front.viewport:GetPoint()
+    assertTrue(nameY > healthY and healthY > modelY)
+    local partyX = front.x
+    state.battle = nil
+    W.UI:Refresh()
+    scene.lastAnimation = GetTime() - 0.05
+    scene:Animate()
+    assertTrue(front.travelling)
+    assertEquals(partyX, front.x)
+    W.Game.StartBattle(state)
+    W.UI:Refresh()
+    assertEquals(partyX, front.x)
+    assertTrue(enemy.x > scene.frame:GetWidth())
+    state.ui.compact = true
+    W.UI:ApplyMode()
+    assertTrue(enemy.name:IsShown())
+    assertTrue(front.hp:IsShown())
+end)
