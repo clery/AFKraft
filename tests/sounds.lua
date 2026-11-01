@@ -125,6 +125,8 @@ return {
         function()
             local state = W.Game.New(1000)
             W.Game.AddHero(state, "WARRIOR")
+            W.Game.AddHero(state, "PRIEST")
+            W.Game.AddHero(state, "MAGE") -- Use a three-enemy encounter.
             W.Game.StartBattle(state)
             for _, enemy in ipairs(state.battle.enemies) do
                 enemy.hp = 1

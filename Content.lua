@@ -2,6 +2,8 @@ local _, W = ...
 WoWIdle = W
 W.Content = {}
 local C = W.Content
+-- Additional companions are discovered by defeating these milestone boss levels.
+C.companionMilestones = { 0, 1, 3, 5, 7 }
 C.slots = { "Weapon", "Armor", "Head", "Accessory", "Trinket I", "Trinket II" }
 C.materials = { timber = "Timber", hide = "Hide", ore = "Ore", relic = "Relic dust" }
 C.materialOrder = { "timber", "hide", "ore", "relic" }

@@ -2,6 +2,33 @@ local _, W = ...
 local C, G = W.Content, W.Game
 local min, max, floor = math.min, math.max, math.floor
 
+function G.CompanionSlots(state)
+    local slots = math.max(1, #state.heroes)
+    for i = 2, #C.companionMilestones do
+        if state.best > C.companionMilestones[i] then
+            slots = math.max(slots, i)
+        end
+    end
+    return math.min(5, slots)
+end
+
+function G.NextCompanionMilestone(state)
+    return C.companionMilestones[G.CompanionSlots(state) + 1]
+end
+
+-- Player recruitment enforces discoveries; AddHero constructs the starting
+-- hero and is also used to assemble simulation fixtures.
+function G.Recruit(state, classID)
+    if #state.heroes >= G.CompanionSlots(state) then
+        local level = G.NextCompanionMilestone(state)
+        return false,
+            level
+                    and ("Find another companion by defeating a level " .. level .. " milestone boss.")
+                or "Your company is complete."
+    end
+    return G.AddHero(state, classID)
+end
+
 function G.AddHero(state, classID, identity)
     local class = C.classByID[classID]
     if not class or #state.heroes >= 5 then
@@ -299,6 +326,7 @@ function G.Talent(state, index, id)
         return false, "Gain more idle levels to earn talent points."
     end
     hero.talents[id] = true
+    state.guide.talent = true
     G.RefreshHero(state, index)
     G.Emit(state, "unlock")
     state.discoveries["talent:" .. hero.class .. ":" .. id] = true
@@ -324,6 +352,7 @@ function G.Travel(state, zone)
     end
     state.battle, state.rest = nil, 0
     state.zone, state.stage = zone, (state.safe[zone] or 0) + 1
+    state.guide.traveled = true
     G.Emit(state, "travel")
     state.farming = false
     G.Log(state, "Traveling to " .. z.name .. ".")

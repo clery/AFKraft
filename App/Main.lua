@@ -76,7 +76,7 @@ function W.Initialize()
             G.AddHero(state, "WARRIOR")
             G.Log(
                 state,
-                "Your party begins with a warrior companion. Choose the rest of your company in Party."
+                "Your adventure begins with one warrior. Defeat milestone bosses to find companions."
             )
         end
     end

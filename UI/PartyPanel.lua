@@ -37,7 +37,35 @@ local function affordable(state, cost)
 end
 
 local function recruit(ui, p, s)
-    line(p, "Gather your company", 0, 0, 950, 23, T.gold)
+    local available = #s.heroes < G.CompanionSlots(s)
+    line(
+        p,
+        available and "A companion is ready to join" or "Find your next companion",
+        0,
+        0,
+        950,
+        23,
+        T.gold
+    )
+    if not available then
+        local milestone = G.NextCompanionMilestone(s)
+        U.Text(
+            p,
+            milestone
+                    and ("Defeat a level " .. milestone .. " milestone boss to discover another companion. Your current hero keeps adventuring automatically.")
+                or "All five companions have joined your company.",
+            0,
+            54,
+            18,
+            T.text,
+            1000
+        )
+        U.Button(p, "Back to equipment", 0, 135, 240, 34, function()
+            ui.recruiting = false
+            ui:Refresh()
+        end)
+        return
+    end
     U.Text(
         p,
         "Choose a class for companion "
@@ -58,9 +86,9 @@ local function recruit(ui, p, s)
         local id = class.id
         local x, y = (i - 1) % 3 * 440, 90 + math.floor((i - 1) / 3) * 94
         local b = U.Button(p, "", x, y, 416, 76, function()
-            if W.Action(G.AddHero, id) then
+            if W.Action(G.Recruit, id) then
                 ui.selected = #s.heroes
-                ui.recruiting = #s.heroes < 5
+                ui.recruiting = false
                 ui:Refresh()
             end
         end)
@@ -91,7 +119,7 @@ end
 
 local function equipment(ui, p, s, hero, index)
     local class, stats = C.classByID[hero.class], G.Stats(s, hero)
-    line(p, hero.name, 0, 0, 310, 23, class.color)
+    line(p, hero.name .. "’s equipment", 0, 0, 320, 20, class.color)
     line(
         p,
         "Level " .. hero.level .. " " .. class.name .. "  ·  " .. U.Number(stats.hp) .. " health",
@@ -117,11 +145,21 @@ local function equipment(ui, p, s, hero, index)
             string.format("%s: %.1f", C.itemStatNames[key], stats.attributes[key] or 0)
     end
     local training = G.TrainingCost(hero)
-    local train = U.Button(p, "Raise cap to " .. (G.LevelCap(hero) + 4), 332, 0, 240, 34, function()
-        if W.Action(G.Train, index) then
-            W.Notify(hero.name .. " can now reach level " .. G.LevelCap(hero) .. ".")
-        end
-    end, false, "primary")
+    local train = U.Button(
+        p,
+        "Train: max " .. G.LevelCap(hero) .. " to " .. (G.LevelCap(hero) + 4),
+        332,
+        0,
+        240,
+        34,
+        function()
+            if W.Action(G.Train, index) then
+                W.Notify(hero.name .. " can now reach level " .. G.LevelCap(hero) .. ".")
+            end
+        end,
+        false,
+        "primary"
+    )
     U.Enabled(train, affordable(s, training))
     line(p, costText(s, training), 332, 37, 240, 11)
     U.Tooltip(
@@ -129,7 +167,7 @@ local function equipment(ui, p, s, hero, index)
         "Raise the level cap · Equipment stats",
         "Current cap: "
             .. G.LevelCap(hero)
-            .. ". Training raises the cap by four. Heroes gain experience in idle battles; Adventure XP ranks award the Essence for training.\n\n"
+            .. ". Training raises the maximum level by four; it does not grant levels. Heroes gain experience in idle battles; Adventure XP ranks award the Essence for training.\n\n"
             .. table.concat(attributeLines, "\n")
     )
 

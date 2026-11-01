@@ -11,14 +11,16 @@ WoWIdle is an idle party RPG inside World of Warcraft. Build a company of five h
 1. Place the addon folder, named `WoWIdle`, in your client's `Interface/AddOns` directory. The folder should contain `WoWIdle.toc` directly.
 2. Enable **WoWIdle** in the character selection AddOns list, then log in. If you installed it while the game was running, restart the client.
 3. Enter `/wowidle` or `/wi` to open the adventure.
-4. Select an empty companion card to recruit a hero by class. Open **Party** to manage the selected hero's equipment and build.
+4. Begin with one hero. Follow the dismissible starter guide to learn battles, equipment, talents and travel. Open **Party** to manage the selected hero.
 5. Let your heroes fight, collect their rewards, and choose new destinations from the **World map** as they unlock.
 
 Required libraries are included; you do not need to install them separately.
 
 ## A party of your own
 
-Your adventure has five hero slots and nine original class identities. Choose your companions' classes freely, including duplicates, and combine damage, healing, and survival to tackle harder encounters.
+Your adventure starts with one hero and grows to five. Defeat milestone bosses at levels **1, 3, 5 and 7** to discover companions, then select their empty cards in **Party** to choose a class. You can choose from nine original class identities, including duplicates. Discovered slots and recruited heroes carry across chapters; existing parties are preserved.
+
+Enemy groups grow with your company, early bosses suit smaller parties, and your first victory guarantees an equipment drop. Combine damage, healing, and survival as your company grows to tackle harder encounters.
 
 Combat runs automatically. Heroes use their abilities according to configurable priorities, while talents and equipment shape their strengths. You can equip items, train, and adjust talents or priorities during a battle. Equipment changes preserve current health proportions and cooldowns.
 

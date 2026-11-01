@@ -144,6 +144,7 @@ function G.Equip(state, heroIndex, inventoryIndex)
     end
     local previous = hero.gear[item.slot]
     hero.gear[item.slot] = item
+    state.guide.equipped = true
     G.Emit(state, "equip")
     G.RefreshHero(state, heroIndex)
     if previous then

@@ -13,6 +13,10 @@ case("Melee fighters close distance before dealing damage and dead targets are r
     G.AddHero(s, "WARRIOR")
     G.StartBattle(s)
     local b = s.battle
+    -- Exercise replacement independently of the solo opening's enemy count.
+    b.enemies[2] = G.Copy(b.enemies[1])
+    b.enemies[2].id, b.enemies[2].x, b.enemies[2].y = 2, nil, nil
+    P.Ensure(s, b)
     local hero, enemy = b.heroes[1], b.enemies[1]
     local hp, x, enemyX = enemy.hp, hero.x, enemy.x
     G.Step(s, 0.25)

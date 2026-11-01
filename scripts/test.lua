@@ -20,6 +20,7 @@ end
 local cases = {}
 for _, file in ipairs({
     "tests/domain.lua",
+    "tests/progression.lua",
     "tests/positioning.lua",
     "tests/talents.lua",
     "tests/items.lua",

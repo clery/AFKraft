@@ -40,6 +40,7 @@ function G.New(now)
     return {
         version = C.version,
         itemStatsVersion = 1,
+        guide = { dismissed = false, equipped = false, talent = false, traveled = false },
         seed = floor(now) % 2147483646 + 1,
         heroes = {},
         inventory = {},
@@ -107,6 +108,7 @@ function G.Load(db, now)
     elseif db.version ~= C.version then
         return nil, "This save belongs to an unsupported version. It has not been changed."
     end
+    local existingGuide = type(db.guide) == "table"
     local needsItemMigration = db.itemStatsVersion ~= 1
     local defaults = G.New(now)
     for k, v in pairs(defaults) do
@@ -115,6 +117,20 @@ function G.Load(db, now)
         elseif type(db[k]) ~= type(v) then
             return nil,
                 "The saved adventure has an invalid " .. k .. " field. It has not been reset."
+        end
+    end
+    for key, value in pairs(defaults.guide) do
+        if type(db.guide[key]) ~= "boolean" then
+            db.guide[key] = value
+        end
+    end
+    if not existingGuide then
+        -- Existing adventures retain their party and can opt into the guide.
+        db.guide.dismissed = true
+        db.guide.traveled = db.zone ~= "elwynn"
+        for _, hero in ipairs(db.heroes) do
+            db.guide.equipped = db.guide.equipped or next(hero.gear or {}) ~= nil
+            db.guide.talent = db.guide.talent or next(hero.talents or {}) ~= nil
         end
     end
     for key, value in pairs(defaults.settings) do

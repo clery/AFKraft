@@ -39,15 +39,21 @@ function G.StartBattle(state)
             shield = 0,
         }
     end
-    local count = boss and 1 or 3
+    -- The opening adventure is fought alone, before the first discovery.
+    local opening = G.CompanionSlots(state) == 1
+    local count = boss and 1 or min(3, #state.heroes)
     for i = 1, count do
-        local hp = floor((60 + level * 24) * 1.16 ^ (level - 1) * (boss and 4 or 1))
+        local hp = floor(
+            (60 + level * 24) * 1.16 ^ (level - 1) * (boss and min(4, #state.heroes + 1) or 1)
+        )
         battle.enemies[i] = {
             id = i,
             name = boss and zone.boss or zone.enemies[(state.stage + i - 2) % #zone.enemies + 1],
             hp = hp,
             maxHP = hp,
-            damage = (6 + level * 3) * 1.12 ^ (level - 1) * (boss and 1.8 or 1),
+            damage = (6 + level * 3)
+                * 1.12 ^ (level - 1)
+                * (boss and (opening and 1.2 or 1.8) or 1),
             attackCD = 1 + i * 0.3,
         }
     end
@@ -120,7 +126,7 @@ local function victory(state, battle)
     state.materials[z.material] = state.materials[z.material] + (battle.boss and 5 or 1)
     state.stats.victories = state.stats.victories + 1
     state.stats.kills = state.stats.kills + #battle.enemies
-    if G.Random(state, 100) <= 35 or battle.boss then
+    if G.Random(state, 100) <= 35 or battle.boss or state.stats.victories == 1 then
         local item = G.ZoneLoot(state, battle.level)
         if item then
             G.Loot(state, item)
@@ -129,15 +135,27 @@ local function victory(state, battle)
     local previousSafe = state.safe[state.zone] or 0
     state.safe[state.zone] = max(state.safe[state.zone] or 0, battle.stage)
     if battle.boss then
+        local previousSlots = G.CompanionSlots(state)
         local previousBest = state.runBest
         state.runBest = max(state.runBest, battle.level + 1)
+        local unlockedDestination = false
         for _, destination in ipairs(C.zones) do
             if destination.level > previousBest and destination.level <= state.runBest then
-                G.Emit(state, "unlock")
+                unlockedDestination = true
                 break
             end
         end
         state.best = max(state.best, state.runBest)
+        local discovered = G.CompanionSlots(state) > previousSlots
+        if discovered then
+            G.Log(
+                state,
+                "You found a new companion! Open Party to choose their class and welcome them."
+            )
+        end
+        if discovered or unlockedDestination then
+            G.Emit(state, "unlock")
+        end
         if battle.level >= 8 then
             state.prestigeUnlocked = true
         end

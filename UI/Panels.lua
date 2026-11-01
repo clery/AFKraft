@@ -36,15 +36,79 @@ function P.Opportunities(s)
     return points, talentHero, cappedHero, routes
 end
 
+function P.GuideStep(s)
+    if s.stats.victories == 0 then
+        return 1
+    elseif not s.guide.equipped then
+        return 2
+    elseif not s.guide.talent then
+        return 3
+    elseif not s.guide.traveled then
+        return 4
+    end
+end
+
+local function starterGuide(ui, p, s, step)
+    text(p, "YOUR FIRST ADVENTURE", 710, 0, 12, T.gold)
+    local labels = {
+        "Win an automatic battle",
+        "Equip your first reward",
+        "Choose a talent",
+        "Visit another destination",
+    }
+    local completed = { s.stats.victories > 0, s.guide.equipped, s.guide.talent, s.guide.traveled }
+    for i, label in ipairs(labels) do
+        text(
+            p,
+            (completed[i] and "Done · " or (i .. ". ")) .. label,
+            710,
+            27 + (i - 1) * 24,
+            16,
+            completed[i] and T.green or i == step and T.gold or T.muted,
+            580
+        )
+    end
+    button(p, "Dismiss guide", 710, 139, 210, function()
+        s.guide.dismissed = true
+        ui:Refresh()
+    end)
+end
+
 function P.adventure(ui, p, s)
     local points, talentHero, cappedHero, routes = P.Opportunities(s)
     local title, detail, label, tab, hero
-    if #s.heroes < 5 then
+    local guideStep = not s.guide.dismissed and P.GuideStep(s)
+    if #s.heroes < G.CompanionSlots(s) then
         title, detail, label, tab =
-            "Grow your company",
-            "Recruit up to five companions. Choose their classes in Party.",
+            "You found a companion!",
+            "A new companion is ready to join. Choose their class in Party; they join the next encounter.",
             "Recruit companions",
             "party"
+    elseif guideStep == 1 then
+        title, detail, label, tab =
+            "Your hero fights automatically",
+            "Win your first encounter. Battles earn hero XP, gold, equipment and materials; you do not need to click to attack.",
+            "View your hero",
+            "party"
+    elseif guideStep == 2 then
+        title, detail, label, tab =
+            "Equip your first reward",
+            "Open Party, select your hero, then equip a drop from the shared inventory. Green power values show improvements.",
+            "Equip rewards",
+            "party"
+    elseif guideStep == 3 and talentHero then
+        title, detail, label, tab, hero =
+            "Choose your first talent",
+            "Spend a talent point to strengthen your hero. You can change talents freely at any time.",
+            "Choose a talent",
+            "talents",
+            talentHero
+    elseif guideStep == 4 then
+        title, detail, label, tab =
+            "Explore another destination",
+            "Open the World map and choose an unlocked region. Higher frontiers open after milestone bosses; your party travels separately from your WoW character.",
+            "Choose destination",
+            "atlas"
     elseif talentHero then
         title, detail, label, tab, hero =
             "Shape your party’s talents",
@@ -81,46 +145,60 @@ function P.adventure(ui, p, s)
     end
     text(p, "YOUR NEXT STEP", 0, 0, 12, T.gold)
     text(p, title, 0, 27, 23, T.text, 640)
+    if s.farming then
+        detail = (s.lastDefeat or "Your party is farming a safe encounter.")
+            .. " Improve your heroes, then use Retry."
+    end
     text(p, detail, 0, 65, 14, T.muted, 630)
     button(p, label, 0, 128, 240, function()
         if hero then
             ui.selected = hero
         end
-        ui.recruiting = #s.heroes < 5
+        ui.recruiting = tab == "party" and #s.heroes < G.CompanionSlots(s)
         ui:SetTab(tab)
     end, false, "primary")
-    text(p, "YOUR LEGACY", 710, 0, 12, T.gold)
-    local reward = G.PrestigeReward(s)
-    text(
-        p,
-        s.prestigeUnlocked and "A new chapter is available" or "Build a lasting inheritance",
-        710,
-        27,
-        21,
-        T.gold,
-        580
-    )
-    text(
-        p,
-        s.prestigeUnlocked
-                and ("Reset this run for " .. reward .. " Legacy. Review what carries forward before deciding.")
-            or "Defeat a level 8 milestone boss to unlock new chapters and earn Legacy for heirloom recipes.",
-        710,
-        65,
-        14,
-        T.muted,
-        580
-    )
-    button(
-        p,
-        s.prestigeUnlocked and "Review Legacy · +" .. reward or "Explore Legacy",
-        710,
-        128,
-        300,
-        function()
-            ui:SetTab("legacy")
+    if guideStep then
+        starterGuide(ui, p, s, guideStep)
+    else
+        text(p, "YOUR LEGACY", 710, 0, 12, T.gold)
+        local reward = G.PrestigeReward(s)
+        text(
+            p,
+            s.prestigeUnlocked and "A new chapter is available" or "Build a lasting inheritance",
+            710,
+            27,
+            21,
+            T.gold,
+            580
+        )
+        text(
+            p,
+            s.prestigeUnlocked
+                    and ("Reset this run for " .. reward .. " Legacy. Review what carries forward before deciding.")
+                or "Defeat a level 8 milestone boss to unlock new chapters and earn Legacy for heirloom recipes.",
+            710,
+            65,
+            14,
+            T.muted,
+            580
+        )
+        button(
+            p,
+            s.prestigeUnlocked and "Review Legacy · +" .. reward or "Explore Legacy",
+            710,
+            128,
+            300,
+            function()
+                ui:SetTab("legacy")
+            end
+        )
+        if P.GuideStep(s) then
+            button(p, "Show starter guide", 1030, 128, 266, function()
+                s.guide.dismissed = false
+                ui:Refresh()
+            end)
         end
-    )
+    end
     text(p, "ADVENTURE JOURNAL", 0, 187, 11, T.gold)
     U.SingleLine(text(p, s.log[#s.log] or "", 0, 210, 13, T.muted, 1290), 1290, 24)
 end

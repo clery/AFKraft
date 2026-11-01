@@ -12,11 +12,11 @@ Target occasional meaningful check-ins every 15–30 minutes. Balance the first 
 
 ## Party and identity
 
-- One shared account adventure with one active party of five.
+- One shared account adventure with one active party that grows from one hero to five.
 - Unrestricted composition, including duplicate classes.
 - Support every Forever launch class with recognizable abilities adapted for idle combat.
 - The current character supplies the first hero's identity and class. Idle progression is independent of actual character power, gear, and talents.
-- Fill remaining slots with companions whose classes the player chooses; generate names and appearances.
+- Discover companion slots after defeating milestone bosses at levels 1, 3, 5 and 7. Let the player choose each companion’s class; generate names and appearances. Discoveries and existing parties persist across chapters.
 - Register alts when the addon is loaded on them. An alt may replace a generated hero of the same class, retaining its idle level, build, equipment, and progression.
 - Additional simultaneous parties and parties combining into raids are future features.
 

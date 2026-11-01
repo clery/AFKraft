@@ -227,7 +227,13 @@ function UI:Refresh(redraw)
     )
     self.compactZone:SetText(C.zoneByID[s.zone].name .. "  /  Encounter " .. s.stage)
     self.battleState:SetText(
-        s.farming and "Farming · Encounter " .. s.stage or "Advancing · Encounter " .. s.stage
+        (
+            s.farming and "Farming"
+            or not s.battle and (s.rest or 0) > 0 and "Recovering"
+            or "Advancing"
+        )
+            .. " · Encounter "
+            .. s.stage
     )
     U.Enabled(self.retry, s.farming == true)
     self.lock.text:SetText(s.ui.locked and "Unlock" or "Lock")
@@ -244,7 +250,7 @@ function UI:Refresh(redraw)
         if h then
             local class = C.classByID[h.class]
             button.label:SetText(h.name)
-            button.label:SetTextColor(unpack(class.color))
+            button.label:SetTextColor(unpack(i == self.selected and T.gold or class.color))
             local cap = W.Game.LevelCap(h)
             button.detail:SetText(
                 "Lv "
@@ -259,8 +265,15 @@ function UI:Refresh(redraw)
             button.icon:SetTexture("Interface\\Icons\\" .. class.icon)
             button.xp:Show()
         else
-            button.label:SetText("Recruit companion")
-            button.detail:SetText("Choose a class in Party")
+            local available = i <= W.Game.CompanionSlots(s)
+            button.label:SetText(
+                available and "Companion found!" or "Companion " .. i .. " · Locked"
+            )
+            button.label:SetTextColor(unpack(available and T.gold or T.muted))
+            button.detail:SetText(
+                available and "Choose a class in Party"
+                    or "Milestone boss level " .. C.companionMilestones[i]
+            )
             button.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
             button.xp:Hide()
         end
@@ -269,8 +282,12 @@ function UI:Refresh(redraw)
         end
     end
     local points, _, cappedHero, routes = W.Panels.Opportunities(s)
-    self.tabs.talents.notice:SetText(points > 0 and (points .. " points") or "")
-    self.tabs.party.notice:SetText(#s.heroes < 5 and "Recruit" or cappedHero and "Train" or "")
+    self.tabs.talents.notice:SetText(
+        points > 0 and (points .. (points == 1 and " point" or " points")) or ""
+    )
+    self.tabs.party.notice:SetText(
+        #s.heroes < W.Game.CompanionSlots(s) and "Recruit" or cappedHero and "Train" or ""
+    )
     self.tabs.atlas.notice:SetText(routes > 0 and (routes .. " routes") or "")
     self.tabs.legacy.notice:SetText(
         s.prestigeUnlocked and ("+" .. W.Game.PrestigeReward(s) .. " Legacy") or ""
@@ -279,9 +296,13 @@ function UI:Refresh(redraw)
         points,
         cappedHero or 0,
         s.runBest,
+        s.zone,
         tostring(s.prestigeUnlocked),
         W.Game.PrestigeReward(s),
         tostring(s.farming),
+        W.Panels.GuideStep(s) or 0,
+        tostring(s.guide.dismissed),
+        W.Game.CompanionSlots(s),
     }, ":")
     for id, button in pairs(self.tabs) do
         button.text:SetTextColor(unpack(s.ui.tab == id and T.gold or T.muted))
@@ -379,6 +400,16 @@ function W.CreateUI()
         local x = 650 + (i - 1) * 198
         U.Text(expanded, currency[2], x + 12, 23, 10, T.muted, 160)
         ui.currencies[currency[1]] = U.Text(expanded, "0", x + 12, 38, 19, T.gold, 160)
+        local help = CreateFrame("Frame", nil, expanded)
+        help:SetPoint("TOPLEFT", x, -18)
+        help:SetSize(185, 50)
+        help:EnableMouse(true)
+        local descriptions = {
+            essence = "Earn Essence from Adventure XP ranks by playing your WoW character. Spend it on training, crafting and upgrades. Hero XP comes from idle battles instead.",
+            gold = "Your heroes earn gold from idle battles. Spend it on training, crafting and equipment upgrades. This is separate from your WoW character’s gold.",
+            legacy = "Earn Legacy by beginning a new chapter after unlocking resets. Spend it on permanent heirloom recipes. Review reset consequences in Legacy.",
+        }
+        U.Tooltip(help, currency[2], descriptions[currency[1]])
     end
     ui.materials = U.Text(expanded, "", 650, 72, 11, T.muted, 610)
     local minimize = U.Button(expanded, "-", 1280, 28, 38, 32, function()
