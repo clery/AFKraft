@@ -6,7 +6,7 @@ local durations = { shield = 1.1, heal = 0.8, slash = 0.5, burst = 0.8, impact =
 local projectiles = { arrow = true, bolt = true, shadow = true, leaf = true, lightning = true }
 
 local function position(unit)
-    return (unit.x or 0) + 66, -(unit.y or 110) - 100
+    return (unit.renderX or unit.x or 0) + 66, -(unit.y or 110) - 100
 end
 
 local function release(effect)
@@ -97,7 +97,10 @@ function Effects:Play(source, target, kind, class)
     effect.active, effect.started = true, GetTime()
     effect.source, effect.target, effect.class = source, target, class
     effect.projectile = projectiles[kind] or false
-    effect.direction = effect.projectile and (target.x or 0) < (source.x or 0) and -1 or 1
+    effect.direction = effect.projectile
+            and (target.renderX or target.x or 0) < (source.renderX or source.x or 0)
+            and -1
+        or 1
     effect.x, effect.y = position(source)
     effect.duration = durations[kind] or 0.45
     if not self:Load(effect, kind) then

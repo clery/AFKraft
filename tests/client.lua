@@ -295,6 +295,24 @@ case("Measured model bounds fit the viewport at every size and origin", function
     assert(not client.ModelFit({ x = 0, y = 0, z = 0 }, { x = 0, y = 0, z = 0 }, {}, 1))
 end)
 
+case("Wide model bounds produce wider visual contact footprints", function()
+    local client = adapter("12.1.5")
+    local bottom = { x = -0.5, y = -0.5, z = 0 }
+    local top = { x = 0.5, y = 0.5, z = 2 }
+    local narrow = client.ModelRadius(bottom, top, 360, 240, 0.5, 1.05)
+    local wide = client.ModelRadius(
+        { x = -2, y = -1, z = 0 },
+        { x = 2, y = 1, z = 2 },
+        360,
+        240,
+        0.5,
+        1.05
+    )
+    assert(wide > narrow and wide <= 180)
+    assert(client.ModelRadius({ x = -2, y = -1, z = 0 }, { x = 2, y = 1, z = 2 }, 360, 240) >= 80)
+    assert(client.ModelRadius(nil, nil, 360, 240) == nil)
+end)
+
 case("Actor loading binds through its XML template without frame script methods", function()
     local called, creates = 0, 0
     local actor = setmetatable({ SetAlpha = function() end }, {
@@ -444,6 +462,12 @@ case(
             GetModelFileID = function()
                 return 42
             end,
+            GetWidth = function()
+                return 360
+            end,
+            GetHeight = function()
+                return 240
+            end,
             RefreshCamera = function() end,
             SetPortraitZoom = function() end,
             SetCamDistanceScale = function() end,
@@ -458,6 +482,20 @@ case(
             appearanceSource = source,
             adventureActor = {
                 ClearModel = function() end,
+                SetScale = function() end,
+                SetPosition = function() end,
+                SetModelByFileID = function(_, file)
+                    assert(file == 42)
+                end,
+                IsLoaded = function()
+                    return true
+                end,
+                GetModelFileID = function()
+                    return 42
+                end,
+                GetActiveBoundingBox = function()
+                    return -2, -1, 0, 2, 1, 3
+                end,
                 SetAlpha = function(_, value)
                     actorAlpha = value
                 end,
@@ -489,7 +527,11 @@ case(
         }, false))
         assert(dressed == 0 and undressed == 1 and tried[1] == "item:25" and tried[2] == "item:821")
         assert(sourceAlpha == 1 and actorAlpha == 0 and hidden)
+        assert(model.spacingRadius > 80)
         assert(client.AnimateModel(model, 16) and animation == 16)
+        model.adventureActor.IsLoaded = function()
+            return false
+        end
         assert(
             client.ConfigureModel(
                 model,

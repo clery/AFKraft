@@ -217,6 +217,7 @@ function Scene:Layout(compact, management)
         local x = unit.x or (friendly and 30 + (i - 1) * 132 or 862 + (i - 6) * 138)
         unit:ClearAllPoints()
         unit:SetPoint("TOPLEFT", x, -(unit.y or 110))
+        unit.placedX, unit.placedY = nil, nil
         unit:EnableMouse(friendly and not W.state.ui.locked)
         unit.name:SetFont("Fonts\\FRIZQT__.TTF", compact and 20 or 12, "")
         unit.name:SetHeight(compact and 24 or 19)
@@ -233,6 +234,7 @@ function Scene:Refresh(s)
         self.effects:Clear()
         self.regroup = nil
         self.lastBattle = nil
+        self.contactGap = 0
         self.renderState, self.zone = s, s.zone
     end
     local freshBattle = s.battle and s.battle ~= self.lastBattle
@@ -313,8 +315,6 @@ function Scene:Refresh(s)
             else
                 unit.x, unit.y = unit.x or x, unit.y or y
             end
-            unit:ClearAllPoints()
-            unit:SetPoint("TOPLEFT", unit.x, -unit.y)
             local spec = W.Client.ModelSpec(hero, z.id, enemy and enemy.name)
             local key = spec and spec.key or "unavailable"
             if unit.modelKey ~= key then
@@ -373,6 +373,7 @@ function Scene:Refresh(s)
     if self.travelling and not wasTravelling and b then
         self:BeginRegroup()
     end
+    self:PlaceModels()
     if s.events then
         if not self.management then
             for _, event in ipairs(s.events) do
@@ -419,13 +420,57 @@ end
 
 -- Keep overhead bars above their owners, with horizontal spacing when crowded.
 local function sortByPosition(a, b)
-    return a.x < b.x or (a.x == b.x and a.index < b.index)
+    local ax, bx = a.renderX or a.x, b.renderX or b.x
+    return ax < bx or (ax == bx and a.index < b.index)
+end
+
+local function radius(unit)
+    return unit.model.spacingRadius or 80
+end
+
+-- Keep rendered opponents apart without feeding client-dependent model bounds
+-- back into combat reach, damage timing, or offline simulation.
+function Scene:PlaceModels(elapsed)
+    local gap, leftRoom = 0, math.huge
+    if not self.travelling then
+        for i = 1, 5 do
+            local hero = self.units[i]
+            if hero:IsShown() and hero.x and not hero.dead then
+                leftRoom = math.min(leftRoom, hero.x + 66 - radius(hero) - 8)
+                for j = 6, 8 do
+                    local enemy = self.units[j]
+                    if enemy:IsShown() and enemy.x and not enemy.dead then
+                        gap = math.max(gap, hero.x + radius(hero) + radius(enemy) + 28 - enemy.x)
+                    end
+                end
+            end
+        end
+    end
+    -- Release surplus clearance gradually when a target dies or changes size.
+    if not self.travelling then
+        gap = math.max(gap, (self.contactGap or 0) * math.exp(-(elapsed or 0) * 12))
+    end
+    self.contactGap = gap
+    local left = math.min(gap / 2, math.max(0, leftRoom))
+    for i, unit in ipairs(self.units) do
+        if unit:IsShown() and unit.x then
+            local x = unit.dead and (unit.renderX or unit.x)
+                or unit.x + (i <= 5 and -left or gap - left)
+            unit.renderX = x
+            if unit.placedX ~= x or unit.placedY ~= unit.y then
+                unit:ClearAllPoints()
+                unit:SetPoint("TOPLEFT", x, -(unit.y or 110))
+                unit.placedX, unit.placedY = x, unit.y
+            end
+        end
+    end
 end
 
 function Scene:PlaceNameplates()
     local order, count = self.plateOrder, 0
     for _, unit in ipairs(self.units) do
-        local visible = unit:IsShown() and unit.x and unit.x < 1270
+        local x = unit.renderX or unit.x
+        local visible = unit:IsShown() and x and x < 1270
         unit.plate:SetShown(visible)
         if visible then
             count = count + 1
@@ -441,7 +486,7 @@ function Scene:PlaceNameplates()
     -- into the scene heading. All eight plates fit within the stage width.
     local previous = -132
     for _, unit in ipairs(order) do
-        unit.plateX = math.max(8, unit.x, previous + 140)
+        unit.plateX = math.max(8, unit.renderX or unit.x, previous + 140)
         previous = unit.plateX
     end
     local nextX = 1280
@@ -504,7 +549,6 @@ function Scene:Animate(frameElapsed, simulationFraction)
         if unit:IsShown() and unit.targetX then
             local moving = false
             if not unit.dead then
-                local x, y = unit.x, unit.y
                 if unit.travelling and regroupProgress and unit.regroupX then
                     unit.x = unit.regroupX + (unit.homeX - unit.regroupX) * regroupProgress
                     unit.y = unit.regroupY + (unit.homeY - unit.regroupY) * regroupProgress
@@ -513,10 +557,6 @@ function Scene:Animate(frameElapsed, simulationFraction)
                     moving = Scene.MoveUnit(unit, elapsed)
                         or (not self.travelling and unit.combatant and unit.combatant.moving)
                         or false
-                end
-                if x ~= unit.x or y ~= unit.y then
-                    unit:ClearAllPoints()
-                    unit:SetPoint("TOPLEFT", unit.x, -unit.y)
                 end
             end
             if moving ~= unit.moving or unit.travelAnimation ~= unit.travelling then
@@ -576,6 +616,7 @@ function Scene:Animate(frameElapsed, simulationFraction)
     if regroup and regroup.elapsed >= regroup.duration then
         self.regroup = nil
     end
+    self:PlaceModels(elapsed)
     self.effects:Animate(now)
     self:PlaceNameplates()
 end

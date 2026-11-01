@@ -214,6 +214,7 @@ function A.ConfigureModel(model, spec, enemy)
             model.appearanceUnit = spec.unit
             model.adventureKey = nil
             model.adventureFittedKey = nil
+            model.measurementFile, model.spacingRadius = nil, nil
             model.equipmentAppliedKey = nil
             model.pendingEquipment = {}
             model.adventureActor:ClearModel()

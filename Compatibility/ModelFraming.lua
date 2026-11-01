@@ -46,6 +46,52 @@ function A.ModelFit(bottom, top, ground, aspect)
     return scale, (bottom.x + top.x) / 2, (bottom.y + top.y) / 2, ground.z
 end
 
+-- Bounding dimensions are sampled only on load, not during animation updates.
+function A.ModelRadius(bottom, top, viewportWidth, viewportHeight, scale, yaw)
+    if not bottom or not top then
+        return nil
+    end
+    for _, point in ipairs({ bottom, top }) do
+        if
+            type(point) ~= "table"
+            or not finite(point.x)
+            or not finite(point.y)
+            or not finite(point.z)
+        then
+            return nil
+        end
+    end
+    local width, depth, height = top.x - bottom.x, top.y - bottom.y, top.z - bottom.z
+    if width <= 0 or depth <= 0 or height <= 0 then
+        return nil
+    end
+    if scale then
+        local horizontal = (math.abs(math.sin(yaw)) * width + math.abs(math.cos(yaw)) * depth)
+            * scale
+            / 2
+        local towardsCamera = (math.abs(math.cos(yaw)) * width + math.abs(math.sin(yaw)) * depth)
+            * scale
+            / 2
+        return math.min(
+            180,
+            math.max(
+                48,
+                horizontal * viewportWidth / (2 * math.tan(0.25) * math.max(0.1, 6 - towardsCamera))
+                    + 18
+            )
+        )
+    end
+    -- Native portrait cameras do not expose a screen-space bounding box. Estimate
+    -- their footprint from body proportions and full-body framing, with swing room.
+    return math.min(
+        180,
+        math.max(
+            80,
+            math.sqrt(width * width + depth * depth) / height * viewportHeight * 0.65 / 2 + 18
+        )
+    )
+end
+
 function A.CreateAdventureModel(parent, loaded)
     -- Native character models retain complete NPC skins and player outfit data.
     -- Creature enemies use the separately fitted scene actor.
@@ -164,6 +210,17 @@ function A.FrameAdventureModel(model, enemy, spec)
         if not finite(file) or file <= 0 then
             return false
         end
+        if model.measurementFile ~= file then
+            model.measurementFile = file
+            actor:SetScale(1)
+            actor:SetPosition(0, 0, 0)
+            actor:SetModelByFileID(file)
+        end
+        if actor:IsLoaded() and actor:GetModelFileID() == file then
+            local bottom, top = bounds(actor:GetActiveBoundingBox())
+            model.spacingRadius = A.ModelRadius(bottom, top, source:GetWidth(), source:GetHeight())
+                or 80
+        end
         source:RefreshCamera()
         source:SetPortraitZoom(0)
         source:SetCamDistanceScale(1.7)
@@ -220,6 +277,8 @@ function A.FrameAdventureModel(model, enemy, spec)
             scale = scale * 1.7 / padding
         end
         local yaw = enemy and 1.05 or -1.05
+        model.spacingRadius =
+            A.ModelRadius(bottom, top, scene:GetWidth(), scene:GetHeight(), scale, yaw)
         actor:SetYaw(yaw)
         actor:SetScale(scale)
         actor:SetPosition(

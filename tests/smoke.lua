@@ -618,6 +618,40 @@ test("Adventure models follow combat positions with roomy transparent viewports"
     assertTrue(front.hp:IsShown())
 end)
 
+test(
+    "Model bounds separate opposing bodies and their plates without changing combat coordinates",
+    function()
+        local scene = WoWIdle.Scene.Create(UIParent)
+        for _, unit in ipairs(scene.units) do
+            unit:Hide()
+        end
+        local hero, enemy = scene.units[1], scene.units[6]
+        hero.x, hero.y, enemy.x, enemy.y = 480, 110, 580, 110
+        hero.model.spacingRadius, enemy.model.spacingRadius = 120, 150
+        hero:Show()
+        enemy:Show()
+        scene:PlaceModels()
+        assertTrue(enemy.renderX - hero.renderX >= 298)
+        assertEquals(480, hero.x)
+        assertEquals(580, enemy.x)
+        local _, _, _, x = hero:GetPoint()
+        assertEquals(hero.renderX, x)
+        scene:PlaceNameplates()
+        local _, _, _, plateX = hero.plate:GetPoint()
+        assertEquals(hero.renderX, plateX)
+        local largeGap = enemy.renderX - hero.renderX
+        enemy.model.spacingRadius = 60
+        scene:PlaceModels(1)
+        assertTrue(enemy.renderX - hero.renderX < largeGap)
+        assertTrue(enemy.renderX - hero.renderX >= 208)
+        scene.travelling = true
+        scene:PlaceModels()
+        assertEquals(hero.x, hero.renderX)
+        assertEquals(enemy.x, enemy.renderX)
+        scene.frame:Hide()
+    end
+)
+
 test("Player and enemy nameplates follow their displayed models vertically", function()
     local scene = WoWIdle.Scene.Create(UIParent)
     for _, unit in ipairs(scene.units) do
