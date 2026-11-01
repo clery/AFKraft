@@ -125,6 +125,7 @@ end
 
 local function equipment(ui, p, s, hero, index)
     local class, stats = C.classByID[hero.class], G.Stats(s, hero)
+    local outfit = W.ModelAssets.starterOutfits[hero.class] or W.ModelAssets.starterOutfits.MAGE
     line(p, hero.name .. "’s equipment", 0, 0, 320, 20, class.color)
     line(
         p,
@@ -194,7 +195,7 @@ local function equipment(ui, p, s, hero, index)
         line(b, name, 48, 2, 220, 12, slot == selectedSlot and T.gold or T.text)
         line(
             b,
-            item and item.name or "Empty slot",
+            item and item.name or (outfit[slot] and "Basic clothing" or "Empty slot"),
             48,
             rowStep - 22,
             220,
@@ -210,7 +211,8 @@ local function equipment(ui, p, s, hero, index)
                         item,
                         hero
                     ) .. "\nSelect to view upgrades and matching inventory.")
-                or "Select this slot to find matching equipment in the shared inventory."
+                or (outfit[slot] and "Basic clothing is cosmetic and adds no stats. " or "")
+                    .. "Select this slot to find matching equipment in the shared inventory."
         )
     end
 
@@ -244,7 +246,8 @@ local function equipment(ui, p, s, hero, index)
     else
         line(
             p,
-            "An empty " .. string.lower(C.slots[selectedSlot]) .. " slot",
+            outfit[selectedSlot] and "Basic clothing · " .. C.slots[selectedSlot]
+                or "An empty " .. string.lower(C.slots[selectedSlot]) .. " slot",
             0,
             351,
             320,

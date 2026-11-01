@@ -207,6 +207,20 @@ case("Prestige unequips higher armor proficiencies until the hero reaches 40 aga
     hero.level = 40
     assert(G.Equip(s, 1, 1))
 end)
+case("Both starting zones provide wearable chest, leg and foot upgrades for every class", function()
+    for _, zone in ipairs({ "elwynn", "durotar" }) do
+        for _, class in ipairs(C.classes) do
+            local covered = {}
+            for _, id in ipairs(C.zoneItems[zone]) do
+                local item = C.itemByID[id]
+                if item.level == 1 and G.CanEquip({ class = class.id, level = 1 }, item) then
+                    covered[item.slot] = true
+                end
+            end
+            assert(covered[2] and covered[10] and covered[11], zone .. class.id)
+        end
+    end
+end)
 case("Zone drops retain catalog stats, requirements and deterministic identity", function()
     local s = state()
     s.zone = "redridge"

@@ -805,6 +805,10 @@ item(
     { strength = 9, agility = 9, stamina = 10, intellect = 9, spirit = 10, armor = 336 }
 )
 
+item(10046, "Simple Linen Boots", "inv_boots_05", 11, 1, 4, { armor = 11 })
+item(10045, "Simple Linen Pants", "inv_pants_11", 10, 1, 2, { armor = 12 })
+item(2568, "Brown Linen Vest", "inv_shirt_05", 2, 1, 3, { armor = 15 })
+
 C.armorRanks = { cloth = 1, leather = 2, mail = 3, plate = 4 }
 C.armorNames = { cloth = "Cloth", leather = "Leather", mail = "Mail", plate = "Plate" }
 C.classArmor = {
@@ -821,6 +825,9 @@ C.classArmor = {
 -- Source armor subclasses, independent of client-scaled item data.
 local armorItems = {
     cloth = {
+        10046,
+        10045,
+        2568,
         2981,
         3069,
         4038,
@@ -932,6 +939,9 @@ end
 -- Curated zone encounters, not a claim to reproduce live drop rates.
 C.zoneItems = {
     elwynn = {
+        10046,
+        10045,
+        2568,
         25,
         35,
         36,
@@ -950,6 +960,9 @@ C.zoneItems = {
         3213,
     },
     durotar = {
+        10046,
+        10045,
+        2568,
         25,
         35,
         36,

@@ -2,6 +2,26 @@
 
 The catalog uses fixed Classic-era WoWhead tooltip snapshots, checked on 2026-11-01, rather than the connected client’s scaled item cache. Names, icon paths, rarity, primary attributes, armor, weapon DPS, attack power, healing power, resistances, and passive health regeneration come from those tooltips. The structured source for each entry is `https://nether.wowhead.com/classic/tooltip/item/ITEM_ID`. No network access is used by the addon.
 
+## Basic clothing
+
+Every hero model, including the main character, uses a class-themed starter outfit for empty torso, leg, and foot slots. This is a cosmetic fallback, not inventory equipment: it adds no stats, item identities, crafting recipes, salvage rewards, or saved state. Equipped armor replaces the matching part; removing it restores basic clothing. Existing saves and prestige use the same fallback automatically.
+
+Elwynn and Durotar also offer Brown Linen Vest, Simple Linen Pants, and Simple Linen Boots as weak stat-bearing drops wearable by every class from idle level 1. Loot remains random, so cosmetic coverage does not depend on drops.
+
+Starter appearance item references (shirt items cover the torso until chest armor is equipped):
+
+| Class | Torso | Legs | Feet |
+| --- | --- | --- | --- |
+| Warrior | [Recruit's Shirt](https://www.wowhead.com/classic/item=38) | [Recruit's Pants](https://www.wowhead.com/classic/item=39) | [Recruit's Boots](https://www.wowhead.com/classic/item=40) |
+| Paladin | [Squire's Shirt](https://www.wowhead.com/classic/item=45) | [Squire's Pants](https://www.wowhead.com/classic/item=44) | [Squire's Boots](https://www.wowhead.com/classic/item=43) |
+| Hunter | [Trapper's Shirt](https://www.wowhead.com/classic/item=127) | [Recruit's Pants](https://www.wowhead.com/classic/item=39) | [Rugged Trapper's Boots](https://www.wowhead.com/classic/item=129) |
+| Rogue | [Footpad's Shirt](https://www.wowhead.com/classic/item=49) | [Footpad's Pants](https://www.wowhead.com/classic/item=48) | [Footpad's Shoes](https://www.wowhead.com/classic/item=47) |
+| Priest | [Acolyte's Robe](https://www.wowhead.com/classic/item=57) | [Acolyte's Pants](https://www.wowhead.com/classic/item=1396) | [Acolyte's Shoes](https://www.wowhead.com/classic/item=59) |
+| Shaman | [Primitive Mantle](https://www.wowhead.com/classic/item=6134) | [Novice's Pants](https://www.wowhead.com/classic/item=6124) | [Trapper's Boots](https://www.wowhead.com/classic/item=6127) |
+| Mage | [Apprentice's Robe](https://www.wowhead.com/classic/item=56) | [Apprentice's Pants](https://www.wowhead.com/classic/item=1395) | [Apprentice's Boots](https://www.wowhead.com/classic/item=55) |
+| Warlock | [Acolyte's Robe](https://www.wowhead.com/classic/item=6129) | [Acolyte's Pants](https://www.wowhead.com/classic/item=1396) | [Acolyte's Shoes](https://www.wowhead.com/classic/item=59) |
+| Druid | [Novice's Robe](https://www.wowhead.com/classic/item=6123) | [Novice's Pants](https://www.wowhead.com/classic/item=6124) | [Acolyte's Shoes](https://www.wowhead.com/classic/item=59) |
+
 ## Idle adaptations
 
 - Zone tables are curated minigame pools, not complete live mob loot tables or authentic drop percentages. Riverpaw Leather Vest belongs to Elwynn’s gnolls, Stonemason Cloak to Westfall’s Defias, Blackrock Champion’s Axe to Redridge’s Blackrock enemies, and Rathorian’s Cape to the Barrens. Other entries are level-appropriate world finds. Starter weapons are included to supply basic equipment.
@@ -153,5 +173,8 @@ Combat aggregates effective attributes directly. Stamina adds 10 health per poin
 | 13074 | [Golem Shard Leggings](https://www.wowhead.com/classic/item=13074) |
 | 13076 | [Giantslayer Bracers](https://www.wowhead.com/classic/item=13076) |
 | 13077 | [Girdle of Uther](https://www.wowhead.com/classic/item=13077) |
+| 2568 | [Brown Linen Vest](https://www.wowhead.com/classic/item=2568) |
+| 10045 | [Simple Linen Pants](https://www.wowhead.com/classic/item=10045) |
+| 10046 | [Simple Linen Boots](https://www.wowhead.com/classic/item=10046) |
 
 Armor proficiency reference: [Blizzard’s original game manual](https://bnetcmsus-a.akamaihd.net/cms/template_resource/263A8NGR8HLZ1556919642368.pdf). The unlock uses the minigame hero’s idle level, independently of the source item requirement mapping.

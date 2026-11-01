@@ -3,6 +3,18 @@ local _, W = ...
 -- Creature IDs resolve complete NPC appearances, including their baked skins.
 -- Bare race display IDs do not contain a character's composite textures.
 W.ModelAssets = {
+    -- Cosmetic coverage for empty chest, leg and foot slots; no inventory items or stats.
+    starterOutfits = {
+        WARRIOR = { [2] = 38, [10] = 39, [11] = 40 },
+        PALADIN = { [2] = 45, [10] = 44, [11] = 43 },
+        HUNTER = { [2] = 127, [10] = 39, [11] = 129 },
+        ROGUE = { [2] = 49, [10] = 48, [11] = 47 },
+        PRIEST = { [2] = 57, [10] = 1396, [11] = 59 },
+        SHAMAN = { [2] = 6134, [10] = 6124, [11] = 6127 },
+        MAGE = { [2] = 56, [10] = 1395, [11] = 55 },
+        WARLOCK = { [2] = 6129, [10] = 1396, [11] = 59 },
+        DRUID = { [2] = 6123, [10] = 6124, [11] = 59 },
+    },
     -- Align the fitted creature camera's ground with native full-body characters
     -- in the shared 240-unit-high viewport. Parent scaling preserves this in compact mode.
     creatureGroundOffset = 24,

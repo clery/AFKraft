@@ -3,11 +3,13 @@ local A = W.Client
 
 function A.EquipmentSpec(hero)
     local equipment, key = {}, {}
+    local outfit = W.ModelAssets.starterOutfits[hero.class] or W.ModelAssets.starterOutfits.MAGE
     for _, slot in ipairs(W.Content.equipmentSlots) do
         local item = type(hero.gear) == "table" and hero.gear[slot]
         local id = type(item) == "table" and item.itemID
         local template = id and W.Content.itemByID[id]
-        if template then
+        id = template and id or outfit[slot]
+        if id then
             equipment[#equipment + 1] = id
             key[#key + 1] = slot .. "=" .. id
         end

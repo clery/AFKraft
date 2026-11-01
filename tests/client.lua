@@ -643,7 +643,7 @@ case(
         hero.gear[4] = { itemID = 13094 }
         assert(client.ModelSpec(hero).key == equipped.key)
         hero.gear[4] = { itemID = 1930 }
-        assert(client.ModelSpec(hero).equipment[2] == 1930)
+        assert(client.ModelSpec(hero).equipment[3] == 1930)
         local seen = {}
         for seed = 1, 20 do
             hero.appearanceSeed = seed
@@ -660,6 +660,33 @@ case(
         assert(seed and W.Game.Load(W.Game.Copy(migrated), 1000).heroes[1].appearanceSeed == seed)
     end
 )
+
+case("Every new hero and the main character have stat-free clothing in empty slots", function()
+    local client = adapter("12.1.5")
+    for _, class in ipairs(W.Content.classes) do
+        local s = W.Game.New(1000)
+        assert(W.Game.AddHero(s, class.id))
+        local hero = s.heroes[1]
+        local seed, nextItem = s.seed, s.nextItem
+        local outfit = client.ModelSpec(hero).equipment
+        assert(#outfit == 3)
+        assert(next(hero.gear) == nil and #s.inventory == 0)
+        assert(s.seed == seed and s.nextItem == nextItem)
+        assert(W.Game.Stats(s, hero).attributes.armor == nil)
+        local baseline = client.ModelSpec(hero).equipmentKey
+        hero.guid = "test-character"
+        local main = client.ModelSpec(hero)
+        assert(main.unit == "player" and main.equipmentKey == baseline)
+        hero.gear[2] = W.Game.Item(s, 2, 1, 1, false, W.Content.itemByID[2568])
+        local dressed = client.ModelSpec(hero)
+        assert(#dressed.equipment == 3 and dressed.equipment[1] == 2568)
+        assert(dressed.equipment[2] == outfit[2] and dressed.equipment[3] == outfit[3])
+        hero.gear[2] = nil
+        assert(client.ModelSpec(hero).equipmentKey == baseline)
+        assert(W.Game.Load(s, 1000))
+        assert(client.ModelSpec(hero).equipmentKey == baseline)
+    end
+end)
 
 case("Uncached equipment requests data once and dresses only after data arrives", function()
     local cached, requests, tried = false, 0, 0
