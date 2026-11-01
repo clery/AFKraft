@@ -605,7 +605,7 @@ test("Adventure models follow combat positions with roomy transparent viewports"
         for j = 1, i - 1 do
             local other = scene.plateOrder[j]
             local _, _, _, otherX, otherY = other.plate:GetPoint()
-            assertTrue(math.abs(y - otherY) >= 40 or math.abs(x - otherX) >= 140)
+            assertTrue(math.abs(y - otherY) >= 10 or math.abs(x - otherX) >= 124)
         end
     end
     local _, _, _, _, nameY = front.name:GetPoint()
@@ -670,19 +670,19 @@ test("Player and enemy nameplates follow their displayed models vertically", fun
         scene:PlaceNameplates()
         local _, _, _, x, y = unit.plate:GetPoint()
         assertEquals(600, x)
-        assertEquals(-82, y)
+        assertEquals(-88, y)
         unit.y = 130
         scene:PlaceNameplates()
         local _, _, _, movedX, movedY = unit.plate:GetPoint()
         assertEquals(x, movedX)
-        assertEquals(y - 20, movedY)
+        assertEquals(-102, movedY)
         unit.y = 95
         scene:PlaceNameplates()
         local _, _, _, _, raisedY = unit.plate:GetPoint()
-        assertEquals(-67, raisedY)
+        assertEquals(-88, raisedY)
         unit:Hide()
     end
-    -- A crowded company must retain its overhead height in every layout.
+    -- Crowded plates stay horizontally attached and use separate heights in every layout.
     for _, compact in ipairs({ false, true }) do
         scene:Layout(compact, false)
         for i, unit in ipairs(scene.units) do
@@ -692,13 +692,39 @@ test("Player and enemy nameplates follow their displayed models vertically", fun
         scene:PlaceNameplates()
         for i, unit in ipairs(scene.plateOrder) do
             local _, _, _, x, y = unit.plate:GetPoint()
-            assertEquals(28 - unit.y, y)
+            assertEquals(unit.x, x)
             assertTrue(x >= 8 and x + 132 <= 1284)
-            if i > 1 then
-                assertTrue(x - scene.plateOrder[i - 1].plateX >= 140)
+            for j = 1, i - 1 do
+                local other = scene.plateOrder[j]
+                assertTrue(math.abs(x - other.plateX) >= 124 or math.abs(-y - other.plateY) >= 10)
             end
         end
     end
+    scene.frame:Hide()
+end)
+
+test("Nameplates only change height when health bars overlap", function()
+    local scene = WoWIdle.Scene.Create(UIParent)
+    for _, unit in ipairs(scene.units) do
+        unit:Hide()
+    end
+    local first, second = scene.units[1], scene.units[2]
+    first.x, first.y = 400, 140
+    first:Show()
+    second:Show()
+    for _, gap in ipairs({ 124, 130, 139 }) do
+        second.x, second.y = first.x + gap, first.y
+        scene:PlaceNameplates()
+        assertEquals(112, first.plateY)
+        assertEquals(112, second.plateY)
+    end
+    second.x = first.x + 123
+    scene:PlaceNameplates()
+    assertEquals(34, math.abs(first.plateY - second.plateY))
+    second.y = first.y + first.hp:GetHeight()
+    scene:PlaceNameplates()
+    assertEquals(112, first.plateY)
+    assertEquals(122, second.plateY)
     scene.frame:Hide()
 end)
 

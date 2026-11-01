@@ -429,7 +429,7 @@ function Scene:Refresh(s)
     end
 end
 
--- Keep overhead bars above their owners, with horizontal spacing when crowded.
+-- Keep plate placement deterministic as models move past one another.
 local function sortByPosition(a, b)
     local ax, bx = a.renderX or a.x, b.renderX or b.x
     return ax < bx or (ax == bx and a.index < b.index)
@@ -539,25 +539,52 @@ function Scene:PlaceNameplates()
         order[i] = nil
     end
     table.sort(order, sortByPosition)
-    -- Keep the health bar relative to its rendered owner. Resolve congestion along
-    -- the horizontal axis so no row pushes a bar down onto a character or up
-    -- into the scene heading. All eight plates fit within the stage width.
-    local previous = -132
-    for _, unit in ipairs(order) do
-        unit.plateX = math.max(8, unit.renderX or unit.x, previous + 140)
-        previous = unit.plateX
-    end
-    local nextX = 1280
-    for i = count, 1, -1 do
-        local unit = order[i]
-        unit.plateX = math.min(unit.plateX, nextX - 140)
-        nextX = unit.plateX
-        local y =
+    -- Keep each plate centered on its owner. Only overlapping plates need a
+    -- different height; spreading the entire company sideways loses that link.
+    for i, unit in ipairs(order) do
+        local x = math.max(8, math.min(1140, unit.renderX or unit.x))
+        local preferredY =
             math.max(88, (unit.renderY or unit.y or 110) - 28 + (1 - (unit.depthScale or 1)) * 240)
-        if unit.plateX ~= unit.lastPlateX or y ~= unit.lastPlateY then
+        local y = preferredY
+        local bestDistance = math.huge
+        -- Try the owner's height and the edges of already placed plates. Choose
+        -- the nearest free height, preferring overhead space on equal distances.
+        for candidate = 0, (i - 1) * 2 do
+            local candidateY = preferredY
+            if candidate > 0 then
+                local other = order[math.ceil(candidate / 2)]
+                candidateY = other.plateY
+                    + (
+                        candidate % 2 == 1 and -(24 + unit.hp:GetHeight())
+                        or 24 + other.hp:GetHeight()
+                    )
+            end
+            local free = candidateY >= 88
+            -- All bars share the same inset, so it cancels out of these bounds.
+            for j = 1, i - 1 do
+                local other = order[j]
+                if
+                    x < other.plateX + other.hp:GetWidth()
+                    and x + unit.hp:GetWidth() > other.plateX
+                    and candidateY < other.plateY + other.hp:GetHeight()
+                    and candidateY + unit.hp:GetHeight() > other.plateY
+                then
+                    free = false
+                    break
+                end
+            end
+            local distance = math.abs(candidateY - preferredY)
+            if
+                free and (distance < bestDistance or (distance == bestDistance and candidateY < y))
+            then
+                y, bestDistance = candidateY, distance
+            end
+        end
+        unit.plateX, unit.plateY = x, y
+        if x ~= unit.lastPlateX or y ~= unit.lastPlateY then
             unit.plate:ClearAllPoints()
-            unit.plate:SetPoint("TOPLEFT", self.nameplates, "TOPLEFT", unit.plateX, -y)
-            unit.lastPlateX, unit.lastPlateY = unit.plateX, y
+            unit.plate:SetPoint("TOPLEFT", self.nameplates, "TOPLEFT", x, -y)
+            unit.lastPlateX, unit.lastPlateY = x, y
         end
     end
 end
