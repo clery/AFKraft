@@ -561,6 +561,30 @@ test("Adventure models follow combat positions with roomy transparent viewports"
     assertTrue(front.hp:IsShown())
 end)
 
+test("Enemy nameplates follow their displayed model vertically", function()
+    local scene = WoWIdle.Scene.Create(UIParent)
+    for _, unit in ipairs(scene.units) do
+        unit:Hide()
+    end
+    local enemy = scene.units[6]
+    enemy.x, enemy.y = 600, 110
+    enemy:Show()
+    scene:PlaceNameplates()
+    local _, _, _, x, y = enemy.plate:GetPoint()
+    assertEquals(600, x)
+    assertEquals(-82, y)
+    enemy.y = 130
+    scene:PlaceNameplates()
+    local _, _, _, movedX, movedY = enemy.plate:GetPoint()
+    assertEquals(x, movedX)
+    assertEquals(y - 20, movedY)
+    enemy.y = 95
+    scene:PlaceNameplates()
+    local _, _, _, _, raisedY = enemy.plate:GetPoint()
+    assertEquals(-67, raisedY)
+    scene.frame:Hide()
+end)
+
 test("Talent trees change with class and keep class selections independent", function()
     local W = WoWIdle
     W.Initialize()
