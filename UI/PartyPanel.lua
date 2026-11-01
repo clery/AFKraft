@@ -226,15 +226,36 @@ local function inventory(ui, p, s, hero, index)
     for slot, name in ipairs(C.slots) do
         options[#options + 1] = { id = slot, name = name }
     end
-    entries = G.InventoryEntries(s, hero, filter)
-    line(p, "Shared inventory", 608, 0, 420, 21, T.gold)
-    line(p, #entries .. " stacks", 1116, 7, 180, 12, T.muted):SetJustifyH("RIGHT")
+    local view = ui.bagView or {}
+    ui.bagView = view
+    entries = G.InventoryEntries(s, hero, filter, view)
+    line(p, "Shared inventory", 608, 0, 300, 21, T.gold)
+    line(p, #entries .. " / " .. #s.inventory .. " stacks", 920, 7, 244, 12, T.muted):SetJustifyH(
+        "RIGHT"
+    )
+    U.Button(p, "Reset filters", 1180, 0, 116, 30, function()
+        ui.bagView, ui.bagFilter, ui.bagPage = nil, 0, 0
+        ui:Refresh()
+    end)
+    local function choice(key, choices, default, x, y, width)
+        local value = view[key] or default
+        local label = choices[1].name
+        for _, option in ipairs(choices) do
+            if option.id == value then
+                label = option.name
+            end
+        end
+        U.Choice(p, label, x, y, width, choices, value, function(id)
+            view[key], ui.bagPage = id, 0
+            ui:Refresh()
+        end)
+    end
     U.Choice(
         p,
         filter == 0 and "All equipment" or C.slots[filter],
         608,
         40,
-        240,
+        216,
         options,
         filter,
         function(id)
@@ -242,7 +263,36 @@ local function inventory(ui, p, s, hero, index)
             ui:Refresh()
         end
     )
-    local equipBest = U.Button(p, "Equip best power", 1056, 40, 240, 34, function()
+    choice("availability", {
+        { id = "all", name = "Any required level" },
+        { id = "usable", name = "Equippable now" },
+        { id = "locked", name = "Requires higher level" },
+        { id = "upgrades", name = "Usable upgrades" },
+    }, "all", 840, 40, 224)
+    choice("sort", {
+        { id = "power", name = "Sort: Power" },
+        { id = "level", name = "Sort: Level" },
+        { id = "quality", name = "Sort: Quality" },
+        { id = "slot", name = "Sort: Equipment slot" },
+        { id = "name", name = "Sort: Name" },
+    }, "power", 1080, 40, 216)
+    local qualities = { { id = 0, name = "Any quality" } }
+    for quality, name in ipairs(C.qualityNames) do
+        qualities[#qualities + 1] = { id = quality, name = name }
+    end
+    choice("quality", qualities, 0, 608, 80, 160)
+    choice("trait", {
+        { id = "all", name = "Any item trait" },
+        { id = "heirloom", name = "Heirlooms" },
+        { id = "protected", name = "Protected" },
+        { id = "effect", name = "With effect" },
+        { id = "upgraded", name = "Upgraded" },
+    }, "all", 784, 80, 160)
+    U.Button(p, view.ascending and "Ascending" or "Descending", 960, 80, 120, 32, function()
+        view.ascending, ui.bagPage = not view.ascending, 0
+        ui:Refresh()
+    end)
+    local equipBest = U.Button(p, "Equip best power", 1096, 80, 200, 32, function()
         W.Action(G.EquipBest, index)
     end, false, "primary")
     U.Tooltip(
@@ -260,12 +310,12 @@ local function inventory(ui, p, s, hero, index)
         local entry = entries[page * 5 + row]
         if entry then
             local n, item = entry.index, entry.item
-            local y = 88 + (row - 1) * 56
+            local y = 124 + (row - 1) * 50
             local power = G.ItemPower(item, hero)
             local previous = hero.gear[item.slot]
             local delta = power - G.ItemPower(previous, hero)
             local levelOK = item.heirloom or item.level <= hero.level
-            local b = U.Button(p, "", 608, y, 688, 50, function()
+            local b = U.Button(p, "", 608, y, 688, 46, function()
                 ui.gearSlot = item.slot
                 if W.Action(G.Equip, index, n) then
                     W.Notify("Equipped " .. item.name .. " on " .. hero.name .. ".")
@@ -274,7 +324,7 @@ local function inventory(ui, p, s, hero, index)
             b.text:Hide()
             U.Begin(b)
             U.Enabled(b, levelOK)
-            U.Icon(b, slotIcons[item.slot], 12, 9, 32)
+            U.Icon(b, slotIcons[item.slot], 12, 7, 32)
             line(
                 b,
                 item.name .. ((item.count or 1) > 1 and "  ×" .. item.count or ""),
@@ -347,16 +397,31 @@ local function inventory(ui, p, s, hero, index)
         )
         U.Text(
             p,
-            "Win encounters or craft a targeted item. Equipment is shared by your company.",
+            #s.inventory == 0
+                    and "Win encounters or craft a targeted item. Equipment is shared by your company."
+                or "Try another filter, or reset the inventory view to show all equipment.",
             632,
             201,
             14,
             T.muted,
             610
         )
-        U.Button(p, "Visit the forge", 632, 258, 216, 34, function()
-            ui:SetTab("crafting")
-        end)
+        U.Button(
+            p,
+            #s.inventory == 0 and "Visit the forge" or "Reset filters",
+            632,
+            258,
+            216,
+            34,
+            function()
+                if #s.inventory == 0 then
+                    ui:SetTab("crafting")
+                else
+                    ui.bagView, ui.bagFilter, ui.bagPage = nil, 0, 0
+                    ui:Refresh()
+                end
+            end
+        )
     end
     local previous = U.Button(p, "Previous", 608, 389, 116, 32, function()
         ui.bagPage = page - 1

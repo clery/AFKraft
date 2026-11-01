@@ -217,6 +217,51 @@ case("Inventory sorts by effective power with stable ties and original indices",
     end
 end)
 
+case("Inventory combines hero requirements, quality, slot and trait filters", function()
+    local s = party()
+    local hero = s.heroes[1]
+    hero.level = 4
+    local usable = G.Item(s, 1, 3, 3)
+    local locked = G.Item(s, 1, 9, 3)
+    local legacy = G.Item(s, 2, 9, 3, true)
+    usable.protected, usable.upgrade = true, 1
+    s.inventory = { usable, locked, legacy, G.Item(s, 1, 2, 1) }
+    equal(#G.InventoryEntries(s, hero, 0, { availability = "usable" }), 3)
+    equal(G.InventoryEntries(s, hero, 0, { availability = "locked" })[1].item, locked)
+    equal(#G.InventoryEntries(s, hero, 1, { availability = "usable", quality = 3 }), 1)
+    for _, trait in ipairs({ "protected", "upgraded", "effect" }) do
+        equal(
+            G.InventoryEntries(s, hero, 1, { availability = "usable", trait = trait })[1].item,
+            usable
+        )
+    end
+    equal(G.InventoryEntries(s, hero, 0, { trait = "heirloom" })[1].item, legacy)
+    hero.gear[1] = usable
+    local upgrades = G.InventoryEntries(s, hero, 1, { availability = "upgrades" })
+    equal(#upgrades, 0)
+    equal(#s.inventory, 4)
+end)
+
+case("Inventory sorting supports both directions without changing equip indices", function()
+    local s = party()
+    s.inventory = { G.Item(s, 2, 3, 1), G.Item(s, 1, 6, 3), G.Item(s, 3, 2, 2) }
+    for _, sort in ipairs({ "power", "level", "quality", "slot", "name" }) do
+        for _, ascending in ipairs({ true, false }) do
+            local entries =
+                G.InventoryEntries(s, s.heroes[1], 0, { sort = sort, ascending = ascending })
+            for i, entry in ipairs(entries) do
+                equal(s.inventory[entry.index], entry.item)
+                if i > 1 then
+                    local previous = entries[i - 1]
+                    local a = sort == "power" and previous.power or previous.item[sort]
+                    local b = sort == "power" and entry.power or entry.item[sort]
+                    assert((ascending and a <= b) or (not ascending and a >= b))
+                end
+            end
+        end
+    end
+end)
+
 case("Auto equip selects usable effective power and preserves stacks and other heroes", function()
     local s = party()
     local hero = s.heroes[1]

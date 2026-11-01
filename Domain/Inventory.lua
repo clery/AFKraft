@@ -201,16 +201,43 @@ function G.UnlockRecipe(state, slot)
     return true
 end
 
-function G.InventoryEntries(state, hero, slot)
+-- Options only affect the view; indices always refer to the shared inventory.
+function G.InventoryEntries(state, hero, slot, options)
+    options = options or {}
     local entries = {}
     for index, item in ipairs(state.inventory) do
-        if not slot or slot == 0 or item.slot == slot then
-            entries[#entries + 1] = { index = index, item = item, power = G.ItemPower(item, hero) }
+        local power = G.ItemPower(item, hero)
+        local usable = item.heirloom or (hero and item.level <= hero.level)
+        local upgrade = hero and power > G.ItemPower(hero.gear[item.slot], hero)
+        local availability = options.availability
+        local trait = options.trait
+        if
+            (not slot or slot == 0 or item.slot == slot)
+            and (not options.quality or options.quality == 0 or item.quality == options.quality)
+            and (not availability or availability == "all" or (availability == "usable" and usable) or (availability == "locked" and not usable) or (availability == "upgrades" and usable and upgrade))
+            and (
+                not trait
+                or trait == "all"
+                or (trait == "heirloom" and item.heirloom)
+                or (trait == "protected" and item.protected)
+                or (trait == "effect" and item.effect)
+                or (trait == "upgraded" and (item.upgrade or 0) > 0)
+            )
+        then
+            entries[#entries + 1] = { index = index, item = item, power = power }
         end
     end
+    local sort = options.sort or "power"
     table.sort(entries, function(a, b)
-        if a.power ~= b.power then
-            return a.power > b.power
+        local av, bv = a.power, b.power
+        if sort == "level" or sort == "quality" or sort == "slot" or sort == "name" then
+            av, bv = a.item[sort], b.item[sort]
+        end
+        if av ~= bv then
+            if options.ascending then
+                return av < bv
+            end
+            return av > bv
         end
         return a.item.uid < b.item.uid
     end)
