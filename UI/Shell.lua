@@ -318,7 +318,13 @@ function W.CreateUI()
     W.UI = ui
     local f = CreateFrame("Frame", "WoWIdleWindow", UIParent)
     ui.frame = f
-    f:SetFrameStrata("HIGH")
+    f:SetFrameStrata("DIALOG")
+    f:SetToplevel(true)
+    -- Keep the interactive window above HIGH overlays and bring it forward
+    -- among other dialogs whenever it opens.
+    f:SetScript("OnShow", function(self)
+        self:Raise()
+    end)
     f:SetClampedToScreen(true)
     f:SetMovable(true)
     f:SetResizable(true)
