@@ -50,6 +50,22 @@ function W.Toggle()
     W.UI.frame:SetShown(not W.UI.frame:IsShown())
 end
 
+local function startingHero(state)
+    local identity = A.Identity()
+    state.identities[identity.guid] = identity
+    if #state.heroes == 0 then
+        if W.Content.classByID[identity.class] then
+            G.AddHero(state, identity.class, identity)
+        else
+            G.AddHero(state, "WARRIOR")
+            G.Log(
+                state,
+                "Your adventure begins with one warrior. Defeat milestone bosses to find companions."
+            )
+        end
+    end
+end
+
 function W.Initialize()
     if W.state then
         return
@@ -67,24 +83,62 @@ function W.Initialize()
     end
     W.state = state
     WoWIdleDB = state
-    local identity = A.Identity()
-    state.identities[identity.guid] = identity
-    if #state.heroes == 0 then
-        if W.Content.classByID[identity.class] then
-            G.AddHero(state, identity.class, identity)
-        else
-            G.AddHero(state, "WARRIOR")
-            G.Log(
-                state,
-                "Your adventure begins with one warrior. Defeat milestone bosses to find companions."
-            )
-        end
-    end
+    startingHero(state)
     W.catchup = G.BeginCatchup(state, A.Now())
     W.CreateUI()
     W.Minimap.Create()
     W.RegisterSettings()
     print("|cffdfbc79WoWIdle|r · /wowidle to enter your adventure.")
+end
+
+-- Called by the confirmed Settings action. Replace the saved gameplay state
+-- without rebuilding frames, rebinding preferences, or re-registering events.
+function W.ResetAdventure()
+    if not W.state then
+        return
+    end
+    local previous = W.state
+    local state = G.New(A.Now())
+    state.ui, state.settings = previous.ui, previous.settings
+    state.ui.tab, state.ui.compact, state.ui.minimapNotice = "adventure", false, nil
+    W.catchup = nil
+    elapsed = 0
+    W.Audio.Stop()
+    W.state, WoWIdleDB = state, state
+    startingHero(state)
+    local ui = W.UI
+    for _, key in ipairs({
+        "craftSlot",
+        "craftHeirloom",
+        "craftMaterial",
+        "legacySlot",
+        "lootPage",
+        "gearSlot",
+        "bagFilter",
+        "bagFiltersOpen",
+        "bagPage",
+        "bagView",
+        "confirmPrestige",
+        "message",
+        "messageUntil",
+    }) do
+        ui[key] = nil
+    end
+    ui.selected, ui.recruiting = 1, false
+    if ui.atlas then
+        ui.atlas.focus = nil
+    end
+    if ui.map then
+        ui.map:Hide()
+    end
+    for _, unit in ipairs(ui.scene.units) do
+        unit.floatAnimation:Stop()
+        unit.floating:SetAlpha(0)
+    end
+    state.ui.minimapNotice = nil
+    W.Minimap.Refresh()
+    ui:ApplyMode()
+    ui.frame:Show()
 end
 
 function root:OnInitialize()

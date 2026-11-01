@@ -84,6 +84,8 @@ Use the top-right controls to switch between **compact**, **windowed**, and **fu
 
 Open **Settings → AddOns → WoWIdle** to adjust display preferences, window locking, the minimap button, chat announcements, floating combat text, and audio. Preferences are saved account-wide and apply immediately. Loot rules remain in the minigame.
 
+To test a fresh start, open **Settings → AddOns → WoWIdle → New adventure** and choose **Reset all adventure progress**. Confirming permanently erases the account-wide adventure, including Legacy and heirlooms, and starts with one hero and the starter guide. Display and audio preferences are kept.
+
 Audio can be muted entirely or by category, including combat, encounters, progression, loot, and travel. Sounds play only while the adventure window is visible, use WoW's sound-effects volume, and stay silent during offline catch-up.
 
 | Command | Action |

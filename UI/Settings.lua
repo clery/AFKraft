@@ -77,6 +77,30 @@ function W.RegisterSettings()
             width = "full",
         }
     end
+    options.args.adventure = {
+        type = "group",
+        name = "New adventure",
+        order = 90,
+        args = {
+            description = {
+                type = "description",
+                name = "Start over with one hero and the starter guide. This erases the shared adventure for every character on your account. Display and audio preferences are kept.",
+                order = 1,
+            },
+            reset = {
+                type = "execute",
+                name = "Reset all adventure progress…",
+                desc = "Permanently erase heroes, equipment, currencies, Adventure XP, Legacy, recipes, discoveries and destination progress. This is a full reset, not a new chapter.",
+                order = 2,
+                width = "full",
+                confirm = true,
+                confirmText = "Erase ALL account-wide WoWIdle progress? Heroes, equipment, gold, materials, Essence, Adventure XP, Legacy, heirlooms, recipes and discoveries will be lost. This cannot be undone. Display and audio preferences are kept.",
+                func = function()
+                    W.ResetAdventure()
+                end,
+            },
+        },
+    }
     options.args.debug = {
         type = "group",
         name = "Debug",
