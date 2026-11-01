@@ -8,7 +8,7 @@ Audio.categories = {
     {
         key = "soundCombat",
         name = "Sounds: combat and voices",
-        tip = "Sampled weapon impacts and actor attack voices, at most once every 1.2 seconds.",
+        tip = "Weapon impacts, attack voices, and wound sounds, sampled every 1.2 seconds per side.",
     },
     {
         key = "soundSpells",
@@ -68,29 +68,29 @@ local cues = {
 }
 -- Native SoundKit IDs (not FileDataIDs). Each kit supplies its own variations.
 -- Profiles follow the NPC appearances in ModelAssets, rather than display names.
--- attack, death, aggro; omitted entries retain the ordinary cue.
+-- attack, death, aggro, wound; omitted entries retain the ordinary cue.
 local voices = {
-    wolf = { 391, 394, 390 },
-    kobold = { 312, 314, 694 },
-    gnoll = { 306, 308, 1015 },
-    boar = { 380, 383, 379 },
-    quillboar = { 1176, 1179, 1181 },
-    thief = { 322, 324 },
-    harvest = { 2087, 2518, 2092 },
+    wolf = { 391, 394, 390, 392 },
+    kobold = { 312, 314, 694, 315 },
+    gnoll = { 306, 308, 1015, 309 },
+    boar = { 380, 383, 379, 381 },
+    quillboar = { 1176, 1179, 1181, 1177 },
+    thief = { 322, 324, nil, 325 },
+    harvest = { 2087, 2518, 2092, 2088 },
     air = { nil, 3787, 3789 },
-    cat = { 643, 646 },
-    centaur = { 1040, 1043, 1044 },
-    orc = { 1319, 1322, 1346 },
-    whelp = { 429, 432, 428 },
-    furbolg = { 355, 357 },
-    ancient = { 1494, 3375, 1498 },
-    skeleton = { 335, 337, 1016 },
-    worgen = { 558, 441, 437 },
-    troll = { 1029, 1032, 1034 },
-    goblin = { 1409, 1413 },
-    vulture = { 442, 444, 447 },
-    ogre = { 397, 400, 396 },
-    yeti = { 1239, 1242, 1243 },
+    cat = { 643, 646, nil, 644 },
+    centaur = { 1040, 1043, 1044, 1041 },
+    orc = { 1319, 1322, 1346, 1320 },
+    whelp = { 429, 432, 428, 430 },
+    furbolg = { 355, 357, nil, 358 },
+    ancient = { 1494, 3375, 1498, 1495 },
+    skeleton = { 335, 337, 1016, 338 },
+    worgen = { 558, 441, 437, 439 },
+    troll = { 1029, 1032, 1034, 1030 },
+    goblin = { 1409, 1413, nil, 1410 },
+    vulture = { 442, 444, 447, 445 },
+    ogre = { 397, 400, 396, 398 },
+    yeti = { 1239, 1242, 1243, 1240 },
 }
 local creatureVoices = {
     [299] = "wolf",
@@ -129,18 +129,18 @@ local creatureVoices = {
     [7459] = "yeti",
 }
 local characterVoices = {
-    human_male = { 2941, 2944 },
-    human_female = { 2937, 2940 },
-    orc_male = { 1319, 1322 },
-    orc_female = { 209, 213 },
-    dwarf_male = { 2929, 2932 },
-    dwarf_female = { 2925, 2928 },
-    nightelf_male = { 2956, 2959 },
-    nightelf_female = { 2933, 2936 },
-    undead_male = { 1315, 1318 },
-    undead_female = { 1361, 1364 },
-    tauren_male = { 1353, 1356 },
-    tauren_female = { 225, 229 },
+    human_male = { 2941, 2944, nil, 2942 },
+    human_female = { 2937, 2940, nil, 2938 },
+    orc_male = { 1319, 1322, nil, 1320 },
+    orc_female = { 209, 213, nil, 211 },
+    dwarf_male = { 2929, 2932, nil, 2930 },
+    dwarf_female = { 2925, 2928, nil, 2926 },
+    nightelf_male = { 2956, 2959, nil, 2957 },
+    nightelf_female = { 2933, 2936, nil, 2934 },
+    undead_male = { 1315, 1318, nil, 1316 },
+    undead_female = { 1361, 1364, nil, 1362 },
+    tauren_male = { 1353, 1356, nil, 1354 },
+    tauren_female = { 225, 229, nil, 227 },
 }
 
 local function actorVoice(state, enemy, index, action)
@@ -177,12 +177,14 @@ local function actorVoice(state, enemy, index, action)
 end
 
 local pending, last = nil, {}
+local pendingHits = {}
 local quietUntil = -math.huge
 local handles = {}
 local levelUpQuietUntil = -math.huge
 
 function Audio.Stop()
     pending = nil
+    pendingHits = {}
     for i = #handles, 1, -1 do
         if StopSound then
             pcall(StopSound, handles[i])
@@ -217,11 +219,19 @@ function W.OnGameEvent(state, event)
     end
     local cue = cues[kind]
     local now = GetTime()
-    if cue and state.settings[cue[1]] and now - (last[cue[1]] or -math.huge) >= cue[4] then
-        if not pending or cue[3] > pending[3] then
-            local kit, voice
+    local side = kind == "hit" and (event.enemy and "heroHit" or "mobHit") or nil
+    local cooldown = side or cue and cue[1]
+    if cue and state.settings[cue[1]] and now - (last[cooldown] or -math.huge) >= cue[4] then
+        if side and not pendingHits[side] or not side and (not pending or cue[3] > pending[3]) then
+            local kit, voice, wound
             if kind == "hit" then
                 voice = actorVoice(state, not event.enemy, event.source, 1)
+                local targets = state.battle
+                    and (event.enemy and state.battle.enemies or state.battle.heroes)
+                local target = targets and targets[event.target]
+                if target and target.hp > 0 then
+                    wound = actorVoice(state, event.enemy, event.target, 4)
+                end
                 if not event.enemy then
                     -- Creature attacks carry their own bite/claw/exertion sound.
                     kit, voice = voice, nil
@@ -252,7 +262,12 @@ function W.OnGameEvent(state, event)
                     return
                 end
             end
-            pending = { cue[1], kit or cue[2], cue[3], cue[4], voice }
+            local resolved = { cue[1], kit or cue[2], cue[3], cue[4], voice, wound, cooldown }
+            if side then
+                pendingHits[side] = resolved
+            else
+                pending = resolved
+            end
         end
     end
 end
@@ -261,7 +276,14 @@ function Audio.Flush()
     -- Consume once per controller frame, independently of scene refreshes.
     -- Never retain a backlog to replay after reopening the window or catch-up.
     local cue = pending
+    local heroHit, mobHit = pendingHits.heroHit, pendingHits.mobHit
     pending = nil
+    pendingHits = {}
+    local batch = cue and { cue } or { heroHit or mobHit }
+    if not cue and heroHit and mobHit then
+        batch[2] = mobHit
+    end
+    cue = batch[1]
     if not audible(W.state) then
         Audio.Stop()
         return
@@ -278,27 +300,36 @@ function Audio.Flush()
     if cue[3] < 4 and now < quietUntil then
         return
     end
-    local kit = type(cue[2]) == "number" and cue[2] or SOUNDKIT and SOUNDKIT[cue[2]]
-    if type(kit) ~= "number" or kit <= 0 or not PlaySound then
-        return
-    end
-    -- SFX respects the player's effects volume/mute; never force the Master channel.
+    -- Stop the previous sample once; both sides of this exchange may play together.
     Audio.Stop()
-    local ok, played, soundHandle = pcall(PlaySound, kit, "SFX", false)
-    if ok and played then
-        if soundHandle then
-            handles[#handles + 1] = soundHandle
-        end
-        if cue[5] then
-            local voiceOK, voiced, voiceHandle = pcall(PlaySound, cue[5], "SFX", false)
-            if voiceOK and voiced and voiceHandle then
-                handles[#handles + 1] = voiceHandle
+    for _, sample in ipairs(batch) do
+        local kit = type(sample[2]) == "number" and sample[2] or SOUNDKIT and SOUNDKIT[sample[2]]
+        local playedAny = false
+        for slot = 1, 3 do
+            local id
+            if slot == 1 then
+                id = kit
+            else
+                id = sample[slot + 3]
+            end
+            if type(id) == "number" and id > 0 and PlaySound then
+                -- SFX respects the player's effects volume/mute.
+                local ok, played, soundHandle = pcall(PlaySound, id, "SFX", false)
+                if ok and played then
+                    playedAny = true
+                    if soundHandle then
+                        handles[#handles + 1] = soundHandle
+                    end
+                end
             end
         end
-        if kit == 888 then
-            levelUpQuietUntil = now + 4
+        if playedAny then
+            if kit == 888 then
+                levelUpQuietUntil = now + 4
+            end
+            last[sample[7]] = now
+            quietUntil = now
+                + (sample[3] >= 4 and 2.5 or sample[1] == "soundEncounters" and 1.8 or 0.65)
         end
-        last[cue[1]] = now
-        quietUntil = now + (cue[3] >= 4 and 2.5 or cue[1] == "soundEncounters" and 1.8 or 0.65)
     end
 end

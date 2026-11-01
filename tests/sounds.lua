@@ -200,6 +200,80 @@ return {
         end,
     },
     {
+        "Both sides of an exchange play attacks and surviving targets' wounds",
+        function()
+            local n, emit, played, advance = fixture()
+            n.Client = {
+                ModelSpec = function()
+                    return { creatureID = 448 }
+                end,
+            }
+            n.state.heroes = { { class = "WARRIOR", appearance = "human_male" } }
+            n.state.battle = {
+                heroes = { { hp = 50 } },
+                enemies = { { name = "Hogger", hp = 50 } },
+            }
+            emit("hit", { enemy = true, source = 1, target = 1 })
+            emit("hit", { enemy = false, source = 1, target = 1 })
+            n.Audio.Flush()
+            assert(#played == 5)
+            assert(played[1] == 235 and played[2] == 2941 and played[3] == 309)
+            assert(played[4] == 306 and played[5] == 2942)
+            advance(0.8)
+            emit("hit", { enemy = false, source = 1, target = 1 })
+            n.Audio.Flush()
+            assert(#played == 5)
+            advance(1.3)
+            emit("hit", { enemy = false, source = 1, target = 1 })
+            n.Audio.Flush()
+            assert(#played == 7)
+        end,
+    },
+    {
+        "Creatures without an aggro kit keep wounds separate from entrance calls",
+        function()
+            local n, emit, played, advance = fixture()
+            n.Client = {
+                ModelSpec = function()
+                    return { creatureID = 3425 }
+                end,
+            }
+            n.state.battle = { enemies = { { name = "Savannah prowler", hp = 50 } } }
+            emit("encounter")
+            n.Audio.Flush()
+            assert(played[1] == 643)
+            advance(2)
+            emit("hit", { enemy = true, target = 1 })
+            n.Audio.Flush()
+            assert(played[#played] == 644)
+        end,
+    },
+    {
+        "Lethal hits skip wounds and combat mute discards both sides",
+        function()
+            local n, emit, played, advance = fixture()
+            n.Client = {
+                ModelSpec = function()
+                    return { creatureID = 448 }
+                end,
+            }
+            n.state.heroes = { { class = "WARRIOR", appearance = "human_male" } }
+            n.state.battle = { enemies = { { name = "Hogger", hp = 0 } } }
+            emit("hit", { enemy = true, source = 1, target = 1 })
+            n.Audio.Flush()
+            assert(#played == 2 and played[1] == 235 and played[2] == 2941)
+            advance(2)
+            emit("hit", { enemy = true, source = 1, target = 1 })
+            emit("hit", { enemy = false, source = 1, target = 1 })
+            n.state.settings.soundCombat = false
+            n.Audio.Flush()
+            assert(#played == 2)
+            n.state.settings.soundCombat = true
+            n.Audio.Flush()
+            assert(#played == 2)
+        end,
+    },
+    {
         "Sound settings migration retains explicit category mutes",
         function()
             local state = W.Game.New(1000)
