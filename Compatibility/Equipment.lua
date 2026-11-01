@@ -3,17 +3,11 @@ local A = W.Client
 
 function A.EquipmentSpec(hero)
     local equipment, key = {}, {}
-    for slot = 1, #W.Content.slots do
+    for _, slot in ipairs(W.Content.equipmentSlots) do
         local item = type(hero.gear) == "table" and hero.gear[slot]
         local id = type(item) == "table" and item.itemID
         local template = id and W.Content.itemByID[id]
-        -- Necklaces, rings and trinkets contribute stats but have no character mesh.
-        if
-            template
-            and not W.ModelAssets.invisibleItems[id]
-            and template.slot ~= 5
-            and template.slot ~= 6
-        then
+        if template then
             equipment[#equipment + 1] = id
             key[#key + 1] = slot .. "=" .. id
         end

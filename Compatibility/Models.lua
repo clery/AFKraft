@@ -18,15 +18,6 @@ W.ModelAssets = {
         tauren_male = { 3060 },
         tauren_female = { 3062 },
     },
-    invisibleItems = {
-        [13094] = true,
-        [13095] = true,
-        [13097] = true,
-        [13002] = true,
-        [13085] = true,
-        [13096] = true,
-        [833] = true,
-    },
     levelUp = "Spells\\LevelUp\\LevelUp.m2",
     -- Particle-heavy creatures need more room than their default portrait camera gives them.
     framing = {

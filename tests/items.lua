@@ -44,13 +44,13 @@ case("Wearable slots have recipes and zone loot excludes retired jewelry and tri
     for _, slot in ipairs(C.equipmentSlots) do
         available[slot] = true
         local craft = assert(G.CraftItem(hero, slot, false))
-        assert(craft.slot == slot and not craft.legacy)
+        assert(craft.slot == slot)
         assert(G.CraftItem(hero, slot, true))
     end
     for _, pool in pairs(C.zoneItems) do
         for _, id in ipairs(pool) do
             local item = C.itemByID[id]
-            assert(available[item.slot] and not item.legacy)
+            assert(available[item.slot])
         end
     end
     s.legacy = 5
@@ -61,20 +61,58 @@ case("Wearable slots have recipes and zone loot excludes retired jewelry and tri
     assert(C.itemByID[13101].stats.spellPower == 13)
 end)
 case(
-    "Saved jewelry and both trinket slots retain identities, upgrades and recipe unlocks",
+    "Excluded gear and recipes are purged from old saves without touching wearable gear",
     function()
         local s = state()
-        local ring = G.Item(s, 4, 10, 3, false, C.itemByID[13097])
-        local trinket = G.Item(s, 6, 13, 4, true, C.itemByID[833])
-        ring.count, ring.protected, trinket.upgrade = 3, true, 4
-        s.inventory, s.recipes[6] = { ring, trinket }, true
-        s.heroes[1].level = 60
+        local removedIDs = { 13094, 13095, 13097, 13002, 13085, 13096, 833 }
+        for index, id in ipairs(removedIDs) do
+            assert(C.itemByID[id] == nil)
+            s.inventory[#s.inventory + 1] = {
+                uid = 100 + index,
+                itemID = id,
+                slot = id == 833 and 5 or 4,
+                stats = { stamina = 10 },
+                count = 3,
+                protected = true,
+                heirloom = true,
+            }
+        end
+        local cloak = G.Item(s, 4, 3, 2, false, C.itemByID[5111])
+        cloak.count, cloak.upgrade, cloak.protected = 4, 2, true
+        s.inventory[#s.inventory + 1] = cloak
+        local shoulders = G.Item(s, 7, 15, 3)
+        s.heroes[1].gear = {
+            [4] = { uid = 200, itemID = 13097, slot = 4, stats = { strength = 8 } },
+            [5] = { uid = 201, slot = 5, stats = { stamina = 2 } },
+            [6] = {
+                uid = 202,
+                itemID = 833,
+                slot = 6,
+                stats = { healthRegen = 10 },
+                heirloom = true,
+            },
+            [7] = shoulders,
+        }
+        s.recipes = { [4] = true, [5] = true, [6] = true, [7] = true }
+        s.guide.craftItem, s.guide.craftHero = 101, 1
+        G.StartBattle(s)
         local loaded = assert(G.Load(s, 1000))
-        assert(G.Equip(loaded, 1, 2))
-        assert(loaded.heroes[1].gear[6] == trinket and trinket.upgrade == 4)
-        assert(loaded.inventory[1] == ring and ring.count == 3 and ring.protected)
-        assert(loaded.recipes[6])
-        assert(G.Load(loaded, 1000).heroes[1].gear[6] == trinket)
+        assert(#loaded.inventory == 1 and loaded.inventory[1] == cloak)
+        assert(cloak.count == 4 and cloak.upgrade == 2 and cloak.protected)
+        assert(
+            not loaded.heroes[1].gear[4]
+                and not loaded.heroes[1].gear[5]
+                and not loaded.heroes[1].gear[6]
+        )
+        assert(loaded.heroes[1].gear[7] == shoulders)
+        assert(not loaded.recipes[5] and not loaded.recipes[6])
+        assert(loaded.recipes[4] and loaded.recipes[7])
+        assert(not loaded.guide.craftItem and not loaded.guide.craftHero)
+        assert(not loaded.battle and loaded.stats.victories == 0)
+        G.StartBattle(loaded)
+        local battle = loaded.battle
+        assert(G.Load(loaded, 1000).battle == battle)
+        assert(#loaded.inventory == 1)
     end
 )
 case("Zone drops retain catalog stats, requirements and deterministic identity", function()

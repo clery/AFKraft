@@ -193,6 +193,43 @@ function G.Load(db, now)
             G.Log(db, "The party regrouped and is ready to continue.")
         end
     end
+    -- Purge excluded equipment from older saves, including protected stacks and heirlooms.
+    local removedItems = {
+        [13094] = true,
+        [13095] = true,
+        [13097] = true,
+        [13002] = true,
+        [13085] = true,
+        [13096] = true,
+        [833] = true,
+    }
+    local function excluded(item)
+        return type(item) == "table"
+            and (item.slot == 5 or item.slot == 6 or removedItems[item.itemID])
+    end
+    local function clearCraftTarget(item)
+        if type(item) == "table" and db.guide.craftItem == item.uid then
+            db.guide.craftItem, db.guide.craftHero = nil, nil
+        end
+    end
+    for index = #db.inventory, 1, -1 do
+        local item = db.inventory[index]
+        if excluded(item) then
+            clearCraftTarget(item)
+            table.remove(db.inventory, index)
+        end
+    end
+    for _, hero in ipairs(db.heroes) do
+        for slot, item in pairs(hero.gear or {}) do
+            if slot == 5 or slot == 6 or excluded(item) then
+                clearCraftTarget(item)
+                hero.gear[slot] = nil
+                -- Restart without rewards rather than retaining combat stats from removed gear.
+                db.battle, db.rest = nil, 0
+            end
+        end
+    end
+    db.recipes[5], db.recipes[6] = nil, nil
     local function migrateItem(item)
         if type(item) ~= "table" or type(item.stats) == "table" then
             return

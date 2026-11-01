@@ -167,9 +167,6 @@ function G.ItemDescription(item, hero)
         lines[#lines + 1] = "Idle enhancement: +" .. item.upgrade * 10 .. "% stats."
     end
     lines[#lines + 1] = "Power is an idle class-weighted estimate."
-    if item.itemID == 833 then
-        lines[#lines + 1] = "Passive regeneration applies; on-use heal is not simulated."
-    end
     if item.itemID == 13040 then
         lines[#lines + 1] = "Shadowbolt proc is not simulated."
     end

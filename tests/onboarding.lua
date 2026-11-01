@@ -120,7 +120,7 @@ test("Starter lessons skip unavailable actions and point at live controls", func
     ui:SetTab("adventure")
     assertEquals(2, W.Panels.GuideStep(s))
     click(ui.tabs.party)
-    ui.bagFilter = 6
+    ui.bagFilter = 7
     ui:Refresh()
     assertEquals(ui.guideInventoryTarget, ui.guideTarget)
     click(ui.guideInventoryTarget)
@@ -192,7 +192,7 @@ test(
         assertEquals(6, W.Panels.GuideStep(s, ui.selected))
         assertEquals(ui.tabs.party, ui.guideTarget)
         W.state = assert(W.Game.Load(s, W.Client.Now()))
-        ui.bagFilter = 6
+        ui.bagFilter = 7
         click(ui.tabs.party)
         assertEquals(ui.guideInventoryTarget, ui.guideTarget)
         click(ui.guideTarget)

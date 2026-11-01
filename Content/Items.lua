@@ -199,52 +199,6 @@ item(
     { stamina = 13, intellect = 20, spirit = 21, armor = 143 }
 )
 item(
-    13094,
-    "The Queen's Jewel",
-    "inv_jewelry_ring_26",
-    4,
-    3,
-    25,
-    { stamina = 1, intellect = 2, spirit = 8 }
-)
-item(
-    13095,
-    "Assault Band",
-    "inv_jewelry_ring_04",
-    4,
-    3,
-    39,
-    { stamina = 7, spirit = 5, attackPower = 20 }
-)
-item(13097, "Thunderbrow Ring", "inv_jewelry_ring_09", 4, 3, 24, { strength = 8, agility = 3 })
-item(
-    13002,
-    "Lady Alizabeth's Pendant",
-    "inv_jewelry_amulet_03",
-    4,
-    3,
-    54,
-    { stamina = 8, spirit = 15 }
-)
-item(
-    13085,
-    "Horizon Choker",
-    "inv_jewelry_necklace_11",
-    4,
-    3,
-    46,
-    { stamina = 4, intellect = 14, spirit = 4 }
-)
-item(
-    13096,
-    "Band of the Hierophant",
-    "inv_jewelry_ring_17",
-    4,
-    3,
-    55,
-    { stamina = 7, intellect = 10, spirit = 11 }
-)
-item(
     13014,
     "Axe of Rin'ji",
     "inv_axe_21",
@@ -317,7 +271,6 @@ item(
     44,
     { strength = 10, stamina = 24, weaponDPS = 42.58 }
 )
-item(833, "Lifestone", "inv_ore_truesilver_01", 5, 4, 51, { healthRegen = 10 })
 
 item(2962, "Burnt Leather Breeches", "inv_pants_06", 10, 2, 5, { agility = 1, armor = 48 })
 item(2963, "Burnt Leather Boots", "inv_boots_09", 11, 1, 4, { armor = 34 })
@@ -786,11 +739,6 @@ item(
     38,
     { strength = 6, stamina = 15, armor = 199 }
 )
-
--- Retained only for existing saves; new loot and crafting use wearable equipment.
-for _, id in ipairs({ 13094, 13095, 13097, 13002, 13085, 13096, 833 }) do
-    C.itemByID[id].legacy = true
-end
 
 -- Curated zone encounters, not a claim to reproduce live drop rates.
 C.zoneItems = {

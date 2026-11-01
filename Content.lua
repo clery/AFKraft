@@ -4,14 +4,14 @@ W.Content = {}
 local C = W.Content
 -- Additional companions are discovered by defeating these milestone boss levels.
 C.companionMilestones = { 0, 1, 3, 5, 7 }
--- Keep the original numeric slots stable for saved equipment and recipes.
+-- Removed slot IDs stay reserved so existing wearable gear and recipes keep their identity.
 C.slots = {
     "Weapon",
     "Armor",
     "Head",
     "Back",
-    "Trinket I",
-    "Trinket II",
+    false,
+    false,
     "Shoulders",
     "Hands",
     "Waist",

@@ -4,10 +4,13 @@ local copy = G.Copy
 
 -- Crafting and migrated saves choose the closest catalog entry for their slot.
 function G.Item(state, slot, level, quality, heirloom, template)
+    if not C.slots[slot] then
+        return nil
+    end
     if not template then
         local distance
         for _, candidate in ipairs(C.items) do
-            if candidate.slot == slot and not candidate.legacy then
+            if candidate.slot == slot then
                 local score = math.abs(candidate.level - level) * 10
                     + math.abs(candidate.quality - quality)
                     + (not heirloom and candidate.level > level and 100000 or 0)
@@ -33,7 +36,7 @@ function G.ZoneLoot(state, level)
     local candidates = {}
     for _, id in ipairs(pool) do
         local template = C.itemByID[id]
-        if not template.legacy and template.level <= level then
+        if template.level <= level then
             -- Uncommon finds are more frequent than rare finds.
             local weight = template.quality == 3 and 1 or 4
             for _ = 1, weight do
@@ -123,7 +126,12 @@ end
 
 function G.Equip(state, heroIndex, inventoryIndex)
     local hero, item = state.heroes[heroIndex], state.inventory[inventoryIndex]
-    if not hero or not item then
+    if
+        not hero
+        or not item
+        or not C.slots[item.slot]
+        or (item.itemID and not C.itemByID[item.itemID])
+    then
         return false
     end
     if not item.heirloom and item.level > hero.level then
@@ -158,7 +166,7 @@ function G.EquipBest(state, heroIndex)
         return false, "Choose a hero."
     end
     local equipped = 0
-    for slot in ipairs(C.slots) do
+    for _, slot in ipairs(C.equipmentSlots) do
         local bestIndex, bestPower = nil, G.ItemPower(hero.gear[slot], hero)
         for index, item in ipairs(state.inventory) do
             if item.slot == slot and (item.heirloom or item.level <= hero.level) then
@@ -223,7 +231,7 @@ function G.CraftingOpportunity(state, heroIndex)
         if material then
             if not best then
                 best = {}
-                for slot = 1, #C.slots do
+                for _, slot in ipairs(C.equipmentSlots) do
                     best[slot] = G.ItemPower(hero.gear[slot], hero)
                 end
                 for _, stored in ipairs(state.inventory) do
@@ -232,7 +240,7 @@ function G.CraftingOpportunity(state, heroIndex)
                     end
                 end
             end
-            for slot = 1, #C.slots do
+            for _, slot in ipairs(C.equipmentSlots) do
                 if not heirloom or state.recipes[slot] then
                     local item = G.CraftItem(hero, slot, heirloom)
                     if item then
@@ -311,7 +319,7 @@ function G.Upgrade(state, index, slot)
 end
 
 function G.UnlockRecipe(state, slot)
-    if not C.slots[slot] or slot == 5 or slot == 6 or state.recipes[slot] then
+    if not C.slots[slot] or state.recipes[slot] then
         return false, "Recipe already known."
     end
     if state.legacy < 1 then

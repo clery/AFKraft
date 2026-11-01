@@ -7,10 +7,10 @@ The catalog uses fixed Classic-era WoWhead tooltip snapshots, checked on 2026-11
 - Zone tables are curated minigame pools, not complete live mob loot tables or authentic drop percentages. Riverpaw Leather Vest belongs to Elwynn’s gnolls, Stonemason Cloak to Westfall’s Defias, Blackrock Champion’s Axe to Redridge’s Blackrock enemies, and Rathorian’s Cape to the Barrens. Other entries are level-appropriate world finds. Starter weapons are included to supply basic equipment.
 - Source stats stay fixed. WoW required level maps to idle level as `max(1, ceil(requiredLevel / 4))`; items become available as encounter levels reach that requirement. An item’s source WoW requirement is also shown in its tooltip.
 - Crafting chooses the nearest available source item for the selected slot and idle level. It retains the source rarity, rather than recoloring it. Low-level slots with no available source item cannot be crafted yet. Weapon and armor proficiencies, unique-equipped restrictions, and two-handed weapon rules are simplified by the idle inventory.
-- New loot and crafting use ten wearable slots: weapon, armor, head, back, shoulders, hands, waist, legs, feet, and wrists. Rings, necklaces, and trinkets remain in the catalog only to preserve existing saved equipment. Legacy trinket slots appear in Party only when occupied; old items can still be equipped, upgraded, or salvaged. Existing recipe unlocks are retained, but retired trinket recipes cannot be purchased or crafted.
+- New loot and crafting use ten wearable slots: weapon, armor, head, back, shoulders, hands, waist, legs, feet, and wrists. Rings, necklaces, and trinkets are removed from the catalog. Loading an older save removes these items from inventory and equipped gear, including protected stacks and heirlooms, and removes their recipe unlocks. Other equipment and progression are preserved. Encounters with removed equipped gear restart without rewards.
 - An enhancement adds 10% of base stats, additively. Heirloom stats additionally scale by `hero idle level / source idle requirement`. Both are minigame enhancements, not claims about the original WoW item.
 - Existing synthetic saved equipment keeps its identity, stacks, protections, effects, and purchased enhancements. Its old power is converted once into attributes; an active encounter from that older stat model restarts without rewards. New drops and crafts use catalog items.
-- Heartseeking Crossbow’s Shadowbolt proc and Lifestone’s on-use heal are not simulated. Lifestone’s passive regeneration works. Cow King’s Hide retains its resistance values for display; damage schools are not modeled, so those values contribute no power. Tooltips identify these limitations.
+- Heartseeking Crossbow’s Shadowbolt proc is not simulated. Cow King’s Hide retains its resistance values for display; damage schools are not modeled, so those values contribute no power. Tooltips identify these limitations.
 
 ## Derived stats and power
 
@@ -51,12 +51,6 @@ Combat aggregates effective attributes directly. Stamina adds 10 health per poin
 | 3020 | [Enduring Cap](https://www.wowhead.com/classic/item=3020) |
 | 13102 | [Cassandra's Grace](https://www.wowhead.com/classic/item=13102) |
 | 13113 | [Feathermoon Headdress](https://www.wowhead.com/classic/item=13113) |
-| 13094 | [The Queen's Jewel](https://www.wowhead.com/classic/item=13094) |
-| 13095 | [Assault Band](https://www.wowhead.com/classic/item=13095) |
-| 13097 | [Thunderbrow Ring](https://www.wowhead.com/classic/item=13097) |
-| 13002 | [Lady Alizabeth's Pendant](https://www.wowhead.com/classic/item=13002) |
-| 13085 | [Horizon Choker](https://www.wowhead.com/classic/item=13085) |
-| 13096 | [Band of the Hierophant](https://www.wowhead.com/classic/item=13096) |
 | 13014 | [Axe of Rin'ji](https://www.wowhead.com/classic/item=13014) |
 | 13015 | [Serathil](https://www.wowhead.com/classic/item=13015) |
 | 13022 | [Gryphonwing Long Bow](https://www.wowhead.com/classic/item=13022) |
@@ -66,7 +60,6 @@ Combat aggregates effective attributes directly. Stamina adds 10 health per poin
 | 13028 | [Bludstone Hammer](https://www.wowhead.com/classic/item=13028) |
 | 13040 | [Heartseeking Crossbow](https://www.wowhead.com/classic/item=13040) |
 | 13043 | [Blade of the Titans](https://www.wowhead.com/classic/item=13043) |
-| 833 | [Lifestone](https://www.wowhead.com/classic/item=833) |
 | 2962 | [Burnt Leather Breeches](https://www.wowhead.com/classic/item=2962) |
 | 2963 | [Burnt Leather Boots](https://www.wowhead.com/classic/item=2963) |
 | 2964 | [Burnt Leather Gloves](https://www.wowhead.com/classic/item=2964) |

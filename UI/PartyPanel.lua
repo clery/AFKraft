@@ -7,8 +7,8 @@ local slotIcons = {
     "INV_Chest_Chain_05",
     "INV_Helmet_03",
     "INV_Misc_Cape_11",
-    "INV_Jewelry_Talisman_07",
-    "INV_Jewelry_Talisman_08",
+    false,
+    false,
     "INV_Shoulder_05",
     "INV_Gauntlets_05",
     "INV_Belt_03",
@@ -177,15 +177,9 @@ local function equipment(ui, p, s, hero, index)
             .. table.concat(attributeLines, "\n")
     )
 
-    local selectedSlot = ui.gearSlot or 1
-    local slots = G.Copy(C.equipmentSlots)
-    for slot = 5, 6 do
-        if hero.gear[slot] then
-            slots[#slots + 1] = slot
-        end
-    end
-    local rowStep = #slots > 10 and 40 or 48
-    for position, slot in ipairs(slots) do
+    local selectedSlot = C.slots[ui.gearSlot or 1] and (ui.gearSlot or 1) or 1
+    local rowStep = 48
+    for position, slot in ipairs(C.equipmentSlots) do
         local name = C.slots[slot]
         local id, item = slot, hero.gear[slot]
         local x, y = (position - 1) % 2 * 292, 94 + math.floor((position - 1) / 2) * rowStep
@@ -197,22 +191,14 @@ local function equipment(ui, p, s, hero, index)
         U.Begin(b)
         U.Icon(b, item and item.icon or slotIcons[slot], 10, 6, rowStep - 20)
             :SetParent(b.content or b)
-        line(
-            b,
-            name,
-            48,
-            2,
-            220,
-            rowStep == 40 and 11 or 12,
-            slot == selectedSlot and T.gold or T.text
-        )
+        line(b, name, 48, 2, 220, 12, slot == selectedSlot and T.gold or T.text)
         line(
             b,
             item and item.name or "Empty slot",
             48,
             rowStep - 22,
             220,
-            rowStep == 40 and 10 or 11,
+            11,
             item and T.text or T.muted
         )
         U.EndBuild(b)
@@ -289,16 +275,10 @@ local function equipment(ui, p, s, hero, index)
 end
 
 local function inventory(ui, p, s, hero, index)
-    local filter = ui.bagFilter or 0
+    local filter = C.slots[ui.bagFilter or 0] and ui.bagFilter or 0
     local options, entries = { { id = 0, name = "All equipment" } }, {}
-    for slot, name in ipairs(C.slots) do
-        local visible = slot ~= 5 and slot ~= 6
-        for _, item in ipairs(s.inventory) do
-            visible = visible or item.slot == slot
-        end
-        if visible then
-            options[#options + 1] = { id = slot, name = name }
-        end
+    for _, slot in ipairs(C.equipmentSlots) do
+        options[#options + 1] = { id = slot, name = C.slots[slot] }
     end
     local view = ui.bagView or {}
     ui.bagView = view
