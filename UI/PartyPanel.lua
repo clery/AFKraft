@@ -422,6 +422,9 @@ local function inventory(ui, p, s, hero, index)
                     W.Notify("Equipped " .. item.name .. " on " .. hero.name .. ".")
                 end
             end)
+            if levelOK and item.uid == s.guide.craftItem then
+                ui.guideCraftEquipTarget = b
+            end
             if levelOK and not ui.guideEquipTarget then
                 ui.guideEquipTarget = b
             end

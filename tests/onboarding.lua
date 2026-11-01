@@ -165,3 +165,42 @@ test(
         assertNotNil(ui.guideTip)
     end
 )
+
+test(
+    "Crafting lesson waits for an upgrade and follows mode, slot, material, craft and equip",
+    function()
+        local W, s, ui = opening()
+        s.guide.equipped, s.guide.talent, s.guide.traveled = true, true, true
+        ui:Refresh(false)
+        assertTrue(ui.guideTip == nil)
+        s.essence, s.gold, s.materials.timber = 100, 100, 100
+        ui:Refresh(false)
+        assertEquals(5, W.Panels.GuideStep(s, ui.selected))
+        assertEquals(ui.tabs.crafting, ui.guideTarget)
+        ui.craftHeirloom, ui.craftSlot, ui.craftMaterial = true, 6, "ore"
+        click(ui.tabs.crafting)
+        assertEquals(ui.craftControls.ordinary, ui.guideTarget)
+        click(ui.guideTarget)
+        assertEquals(ui.craftControls.slots[1], ui.guideTarget)
+        click(ui.guideTarget)
+        assertEquals(ui.craftControls.materials.timber, ui.guideTarget)
+        click(ui.guideTarget)
+        assertEquals(ui.craftControls.craft, ui.guideTarget)
+        click(ui.guideTarget)
+        assertTrue(s.guide.crafted)
+        local uid = s.guide.craftItem
+        assertEquals(6, W.Panels.GuideStep(s, ui.selected))
+        assertEquals(ui.tabs.party, ui.guideTarget)
+        W.state = assert(W.Game.Load(s, W.Client.Now()))
+        ui.bagFilter = 6
+        click(ui.tabs.party)
+        assertEquals(ui.guideInventoryTarget, ui.guideTarget)
+        click(ui.guideTarget)
+        assertEquals(ui.guideCraftEquipTarget, ui.guideTarget)
+        click(ui.guideTarget)
+        assertEquals(uid, s.heroes[1].gear[1].uid)
+        assertTrue(s.guide.craftItem == nil)
+        assertTrue(ui.guideTip == nil)
+        assertTrue(W.Panels.GuideStep(s, ui.selected) == nil)
+    end
+)

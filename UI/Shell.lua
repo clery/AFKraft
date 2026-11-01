@@ -300,7 +300,7 @@ function UI:Refresh(redraw)
         tostring(s.prestigeUnlocked),
         W.Game.PrestigeReward(s),
         tostring(s.farming),
-        W.Panels.GuideStep(s) or 0,
+        W.Panels.GuideStep(s, self.selected) or 0,
         tostring(s.guide.dismissed),
         W.Game.CompanionSlots(s),
     }, ":")

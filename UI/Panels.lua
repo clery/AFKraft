@@ -37,7 +37,21 @@ function P.Opportunities(s)
 end
 
 -- Return only lessons that can be acted on now; unavailable lessons never block others.
-function P.GuideStep(s)
+function P.GuideStep(s, selectedHero)
+    local craftHero = s.guide.craftHero
+    local recipient = craftHero and s.heroes[craftHero]
+    if recipient then
+        for index, item in ipairs(s.inventory) do
+            if
+                item.uid == s.guide.craftItem
+                and (item.heirloom or item.level <= recipient.level)
+                and G.ItemPower(item, recipient)
+                    > G.ItemPower(recipient.gear[item.slot], recipient)
+            then
+                return 6, craftHero, nil, { item = item, inventoryIndex = index }
+            end
+        end
+    end
     if not s.guide.equipped then
         for index, hero in ipairs(s.heroes) do
             for _, item in ipairs(s.inventory) do
@@ -63,6 +77,13 @@ function P.GuideStep(s)
             if zone.level > C.zoneByID[s.zone].level and G.IsUnlocked(s, zone) then
                 return 4, nil, zone
             end
+        end
+    end
+    if not s.guide.crafted then
+        local index = selectedHero or 1
+        local craft = G.CraftingOpportunity(s, index)
+        if craft then
+            return 5, index, nil, craft
         end
     end
 end
@@ -126,7 +147,7 @@ function P.adventure(ui, p, s)
                 ui:SetTab("legacy")
             end
         )
-        if s.guide.dismissed and P.GuideStep(s) then
+        if s.guide.dismissed and P.GuideStep(s, ui.selected) then
             button(p, "Show starter guide", 1030, 128, 266, function()
                 s.guide.dismissed = false
                 ui:Refresh()
@@ -214,18 +235,29 @@ function P.crafting(ui, p, s)
     local material = ui.craftMaterial or "timber"
     local heirloom = ui.craftHeirloom or false
     local cost = G.Cost(s, h, heirloom)
+    local preview, unavailable = G.CraftItem(h, slot, heirloom)
+    ui.craftControls = { slots = {}, materials = {} }
     text(p, "Craft for " .. h.name, 0, 0, 23, T.gold)
     text(p, "Choose an equipment slot", 0, 39, 13, T.muted)
     for i, name in ipairs(C.slots) do
         local id = i
-        U.Button(p, name, (i - 1) % 2 * 220, 79 + math.floor((i - 1) / 2) * 72, 205, 56, function()
-            ui.craftSlot = id
-            ui:Refresh()
-        end, slot == i)
+        ui.craftControls.slots[i] = U.Button(
+            p,
+            name,
+            (i - 1) % 2 * 220,
+            79 + math.floor((i - 1) / 2) * 72,
+            205,
+            56,
+            function()
+                ui.craftSlot = id
+                ui:Refresh()
+            end,
+            slot == i
+        )
     end
     text(p, "MATERIAL", 480, 0, 11, T.gold)
     for i, id in ipairs(C.materialOrder) do
-        button(
+        ui.craftControls.materials[id] = button(
             p,
             C.materials[id] .. " · " .. s.materials[id],
             480,
@@ -238,27 +270,15 @@ function P.crafting(ui, p, s)
             material == id
         )
     end
-    text(
-        p,
-        heirloom and "Legacy " .. C.slots[slot] or "Runeworn " .. C.slots[slot],
-        850,
-        0,
-        23,
-        T.text,
-        450
-    )
-    text(
-        p,
-        (
-            heirloom and "Scales with your hero. Survives chapter resets."
-            or "Rare · Idle level " .. h.level .. " · Power " .. (2 + h.level * 2 + 6)
-        ) .. "\nRenewal: +6% ability healing",
-        850,
-        58,
-        14,
-        T.muted,
-        450
-    )
+    text(p, preview and preview.name or "Recipe unavailable", 850, 0, 23, T.text, 450)
+    local description = unavailable
+    if preview then
+        local quality = heirloom and "Heirloom" or C.qualityNames[preview.quality]
+        local requirement = heirloom and "Scales with your hero. Survives chapter resets."
+            or "Idle level " .. preview.level
+        description = quality .. " · " .. G.ItemPower(preview, h) .. " power\n" .. requirement
+    end
+    text(p, description, 850, 58, 14, T.muted, 450)
     text(
         p,
         cost.essence
@@ -276,9 +296,11 @@ function P.crafting(ui, p, s)
     local craft = button(p, "Craft for " .. h.name, 850, 233, 446, function()
         W.Action(G.Craft, index, slot, material, heirloom)
     end, false, "primary")
+    ui.craftControls.craft = craft
     U.Enabled(
         craft,
-        s.essence >= cost.essence
+        preview ~= nil
+            and s.essence >= cost.essence
             and s.gold >= cost.gold
             and s.materials[material] >= cost.material
             and (not heirloom or s.recipes[slot])
@@ -286,7 +308,8 @@ function P.crafting(ui, p, s)
     U.Tooltip(
         craft,
         "Craft targeted equipment",
-        "The full cost is shown above. Earn Essence by playing WoW and materials by adventuring in the matching zone. Heirloom recipes must first be unlocked in Legacy."
+        (preview and G.ItemDescription(preview, h) .. "\n\n" or "")
+            .. "The full cost is shown above. Earn Essence by playing WoW and materials by adventuring in the matching zone. Heirloom recipes must first be unlocked in Legacy."
     )
     text(
         p,
@@ -298,11 +321,11 @@ function P.crafting(ui, p, s)
         T.muted,
         446
     )
-    button(p, "Ordinary", 0, 309, 205, function()
+    ui.craftControls.ordinary = button(p, "Ordinary", 0, 309, 205, function()
         ui.craftHeirloom = false
         ui:Refresh()
     end, not heirloom)
-    button(p, "Heirloom", 220, 309, 205, function()
+    ui.craftControls.heirloom = button(p, "Heirloom", 220, 309, 205, function()
         ui.craftHeirloom = true
         ui:Refresh()
     end, heirloom)
@@ -609,7 +632,7 @@ function P.Draw(ui)
     if ui.talentTrees then
         ui.talentTrees:SetShown(s.ui.tab == "talents" and not W.catchup)
     end
-    ui.guideEquipTarget, ui.guideInventoryTarget = nil, nil
+    ui.guideEquipTarget, ui.guideInventoryTarget, ui.guideCraftEquipTarget = nil, nil, nil
     U.Begin(p)
     if W.catchup then
         text(p, "YOUR PARTY IS RETURNING", 0, 0, 22, T.gold)

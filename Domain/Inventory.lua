@@ -133,6 +133,9 @@ function G.Equip(state, heroIndex, inventoryIndex)
     if not item.heirloom and item.level > hero.level then
         return false, "This hero needs idle level " .. item.level .. "."
     end
+    if state.guide.craftItem == item.uid then
+        state.guide.craftItem, state.guide.craftHero = nil, nil
+    end
     if (item.count or 1) > 1 then
         item.count = item.count - 1
         item = copy(item)
@@ -188,6 +191,71 @@ function G.Cost(_, hero, heirloom)
     }
 end
 
+-- Preview with a detached identity counter: inspecting recipes never changes the run.
+function G.CraftItem(hero, slot, heirloom)
+    if not hero or not C.slots[slot] then
+        return nil, "Choose a hero and equipment slot."
+    end
+    local item = G.Item({ nextItem = 0 }, slot, heirloom and 1 or hero.level, 3, heirloom)
+    if not item then
+        return nil, "No equipment recipe is available for this slot."
+    end
+    if not heirloom and C.itemByID[item.itemID].level > hero.level then
+        return nil, "Reach idle level " .. C.itemByID[item.itemID].level .. " to craft this slot."
+    end
+    return item
+end
+
+function G.CraftingOpportunity(state, heroIndex)
+    local hero = state.heroes[heroIndex]
+    if not hero then
+        return
+    end
+    local best
+    for mode = 1, 2 do
+        local heirloom = mode == 2
+        local cost = G.Cost(state, hero, heirloom)
+        local material
+        if state.essence >= cost.essence and state.gold >= cost.gold then
+            for _, id in ipairs(C.materialOrder) do
+                if state.materials[id] >= cost.material then
+                    material = id
+                    break
+                end
+            end
+        end
+        if material then
+            if not best then
+                best = {}
+                for slot = 1, #C.slots do
+                    best[slot] = G.ItemPower(hero.gear[slot], hero)
+                end
+                for _, stored in ipairs(state.inventory) do
+                    if best[stored.slot] and (stored.heirloom or stored.level <= hero.level) then
+                        best[stored.slot] = math.max(best[stored.slot], G.ItemPower(stored, hero))
+                    end
+                end
+            end
+            for slot = 1, #C.slots do
+                if not heirloom or state.recipes[slot] then
+                    local item = G.CraftItem(hero, slot, heirloom)
+                    if item then
+                        local power = G.ItemPower(item, hero)
+                        if power > best[slot] then
+                            return {
+                                slot = slot,
+                                material = material,
+                                heirloom = heirloom,
+                                item = item,
+                            }
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 function G.Craft(state, index, slot, material, heirloom)
     local hero = state.heroes[index]
     if not hero or not C.slots[slot] or not C.materials[material] then
@@ -204,18 +272,20 @@ function G.Craft(state, index, slot, material, heirloom)
     then
         return false, "You need more Essence, gold, or materials."
     end
-    local item = G.Item(state, slot, heirloom and 1 or hero.level, 3, heirloom)
+    local item, reason = G.CraftItem(hero, slot, heirloom)
     if not item then
-        return false, "No equipment recipe is available for this slot."
+        return false, reason
     end
-    if not heirloom and C.itemByID[item.itemID].level > hero.level then
-        state.nextItem = state.nextItem - 1
-        return false, "Reach idle level " .. C.itemByID[item.itemID].level .. " to craft this slot."
-    end
+    item.uid = state.nextItem
+    state.nextItem = state.nextItem + 1
     state.essence = state.essence - cost.essence
     state.gold = state.gold - cost.gold
     state.materials[material] = state.materials[material] - cost.material
     state.inventory[#state.inventory + 1] = item
+    if not state.guide.crafted then
+        state.guide.crafted = true
+        state.guide.craftItem, state.guide.craftHero = item.uid, index
+    end
     G.Log(state, "Crafted " .. item.name .. " for " .. hero.name .. ".")
     G.Emit(state, "craft")
     return true

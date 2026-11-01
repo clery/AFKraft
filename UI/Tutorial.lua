@@ -67,17 +67,24 @@ function Tutorial.Refresh(ui)
         Tutorial.Hide(ui)
         return
     end
-    local step, hero, destination = W.Panels.GuideStep(s)
+    local step, hero, destination, craft = W.Panels.GuideStep(s, ui.selected)
     if not step then
         Tutorial.Hide(ui)
         return
     end
-    local tab = step == 2 and "party" or step == 3 and "talents" or "atlas"
+    local tab = (step == 2 or step == 6) and "party"
+        or step == 3 and "talents"
+        or step == 5 and "crafting"
+        or "atlas"
     if s.ui.tab ~= tab then
         local messages = {
             [2] = "Your company has equipment it can use. Click Party to equip your first reward.",
             [3] = "You have an unspent talent point. Click Talents to explore your hero’s three talent trees.",
             [4] = "A harder destination is unlocked. Click World map to choose your next frontier.",
+            [5] = "You can afford to craft an equipment upgrade for "
+                .. s.heroes[hero or ui.selected].name
+                .. ". Click Crafting to make it.",
+            [6] = "Your crafted upgrade is ready. Click Party to equip it from your shared inventory.",
         }
         show(ui, ui.tabs[tab], messages[step], nil, true)
         return
@@ -89,16 +96,23 @@ function Tutorial.Refresh(ui)
             "Click "
                 .. s.heroes[hero].name
                 .. " to use their available "
-                .. (step == 2 and "equipment." or "talent point.")
+                .. (
+                    (step == 2 or step == 6) and "equipment."
+                    or step == 5 and "crafting upgrade."
+                    or "talent point."
+                )
         )
         return
     end
-    if step == 2 then
-        if ui.guideEquipTarget then
+    if step == 2 or step == 6 then
+        local target = step == 6 and ui.guideCraftEquipTarget or step == 2 and ui.guideEquipTarget
+        if target then
             show(
                 ui,
-                ui.guideEquipTarget,
-                "Click this item to equip it. Green power values show improvements; replaced equipment returns to your shared inventory."
+                target,
+                step == 6
+                        and ("Click " .. craft.item.name .. " to equip your crafted upgrade. Its stats take effect immediately.")
+                    or "Click this item to equip it. Green power values show improvements; replaced equipment returns to your shared inventory."
             )
         else
             show(
@@ -147,6 +161,47 @@ function Tutorial.Refresh(ui)
                     return
                 end
             end
+        end
+    elseif step == 5 then
+        local controls = ui.craftControls
+        if (ui.craftHeirloom or false) ~= craft.heirloom then
+            show(
+                ui,
+                craft.heirloom and controls.heirloom or controls.ordinary,
+                "Click "
+                    .. (craft.heirloom and "Heirloom" or "Ordinary")
+                    .. " to use an affordable recipe that improves this hero’s equipment."
+            )
+        elseif (ui.craftSlot or 1) ~= craft.slot then
+            show(
+                ui,
+                controls.slots[craft.slot],
+                "Click " .. C.slots[craft.slot] .. " to craft an upgrade for this equipment slot."
+            )
+        elseif (ui.craftMaterial or "timber") ~= craft.material then
+            show(
+                ui,
+                controls.materials[craft.material],
+                "Click "
+                    .. C.materials[craft.material]
+                    .. ". You have enough of this material for the recipe; the full cost is shown beside it."
+            )
+        else
+            local h = s.heroes[hero]
+            local gain = G.ItemPower(craft.item, h) - G.ItemPower(h.gear[craft.slot], h)
+            show(
+                ui,
+                controls.craft,
+                "Click Craft for "
+                    .. h.name
+                    .. " to make "
+                    .. craft.item.name
+                    .. " (+"
+                    .. gain
+                    .. " power). This spends the shown Essence, gold and materials and puts the item in your shared inventory.",
+                nil,
+                true
+            )
         end
     else
         local focus = ui.atlas.focus

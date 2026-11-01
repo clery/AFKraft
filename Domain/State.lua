@@ -40,7 +40,13 @@ function G.New(now)
     return {
         version = C.version,
         itemStatsVersion = 1,
-        guide = { dismissed = false, equipped = false, talent = false, traveled = false },
+        guide = {
+            dismissed = false,
+            equipped = false,
+            talent = false,
+            traveled = false,
+            crafted = false,
+        },
         seed = floor(now) % 2147483646 + 1,
         heroes = {},
         inventory = {},
@@ -122,6 +128,12 @@ function G.Load(db, now)
     for key, value in pairs(defaults.guide) do
         if type(db.guide[key]) ~= "boolean" then
             db.guide[key] = value
+        end
+    end
+    for _, key in ipairs({ "craftItem", "craftHero" }) do
+        local value = db.guide[key]
+        if type(value) ~= "number" or value <= 0 or value >= math.huge or value ~= floor(value) then
+            db.guide[key] = nil
         end
     end
     if not existingGuide then

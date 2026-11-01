@@ -158,4 +158,78 @@ case("Unavailable low-level crafting slots do not spend resources or identities"
     assert(s.essence == 1000 and s.gold == 1000 and s.materials.ore == 1000)
     assert(s.nextItem == nextItem and #s.inventory == 0)
 end)
+case(
+    "Useful crafting previews match the result without spending resources or identities",
+    function()
+        local s = state()
+        local hero = s.heroes[1]
+        assert(not G.CraftingOpportunity(s, 1))
+        s.essence, s.gold, s.materials.timber = 100, 100, 100
+        local nextItem, seed = s.nextItem, s.seed
+        local craft = assert(G.CraftingOpportunity(s, 1))
+        assert(craft.slot == 1 and craft.material == "timber" and not craft.heirloom)
+        assert(G.CraftingOpportunity(s, 1))
+        assert(s.nextItem == nextItem and s.seed == seed and #s.inventory == 0)
+        assert(s.essence == 100 and s.gold == 100 and s.materials.timber == 100)
+        assert(not G.CraftItem(hero, 5, false))
+        assert(G.Craft(s, 1, craft.slot, craft.material, craft.heirloom))
+        assert(s.inventory[1].itemID == craft.item.itemID)
+        assert(G.ItemPower(s.inventory[1], hero) == G.ItemPower(craft.item, hero))
+        assert(s.inventory[1].uid == nextItem and s.nextItem == nextItem + 1)
+    end
+)
+
+case(
+    "Crafting opportunities skip equal equipped or stored gear and respect the selected hero",
+    function()
+        local s = state()
+        local hero = s.heroes[1]
+        s.essence, s.gold, s.materials.ore = 1000, 1000, 1000
+        for slot = 1, #C.slots do
+            hero.gear[slot] = G.CraftItem(hero, slot, false)
+        end
+        assert(not G.CraftingOpportunity(s, 1))
+        assert(G.CraftingOpportunity(s, 2))
+        for slot, item in pairs(hero.gear) do
+            s.inventory[#s.inventory + 1] = item
+            hero.gear[slot] = nil
+        end
+        assert(not G.CraftingOpportunity(s, 1))
+        s.inventory = {}
+        assert(G.CraftingOpportunity(s, 1))
+        s.essence = 0
+        assert(not G.CraftingOpportunity(s, 1))
+    end
+)
+
+case("Heirloom crafting guidance requires a known recipe and its exact affordable cost", function()
+    local s = state()
+    s.heroes[1].level = 30
+    s.essence, s.gold, s.materials.hide = 45, 30, 12
+    assert(not G.CraftingOpportunity(s, 1))
+    s.recipes[1] = true
+    local craft = assert(G.CraftingOpportunity(s, 1))
+    assert(craft.heirloom and craft.slot == 1 and craft.material == "hide")
+    s.materials.hide = 11
+    assert(not G.CraftingOpportunity(s, 1))
+end)
+
+case("Crafting lesson progress and the exact reward survive reload until equipped", function()
+    local s = state()
+    s.guide.crafted = nil
+    s.guide.craftItem, s.guide.craftHero = "bad", -1
+    assert(G.Load(s, 1000))
+    assert(s.guide.crafted == false and s.guide.craftItem == nil and s.guide.craftHero == nil)
+    assert(not G.Craft(s, 1, 1, "ore", false))
+    assert(not s.guide.crafted)
+    s.essence, s.gold, s.materials.ore = 100, 100, 100
+    assert(G.Craft(s, 1, 1, "ore", false))
+    local uid = s.inventory[1].uid
+    assert(s.guide.crafted and s.guide.craftItem == uid and s.guide.craftHero == 1)
+    assert(G.Load(s, 1000))
+    assert(s.guide.crafted and s.guide.craftItem == uid)
+    assert(G.Equip(s, 1, 1))
+    assert(s.heroes[1].gear[1].uid == uid)
+    assert(s.guide.crafted and s.guide.craftItem == nil and s.guide.craftHero == nil)
+end)
 return cases
