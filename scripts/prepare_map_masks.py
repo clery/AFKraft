@@ -1,4 +1,4 @@
-"""Build Retail fallback shading masks from the authored region outlines."""
+"""Build Retail alpha masks from the authored region outlines."""
 
 import re
 import struct
@@ -35,7 +35,10 @@ def main():
             for column in range(SIZE):
                 x = left + (column + 0.5) / SIZE * (right - left)
                 y = top + (row + 0.5) / SIZE * (bottom - top)
-                pixels.extend((110, 110, 110, 220 if contains(points, x, y) else 0))
+                inside = contains(points, x, y)
+                # Transparent edges prevent the mask from extending beyond its rectangle.
+                inside = inside and 0 < row < SIZE - 1 and 0 < column < SIZE - 1
+                pixels.extend((255, 255, 255, 255) if inside else (0, 0, 0, 0))
         # Uncompressed BGRA, top-left origin, eight alpha bits.
         header = struct.pack("<BBBHHBHHHHBB", 0, 0, 2, 0, 0, 0, 0, 0, SIZE, SIZE, 32, 40)
         (output / (name + ".tga")).write_bytes(header + pixels)

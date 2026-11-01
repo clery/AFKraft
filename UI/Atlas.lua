@@ -49,8 +49,8 @@ local function cursorPosition(map)
         (map:GetTop() - y / scale) / map:GetHeight()
 end
 
-local function highlight(map, x, y, texture)
-    texture = texture or map.highlight
+local function highlight(map, x, y)
+    local texture = map.highlight
     local id = A.MapID(map.id)
     if not id or not C_Map or not C_Map.GetMapHighlightInfoAtPosition then
         texture:Hide()
@@ -96,7 +96,7 @@ local function createMap(self, parent, id, name, x)
     U.FrameTreatment(box)
     U.Text(content, name, 18, 13, 21, T.gold)
     local map = CreateFrame("Frame", nil, content)
-    map.id, map.tiles, map.lockedRegions = id, {}, {}
+    map.id, map.tiles, map.colorRegions = id, {}, {}
     map:SetPoint("TOPLEFT", 8, -48)
     map:SetSize(616, 410)
     map:SetClipsChildren(true)
@@ -115,6 +115,7 @@ local function createMap(self, parent, id, name, x)
         frame.elapsed = 0
         local nx, ny = cursorPosition(frame)
         local zone = A.ZoneAtPosition(id, nx, ny)
+        frame.highlight:SetDesaturated(not zone or not G.IsUnlocked(W.state, zone))
         highlight(frame, nx, ny)
         if zone ~= frame.hovered then
             frame.hovered = zone
@@ -171,50 +172,57 @@ local function paintMap(map)
         )
         tile:SetSize(tw * sx, th * sy)
         tile:SetTexture(texture)
+        tile:SetDesaturated(true)
         tile:Show()
     end
 end
 
-local function updateLockedRegions(map)
-    if map.lockedFrontier == W.state.runBest then
+local function createColorRegion(map, zone, outline)
+    if not map.CreateMaskTexture then
         return
     end
-    map.lockedFrontier = W.state.runBest
+    local left, right, top, bottom = 1, 0, 1, 0
+    for i = 1, #outline, 2 do
+        left, right = math.min(left, outline[i]), math.max(right, outline[i])
+        top, bottom = math.min(top, outline[i + 1]), math.max(bottom, outline[i + 1])
+    end
+    local region = { tiles = {} }
+    local mask = map:CreateMaskTexture()
+    mask:SetTexture("Interface\\AddOns\\WoWIdle\\Assets\\Maps\\" .. zone.id .. ".tga")
+    mask:SetPoint("TOPLEFT", left * map:GetWidth(), -top * map:GetHeight())
+    mask:SetSize((right - left) * map:GetWidth(), (bottom - top) * map:GetHeight())
+    region.mask = mask
+    for _, source in ipairs(map.tiles) do
+        local tile = map:CreateTexture(nil, "ARTWORK")
+        tile:SetAllPoints(source)
+        tile:SetTexture(source:GetTexture())
+        tile:AddMaskTexture(mask)
+        region.tiles[#region.tiles + 1] = tile
+    end
+    return region
+end
+
+local function updateAccessibleRegions(map)
+    if map.coloredFrontier == W.state.runBest then
+        return
+    end
+    map.coloredFrontier = W.state.runBest
+    -- The complete map stays gray, including destinations outside current content.
+    -- Only regions the player can actually visit restore the original map colors.
     for _, zone in ipairs(C.zones) do
-        local texture = map.lockedRegions[zone.id]
-        local x, y = A.ZonePosition(zone.id, map.id)
-        if x and y and not G.IsUnlocked(W.state, zone) then
-            if not texture then
-                texture = map:CreateTexture(nil, "ARTWORK")
-                texture:SetDesaturated(true)
-                map.lockedRegions[zone.id] = texture
+        local region = map.colorRegions[zone.id]
+        local unlocked = G.IsUnlocked(W.state, zone)
+        if unlocked and not region then
+            local outline = A.ZoneOutline(zone.id, map.id)
+            if outline then
+                region = createColorRegion(map, zone, outline)
+                map.colorRegions[zone.id] = region
             end
-            texture:SetVertexColor(0.4, 0.4, 0.4)
-            if not highlight(map, x, y, texture) then
-                local outline = A.ZoneOutline(zone.id, map.id)
-                if outline then
-                    texture:SetVertexColor(1, 1, 1)
-                    local left, right, top, bottom = 1, 0, 1, 0
-                    for i = 1, #outline, 2 do
-                        left, right = math.min(left, outline[i]), math.max(right, outline[i])
-                        top, bottom =
-                            math.min(top, outline[i + 1]), math.max(bottom, outline[i + 1])
-                    end
-                    texture:SetTexture(
-                        "Interface\\AddOns\\WoWIdle\\Assets\\Maps\\" .. zone.id .. ".tga"
-                    )
-                    texture:SetTexCoord(0, 1, 0, 1)
-                    texture:ClearAllPoints()
-                    texture:SetPoint("TOPLEFT", left * map:GetWidth(), -top * map:GetHeight())
-                    texture:SetSize(
-                        (right - left) * map:GetWidth(),
-                        (bottom - top) * map:GetHeight()
-                    )
-                    texture:Show()
-                end
+        end
+        if region then
+            for _, tile in ipairs(region.tiles) do
+                tile:SetShown(unlocked)
             end
-        elseif texture then
-            texture:Hide()
         end
     end
 end
@@ -247,7 +255,7 @@ function Atlas.Draw(ui)
     end
     self.frame:Show()
     for _, map in ipairs(self.maps) do
-        updateLockedRegions(map)
+        updateAccessibleRegions(map)
     end
     local step, _, destination = W.Panels.GuideStep(W.state)
     local guided = not W.state.guide.dismissed and step == 4

@@ -249,19 +249,35 @@ test(
     end
 )
 
-test("Locked regions are shaded until their frontier unlocks", function()
+test("All continent artwork is gray and only accessible regions regain color", function()
     local W = WoWIdle
     W.state = W.Game.New(W.Client.Now())
     W.Game.AddHero(W.state, "WARRIOR")
     W.UI:SetTab("atlas")
+    for _, map in ipairs(W.UI.atlas.maps) do
+        assertTrue(#map.tiles > 0)
+        for _, tile in ipairs(map.tiles) do
+            assertTrue(tile:IsDesaturated())
+        end
+    end
     local map = W.UI.atlas.maps[1]
-    local locked = map.lockedRegions.winterspring
-    assertNotNil(locked)
-    assertTrue(locked:IsShown())
-    assertTrue(map.lockedRegions.durotar == nil or not map.lockedRegions.durotar:IsShown())
+    assertTrue(map.colorRegions.winterspring == nil)
+    local starting = map.colorRegions.durotar
+    assertNotNil(starting)
+    for _, tile in ipairs(starting.tiles) do
+        assertTrue(tile:IsShown())
+        assertFalse(tile:IsDesaturated())
+        assertEquals(1, tile:GetNumMaskTextures())
+    end
     W.state.runBest = 100
     W.UI:Refresh()
-    assertFalse(locked:IsShown())
+    local unlocked = map.colorRegions.winterspring
+    assertNotNil(unlocked)
+    assertTrue(unlocked.tiles[1]:IsShown())
+    W.state.runBest = 1
+    W.UI:Refresh()
+    assertFalse(unlocked.tiles[1]:IsShown())
+    assertTrue(starting.tiles[1]:IsShown())
     W.UI:SetTab("adventure")
 end)
 
