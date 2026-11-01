@@ -78,14 +78,26 @@ function M.Create()
     local button = icons:GetMinimapButton("WoWIdle")
     M.button = button
     -- The library owns the launcher; this overlay represents addon-specific unread notices.
-    local bubble = button:CreateTexture(nil, "OVERLAY", nil, 7)
+    local bubble = CreateFrame("Frame", nil, button)
     M.bubble = bubble
-    bubble:SetSize(10, 10)
-    bubble:SetPoint("TOPRIGHT", -1, -1)
-    bubble:SetColorTexture(0.95, 0.08, 0.08, 1)
-    local bubbleMask = button:CreateMaskTexture()
-    bubbleMask:SetAllPoints(bubble)
-    bubbleMask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-    bubble:AddMaskTexture(bubbleMask)
+    bubble:SetSize(12, 12)
+    bubble:SetPoint("CENTER", button, "TOPRIGHT", -6, -6)
+    -- A dark edge, antique-gold rim and highlighted red inset echo the launcher frame.
+    local layers = {
+        { size = 12, x = 0, y = 0, color = { 0.12, 0.07, 0.03 } },
+        { size = 10, x = 0, y = 0, color = { 0.72, 0.53, 0.22 } },
+        { size = 8, x = 0, y = 0, color = { 0.72, 0.06, 0.04 } },
+        { size = 3, x = -1, y = 2, color = { 1, 0.52, 0.34 } },
+    }
+    for i, layer in ipairs(layers) do
+        local texture = bubble:CreateTexture(nil, "OVERLAY", nil, i)
+        texture:SetSize(layer.size, layer.size)
+        texture:SetPoint("CENTER", layer.x, layer.y)
+        texture:SetColorTexture(layer.color[1], layer.color[2], layer.color[3], 1)
+        local mask = bubble:CreateMaskTexture()
+        mask:SetAllPoints(texture)
+        mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+        texture:AddMaskTexture(mask)
+    end
     M.Refresh()
 end
