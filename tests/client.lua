@@ -258,6 +258,51 @@ case("Creature framing survives loading and resets when a slot changes creature"
     assert(distance == 1.7)
 end)
 
+case("Model ground projection is independent of native camera size and pivot", function()
+    local client = adapter("12.1.5")
+    local size = 2
+    local camera, target, centered
+    local model = {
+        SetCamera = function(_, index)
+            assert(index == 0)
+            camera, target = { size, 0, size * 0.7 }, { 0, 0, size * 0.7 }
+        end,
+        GetCameraPosition = function()
+            return unpack(camera)
+        end,
+        GetCameraTarget = function()
+            return unpack(target)
+        end,
+        SetPortraitZoom = function() end,
+        SetCamDistanceScale = function() end,
+        SetFacing = function() end,
+        SetCustomCamera = function() end,
+        SetCameraPosition = function(_, x, y, z)
+            camera = { x, y, z }
+        end,
+        SetCameraTarget = function(_, x, y, z)
+            target = { x, y, z }
+        end,
+        UseModelCenterToTransform = function(_, value)
+            centered = value
+        end,
+    }
+    for _, scale in ipairs({ 2, 8, 3 }) do
+        size = scale
+        for _ = 1, 2 do
+            client.FrameModel(model, true)
+            assert(centered == false)
+            assert(camera[1] == size and camera[2] == 0)
+            assert(target[1] == 0 and target[2] == 0)
+            assert(camera[3] == target[3])
+            assert(math.abs(target[3] / camera[1] - 0.2) < 0.00001)
+        end
+    end
+    size = 0
+    client.FrameModel(model, true)
+    assert(camera[1] == 0) -- Unloaded assets keep their native camera until loading completes.
+end)
+
 case("Native map hit testing resolves city submaps to their adventure zone", function()
     local client = adapter("12.1.5", {
         C_Map = {
