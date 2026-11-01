@@ -150,6 +150,7 @@ function Scene.Create(parent)
     self.effects = W.CombatEffects.Create(content)
     self.units = {}
     self.plateOrder = {}
+    self.depthOrder = {}
     for i = 1, 8 do
         local unit = CreateFrame("Frame", nil, content)
         local friendly = i <= 5
@@ -435,12 +436,42 @@ local function sortByPosition(a, b)
 end
 
 local function radius(unit)
-    return unit.model.spacingRadius or 80
+    return (unit.model.spacingRadius or 80) * (unit.depthScale or 1)
+end
+
+local function sortByDepth(a, b)
+    return a.renderY < b.renderY or (a.renderY == b.renderY and a.index < b.index)
 end
 
 -- Keep rendered opponents apart without feeding client-dependent model bounds
 -- back into combat reach, damage timing, or offline simulation.
 function Scene:PlaceModels(elapsed)
+    local order, count = self.depthOrder, 0
+    for _, unit in ipairs(self.units) do
+        if unit:IsShown() and unit.x then
+            -- A shallow perspective keeps the existing side-on composition. Only
+            -- the viewport scales: labels and interaction areas remain readable.
+            local y = unit.y or 110
+            unit.renderY = 114 + (y - 114) * 1.55
+            local scale = 0.9 + 0.1 * math.min(1, math.max(0, (y - 96) / 36))
+            if unit.depthScale ~= scale then
+                unit.viewport:SetScale(scale)
+                unit.depthScale = scale
+            end
+            count = count + 1
+            order[count] = unit
+        end
+    end
+    for i = #order, count + 1, -1 do
+        order[i] = nil
+    end
+    table.sort(order, sortByDepth)
+    for i, unit in ipairs(order) do
+        local level = self.frame:GetFrameLevel() + 10 + i * 10
+        if unit:GetFrameLevel() ~= level then
+            unit:SetFrameLevel(level)
+        end
+    end
     local gap, leftRoom = 0, math.huge
     if not self.travelling then
         for i = 1, 5 do
@@ -467,10 +498,10 @@ function Scene:PlaceModels(elapsed)
             local x = unit.dead and (unit.renderX or unit.x)
                 or unit.x + (i <= 5 and -left or gap - left)
             unit.renderX = x
-            if unit.placedX ~= x or unit.placedY ~= unit.y then
+            if unit.placedX ~= x or unit.placedY ~= unit.renderY then
                 unit:ClearAllPoints()
-                unit:SetPoint("TOPLEFT", x, -(unit.y or 110))
-                unit.placedX, unit.placedY = x, unit.y
+                unit:SetPoint("TOPLEFT", x, -unit.renderY)
+                unit.placedX, unit.placedY = x, unit.renderY
             end
         end
     end
@@ -504,7 +535,8 @@ function Scene:PlaceNameplates()
         local unit = order[i]
         unit.plateX = math.min(unit.plateX, nextX - 140)
         nextX = unit.plateX
-        local y = (unit.y or 110) - 28
+        local y =
+            math.max(88, (unit.renderY or unit.y or 110) - 28 + (1 - (unit.depthScale or 1)) * 240)
         if unit.plateX ~= unit.lastPlateX or y ~= unit.lastPlateY then
             unit.plate:ClearAllPoints()
             unit.plate:SetPoint("TOPLEFT", self.nameplates, "TOPLEFT", unit.plateX, -y)

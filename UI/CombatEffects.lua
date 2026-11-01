@@ -6,7 +6,8 @@ local durations = { shield = 1.1, heal = 0.8, slash = 0.5, burst = 0.8, impact =
 local projectiles = { arrow = true, bolt = true, shadow = true, leaf = true, lightning = true }
 
 local function position(unit)
-    return (unit.renderX or unit.x or 0) + 66, -(unit.y or 110) - 100
+    local scale = unit.depthScale or 1
+    return (unit.renderX or unit.x or 0) + 66, -(unit.renderY or unit.y or 110) - 204 + 104 * scale
 end
 
 local function release(effect)
