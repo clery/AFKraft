@@ -130,6 +130,76 @@ return {
         end,
     },
     {
+        "Creature calls and deaths follow the rendered NPC, not its adventure name",
+        function()
+            local n, emit, played, advance = fixture()
+            n.Client = {
+                ModelSpec = function()
+                    return { creatureID = 448 }
+                end,
+            }
+            n.state.battle = { enemies = { { name = "Hogger" } } }
+            emit("encounter", { boss = false })
+            n.Audio.Flush()
+            assert(played[1] == 1015)
+            advance(5)
+            emit("hit", { enemy = false, source = 1 })
+            n.Audio.Flush()
+            assert(played[2] == 306)
+            advance(7)
+            emit("death", { enemy = true, target = 1 })
+            n.state.battle = nil -- The controller may finish the battle before flushing.
+            n.Audio.Flush()
+            assert(played[3] == 308)
+        end,
+    },
+    {
+        "Melee impacts include appearance-specific exertions and stop both handles",
+        function()
+            local n, emit, played, advance, env = fixture()
+            n.state.heroes = { { class = "WARRIOR", appearance = "orc_female" } }
+            local stopped = {}
+            env.StopSound = function(handle)
+                stopped[#stopped + 1] = handle
+            end
+            emit("hit", { enemy = true, source = 1 })
+            n.Audio.Flush()
+            assert(played[1] == 235 and played[2] == 209)
+            advance(0.1)
+            emit("hit", { enemy = true, source = 1 })
+            n.Audio.Flush()
+            assert(#played == 2)
+            advance(1, false)
+            n.Audio.Flush()
+            assert(#stopped == 2)
+        end,
+    },
+    {
+        "Live player voices follow race and sex while casters avoid weapon impacts",
+        function()
+            local n, emit, played, advance, env = fixture()
+            n.Client = {
+                Identity = function()
+                    return { guid = "player" }
+                end,
+            }
+            n.state.heroes = { { guid = "player", class = "MAGE", appearance = "human_male" } }
+            env.UnitRace = function()
+                return "Night Elf", "NightElf"
+            end
+            env.UnitSex = function()
+                return 3
+            end
+            emit("hit", { enemy = true, source = 1 })
+            n.Audio.Flush()
+            assert(#played == 1 and played[1] == 2933)
+            advance(2)
+            emit("death", { enemy = false, target = 1 })
+            n.Audio.Flush()
+            assert(played[2] == 2936)
+        end,
+    },
+    {
         "Sound settings migration retains explicit category mutes",
         function()
             local state = W.Game.New(1000)

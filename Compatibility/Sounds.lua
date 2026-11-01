@@ -7,8 +7,8 @@ W.Audio = Audio
 Audio.categories = {
     {
         key = "soundCombat",
-        name = "Sounds: weapon hits",
-        tip = "Sampled combat impacts, at most once every 1.2 seconds.",
+        name = "Sounds: combat and voices",
+        tip = "Sampled weapon impacts and actor attack voices, at most once every 1.2 seconds.",
     },
     {
         key = "soundSpells",
@@ -23,7 +23,7 @@ Audio.categories = {
     {
         key = "soundEncounters",
         name = "Sounds: encounters",
-        tip = "Boss entrances, victories, and party defeats.",
+        tip = "Creature entrance calls, victories, and party defeats.",
     },
     {
         key = "soundProgression",
@@ -66,17 +66,129 @@ local cues = {
     travel = { "soundTravel", "IG_MINIMAP_OPEN", 3, 1 },
     recruit = { "soundTravel", "IG_PLAYER_INVITE", 3, 1 },
 }
+-- Native SoundKit IDs (not FileDataIDs). Each kit supplies its own variations.
+-- Profiles follow the NPC appearances in ModelAssets, rather than display names.
+-- attack, death, aggro; omitted entries retain the ordinary cue.
+local voices = {
+    wolf = { 391, 394, 390 },
+    kobold = { 312, 314, 694 },
+    gnoll = { 306, 308, 1015 },
+    boar = { 380, 383, 379 },
+    quillboar = { 1176, 1179, 1181 },
+    thief = { 322, 324 },
+    harvest = { 2087, 2518, 2092 },
+    air = { nil, 3787, 3789 },
+    cat = { 643, 646 },
+    centaur = { 1040, 1043, 1044 },
+    orc = { 1319, 1322, 1346 },
+    whelp = { 429, 432, 428 },
+    furbolg = { 355, 357 },
+    ancient = { 1494, 3375, 1498 },
+    skeleton = { 335, 337, 1016 },
+    worgen = { 558, 441, 437 },
+    troll = { 1029, 1032, 1034 },
+    goblin = { 1409, 1413 },
+    vulture = { 442, 444, 447 },
+    ogre = { 397, 400, 396 },
+    yeti = { 1239, 1242, 1243 },
+}
+local creatureVoices = {
+    [299] = "wolf",
+    [6] = "kobold",
+    [448] = "gnoll",
+    [3098] = "boar",
+    [3111] = "quillboar",
+    [3100] = "boar",
+    [38] = "thief",
+    [114] = "harvest",
+    [832] = "air",
+    [3425] = "cat",
+    [3272] = "centaur",
+    [3261] = "quillboar",
+    [4064] = "orc",
+    [446] = "gnoll",
+    [441] = "whelp",
+    [2033] = "cat",
+    [3749] = "furbolg",
+    [3919] = "ancient",
+    [48] = "skeleton",
+    [898] = "worgen",
+    [215] = "thief",
+    [2102] = "orc",
+    [687] = "cat",
+    [595] = "troll",
+    [675] = "goblin",
+    [4640] = "centaur",
+    [4695] = "vulture",
+    [4663] = "orc",
+    [5618] = "thief",
+    [5646] = "troll",
+    [5474] = "ogre",
+    [7431] = "cat",
+    [7439] = "furbolg",
+    [7459] = "yeti",
+}
+local characterVoices = {
+    human_male = { 2941, 2944 },
+    human_female = { 2937, 2940 },
+    orc_male = { 1319, 1322 },
+    orc_female = { 209, 213 },
+    dwarf_male = { 2929, 2932 },
+    dwarf_female = { 2925, 2928 },
+    nightelf_male = { 2956, 2959 },
+    nightelf_female = { 2933, 2936 },
+    undead_male = { 1315, 1318 },
+    undead_female = { 1361, 1364 },
+    tauren_male = { 1353, 1356 },
+    tauren_female = { 225, 229 },
+}
+
+local function actorVoice(state, enemy, index, action)
+    if not index then
+        return
+    end
+    if enemy then
+        local unit = state.battle and state.battle.enemies[index]
+        local spec = unit and W.Client and W.Client.ModelSpec(nil, state.zone, unit.name)
+        local profile = spec and voices[creatureVoices[spec.creatureID]]
+        return profile and (profile[action] or action == 3 and profile[1])
+    end
+    local hero = state.heroes[index]
+    if not hero then
+        return
+    end
+    local appearance = hero.appearance
+    if hero.guid and W.Client and hero.guid == W.Client.Identity().guid then
+        -- The player's model uses their live appearance, not the recruit preset.
+        local _, race
+        if UnitRace then
+            _, race = UnitRace("player")
+        end
+        race = race and race:lower()
+        if race == "scourge" then
+            race = "undead"
+        end
+        local sex = UnitSex and UnitSex("player")
+        appearance = race and (sex == 2 or sex == 3) and race .. (sex == 2 and "_male" or "_female")
+            or nil
+    end
+    local profile = characterVoices[appearance]
+    return profile and profile[action]
+end
+
 local pending, last = nil, {}
 local quietUntil = -math.huge
-local handle
+local handles = {}
 local levelUpQuietUntil = -math.huge
 
 function Audio.Stop()
     pending = nil
-    if handle and StopSound then
-        pcall(StopSound, handle)
+    for i = #handles, 1, -1 do
+        if StopSound then
+            pcall(StopSound, handles[i])
+        end
+        handles[i] = nil
     end
-    handle = nil
     levelUpQuietUntil = -math.huge
 end
 
@@ -100,8 +212,6 @@ function W.OnGameEvent(state, event)
         kind = event.action == "special" and "special" or nil
     elseif kind == "death" then
         kind = event.enemy and "enemyDeath" or "heroDeath"
-    elseif kind == "encounter" and not event.boss then
-        return
     elseif kind == "victory" and event.boss then
         kind = "bossVictory"
     end
@@ -109,7 +219,40 @@ function W.OnGameEvent(state, event)
     local now = GetTime()
     if cue and state.settings[cue[1]] and now - (last[cue[1]] or -math.huge) >= cue[4] then
         if not pending or cue[3] > pending[3] then
-            pending = cue
+            local kit, voice
+            if kind == "hit" then
+                voice = actorVoice(state, not event.enemy, event.source, 1)
+                if not event.enemy then
+                    -- Creature attacks carry their own bite/claw/exertion sound.
+                    kit, voice = voice, nil
+                elseif voice then
+                    local hero = state.heroes[event.source]
+                    local melee = hero
+                        and (
+                            hero.class == "WARRIOR"
+                            or hero.class == "PALADIN"
+                            or hero.class == "ROGUE"
+                            or hero.class == "SHAMAN"
+                            or hero.class == "DRUID"
+                        )
+                    -- MediumWeaponNormal complements melee exertions.
+                    if melee then
+                        kit = 235
+                    else
+                        kit, voice = voice, nil
+                    end
+                end
+            elseif kind == "special" then
+                voice = actorVoice(state, false, event.source, 1)
+            elseif kind == "enemyDeath" or kind == "heroDeath" then
+                kit = actorVoice(state, event.enemy, event.target, 2)
+            elseif kind == "encounter" then
+                kit = actorVoice(state, true, 1, 3)
+                if not kit and not event.boss then
+                    return
+                end
+            end
+            pending = { cue[1], kit or cue[2], cue[3], cue[4], voice }
         end
     end
 end
@@ -143,11 +286,19 @@ function Audio.Flush()
     Audio.Stop()
     local ok, played, soundHandle = pcall(PlaySound, kit, "SFX", false)
     if ok and played then
-        handle = soundHandle
+        if soundHandle then
+            handles[#handles + 1] = soundHandle
+        end
+        if cue[5] then
+            local voiceOK, voiced, voiceHandle = pcall(PlaySound, cue[5], "SFX", false)
+            if voiceOK and voiced and voiceHandle then
+                handles[#handles + 1] = voiceHandle
+            end
+        end
         if kit == 888 then
             levelUpQuietUntil = now + 4
         end
         last[cue[1]] = now
-        quietUntil = now + (cue[3] >= 4 and 2.5 or 0.65)
+        quietUntil = now + (cue[3] >= 4 and 2.5 or cue[1] == "soundEncounters" and 1.8 or 0.65)
     end
 end

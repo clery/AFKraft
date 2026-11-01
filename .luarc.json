@@ -27,6 +27,8 @@
     "time",
     "issecretvalue",
     "UnitClass",
+    "UnitRace",
+    "UnitSex",
     "UnitName",
     "UnitGUID",
     "IsLoggedIn",
