@@ -229,72 +229,133 @@ local function inventory(ui, p, s, hero, index)
     local view = ui.bagView or {}
     ui.bagView = view
     entries = G.InventoryEntries(s, hero, filter, view)
-    line(p, "Shared inventory", 608, 0, 300, 21, T.gold)
-    line(p, #entries .. " / " .. #s.inventory .. " stacks", 920, 7, 244, 12, T.muted):SetJustifyH(
-        "RIGHT"
-    )
-    U.Button(p, "Reset filters", 1180, 0, 116, 30, function()
+    local active, summary = 0, {}
+    local function describe(value, default, label)
+        if value ~= default then
+            active = active + 1
+            summary[#summary + 1] = label
+        end
+    end
+    describe(filter, 0, C.slots[filter])
+    local availabilityNames = {
+        all = "Any level",
+        usable = "Equippable now",
+        locked = "Level locked",
+        upgrades = "Usable upgrades",
+    }
+    local traitNames = {
+        all = "Any trait",
+        heirloom = "Heirlooms",
+        protected = "Protected",
+        effect = "With effect",
+        upgraded = "Upgraded",
+    }
+    describe(view.availability or "all", "all", availabilityNames[view.availability])
+    describe(view.quality or 0, 0, C.qualityNames[view.quality])
+    describe(view.trait or "all", "all", traitNames[view.trait])
+    local function reset()
         ui.bagView, ui.bagFilter, ui.bagPage = nil, 0, 0
         ui:Refresh()
-    end)
-    local function choice(key, choices, default, x, y, width)
-        local value = view[key] or default
-        local label = choices[1].name
-        for _, option in ipairs(choices) do
-            if option.id == value then
-                label = option.name
-            end
-        end
-        U.Choice(p, label, x, y, width, choices, value, function(id)
-            view[key], ui.bagPage = id, 0
-            ui:Refresh()
-        end)
     end
-    U.Choice(
-        p,
-        filter == 0 and "All equipment" or C.slots[filter],
-        608,
-        40,
-        216,
-        options,
-        filter,
-        function(id)
-            ui.bagFilter, ui.bagPage = id, 0
-            ui:Refresh()
-        end
+    line(p, "Shared inventory", 608, 0, 280, 21, T.gold)
+    line(p, #entries .. " / " .. #s.inventory .. " stacks", 890, 7, 190, 12, T.muted):SetJustifyH(
+        "RIGHT"
     )
-    choice("availability", {
-        { id = "all", name = "Any required level" },
-        { id = "usable", name = "Equippable now" },
-        { id = "locked", name = "Requires higher level" },
-        { id = "upgrades", name = "Usable upgrades" },
-    }, "all", 840, 40, 224)
-    choice("sort", {
-        { id = "power", name = "Sort: Power" },
-        { id = "level", name = "Sort: Level" },
-        { id = "quality", name = "Sort: Quality" },
-        { id = "slot", name = "Sort: Equipment slot" },
-        { id = "name", name = "Sort: Name" },
-    }, "power", 1080, 40, 216)
-    local qualities = { { id = 0, name = "Any quality" } }
-    for quality, name in ipairs(C.qualityNames) do
-        qualities[#qualities + 1] = { id = quality, name = name }
-    end
-    choice("quality", qualities, 0, 608, 80, 160)
-    choice("trait", {
-        { id = "all", name = "Any item trait" },
-        { id = "heirloom", name = "Heirlooms" },
-        { id = "protected", name = "Protected" },
-        { id = "effect", name = "With effect" },
-        { id = "upgraded", name = "Upgraded" },
-    }, "all", 784, 80, 160)
-    U.Button(p, view.ascending and "Ascending" or "Descending", 960, 80, 120, 32, function()
-        view.ascending, ui.bagPage = not view.ascending, 0
-        ui:Refresh()
-    end)
-    local equipBest = U.Button(p, "Equip best power", 1096, 80, 200, 32, function()
+    local equipBest = U.Button(p, "Equip best power", 1096, 0, 200, 32, function()
         W.Action(G.EquipBest, index)
     end, false, "primary")
+    U.Rect(p, 608, 38, 688, 36, T.panel, 0.65)
+    U.Button(
+        p,
+        (ui.bagFiltersOpen and "- Filters" or "+ Filters")
+            .. (active > 0 and " (" .. active .. ")" or ""),
+        608,
+        40,
+        144,
+        32,
+        function()
+            ui.bagFiltersOpen = not ui.bagFiltersOpen
+            ui.bagPage = 0
+            ui:Refresh()
+        end,
+        ui.bagFiltersOpen
+    )
+    local sorts, sortValue = {}, (view.sort or "power") .. (view.ascending and ":asc" or ":desc")
+    for _, option in ipairs({
+        { "power", "Power", "High to low", "Low to high" },
+        { "level", "Level", "High to low", "Low to high" },
+        { "quality", "Quality", "High to low", "Low to high" },
+        { "slot", "Equipment slot", "Last to first", "First to last" },
+        { "name", "Name", "Z to A", "A to Z" },
+    }) do
+        sorts[#sorts + 1] = { id = option[1] .. ":desc", name = option[2] .. ": " .. option[3] }
+        sorts[#sorts + 1] = { id = option[1] .. ":asc", name = option[2] .. ": " .. option[4] }
+    end
+    local sortLabel = sorts[1].name
+    for _, option in ipairs(sorts) do
+        if option.id == sortValue then
+            sortLabel = option.name
+        end
+    end
+    line(p, "Sort", 772, 49, 44, 12, T.muted)
+    U.Choice(p, sortLabel, 816, 40, 320, sorts, sortValue, function(id)
+        view.sort, view.ascending = id:match("^(.-):"), id:match(":asc$") ~= nil
+        ui.bagPage = 0
+        ui:Refresh()
+    end)
+    local clear = U.Button(p, "Clear filters", 1152, 40, 144, 32, reset)
+    U.Enabled(clear, active > 0)
+    if ui.bagFiltersOpen then
+        U.Rect(p, 608, 78, 688, 70, T.panel, 0.65)
+        local function choice(key, title, choices, default, x)
+            local value = key == "slot" and filter or view[key] or default
+            local label = choices[1].name
+            for _, option in ipairs(choices) do
+                if option.id == value then
+                    label = option.name
+                end
+            end
+            line(p, title, x + 4, 84, 152, 11, T.muted)
+            U.Choice(p, label, x, 104, 160, choices, value, function(id)
+                if key == "slot" then
+                    ui.bagFilter = id
+                else
+                    view[key] = id
+                end
+                ui.bagPage = 0
+                ui:Refresh()
+            end)
+        end
+        choice("slot", "Equipment", options, 0, 608)
+        choice("availability", "Availability", {
+            { id = "all", name = "Any level" },
+            { id = "usable", name = "Equippable now" },
+            { id = "locked", name = "Level locked" },
+            { id = "upgrades", name = "Usable upgrades" },
+        }, "all", 784)
+        local qualities = { { id = 0, name = "Any quality" } }
+        for quality, name in ipairs(C.qualityNames) do
+            qualities[#qualities + 1] = { id = quality, name = name }
+        end
+        choice("quality", "Quality", qualities, 0, 960)
+        choice("trait", "Item trait", {
+            { id = "all", name = "Any trait" },
+            { id = "heirloom", name = "Heirlooms" },
+            { id = "protected", name = "Protected" },
+            { id = "effect", name = "With effect" },
+            { id = "upgraded", name = "Upgraded" },
+        }, "all", 1136)
+    else
+        line(
+            p,
+            active > 0 and table.concat(summary, "  ·  ") or "All equipment",
+            612,
+            80,
+            680,
+            12,
+            T.muted
+        )
+    end
     U.Tooltip(
         equipBest,
         "Equip best power",
@@ -303,14 +364,15 @@ local function inventory(ui, p, s, hero, index)
             .. ". Uses the shared inventory, keeps current items on equal power, and returns replaced gear to the inventory."
     )
 
-    local pages = math.max(1, math.ceil(#entries / 5))
+    local pageSize = ui.bagFiltersOpen and 4 or 5
+    local pages = math.max(1, math.ceil(#entries / pageSize))
     local page = math.max(0, math.min(ui.bagPage or 0, pages - 1))
     ui.bagPage = page
-    for row = 1, 5 do
-        local entry = entries[page * 5 + row]
+    for row = 1, pageSize do
+        local entry = entries[page * pageSize + row]
         if entry then
             local n, item = entry.index, entry.item
-            local y = 124 + (row - 1) * 50
+            local y = (ui.bagFiltersOpen and 160 or 104) + (row - 1) * 50
             local power = G.ItemPower(item, hero)
             local previous = hero.gear[item.slot]
             local delta = power - G.ItemPower(previous, hero)
@@ -390,7 +452,7 @@ local function inventory(ui, p, s, hero, index)
             p,
             #s.inventory == 0 and "Your first treasures await" or "No matching equipment",
             632,
-            157,
+            179,
             640,
             21,
             T.text
@@ -401,7 +463,7 @@ local function inventory(ui, p, s, hero, index)
                     and "Win encounters or craft a targeted item. Equipment is shared by your company."
                 or "Try another filter, or reset the inventory view to show all equipment.",
             632,
-            201,
+            221,
             14,
             T.muted,
             610
