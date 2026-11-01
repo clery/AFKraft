@@ -238,5 +238,13 @@ function Atlas.Draw(ui)
     for _, map in ipairs(self.maps) do
         updatePins(self, map)
     end
-    describe(self, self.focus)
+    local step, _, destination = W.Panels.GuideStep(W.state)
+    local guided = not W.state.guide.dismissed and step == 4
+    describe(self, guided and destination or self.focus)
+    ui.guideTravelTarget = nil
+    if guided then
+        for _, map in ipairs(self.maps) do
+            ui.guideTravelTarget = ui.guideTravelTarget or map.pins[destination.id]
+        end
+    end
 end

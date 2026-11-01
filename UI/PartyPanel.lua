@@ -420,6 +420,9 @@ local function inventory(ui, p, s, hero, index)
                     W.Notify("Equipped " .. item.name .. " on " .. hero.name .. ".")
                 end
             end)
+            if levelOK and not ui.guideEquipTarget then
+                ui.guideEquipTarget = b
+            end
             b.text:Hide()
             U.Begin(b)
             U.Enabled(b, levelOK)

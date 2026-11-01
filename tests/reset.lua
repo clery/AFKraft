@@ -81,7 +81,7 @@ test(
         assertFalse(ui.recruiting)
         assertTrue(ui.bagPage == nil and ui.craftHeirloom == nil and ui.message == nil)
         assertTrue(ui.frame:IsShown())
-        assertEquals(1, W.Panels.GuideStep(state))
+        assertEquals(3, W.Panels.GuideStep(state))
         -- Saving and reloading cannot merge the discarded offline snapshot.
         W.Controller:Save()
         assertEquals(0, state.gold)

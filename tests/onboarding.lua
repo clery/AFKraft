@@ -65,7 +65,10 @@ test(
 
 test("Starter guide can be dismissed and reopened without losing completed lessons", function()
     local W, s, ui = opening()
-    assertEquals(1, W.Panels.GuideStep(s))
+    assertEquals(3, W.Panels.GuideStep(s))
+    s.inventory[1] = W.Game.Item(s, 1, 1, 2)
+    ui:Refresh()
+    assertEquals(2, W.Panels.GuideStep(s))
     click(find(ui, "Dismiss guide"))
     assertTrue(s.guide.dismissed)
     W.state = assert(W.Game.Load(s, W.Client.Now()))
@@ -77,10 +80,11 @@ test("Starter guide can be dismissed and reopened without losing completed lesso
     assertEquals(2, W.Panels.GuideStep(s))
     click(find(ui, "Equip rewards"))
     assertEquals("party", s.ui.tab)
-    s.inventory[1] = W.Game.Item(s, 1, 1, 2)
     assertTrue(W.Game.Equip(s, 1, 1))
     assertEquals(3, W.Panels.GuideStep(s))
     assertTrue(W.Game.Talent(s, 1, W.Game.TalentList(s.heroes[1])[1].id))
+    assertTrue(W.Panels.GuideStep(s) == nil)
+    s.runBest = 4
     assertEquals(4, W.Panels.GuideStep(s))
     assertTrue(W.Game.Travel(s, "durotar"))
     ui:SetTab("adventure")
@@ -88,4 +92,37 @@ test("Starter guide can be dismissed and reopened without losing completed lesso
     assertTrue(find(ui, "Dismiss guide") == nil)
     assertNotNil(find(ui, "Explore Legacy"))
     assertTrue(s.guide.equipped and s.guide.talent and s.guide.traveled)
+end)
+
+test("Starter lessons skip unavailable actions and point at live controls", function()
+    local W, s, ui = opening()
+    s.heroes[1].level = 1
+    assertTrue(W.Game.Talent(s, 1, W.Game.TalentList(s.heroes[1])[1].id))
+    s.guide.talent = false
+    s.inventory[1] = W.Game.Item(s, 1, 4, 2)
+    assertTrue(W.Panels.GuideStep(s) == nil)
+    s.heroes[1].talents = {}
+    s.heroes[1].level = 2
+    assertEquals(3, W.Panels.GuideStep(s))
+    ui:Refresh(false)
+    assertEquals(ui.tabs.talents, ui.guideTarget:GetParent())
+    ui:SetTab("talents")
+    assertEquals(ui.talentTrees, ui.guideTarget:GetParent())
+    local talent = W.Game.TalentList(s.heroes[1])[1]
+    ui.talentTrees.trees[talent.path].buttons[talent.id]:GetScript("OnClick")()
+    assertTrue(s.guide.talent)
+    assertFalse(ui.guideTarget:IsShown())
+    s.heroes[1].level = 4
+    ui:SetTab("adventure")
+    assertEquals(2, W.Panels.GuideStep(s))
+    click(find(ui, "Equip rewards"))
+    assertNotNil(ui.guideEquipTarget)
+    assertEquals(ui.guideEquipTarget, ui.guideTarget:GetParent())
+    ui.guideEquipTarget:GetScript("OnClick")()
+    assertTrue(s.guide.equipped)
+    s.runBest = 4
+    ui:SetTab("atlas")
+    assertEquals(4, W.Panels.GuideStep(s))
+    assertTrue(ui.atlas.focus.level > W.Content.zoneByID[s.zone].level)
+    assertTrue(W.Game.IsUnlocked(s, ui.atlas.focus))
 end)
