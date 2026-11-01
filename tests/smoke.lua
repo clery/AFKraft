@@ -137,7 +137,9 @@ test("Full and compact Adventure bars share rank rewards without granting hero X
     W.UI:Refresh()
     assertEquals(60, state.essence)
     assertEquals(0, state.heroes[1].xp)
-    assertEquals(0.0025, W.UI.adventureBar.fill:GetValue())
+    -- Check the authoritative endpoint after the bar's presentation animation.
+    W.UI.adventureBar:StopAnimation()
+    assertTrue(math.abs(W.UI.adventureBar.fill:GetValue() - 0.0025) < 0.000001)
     assertEquals(W.UI.adventureBar.label:GetText(), W.UI.adventureCompact.label:GetText())
     state.ui.compact = true
     W.UI:ApplyMode()
@@ -395,4 +397,16 @@ test("Ace lifecycle re-enables without duplicate timers, commands or reward deli
     assertEquals(before + W.Content.activityRewards.quest.xp, state.adventure.totalXP)
     LibStub("AceEvent-3.0").events:Fire("QUEST_TURNED_IN", 987654)
     assertEquals(before + W.Content.activityRewards.quest.xp, state.adventure.totalXP)
+end)
+
+test("AceDB shutdown saves gameplay before removing preference defaults", function()
+    local W = WoWIdle
+    local state = W.state
+    state.events = { { kind = "test" } }
+    state.lastTime = 0
+    local before = W.Client.Now()
+    W.preferences.callbacks:Fire("OnDatabaseShutdown", W.preferences)
+    assertTrue(state.events == nil)
+    assertTrue(state.lastTime >= before and state.lastTime <= W.Client.Now())
+    assertEquals(true, state.settings.combatText)
 end)

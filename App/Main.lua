@@ -96,7 +96,7 @@ function root:OnEnable()
     W.Initialize()
     if W.state then
         A.Register(self)
-        self:RegisterEvent("PLAYER_LOGOUT", "Save")
+        W.preferences.RegisterCallback(self, "OnDatabaseShutdown", "Save")
         self:ScheduleRepeatingTimer("RefreshScene", 0.2)
         self:ScheduleRepeatingTimer("RefreshUI", 1)
         update:SetScript("OnUpdate", self.Update)
@@ -106,6 +106,9 @@ end
 function root:OnDisable()
     update:SetScript("OnUpdate", nil)
     self:Save()
+    if W.preferences then
+        W.preferences.UnregisterCallback(self, "OnDatabaseShutdown")
+    end
     if W.UI then
         W.UI.frame:Hide()
     end
