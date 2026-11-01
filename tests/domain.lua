@@ -509,6 +509,23 @@ case("Milestone logs notify once while routine XP stays quiet", function()
         s.battle.enemies[1].hp = 0
         G.Step(s, 0.25)
         equal(#notices, 2)
+        -- A previously unvisited destination can have an already surpassed boss milestone.
+        s.zone, s.rest, s.stage, s.farming = "durotar", 0, 5, false
+        s.runBest = 3
+        G.StartBattle(s)
+        s.battle.enemies[1].hp = 0
+        local victories, gold = s.stats.victories, s.gold
+        G.Step(s, 0.25)
+        equal(#notices, 2)
+        equal(s.stats.victories, victories + 1)
+        assert(s.gold > gold)
+        equal(s.safe.durotar, 5)
+        s.rest, s.stage = 0, 15
+        G.StartBattle(s)
+        s.battle.enemies[1].hp = 0
+        G.Step(s, 0.25)
+        equal(#notices, 3)
+        assert(notices[3]:find(C.zoneByID[s.zone].name, 1, true))
     end)
     W.OnLog = nil
     assert(ok, message)

@@ -143,7 +143,7 @@ local function victory(state, battle)
                 .. " cleared through encounter "
                 .. battle.stage
                 .. ". New paths open.",
-            battle.stage <= previousSafe
+            battle.stage <= previousSafe or state.runBest <= previousBest
         )
     end
     if not state.farming then
