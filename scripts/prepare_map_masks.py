@@ -28,23 +28,30 @@ def artwork(source, name, size):
     return image.resize(size, Image.Resampling.LANCZOS)
 
 
-def land_mask(image, outlines):
+def land_mask(image, outlines, caps, island_start):
     # The guide follows the shoreline; chroma excludes the blue coastal water.
     # Enclosed gaps are filled so labels, roads, lakes and city icons stay in-zone.
     original = polygon_mask(image.size, outlines)
     guide = original.filter(ImageFilter.MaxFilter(41))
-    # The northern islands approach the warm parchment edge; keep their traced caps.
-    guide.paste(original.crop((0, 0, image.width, 150)), (0, 0))
+    # Restrict only the islands that approach the warm parchment edge.
+    # Other northern coasts still need the shoreline search margin.
+    capped = original.filter(ImageFilter.MaxFilter(5))
+    for box in caps:
+        guide.paste(capped.crop(tuple(box)), tuple(box[:2]))
     warm = Image.new("L", image.size)
+    # A green-channel cutoff would exclude red coastal terrain from desaturation.
     channels = [channel.tobytes() for channel in image.split()]
-    warm.putdata([255 if r - b > 70 and g - b > 40 else 0
+    warm.putdata([255 if r - b > 70 else 0
                   for r, g, b in zip(*channels)])
     result = ImageChops.multiply(guide, warm)
-    result = result.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.MinFilter(3))
+    result = result.filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.MinFilter(7))
     flooded = result.copy()
     ImageDraw.floodfill(flooded, (0, 0), 128)
     result = flooded.point(lambda value: 0 if value == 128 else 255)
-    return ImageChops.multiply(result, guide)
+    result = ImageChops.multiply(result, guide)
+    # Closed offshore outlines include dark shore pixels without any chroma guess.
+    islands = polygon_mask(image.size, outlines[island_start:])
+    return ImageChops.lighter(result, islands)
 
 
 def save_mask(output, key, mask):
@@ -77,7 +84,9 @@ def main():
     entries = {}
     for continent, outlines in data["land"].items():
         name = "kalimdor" if continent == "kalimdor" else "easternkingdoms"
-        lands[continent] = land_mask(artwork(args.source_dir, name, size), outlines)
+        lands[continent] = land_mask(artwork(args.source_dir, name, size), outlines,
+                                     data["caps"].get(continent, []),
+                                     data["island_start"][continent])
         entries[continent] = (continent, save_mask(output, continent, lands[continent]))
     for key, zone in data["zones"].items():
         continent = zone["continent"]

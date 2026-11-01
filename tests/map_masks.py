@@ -44,6 +44,20 @@ class MapMasks(unittest.TestCase):
             with self.subTest(key=key, x=x, y=y):
                 self.assertGreater(self.alpha(key, x, y), 200)
 
+    def test_elwynn_stops_at_redridge_and_durotar_reaches_its_coast(self):
+        self.assertEqual(0, self.alpha("elwynn", 625, 620))
+        self.assertGreater(self.alpha("elwynn", 588, 626), 200)
+        self.assertGreater(self.alpha("durotar", 720, 390), 200)
+        self.assertEqual(0, self.alpha("durotar", 735, 390))
+
+    def test_locked_islands_and_red_coastal_terrain_have_no_color_holes(self):
+        for key, x, y in [("kalimdor", 365, 130), ("kalimdor", 360, 210),
+                          ("kalimdor", 351, 194), ("kalimdor", 385, 227),
+                          ("eastern", 652, 689), ("eastern", 827, 213)]:
+            with self.subTest(key=key, x=x, y=y):
+                self.assertGreater(self.alpha(key, x, y), 200)
+        self.assertEqual(0, self.alpha("kalimdor", 440, 80))
+
     def test_every_descriptor_has_a_client_compatible_alpha_texture(self):
         self.assertEqual(14, len(self.bounds))
         for key in self.bounds:
