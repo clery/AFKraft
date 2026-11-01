@@ -86,6 +86,26 @@ case("Mid-fight recruits join the next encounter without duplicating rewards", f
     equal(state.heroes[3].xp, 11)
 end)
 
+case("Victory level-up events identify only heroes that gained a level", function()
+    local state = party()
+    state.heroes[2].xp = 44
+    G.StartBattle(state)
+    state.events = {}
+    for _, enemy in ipairs(state.battle.enemies) do
+        enemy.hp = 0
+    end
+    G.Step(state, 0.25)
+    local count = 0
+    for _, event in ipairs(state.events) do
+        if event.kind == "levelup" then
+            equal(event.target, 2)
+            count = count + 1
+        end
+    end
+    equal(count, 1)
+    equal(state.heroes[2].level, 2)
+end)
+
 case("Interrupted victory saves recover without replaying partial rewards", function()
     local state = party()
     G.StartBattle(state)

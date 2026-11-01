@@ -110,6 +110,15 @@ function A.AnimateModel(model, animation)
     end)
 end
 
+function A.PlayLevelUp(model)
+    return pcall(function()
+        model:ClearModel()
+        model:SetModel(W.ModelAssets.levelUp)
+        model:SetCamera(0)
+        model:SetAnimation(0)
+    end)
+end
+
 function A.ConfigureModel(model, spec, enemy)
     if not spec then
         return false

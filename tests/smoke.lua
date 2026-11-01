@@ -27,6 +27,38 @@ test("Addon initializes a saved party and window", function()
         assertTrue(type(scenery.lastError) == "string")
     end
 end)
+test("Hero level-up effects play once and clear when hidden or expired", function()
+    local W = WoWIdle
+    W.Initialize()
+    local state = W.Game.New(W.Client.Now())
+    W.Game.AddHero(state, "WARRIOR")
+    W.Game.AddHero(state, "MAGE")
+    W.state = state
+    W.Game.StartBattle(state)
+    W.UI.frame:Show()
+    W.UI:SetTab("adventure")
+    local scene = W.UI.scene
+    W.Game.Emit(state, "levelup", { target = 2 })
+    scene:Refresh(state)
+    assertTrue(scene.units[2].levelUpUntil ~= nil)
+    assertTrue(scene.units[2].levelUp:IsShown())
+    assertEquals(scene.units[1].levelUpUntil, nil)
+    local effect = scene.units[2].levelUp
+    scene.units[2].levelUpUntil = GetTime() - 1
+    scene:Animate()
+    assertFalse(effect:IsShown())
+    scene:Refresh(state)
+    assertEquals(scene.units[2].levelUpUntil, nil)
+    W.Game.Emit(state, "levelup", { target = 2 })
+    scene:Refresh(state)
+    assertTrue(scene.units[2].levelUp == effect)
+    W.UI.frame:Hide()
+    assertEquals(scene.units[2].levelUpUntil, nil)
+    W.UI.frame:Show()
+    scene:Refresh(state)
+    assertFalse(effect:IsShown())
+end)
+
 test("Management views reuse frames and preserve simulation state", function()
     local W = WoWIdle
     W.Initialize()

@@ -3,6 +3,7 @@ local _, W = ...
 -- Creature IDs resolve complete NPC appearances, including their baked skins.
 -- Bare race display IDs do not contain a character's composite textures.
 W.ModelAssets = {
+    levelUp = "Spells\\LevelUp\\LevelUp.m2",
     -- Particle-heavy creatures need more room than their default portrait camera gives them.
     framing = {
         [832] = { cameraDistance = 2.3 }, -- Dust devil (also used by the Tanaris boss)

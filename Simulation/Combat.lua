@@ -95,7 +95,8 @@ local function victory(state, battle)
                 + (hero.talents.renew and 0.08 or 0)
         )
         local level, experience = G.ExperienceResult(hero, xp)
-        results[#results + 1] = { hero = hero, health = health, xp = experience, level = level }
+        results[#results + 1] =
+            { hero = hero, id = unit.id, health = health, xp = experience, level = level }
     end
     for _, result in ipairs(results) do
         result.hero.health = result.health
@@ -103,7 +104,7 @@ local function victory(state, battle)
         local previousLevel = result.hero.level
         result.hero.level = result.level
         if result.level > previousLevel then
-            G.Emit(state, "levelup")
+            G.Emit(state, "levelup", { target = result.id })
         end
         if previousLevel < G.LevelCap(result.hero) and result.level == G.LevelCap(result.hero) then
             G.Log(

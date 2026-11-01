@@ -19,6 +19,33 @@ local function modelLoaded(unit, enemy)
     end
 end
 
+local function stopLevelUp(unit)
+    unit.levelUpUntil = nil
+    if unit.levelUp then
+        unit.levelUp:Hide()
+        unit.levelUp:ClearModel()
+    end
+end
+
+local function playLevelUp(unit)
+    if not unit.levelUp then
+        -- Keep the native particle effect separate from the character's poses.
+        unit.levelUp = CreateFrame("PlayerModel", nil, unit.viewport)
+        unit.levelUp:SetAllPoints(unit.viewport)
+        unit.levelUp:EnableMouse(false)
+        unit.levelUp:SetScript("OnModelLoaded", function(model)
+            model:SetCamera(0)
+            model:SetAnimation(0)
+        end)
+    end
+    unit.levelUp:Show()
+    if W.Client.PlayLevelUp(unit.levelUp) then
+        unit.levelUpUntil = GetTime() + 3
+    else
+        stopLevelUp(unit)
+    end
+end
+
 function Scene.Create(parent)
     local self = setmetatable({}, { __index = Scene })
     local f = CreateFrame("Frame", nil, parent)
@@ -44,6 +71,7 @@ function Scene.Create(parent)
         local unit = CreateFrame("Frame", nil, content)
         local friendly = i <= 5
         unit.index = i
+        unit:SetScript("OnHide", stopLevelUp)
         unit:SetSize(132, 204)
         unit.sigil = U.Icon(unit, "INV_Misc_QuestionMark", 36, 88, 60)
         -- Transparent model viewports extend beyond the small interaction/nameplate
@@ -256,6 +284,11 @@ function Scene:Refresh(s)
                         unit.floating:SetAlpha(1)
                         unit.floatAnimation:Play()
                     end
+                elseif event.kind == "levelup" and event.target then
+                    local unit = self.units[event.target]
+                    if unit and event.target <= 5 and unit:IsVisible() then
+                        playLevelUp(unit)
+                    end
                 elseif event.kind == "cast" then
                     local unit = self.units[event.source]
                     if unit and not unit.dead then
@@ -321,6 +354,9 @@ function Scene:Animate()
         return
     end
     for _, unit in ipairs(self.units) do
+        if unit.levelUpUntil and now >= unit.levelUpUntil then
+            stopLevelUp(unit)
+        end
         if unit:IsShown() and unit.combatant then
             unit.targetX, unit.targetY = unit.combatant.x, unit.combatant.y
             unit.targetID, unit.targetEnemy = unit.combatant.targetID, unit.combatant.targetEnemy
