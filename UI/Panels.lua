@@ -44,7 +44,7 @@ function P.GuideStep(s, selectedHero)
         for index, item in ipairs(s.inventory) do
             if
                 item.uid == s.guide.craftItem
-                and (item.heirloom or item.level <= recipient.level)
+                and G.CanEquip(recipient, item)
                 and G.ItemPower(item, recipient)
                     > G.ItemPower(recipient.gear[item.slot], recipient)
             then
@@ -55,7 +55,7 @@ function P.GuideStep(s, selectedHero)
     if not s.guide.equipped then
         for index, hero in ipairs(s.heroes) do
             for _, item in ipairs(s.inventory) do
-                if item.heirloom or item.level <= hero.level then
+                if G.CanEquip(hero, item) then
                     return 2, index
                 end
             end

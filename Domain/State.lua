@@ -253,6 +253,11 @@ function G.Load(db, now)
             migrateItem(item)
         end
     end
+    for _, hero in ipairs(db.heroes) do
+        if G.ReturnUnusableGear(db, hero) then
+            db.battle, db.rest = nil, 0
+        end
+    end
     if needsItemMigration then
         db.battle = nil
         db.rest = 0

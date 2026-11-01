@@ -2,7 +2,59 @@ local _, W = ...
 local C, G = W.Content, W.Game
 local copy = G.Copy
 
--- Crafting and migrated saves choose the closest catalog entry for their slot.
+function G.ItemArmorType(item)
+    if not item or item.slot == 1 or item.slot == 4 then
+        return nil
+    end
+    local template = C.itemByID[item.itemID]
+    -- Older synthetic armor had no subclass; treat it as cloth rather than losing it.
+    return template and template.armorType or item.armorType or "cloth"
+end
+
+function G.CanWearArmor(hero, item)
+    if not hero or not item or not C.slots[item.slot] then
+        return false, "Choose a hero and equipment item."
+    end
+    local armorType = G.ItemArmorType(item)
+    if not armorType then
+        return true
+    end
+    local rank, proficiency = C.armorRanks[armorType], C.classArmor[hero.class]
+    local maximum = proficiency and proficiency[hero.level >= 40 and 2 or 1]
+    if not rank or not maximum or rank > maximum then
+        if proficiency and rank and rank > proficiency[1] and rank <= proficiency[2] then
+            return false, "This hero needs idle level 40 to wear " .. C.armorNames[armorType] .. "."
+        end
+        return false, "This class cannot wear " .. (C.armorNames[armorType] or "this armor") .. "."
+    end
+    return true
+end
+
+function G.CanEquip(hero, item)
+    local allowed, reason = G.CanWearArmor(hero, item)
+    if not allowed then
+        return false, reason
+    end
+    if not item.heirloom and item.level > hero.level then
+        return false, "This hero needs idle level " .. item.level .. "."
+    end
+    return true
+end
+
+-- Keep purchased enhancements and identities when enforcing new restrictions or resetting levels.
+function G.ReturnUnusableGear(state, hero)
+    local changed = false
+    for slot, item in pairs(hero.gear or {}) do
+        if not G.CanEquip(hero, item) then
+            state.inventory[#state.inventory + 1] = item
+            hero.gear[slot] = nil
+            changed = true
+        end
+    end
+    return changed
+end
+
+-- Generic generation chooses the closest entry; crafting supplies a class-compatible template.
 function G.Item(state, slot, level, quality, heirloom, template)
     if not C.slots[slot] then
         return nil
@@ -66,7 +118,7 @@ end
 function G.IsUpgrade(state, item)
     for _, hero in ipairs(state.heroes) do
         if
-            (item.heirloom or item.level <= hero.level)
+            G.CanEquip(hero, item)
             and G.ItemPower(item, hero) > G.ItemPower(hero.gear[item.slot], hero)
         then
             return true
@@ -134,8 +186,9 @@ function G.Equip(state, heroIndex, inventoryIndex)
     then
         return false
     end
-    if not item.heirloom and item.level > hero.level then
-        return false, "This hero needs idle level " .. item.level .. "."
+    local allowed, reason = G.CanEquip(hero, item)
+    if not allowed then
+        return false, reason
     end
     if state.guide.craftItem == item.uid then
         state.guide.craftItem, state.guide.craftHero = nil, nil
@@ -169,7 +222,7 @@ function G.EquipBest(state, heroIndex)
     for _, slot in ipairs(C.equipmentSlots) do
         local bestIndex, bestPower = nil, G.ItemPower(hero.gear[slot], hero)
         for index, item in ipairs(state.inventory) do
-            if item.slot == slot and (item.heirloom or item.level <= hero.level) then
+            if item.slot == slot and G.CanEquip(hero, item) then
                 local power = G.ItemPower(item, hero)
                 if power > bestPower then
                     bestIndex, bestPower = index, power
@@ -200,13 +253,27 @@ function G.CraftItem(hero, slot, heirloom)
     if not hero or not C.slots[slot] then
         return nil, "Choose a hero and equipment slot."
     end
-    local item = G.Item({ nextItem = 0 }, slot, heirloom and 1 or hero.level, 3, heirloom)
-    if not item then
-        return nil, "No equipment recipe is available for this slot."
+    local template, bestPower
+    for _, candidate in ipairs(C.items) do
+        if
+            candidate.slot == slot
+            and G.CanWearArmor(hero, candidate)
+            and (heirloom or candidate.level <= hero.level)
+        then
+            local power = G.ItemPower(
+                heirloom and { itemID = candidate.itemID, stats = candidate.stats, heirloom = true }
+                    or candidate,
+                hero
+            )
+            if not bestPower or power > bestPower then
+                template, bestPower = candidate, power
+            end
+        end
     end
-    if not heirloom and C.itemByID[item.itemID].level > hero.level then
-        return nil, "Reach idle level " .. C.itemByID[item.itemID].level .. " to craft this slot."
+    if not template then
+        return nil, "No usable equipment recipe is available for this hero and slot."
     end
+    local item = G.Item({ nextItem = 0 }, slot, heirloom and 1 or hero.level, 3, heirloom, template)
     return item
 end
 
@@ -235,7 +302,7 @@ function G.CraftingOpportunity(state, heroIndex)
                     best[slot] = G.ItemPower(hero.gear[slot], hero)
                 end
                 for _, stored in ipairs(state.inventory) do
-                    if best[stored.slot] and (stored.heirloom or stored.level <= hero.level) then
+                    if best[stored.slot] and G.CanEquip(hero, stored) then
                         best[stored.slot] = math.max(best[stored.slot], G.ItemPower(stored, hero))
                     end
                 end
@@ -337,7 +404,7 @@ function G.InventoryEntries(state, hero, slot, options)
     local entries = {}
     for index, item in ipairs(state.inventory) do
         local power = G.ItemPower(item, hero)
-        local usable = item.heirloom or (hero and item.level <= hero.level)
+        local usable = G.CanEquip(hero, item)
         local upgrade = hero and power > G.ItemPower(hero.gear[item.slot], hero)
         local availability = options.availability
         local trait = options.trait

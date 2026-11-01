@@ -20,6 +20,9 @@ case("Catalog identities, source stats and zone references are complete", functi
         seen[item.itemID] = true
         assert(item.icon and item.name and next(item.stats))
         assert(item.level >= 1 and C.slots[item.slot] and C.qualityNames[item.quality])
+        if item.slot ~= 1 and item.slot ~= 4 then
+            assert(C.armorRanks[item.armorType], item.name .. " is missing an armor subclass")
+        end
         for key, value in pairs(item.stats) do
             assert(C.itemStatNames[key] and value >= 0)
         end
@@ -80,6 +83,8 @@ case(
         local cloak = G.Item(s, 4, 3, 2, false, C.itemByID[5111])
         cloak.count, cloak.upgrade, cloak.protected = 4, 2, true
         s.inventory[#s.inventory + 1] = cloak
+        s.heroes[1].level = 60
+        s.heroes[1].level = 60
         local shoulders = G.Item(s, 7, 15, 3)
         s.heroes[1].gear = {
             [4] = { uid = 200, itemID = 13097, slot = 4, stats = { strength = 8 } },
@@ -115,6 +120,93 @@ case(
         assert(#loaded.inventory == 1)
     end
 )
+case("Classic armor proficiencies permit lighter armor and unlock only at idle level 40", function()
+    local armor = { cloth = 3069, leather = 3055, mail = 4074, plate = 13067 }
+    local maxima = {
+        WARRIOR = { 3, 4 },
+        PALADIN = { 3, 4 },
+        HUNTER = { 2, 3 },
+        SHAMAN = { 2, 3 },
+        ROGUE = { 2, 2 },
+        DRUID = { 2, 2 },
+        MAGE = { 1, 1 },
+        PRIEST = { 1, 1 },
+        WARLOCK = { 1, 1 },
+    }
+    for class, limits in pairs(maxima) do
+        for index, level in ipairs({ 39, 40 }) do
+            local hero = { class = class, level = level }
+            for kind, id in pairs(armor) do
+                local item = G.Copy(C.itemByID[id])
+                item.armorType = nil -- Existing saved items resolve the canonical subclass by ID.
+                assert(
+                    G.CanEquip(hero, item) == (C.armorRanks[kind] <= limits[index]),
+                    class .. kind .. level
+                )
+                item.heirloom = true
+                assert(G.CanEquip(hero, item) == (C.armorRanks[kind] <= limits[index]))
+            end
+            assert(G.CanEquip(hero, C.itemByID[5111]))
+            if (class == "WARRIOR" or class == "PALADIN") and level == 40 then
+                assert(G.CraftItem(hero, 2, false).armorType == "plate")
+            end
+            for _, slot in ipairs(C.equipmentSlots) do
+                local craft = G.CraftItem(hero, slot, false)
+                if craft then
+                    assert(G.CanEquip(hero, craft))
+                end
+                local heirloom = G.CraftItem(hero, slot, true)
+                if heirloom then
+                    assert(G.CanEquip(hero, heirloom))
+                end
+            end
+        end
+    end
+end)
+case("Armor restrictions drive auto equip, upgrade retention and inventory availability", function()
+    local s = state()
+    local mage = s.heroes[2]
+    mage.level = 39
+    s.heroes[1].class = "PRIEST"
+    local mail = G.Item(s, 2, 1, 3, false, C.itemByID[13123])
+    local cloth = G.Item(s, 2, 1, 2, false, C.itemByID[3069])
+    s.inventory = { mail, cloth }
+    assert(not G.IsUpgrade(s, mail))
+    local nextItem = s.nextItem
+    local allowed, reason = G.Equip(s, 2, 1)
+    assert(not allowed and reason:find("cannot wear Mail", 1, true))
+    assert(#s.inventory == 2 and s.nextItem == nextItem)
+    assert(#G.InventoryEntries(s, mage, 0, { availability = "usable" }) == 1)
+    assert(#G.InventoryEntries(s, mage, 0, { availability = "locked" }) == 1)
+    assert(#G.InventoryEntries(s, mage, 0, { availability = "upgrades" }) == 1)
+    assert(G.EquipBest(s, 2))
+    assert(mage.gear[2] == cloth and s.inventory[1] == mail)
+end)
+case("Incompatible saved armor returns to inventory once with enhancements intact", function()
+    local s = state()
+    local mage = s.heroes[2]
+    local mail = G.Item(s, 2, 1, 3, true, C.itemByID[13123])
+    mail.upgrade, mail.protected, mail.count = 5, true, 3
+    mage.gear[2] = mail
+    G.StartBattle(s)
+    assert(G.Load(s, 1000))
+    assert(mage.gear[2] == nil and s.inventory[1] == mail)
+    assert(mail.upgrade == 5 and mail.protected and mail.count == 3)
+    assert(not s.battle and s.stats.victories == 0)
+    assert(G.Load(s, 1000) and #s.inventory == 1)
+end)
+case("Prestige unequips higher armor proficiencies until the hero reaches 40 again", function()
+    local s = state()
+    local hero = s.heroes[1]
+    hero.class, hero.level = "HUNTER", 40
+    local mail = G.Item(s, 2, 1, 3, true, C.itemByID[13123])
+    hero.gear[2], s.prestigeUnlocked = mail, true
+    assert(G.Prestige(s))
+    assert(hero.level == 1 and not hero.gear[2] and s.inventory[1] == mail)
+    assert(not G.Equip(s, 1, 1))
+    hero.level = 40
+    assert(G.Equip(s, 1, 1))
+end)
 case("Zone drops retain catalog stats, requirements and deterministic identity", function()
     local s = state()
     s.zone = "redridge"

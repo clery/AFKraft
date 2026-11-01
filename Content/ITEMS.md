@@ -6,10 +6,12 @@ The catalog uses fixed Classic-era WoWhead tooltip snapshots, checked on 2026-11
 
 - Zone tables are curated minigame pools, not complete live mob loot tables or authentic drop percentages. Riverpaw Leather Vest belongs to Elwynn’s gnolls, Stonemason Cloak to Westfall’s Defias, Blackrock Champion’s Axe to Redridge’s Blackrock enemies, and Rathorian’s Cape to the Barrens. Other entries are level-appropriate world finds. Starter weapons are included to supply basic equipment.
 - Source stats stay fixed. WoW required level maps to idle level as `max(1, ceil(requiredLevel / 4))`; items become available as encounter levels reach that requirement. An item’s source WoW requirement is also shown in its tooltip.
-- Crafting chooses the nearest available source item for the selected slot and idle level. It retains the source rarity, rather than recoloring it. Low-level slots with no available source item cannot be crafted yet. Weapon and armor proficiencies, unique-equipped restrictions, and two-handed weapon rules are simplified by the idle inventory.
+- Crafting chooses the strongest usable source item for the selected hero and slot, including effective heirloom scaling. It retains the source rarity, rather than recoloring it. Low-level slots with no available source item cannot be crafted yet. Armor proficiencies follow the original class rules: all classes can wear cloth; rogues and druids can also wear leather; hunters and shamans unlock mail at idle level 40; warriors and paladins can wear mail immediately and unlock plate at idle level 40. Lighter armor remains usable. Cloaks have no armor proficiency restriction. Heirlooms bypass item-level requirements, but never class or armor-unlock requirements. Weapons, unique-equipped restrictions, and two-handed weapon rules remain simplified by the idle inventory.
 - New loot and crafting use ten wearable slots: weapon, armor, head, back, shoulders, hands, waist, legs, feet, and wrists. Rings, necklaces, and trinkets are removed from the catalog. Loading an older save removes these items from inventory and equipped gear, including protected stacks and heirlooms, and removes their recipe unlocks. Other equipment and progression are preserved. Encounters with removed equipped gear restart without rewards.
 - An enhancement adds 10% of base stats, additively. Heirloom stats additionally scale by `hero idle level / source idle requirement`. Both are minigame enhancements, not claims about the original WoW item.
 - Existing synthetic saved equipment keeps its identity, stacks, protections, effects, and purchased enhancements. Its old power is converted once into attributes; an active encounter from that older stat model restarts without rewards. New drops and crafts use catalog items.
+- Loading an older save returns armor the hero cannot wear to the shared inventory without losing identities, stacks, protections, or enhancements; affected encounters restart without rewards. Prestige also returns heirlooms that require a higher armor proficiency to inventory until the hero reaches idle level 40 again. Old synthetic armor without a source subclass is treated as cloth.
+- Golem Shard Leggings retain their source +6 Defense as tooltip information; Defense is not simulated.
 - Heartseeking Crossbow’s Shadowbolt proc is not simulated. Cow King’s Hide retains its resistance values for display; damage schools are not modeled, so those values contribute no power. Tooltips identify these limitations.
 
 ## Derived stats and power
@@ -143,3 +145,13 @@ Combat aggregates effective attributes directly. Stamina adds 10 health per poin
 | 13130 | [Windrunner Legguards](https://www.wowhead.com/classic/item=13130) |
 | 13131 | [Sparkleshell Mantle](https://www.wowhead.com/classic/item=13131) |
 | 13132 | [Skeletal Shoulders](https://www.wowhead.com/classic/item=13132) |
+| 13066 | [Wyrmslayer Spaulders](https://www.wowhead.com/classic/item=13066) |
+| 13067 | [Hydralick Armor](https://www.wowhead.com/classic/item=13067) |
+| 13068 | [Obsidian Greaves](https://www.wowhead.com/classic/item=13068) |
+| 13071 | [Plated Fist of Hakoo](https://www.wowhead.com/classic/item=13071) |
+| 13073 | [Mugthol's Helm](https://www.wowhead.com/classic/item=13073) |
+| 13074 | [Golem Shard Leggings](https://www.wowhead.com/classic/item=13074) |
+| 13076 | [Giantslayer Bracers](https://www.wowhead.com/classic/item=13076) |
+| 13077 | [Girdle of Uther](https://www.wowhead.com/classic/item=13077) |
+
+Armor proficiency reference: [Blizzard’s original game manual](https://bnetcmsus-a.akamaihd.net/cms/template_resource/263A8NGR8HLZ1556919642368.pdf). The unlock uses the minigame hero’s idle level, independently of the source item requirement mapping.

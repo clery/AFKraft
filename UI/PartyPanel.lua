@@ -292,9 +292,9 @@ local function inventory(ui, p, s, hero, index)
     end
     describe(filter, 0, C.slots[filter])
     local availabilityNames = {
-        all = "Any level",
+        all = "Any availability",
         usable = "Equippable now",
-        locked = "Level locked",
+        locked = "Cannot equip",
         upgrades = "Usable upgrades",
     }
     local traitNames = {
@@ -384,9 +384,9 @@ local function inventory(ui, p, s, hero, index)
         end
         choice("slot", "Equipment", options, 0, 608)
         choice("availability", "Availability", {
-            { id = "all", name = "Any level" },
+            { id = "all", name = "Any availability" },
             { id = "usable", name = "Equippable now" },
-            { id = "locked", name = "Level locked" },
+            { id = "locked", name = "Cannot equip" },
             { id = "upgrades", name = "Usable upgrades" },
         }, "all", 784)
         local qualities = { { id = 0, name = "Any quality" } }
@@ -432,7 +432,7 @@ local function inventory(ui, p, s, hero, index)
             local power = G.ItemPower(item, hero)
             local previous = hero.gear[item.slot]
             local delta = power - G.ItemPower(previous, hero)
-            local levelOK = item.heirloom or item.level <= hero.level
+            local levelOK, restriction = G.CanEquip(hero, item)
             local b = U.Button(p, "", 608, y, 688, 46, function()
                 ui.gearSlot = item.slot
                 if W.Action(G.Equip, index, n) then
@@ -479,7 +479,7 @@ local function inventory(ui, p, s, hero, index)
                 14,
                 90,
                 15,
-                delta > 0 and T.green or T.muted
+                levelOK and delta > 0 and T.green or T.muted
             ):SetJustifyH("RIGHT")
             line(
                 b,
@@ -506,7 +506,7 @@ local function inventory(ui, p, s, hero, index)
                     .. " power).\n"
                     .. (previous and G.ItemDescription(previous, hero) .. "\n" or "")
                     .. (
-                        not levelOK and "Requires idle level " .. item.level .. "."
+                        not levelOK and restriction
                         or "Click to equip. Your previous item returns to inventory."
                     )
             )

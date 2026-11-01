@@ -33,6 +33,9 @@ function G.Prestige(state)
         end
     end
     state.inventory = retained
+    for _, hero in ipairs(state.heroes) do
+        G.ReturnUnusableGear(state, hero)
+    end
     state.gold = 0
     state.materials = { timber = 0, hide = 0, ore = 0, relic = 0 }
     state.runBest, state.stage, state.zone, state.safe, state.farming = 1, 1, "elwynn", {}, false

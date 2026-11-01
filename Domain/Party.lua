@@ -154,6 +154,16 @@ function G.ItemDescription(item, hero)
             lines[#lines + 1] = string.format("+%.1f %s", stats[key], C.itemStatNames[key])
         end
     end
+    local armorType = G.ItemArmorType(item)
+    if armorType then
+        lines[#lines + 1] = C.armorNames[armorType] or "Unknown armor"
+        if hero then
+            local allowed, reason = G.CanWearArmor(hero, item)
+            if not allowed then
+                lines[#lines + 1] = reason
+            end
+        end
+    end
     if item.itemID then
         lines[#lines + 1] = "Classic item #"
             .. item.itemID
@@ -167,6 +177,9 @@ function G.ItemDescription(item, hero)
         lines[#lines + 1] = "Idle enhancement: +" .. item.upgrade * 10 .. "% stats."
     end
     lines[#lines + 1] = "Power is an idle class-weighted estimate."
+    if item.itemID == 13074 then
+        lines[#lines + 1] = "Source bonus: +6 Defense (not simulated)."
+    end
     if item.itemID == 13040 then
         lines[#lines + 1] = "Shadowbolt proc is not simulated."
     end

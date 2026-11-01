@@ -740,6 +740,195 @@ item(
     { strength = 6, stamina = 15, armor = 199 }
 )
 
+item(
+    13066,
+    "Wyrmslayer Spaulders",
+    "inv_shoulder_24",
+    7,
+    3,
+    46,
+    { strength = 12, agility = 8, stamina = 12, armor = 403 }
+)
+item(
+    13067,
+    "Hydralick Armor",
+    "inv_chest_plate06",
+    2,
+    3,
+    49,
+    { strength = 13, agility = 8, stamina = 20, fireResistance = 10, armor = 567 }
+)
+item(
+    13068,
+    "Obsidian Greaves",
+    "inv_boots_plate_09",
+    11,
+    3,
+    40,
+    { strength = 10, agility = 6, stamina = 10, armor = 257 }
+)
+item(
+    13071,
+    "Plated Fist of Hakoo",
+    "inv_gauntlets_10",
+    8,
+    3,
+    40,
+    { strength = 10, agility = 10, stamina = 10, armor = 300 }
+)
+item(
+    13073,
+    "Mugthol's Helm",
+    "inv_helmet_25",
+    3,
+    3,
+    47,
+    { strength = 10, stamina = 17, spirit = 17, armor = 445 }
+)
+item(13074, "Golem Shard Leggings", "inv_pants_04", 10, 3, 41, { strength = 22, armor = 429 })
+item(
+    13076,
+    "Giantslayer Bracers",
+    "inv_bracer_17",
+    12,
+    3,
+    43,
+    { strength = 10, agility = 5, stamina = 6, armor = 223 }
+)
+item(
+    13077,
+    "Girdle of Uther",
+    "inv_belt_32",
+    9,
+    3,
+    52,
+    { strength = 9, agility = 9, stamina = 10, intellect = 9, spirit = 10, armor = 336 }
+)
+
+C.armorRanks = { cloth = 1, leather = 2, mail = 3, plate = 4 }
+C.armorNames = { cloth = "Cloth", leather = "Leather", mail = "Mail", plate = "Plate" }
+C.classArmor = {
+    WARRIOR = { 3, 4 },
+    PALADIN = { 3, 4 },
+    HUNTER = { 2, 3 },
+    SHAMAN = { 2, 3 },
+    ROGUE = { 2, 2 },
+    DRUID = { 2, 2 },
+    MAGE = { 1, 1 },
+    PRIEST = { 1, 1 },
+    WARLOCK = { 1, 1 },
+}
+-- Source armor subclasses, independent of client-scaled item data.
+local armorItems = {
+    cloth = {
+        2981,
+        3069,
+        4038,
+        2721,
+        13102,
+        2969,
+        2970,
+        2971,
+        2972,
+        2982,
+        2983,
+        2984,
+        3065,
+        3066,
+        3067,
+        4035,
+        4036,
+        4037,
+        4039,
+        4040,
+        4041,
+        4042,
+        4043,
+        4044,
+        4045,
+        4714,
+        13099,
+        13100,
+        13101,
+        13103,
+        13105,
+        13106,
+        13107,
+        14169,
+        12987,
+        12977,
+    },
+    leather = {
+        821,
+        2961,
+        2973,
+        2985,
+        3055,
+        4057,
+        12988,
+        13110,
+        13009,
+        3020,
+        13113,
+        2962,
+        2963,
+        2964,
+        2974,
+        2975,
+        2976,
+        2986,
+        2987,
+        2988,
+        4721,
+        13115,
+        13116,
+        13117,
+        13118,
+        13119,
+        13120,
+        13111,
+        13112,
+        13114,
+        4666,
+        3200,
+        1280,
+    },
+    mail = {
+        4074,
+        13123,
+        2965,
+        2966,
+        2967,
+        2968,
+        2977,
+        2978,
+        2979,
+        2980,
+        2989,
+        4071,
+        4072,
+        4073,
+        4694,
+        3213,
+        13010,
+        13124,
+        13125,
+        13126,
+        13127,
+        13128,
+        13129,
+        13130,
+        13131,
+        13132,
+    },
+    plate = { 13066, 13067, 13068, 13071, 13073, 13074, 13076, 13077 },
+}
+for armorType, items in pairs(armorItems) do
+    for _, id in ipairs(items) do
+        C.itemByID[id].armorType = armorType
+    end
+end
+
 -- Curated zone encounters, not a claim to reproduce live drop rates.
 C.zoneItems = {
     elwynn = {
@@ -952,6 +1141,13 @@ C.zoneItems = {
         13132,
     },
     tanaris = {
+        13066,
+        13067,
+        13068,
+        13071,
+        13073,
+        13074,
+        13076,
         13009,
         13014,
         13022,
@@ -967,5 +1163,24 @@ C.zoneItems = {
         13126,
         13128,
     },
-    winterspring = { 13123, 13113, 13015, 13023, 13028, 13116, 13118, 13101, 13107, 13130 },
+    winterspring = {
+        13066,
+        13067,
+        13068,
+        13071,
+        13073,
+        13074,
+        13076,
+        13077,
+        13123,
+        13113,
+        13015,
+        13023,
+        13028,
+        13116,
+        13118,
+        13101,
+        13107,
+        13130,
+    },
 }
