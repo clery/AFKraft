@@ -784,7 +784,8 @@ test(
         unit.defeatedAt = GetTime() - 2
         unit.appeared = GetTime() - 3
         scene:Animate()
-        assertTrue(unit.model:GetAlpha() > 0.3 and unit.model:GetAlpha() < 0.8)
+        assertEquals(1, unit.model:GetAlpha())
+        assertFalse(unit.model:IsShown())
         assertEquals(0, unit.visualOffset)
     end
 )
@@ -1052,5 +1053,40 @@ test(
         end)
         W.Client.AnimateModel = animate
         assertTrue(ok, message)
+    end
+)
+
+test(
+    "Dead friendly and enemy models stay opaque before being hidden and do not reappear on refresh",
+    function()
+        local W = WoWIdle
+        local state = W.Game.New(W.Client.Now())
+        W.Game.AddHero(state, "WARRIOR")
+        W.Game.AddHero(state, "MAGE")
+        W.state = state
+        W.Game.StartBattle(state)
+        W.UI.frame:Show()
+        W.UI:SetTab("adventure")
+        local scene = W.UI.scene
+        scene:Refresh(state)
+        for _, index in ipairs({ 1, 6 }) do
+            local unit = scene.units[index]
+            unit.modelReady = true
+            unit.combatant.hp = 0
+            scene:Refresh(state)
+            unit.defeatedAt = GetTime() - 0.5
+            scene:Animate(1 / 60)
+            assertTrue(unit.model:IsShown())
+            assertEquals(1, unit.model:GetAlpha())
+            unit.defeatedAt = GetTime() - 1.6
+            scene:Animate(1 / 60)
+            assertFalse(unit.model:IsShown())
+            scene:Refresh(state)
+            assertFalse(unit.model:IsShown())
+            unit.combatant.hp = unit.combatant.maxHP
+            scene:Refresh(state)
+            assertTrue(unit.model:IsShown())
+            assertFalse(unit.dead)
+        end
     end
 )

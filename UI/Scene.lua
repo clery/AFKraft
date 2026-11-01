@@ -58,11 +58,15 @@ end
 
 local function modelAlpha(unit, now)
     local entrance = math.min(1, math.max(0, (now - (unit.appeared or now - 1)) / 0.35))
-    local death = unit.dead
-            and unit.defeatedAt
-            and 1 - math.min(0.7, math.max(0, now - unit.defeatedAt - 1.5) * 0.7)
-        or 1
-    return unit.modelReady and entrance * death or 0
+    -- Separate PlayerModel viewports can retain depth occlusion when faded.
+    -- Corpses remain opaque until their death presentation ends, then are hidden.
+    return unit.modelReady and (unit.dead and 1 or entrance) or 0
+end
+
+local function updateModelVisibility(unit, now)
+    local expired = unit.dead and unit.defeatedAt and now - unit.defeatedAt >= 1.5
+    unit.model:SetShown(not expired)
+    unit.model:SetAlpha(modelAlpha(unit, now))
 end
 
 local function modelLoaded(unit, enemy)
@@ -358,8 +362,7 @@ function Scene:Refresh(s)
                 unit.dead, unit.deathTime, unit.defeatedAt = false, nil, nil
                 W.Client.AnimateModel(unit.model, 0)
             end
-            unit.model:SetShown(true)
-            unit.model:SetAlpha(modelAlpha(unit, GetTime()))
+            updateModelVisibility(unit, GetTime())
             unit.sigil:SetShown(not unit.modelReady and hp > 0)
             unit.sigil:SetTexture(
                 "Interface\\Icons\\" .. (class and class.icon or "Ability_Creature_Cursed_02")
@@ -546,7 +549,7 @@ function Scene:Animate(frameElapsed, simulationFraction)
             unit.animDuration = unit.pendingAnimation == W.Client.animations.fireBow and 0.65 or 1
             unit.pendingAnimation, unit.animTime = nil, now
         end
-        unit.model:SetAlpha(modelAlpha(unit, now))
+        updateModelVisibility(unit, now)
         -- Reactions offset only the viewport, never the simulation coordinates.
         local offset = 0
         if not unit.dead and unit:IsShown() then
