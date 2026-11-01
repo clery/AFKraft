@@ -15,41 +15,96 @@ local function selected(ui, s)
     return s.heroes[ui.selected or 1], ui.selected or 1
 end
 
+-- Opportunities are derived from the current run, never persisted as notifications.
+function P.Opportunities(s)
+    local points, talentHero, cappedHero, routes = 0, nil, nil, 0
+    for i, hero in ipairs(s.heroes) do
+        local unspent = G.Points(hero)
+        points = points + unspent
+        if unspent > 0 and not talentHero then
+            talentHero = i
+        end
+        if hero.level >= G.LevelCap(hero) and not cappedHero then
+            cappedHero = i
+        end
+    end
+    for _, zone in ipairs(C.zones) do
+        if zone.level > C.zoneByID[s.zone].level and G.IsUnlocked(s, zone) then
+            routes = routes + 1
+        end
+    end
+    return points, talentHero, cappedHero, routes
+end
+
 function P.adventure(ui, p, s)
-    text(p, "THE NEXT CHAPTER", 0, 0, 12, T.gold)
+    local points, talentHero, cappedHero, routes = P.Opportunities(s)
+    local title, detail, label, tab, hero
+    if #s.heroes < 5 then
+        title, detail, label, tab =
+            "Grow your company",
+            "Recruit up to five companions. Choose their classes in Party.",
+            "Recruit companions",
+            "party"
+    elseif talentHero then
+        title, detail, label, tab, hero =
+            "Shape your party’s talents",
+            points .. " unspent talent points across your company. Talents can be changed freely.",
+            "Spend talent points",
+            "talents",
+            talentHero
+    elseif cappedHero then
+        title, detail, label, tab, hero =
+            "Help " .. s.heroes[cappedHero].name .. " keep growing",
+            "This hero has reached their level cap. Review training costs in Party.",
+            "Review training",
+            "party",
+            cappedHero
+    elseif routes > 0 then
+        title, detail, label, tab =
+            "Explore a new destination",
+            routes
+                .. " higher-frontier destinations are available. Check their resources on the World map.",
+            "Choose destination",
+            "atlas"
+    elseif s.farming then
+        title, detail, label, tab =
+            "Prepare for the frontier",
+            "Your party is farming a safe encounter. Improve equipment, then retry the frontier.",
+            "Improve your party",
+            "party"
+    else
+        title, detail, label, tab =
+            "Your company is advancing",
+            "Idle battles earn hero experience, gold, equipment and local materials. WoW activities earn Adventure XP and Essence.",
+            "Manage party",
+            "party"
+    end
+    text(p, "YOUR NEXT STEP", 0, 0, 12, T.gold)
+    text(p, title, 0, 27, 23, T.text, 640)
+    text(p, detail, 0, 65, 14, T.muted, 630)
+    button(p, label, 0, 128, 240, function()
+        if hero then
+            ui.selected = hero
+        end
+        ui.recruiting = #s.heroes < 5
+        ui:SetTab(tab)
+    end, false, "primary")
+    text(p, "YOUR LEGACY", 710, 0, 12, T.gold)
+    local reward = G.PrestigeReward(s)
     text(
         p,
-        s.farming and "Regroup. Refine. Return stronger." or "Every adventure leaves a mark.",
-        0,
-        27,
-        23,
-        T.text,
-        640
-    )
-    text(
-        p,
-        s.lastDefeat
-            or "Choose where to adventure, shape your party, and let their legend grow while you play.",
-        0,
-        67,
-        14,
-        T.muted,
-        610
-    )
-    local z = C.zoneByID[s.zone]
-    text(p, "CURRENT HAUL", 710, 0, 12, T.gold)
-    text(
-        p,
-        C.materials[z.material] .. "  ·  Equipment  ·  Idle experience",
+        s.prestigeUnlocked and "A new chapter is available" or "Build a lasting inheritance",
         710,
-        29,
-        16,
-        T.text,
+        27,
+        21,
+        T.gold,
         580
     )
     text(
         p,
-        "WoW activities fill your Adventure XP bar. Each rank awards Essence for training and upgrades.\nYour party earns idle rewards while you are away, up to 24 hours.",
+        s.prestigeUnlocked
+                and ("Reset this run for " .. reward .. " Legacy. Review what carries forward before deciding.")
+            or "Defeat a level 8 milestone boss to unlock new chapters and earn Legacy for heirloom recipes.",
         710,
         65,
         14,
@@ -58,22 +113,14 @@ function P.adventure(ui, p, s)
     )
     button(
         p,
-        #s.heroes < 5 and "Recruit companions" or "Choose destination",
-        0,
+        s.prestigeUnlocked and "Review Legacy · +" .. reward or "Explore Legacy",
+        710,
         128,
-        190,
+        300,
         function()
-            if #s.heroes < 5 then
-                ui.recruiting = true
-                ui:SetTab("party")
-            else
-                ui:SetTab("atlas")
-            end
+            ui:SetTab("legacy")
         end
     )
-    button(p, "Shape your build", 206, 128, 185, function()
-        ui:SetTab("talents")
-    end)
     text(p, "ADVENTURE JOURNAL", 0, 187, 11, T.gold)
     U.SingleLine(text(p, s.log[#s.log] or "", 0, 210, 13, T.muted, 1290), 1290, 24)
 end
@@ -191,7 +238,7 @@ function P.crafting(ui, p, s)
     text(
         p,
         (
-            heirloom and "Scales with your hero. Survives prestige."
+            heirloom and "Scales with your hero. Survives chapter resets."
             or "Rare · Idle level " .. h.level .. " · Power " .. (2 + h.level * 2 + 6)
         ) .. "\nRenewal: +6% ability healing",
         850,
@@ -239,10 +286,20 @@ function P.crafting(ui, p, s)
         T.muted,
         446
     )
-    button(p, heirloom and "Heirloom recipe" or "Ordinary recipe", 0, 309, 425, function()
-        ui.craftHeirloom = not heirloom
+    button(p, "Ordinary", 0, 309, 205, function()
+        ui.craftHeirloom = false
+        ui:Refresh()
+    end, not heirloom)
+    button(p, "Heirloom", 220, 309, 205, function()
+        ui.craftHeirloom = true
         ui:Refresh()
     end, heirloom)
+    if heirloom and not s.recipes[slot] then
+        button(p, "View recipe in Legacy", 850, 325, 446, function()
+            ui.legacySlot = slot
+            ui:SetTab("legacy")
+        end)
+    end
     text(
         p,
         "Crafted items go to the shared inventory. Equip them in Party.",
@@ -259,76 +316,194 @@ function P.atlas(ui)
 end
 
 function P.legacy(ui, p, s)
-    text(p, "WHAT WILL YOUR PARTY LEAVE BEHIND?", 0, 0, 19, T.gold)
+    local reward = G.PrestigeReward(s)
+    local currentBonus = s.prestiges * 4
+    local nextBonus = currentBonus + (reward > 0 and 4 or 0)
     text(
         p,
-        "Legacy " .. s.legacy .. "  /  " .. s.prestiges .. " rewarded chapters",
+        ui.confirmPrestige and "REVIEW YOUR NEW CHAPTER" or "A LASTING INHERITANCE",
         0,
-        37,
-        17,
-        T.text
+        0,
+        24,
+        T.gold
     )
     text(
         p,
-        "Keep identities, discoveries, heirlooms, recipes, and unspent Essence.\nReset levels, ordinary gear, gold, materials, and world progress.",
+        s.legacy .. " Legacy available  ·  " .. s.prestiges .. " rewarded chapters",
+        0,
+        44,
+        16,
+        T.text,
+        1296
+    )
+    text(
+        p,
+        "Permanent party bonus: +" .. currentBonus .. "% health, damage and healing.",
         0,
         77,
-        14,
-        T.muted,
-        650
-    )
-    local reward = G.PrestigeReward(s)
-    button(
-        p,
-        ui.confirmPrestige and "Confirm reset · +" .. reward .. " Legacy"
-            or "Begin a new chapter · +" .. reward .. " Legacy",
-        0,
-        151,
-        600,
-        function()
-            if not s.prestigeUnlocked then
-                W.Notify("Defeat a level 8 milestone boss to unlock prestige.")
-                return
-            end
-            if not ui.confirmPrestige then
-                ui.confirmPrestige = true
-                ui:Refresh()
-                return
-            end
-            W.Action(G.Prestige)
-            ui.confirmPrestige = false
-            ui:Refresh()
-        end
+        16,
+        T.green,
+        1296
     )
     if ui.confirmPrestige then
-        button(p, "Keep adventuring", 0, 198, 210, function()
+        text(p, "GAIN", 0, 138, 14, T.gold)
+        text(
+            p,
+            "+"
+                .. reward
+                .. " Legacy  ·  Balance after reset: "
+                .. (s.legacy + reward)
+                .. "\nPermanent party bonus: +"
+                .. currentBonus
+                .. "% to +"
+                .. nextBonus
+                .. "%",
+            0,
+            171,
+            20,
+            T.green,
+            1296
+        )
+        text(p, "KEEP", 0, 254, 14, T.gold)
+        text(
+            p,
+            "Hero identities and classes; heirlooms; recipes and discoveries; Legacy; Adventure rank and partial XP; unspent Essence.",
+            0,
+            287,
+            17,
+            T.text,
+            1220
+        )
+        text(p, "RESET", 0, 365, 14, T.gold)
+        text(
+            p,
+            "Hero levels, training and allocated talents; ordinary equipped and stored gear; gold and zone materials; destination and encounter progress.",
+            0,
+            398,
+            17,
+            T.text,
+            1220
+        )
+        text(
+            p,
+            "Spent Essence is not refunded. This reset cannot be undone.",
+            0,
+            470,
+            16,
+            T.gold,
+            1220
+        )
+        button(p, "Keep adventuring", 0, 540, 260, function()
             ui.confirmPrestige = false
             ui:Refresh()
         end)
+        -- Keep the final action away from the review button's position.
+        local confirm = button(p, "Reset adventure and begin chapter", 760, 540, 536, function()
+            if not ui.confirmPrestige or not s.prestigeUnlocked then
+                return
+            end
+            ui.confirmPrestige = false
+            if W.Action(G.Prestige) then
+                ui:SetTab("adventure")
+            else
+                ui:Refresh()
+            end
+        end, false, "primary")
+        U.Enabled(confirm, s.prestigeUnlocked == true)
+        return
     end
-    text(p, "HEIRLOOM RECIPES  /  1 LEGACY EACH", 710, 0, 12, T.gold)
+    text(p, "NEW CHAPTER", 0, 142, 14, T.gold)
+    text(p, "Start fresh. Carry your legacy forward.", 0, 177, 22, T.text, 630)
+    text(
+        p,
+        "New chapters reset your run. Rewarded chapters add 4 percentage points to your permanent party bonus, and award Legacy for heirloom recipes.",
+        0,
+        220,
+        16,
+        T.text,
+        620
+    )
+    text(
+        p,
+        s.prestigeUnlocked
+                and ("Available now: +" .. reward .. " Legacy  ·  Party bonus +" .. currentBonus .. "% to +" .. nextBonus .. "%")
+            or "Unlock: defeat a level 8 milestone boss.",
+        0,
+        310,
+        16,
+        T.gold,
+        620
+    )
+    if s.prestigeUnlocked and reward == 0 then
+        text(
+            p,
+            "No Legacy or bonus increase this run. Defeat harder milestone bosses to earn a reward.",
+            0,
+            358,
+            15,
+            T.muted,
+            620
+        )
+    end
+    local review = button(p, "Review new chapter…", 0, 420, 360, function()
+        if s.prestigeUnlocked then
+            ui.confirmPrestige = true
+            ui:Refresh()
+        end
+    end, false, "primary")
+    U.Enabled(review, s.prestigeUnlocked == true)
+    text(
+        p,
+        "Review the full gains, kept progress and reset details before confirming.",
+        0,
+        478,
+        14,
+        T.muted,
+        620
+    )
+    text(p, "HEIRLOOMS THAT GROW WITH YOU", 710, 142, 14, T.gold)
+    text(p, "Earn Legacy / Unlock recipes / Craft lasting equipment", 710, 180, 16, T.text, 580)
+    text(
+        p,
+        "Heirlooms scale with hero level and survive chapter resets. Each recipe costs 1 Legacy; crafting also costs Essence, gold and materials.",
+        710,
+        223,
+        15,
+        T.muted,
+        580
+    )
     for i, name in ipairs(C.slots) do
         local slot = i
-        button(
+        local known = s.recipes[i]
+        local recipe = button(
             p,
-            (s.recipes[i] and "Known · " or "Unlock · ") .. name,
+            (known and "Craft · " or "Unlock · ") .. name .. (known and "" or " · 1 Legacy"),
             710 + (i - 1) % 2 * 302,
-            38 + math.floor((i - 1) / 2) * 48,
+            312 + math.floor((i - 1) / 2) * 56,
             285,
             function()
-                W.Action(G.UnlockRecipe, slot)
+                if s.recipes[slot] or W.Action(G.UnlockRecipe, slot) then
+                    ui.craftSlot, ui.craftHeirloom = slot, true
+                    ui:SetTab("crafting")
+                end
             end,
-            s.recipes[i]
+            known or ui.legacySlot == slot
+        )
+        U.Tooltip(
+            recipe,
+            name .. " heirloom recipe",
+            known and "Open Crafting to make this heirloom for the selected hero."
+                or "Spend 1 Legacy to permanently unlock this recipe, then open Crafting."
         )
     end
     text(
         p,
-        "Unlock a recipe here, then craft your heirloom with zone materials and Essence.",
+        "Unlocking a recipe spends Legacy immediately. It does not reset your adventure.",
         710,
-        204,
-        13,
+        510,
+        14,
         T.muted,
-        600
+        580
     )
 end
 
@@ -343,29 +518,37 @@ function P.loot(ui, p, s)
         T.muted,
         1290
     )
-    button(p, "Keep " .. C.qualityNames[s.salvage.minQuality] .. "+", 0, 79, 310, function()
-        s.salvage.minQuality = s.salvage.minQuality % 4 + 1
-        ui:Refresh()
-    end)
-    button(
+    local qualities = {}
+    for quality = 1, 4 do
+        qualities[#qualities + 1] =
+            { id = quality, name = "Keep " .. C.qualityNames[quality] .. "+" }
+    end
+    U.Choice(
         p,
-        (s.salvage.keepUpgrades and "[x] " or "") .. "Keep potential upgrades",
-        340,
+        "Keep " .. C.qualityNames[s.salvage.minQuality] .. "+",
+        0,
         79,
         310,
-        function()
-            s.salvage.keepUpgrades = not s.salvage.keepUpgrades
+        qualities,
+        s.salvage.minQuality,
+        function(quality)
+            s.salvage.minQuality = quality
             ui:Refresh()
         end
     )
-    button(
+    U.Checkbox(p, "Keep potential upgrades", 340, 79, 310, s.salvage.keepUpgrades, function(checked)
+        s.salvage.keepUpgrades = checked
+        ui:Refresh()
+    end)
+    U.Checkbox(
         p,
-        (s.salvage.keepEffects and "[x] " or "") .. "Keep undiscovered effects",
+        "Keep undiscovered effects",
         680,
         79,
-        310,
-        function()
-            s.salvage.keepEffects = not s.salvage.keepEffects
+        350,
+        s.salvage.keepEffects,
+        function(checked)
+            s.salvage.keepEffects = checked
             ui:Refresh()
         end
     )

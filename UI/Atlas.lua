@@ -3,6 +3,10 @@ local A, C, G, U, T = W.Client, W.Content, W.Game, W.Widgets, W.Theme
 local Atlas = {}
 W.Atlas = Atlas
 
+local function unlockText(zone)
+    return "Unlock: defeat a level " .. math.max(1, zone.level - 1) .. " or higher milestone boss."
+end
+
 local function describe(self, zone)
     zone = zone or C.zoneByID[W.state.zone]
     self.focus = zone
@@ -16,7 +20,7 @@ local function describe(self, zone)
             .. "  ·  "
             .. (
                 G.IsUnlocked(W.state, zone) and "Click the region or its marker to travel."
-                or "Defeat harder encounters to unlock this region."
+                or unlockText(zone)
             )
     )
     self.action.text:SetText(
@@ -176,7 +180,7 @@ local function updatePins(self, map)
                         0.7
                     )
                     GameTooltip:AddLine(
-                        G.IsUnlocked(W.state, zone) and "Click to travel" or "Not yet unlocked",
+                        G.IsUnlocked(W.state, zone) and "Click to travel" or unlockText(zone),
                         0.8,
                         0.8,
                         0.7

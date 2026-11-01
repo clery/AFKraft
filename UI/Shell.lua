@@ -69,6 +69,7 @@ function UI:ApplyMode()
     local minW, minH = math.min(1152, screenW), math.min(720, screenH)
     f:ClearAllPoints()
     if compact then
+        self.confirmPrestige = false
         local geo = s.ui.compactGeometry or { w = 580, h = 370 }
         f:SetSize(math.min(geo.w, screenW), math.min(geo.h, screenH))
         if geo.x and geo.y then
@@ -122,16 +123,17 @@ function UI:Layout()
     self.canvas:SetSize(width, height)
     local management = not compact and (W.state.ui.tab or "adventure") ~= "adventure"
     local atlas = not compact and W.state.ui.tab == "atlas"
+    local company = not compact and (W.state.ui.tab == "legacy" or W.state.ui.tab == "loot")
     self.scene:Layout(compact, management)
-    self.scene.frame:SetShown(not atlas)
+    self.scene.frame:SetShown(not atlas and not company)
     for i, card in ipairs(self.cards) do
-        card:SetShown(not atlas)
+        card:SetShown(not atlas and not company)
         card:ClearAllPoints()
         card:SetPoint("TOPLEFT", 28 + (i - 1) * 261.6, management and -320 or -528)
     end
     self.panel:ClearAllPoints()
-    self.panel:SetPoint("TOPLEFT", 28, atlas and -155 or management and -422 or -620)
-    self.panel:SetSize(1296, atlas and 695 or management and 430 or 240)
+    self.panel:SetPoint("TOPLEFT", 28, (atlas or company) and -155 or management and -422 or -620)
+    self.panel:SetSize(1296, (atlas or company) and 695 or management and 430 or 240)
     self.expanded:SetShown(not compact)
     self.compact:SetShown(compact)
     self.adventureCompact.frame:EnableMouse(not W.state.ui.locked)
@@ -266,6 +268,21 @@ function UI:Refresh(redraw)
             button:SetBackdropBorderColor(unpack(i == self.selected and T.gold or T.line))
         end
     end
+    local points, _, cappedHero, routes = W.Panels.Opportunities(s)
+    self.tabs.talents.notice:SetText(points > 0 and (points .. " points") or "")
+    self.tabs.party.notice:SetText(#s.heroes < 5 and "Recruit" or cappedHero and "Train" or "")
+    self.tabs.atlas.notice:SetText(routes > 0 and (routes .. " routes") or "")
+    self.tabs.legacy.notice:SetText(
+        s.prestigeUnlocked and ("+" .. W.Game.PrestigeReward(s) .. " Legacy") or ""
+    )
+    local guidance = table.concat({
+        points,
+        cappedHero or 0,
+        s.runBest,
+        tostring(s.prestigeUnlocked),
+        W.Game.PrestigeReward(s),
+        tostring(s.farming),
+    }, ":")
     for id, button in pairs(self.tabs) do
         button.text:SetTextColor(unpack(s.ui.tab == id and T.gold or T.muted))
         if button.SetBackdropBorderColor then
@@ -281,7 +298,10 @@ function UI:Refresh(redraw)
         s.ui.tab == "adventure" and "Your company’s journey through Azeroth"
             or s.ui.tab == "party" and "Select a companion to manage equipment and training"
             or s.ui.tab == "talents" and "Shape a companion’s talents and combat priorities"
-            or "Plan your company’s next steps"
+            or s.ui.tab == "crafting" and "Create ordinary equipment or lasting heirlooms"
+            or s.ui.tab == "legacy" and "Permanent rewards, heirlooms and chapter resets"
+            or s.ui.tab == "loot" and "Choose what to keep from future drops"
+            or "Explore destinations and their unlock requirements"
     )
     self.scene:Refresh(s)
     local heroLevel = s.heroes[self.selected] and s.heroes[self.selected].level
@@ -289,6 +309,7 @@ function UI:Refresh(redraw)
         not s.ui.compact
         and (
             redraw ~= false
+            or self.panelGuidance ~= guidance
             or self.panelLevel ~= heroLevel
             or self.panelItems ~= #s.inventory
             or self.panelBattle ~= (s.battle ~= nil)
@@ -299,6 +320,7 @@ function UI:Refresh(redraw)
         )
     then
         W.Panels.Draw(self)
+        self.panelGuidance = guidance
         self.panelLevel = heroLevel
         self.panelItems = #s.inventory
         self.panelBattle = s.battle ~= nil
@@ -324,6 +346,9 @@ function W.CreateUI()
     -- among other dialogs whenever it opens.
     f:SetScript("OnShow", function(self)
         self:Raise()
+        if ui.panel then
+            ui:Refresh()
+        end
     end)
     f:SetClampedToScreen(true)
     f:SetMovable(true)
@@ -400,8 +425,9 @@ function W.CreateUI()
         tab.text:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
         U.SingleLine(tab.text, 74, 16, "CENTER")
         tab.text:SetText(entry[2])
-        U.Icon(tab, tabIcons[id], 23, 9, 32)
+        U.Icon(tab, tabIcons[id], 27, 23, 24)
         U.Tooltip(tab, entry[2], "Open " .. entry[2])
+        tab.notice = U.SingleLine(U.Text(tab, "", 2, 4, 10, T.gold), 74, 16, "CENTER")
         ui.tabs[id] = tab
     end
     ui.destination = U.Button(expanded, "World map", 1068, 105, 148, 34, function()
@@ -500,6 +526,7 @@ function W.CreateUI()
     end)
     f:SetScript("OnHide", function()
         ui:SaveGeometry()
+        ui.confirmPrestige = false
         if ui.map then
             ui.map:Hide()
         end

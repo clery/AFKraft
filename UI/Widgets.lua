@@ -164,6 +164,24 @@ function U.Button(parent, text, x, y, w, h, fn, active, variant)
     return b
 end
 
+function U.Checkbox(parent, label, x, y, width, checked, choose)
+    local check = pooled(parent, "checkbox", function()
+        local frame = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
+        frame.label = U.Text(frame, "", 36, 7, 14, T.text)
+        return frame
+    end)
+    check:SetPoint("TOPLEFT", x, -y)
+    check:SetSize(32, 32)
+    check:SetHitRectInsets(0, -(width - 32), 0, 0)
+    U.SingleLine(check.label, width - 40, 22)
+    check.label:SetText(label)
+    check:SetChecked(checked)
+    check:SetScript("OnClick", function(self)
+        choose(self:GetChecked() == true)
+    end)
+    return check
+end
+
 function U.Enabled(button, enabled)
     button:SetEnabled(enabled)
     button.text:SetAlpha(enabled and 1 or 0.5)
