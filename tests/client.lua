@@ -317,8 +317,10 @@ case("Actor loading binds through its XML template without frame script methods"
         "SetLightVisible",
         "SetModelAlpha",
         "Hide",
+        "Show",
         "SetScript",
         "SetAlpha",
+        "SetKeepModelOnHide",
         "RegisterEvent",
         "RegisterUnitEvent",
     }) do
@@ -327,6 +329,9 @@ case("Actor loading binds through its XML template without frame script methods"
     methods.CreateActor = function(_, name, template)
         assert(name == nil and template == "WoWIdleAdventureActorTemplate")
         return actor
+    end
+    methods.SetKeepModelOnHide = function(self, keep)
+        self.keepModel = keep
     end
     local client = adapter("12.1.5", {
         CreateFrame = function(kind, _, parent)
@@ -355,6 +360,7 @@ case("Actor loading binds through its XML template without frame script methods"
     assert(model.appearanceSource.parent == model)
     assert(model.adventureScene.parent == model)
     assert(model.appearanceSource.alpha == 0)
+    assert(model.appearanceSource.keepModel == true)
     assert(model.alpha == 1 and model.adventureScene.alpha == 1)
     assert(model:GetModelFileID() == 42)
     model:SetAlpha(0.5)
@@ -377,6 +383,17 @@ case("Actor loading binds through its XML template without frame script methods"
     model.appearanceUnit = nil
     model.scripts.OnEvent(model, "UNIT_INVENTORY_CHANGED", "player")
     assert(refreshed == 2 and dressed == 0 and called == 3)
+    model.nativeAppearance = true
+    model.equipmentAppliedKey = "equipped"
+    model.appearanceSource.scripts.OnHide()
+    assert(model.equipmentAppliedKey == nil)
+    model.equipmentAppliedKey = "stale"
+    model.appearanceSource.scripts.OnShow()
+    assert(model.equipmentAppliedKey == nil and called == 4)
+    assert(model.adventureScene.scripts.OnUpdate)
+    model.nativeAppearance = false
+    model.appearanceSource.scripts.OnShow()
+    assert(called == 4)
 end)
 
 case(

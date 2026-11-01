@@ -54,6 +54,7 @@ function A.CreateAdventureModel(parent, loaded)
     source:SetAllPoints(model)
     source:EnableMouse(false)
     source:SetAlpha(0)
+    source:SetKeepModelOnHide(true)
     model.appearanceSource = source
     model.onModelLoaded = loaded
     for _, name in ipairs({
@@ -86,6 +87,17 @@ function A.CreateAdventureModel(parent, loaded)
     source:SetScript("OnModelLoaded", function()
         source:SetAlpha(model.nativeAppearance and 1 or 0)
         loaded()
+    end)
+    source:SetScript("OnHide", function()
+        model.equipmentAppliedKey = nil
+    end)
+    source:SetScript("OnShow", function()
+        if model.nativeAppearance then
+            model.equipmentAppliedKey = nil
+            scene:Show()
+            A.AwaitAdventureModel(model)
+            loaded()
+        end
     end)
     model:SetScript("OnEvent", function(_, event, unit, success)
         if event == "ITEM_DATA_LOAD_RESULT" then
