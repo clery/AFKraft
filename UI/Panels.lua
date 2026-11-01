@@ -84,52 +84,9 @@ end
 
 function P.talents(ui, p, s)
     local h, index = selected(ui, s)
-    local class = C.classByID[h.class]
     text(p, h.name .. "  /  " .. G.Points(h) .. " unspent talent points", 0, 0, 21, T.gold)
     text(p, "Change talents at any time. Earn a point every two idle levels.", 0, 35, 13, T.muted)
-    for column = 0, 2 do
-        local x = column * 440
-        U.Rect(p, x, 67, 416, 270, T.panel)
-        U.Rect(p, x, 67, 416, 2, T.line)
-        text(p, class.paths[column + 1], x + 14, 78, 16, T.gold, 386)
-    end
-    for i, talent in ipairs(C.talents) do
-        local id = talent.id
-        local column, row = math.floor((i - 1) / 3), (i - 1) % 3
-        local x, y = column * 440 + 8, 111 + row * 73
-        local learned = h.talents[id]
-        local b = U.Button(p, "", x, y, 400, 64, function()
-            W.Action(G.Talent, index, id)
-        end, learned)
-        b.text:Hide()
-        U.Enabled(b, learned or G.Points(h) > 0)
-        U.Begin(b)
-        U.SingleLine(
-            text(
-                b,
-                (learned and "Selected · " or "Learn · ") .. talent.name,
-                12,
-                6,
-                13,
-                learned and T.gold or T.text
-            ),
-            376,
-            20
-        )
-        local description = text(b, talent.text, 12, 29, 11, T.muted, 376)
-        description:SetHeight(30)
-        U.EndBuild(b)
-        U.Tooltip(
-            b,
-            talent.name,
-            talent.text
-                .. "\n"
-                .. (
-                    learned and "Click to unlearn and recover the point."
-                    or "Spend one talent point to learn."
-                )
-        )
-    end
+    W.TalentPanel.Draw(ui, p, h, index)
     text(p, "COMBAT PRIORITIES", 0, 372, 12, T.gold)
     local priorities, thresholds = {}, {}
     for _, id in ipairs(C.priorityModes) do
@@ -453,6 +410,9 @@ function P.Draw(ui)
     local p = ui.panel
     if ui.atlas then
         ui.atlas.frame:SetShown(s.ui.tab == "atlas")
+    end
+    if ui.talentTrees then
+        ui.talentTrees:SetShown(s.ui.tab == "talents" and not W.catchup)
     end
     U.Begin(p)
     if W.catchup then

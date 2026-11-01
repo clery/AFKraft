@@ -410,3 +410,39 @@ test("AceDB shutdown saves gameplay before removing preference defaults", functi
     assertTrue(state.lastTime >= before and state.lastTime <= W.Client.Now())
     assertEquals(true, state.settings.combatText)
 end)
+
+test("Talent icons preserve choices and scroll through expanded trees", function()
+    local W = WoWIdle
+    W.Initialize()
+    W.state = W.Game.New(W.Client.Now())
+    W.Game.AddHero(W.state, "WARRIOR")
+    W.UI.selected = 1
+    W.UI.frame:Show()
+    W.UI:SetTab("talents")
+    local trees = W.UI.talentTrees
+    local tree = trees.trees[1]
+    local node = tree.buttons.cleave
+    node:GetScript("OnEnter")(node)
+    assertTrue(GameTooltip:IsOwned(node))
+    node:GetScript("OnClick")(node)
+    assertTrue(W.state.heroes[1].talents.cleave)
+    assertEquals("1/1", node.rank:GetText())
+    node:GetScript("OnClick")(node)
+    assertFalse(W.state.heroes[1].talents.cleave == true)
+    assertEquals("0/1", node.rank:GetText())
+    local talent = W.Content.talents[1]
+    local row = talent.row
+    talent.row = 20
+    W.UI:Refresh()
+    talent.row = row
+    local _, maximum = tree.slider:GetMinMaxValues()
+    assertTrue(maximum > 1000)
+    tree.scroll:GetScript("OnMouseWheel")(tree.scroll, -100)
+    assertEquals(maximum, tree.scroll:GetVerticalScroll())
+    W.UI:SetTab("party")
+    assertFalse(trees:IsShown())
+    W.UI:SetTab("talents")
+    assertTrue(trees == W.UI.talentTrees)
+    assertTrue(node == tree.buttons.cleave)
+    assertEquals(0, tree.scroll:GetVerticalScroll())
+end)

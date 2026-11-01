@@ -322,13 +322,17 @@ C.talents = {
         text = "Basic attacks and strikes hit every enemy.",
         icon = "Ability_Whirlwind",
         path = 1,
+        row = 1,
+        column = 2,
     },
     {
         id = "execute",
         name = "Finishing instinct",
         text = "Deal 50% more damage to enemies below 35% health.",
-        icon = "Ability_Warrior_Execute",
+        icon = "INV_Sword_48",
         path = 1,
+        row = 1,
+        column = 3,
     },
     {
         id = "haste",
@@ -336,6 +340,8 @@ C.talents = {
         text = "Special abilities recover 30% faster.",
         icon = "Ability_Rogue_SliceDice",
         path = 1,
+        row = 2,
+        column = 2,
     },
     {
         id = "sustain",
@@ -343,6 +349,8 @@ C.talents = {
         text = "Healing abilities are 60% stronger.",
         icon = "Spell_Holy_Renew",
         path = 2,
+        row = 1,
+        column = 2,
     },
     {
         id = "renew",
@@ -350,6 +358,8 @@ C.talents = {
         text = "Restore 8% health after each victory.",
         icon = "Spell_Nature_Rejuvenation",
         path = 2,
+        row = 1,
+        column = 3,
     },
     {
         id = "leech",
@@ -357,6 +367,8 @@ C.talents = {
         text = "Attacks restore health equal to 12% of damage.",
         icon = "Spell_Shadow_LifeDrain02",
         path = 2,
+        row = 2,
+        column = 3,
     },
     {
         id = "guard",
@@ -364,6 +376,8 @@ C.talents = {
         text = "Take 25% less damage and draw enemy attention.",
         icon = "Ability_Defend",
         path = 3,
+        row = 1,
+        column = 2,
     },
     {
         id = "thorns",
@@ -371,6 +385,8 @@ C.talents = {
         text = "Reflect 30% of received damage at attackers.",
         icon = "Ability_Warrior_Riposte",
         path = 3,
+        row = 1,
+        column = 3,
     },
     {
         id = "control",
@@ -378,6 +394,8 @@ C.talents = {
         text = "Specials delay the next enemy attack by 1 second.",
         icon = "Spell_Frost_FrostNova",
         path = 3,
+        row = 2,
+        column = 2,
     },
 }
 C.priorityModes = { "heal", "special", "attack" }
