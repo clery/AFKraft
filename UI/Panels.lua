@@ -239,15 +239,15 @@ function P.crafting(ui, p, s)
     ui.craftControls = { slots = {}, materials = {} }
     text(p, "Craft for " .. h.name, 0, 0, 23, T.gold)
     text(p, "Choose an equipment slot", 0, 39, 13, T.muted)
-    for i, name in ipairs(C.slots) do
-        local id = i
+    for position, i in ipairs(C.equipmentSlots) do
+        local name, id = C.slots[i], i
         ui.craftControls.slots[i] = U.Button(
             p,
             name,
-            (i - 1) % 2 * 220,
-            79 + math.floor((i - 1) / 2) * 72,
+            (position - 1) % 2 * 220,
+            79 + math.floor((position - 1) / 2) * 44,
             205,
-            56,
+            38,
             function()
                 ui.craftSlot = id
                 ui:Refresh()
@@ -507,14 +507,14 @@ function P.legacy(ui, p, s)
         T.muted,
         580
     )
-    for i, name in ipairs(C.slots) do
-        local slot = i
+    for position, i in ipairs(C.equipmentSlots) do
+        local name, slot = C.slots[i], i
         local known = s.recipes[i]
         local recipe = button(
             p,
             (known and "Craft · " or "Unlock · ") .. name .. (known and "" or " · 1 Legacy"),
-            710 + (i - 1) % 2 * 302,
-            312 + math.floor((i - 1) / 2) * 56,
+            710 + (position - 1) % 2 * 302,
+            292 + math.floor((position - 1) / 2) * 40,
             285,
             function()
                 if s.recipes[slot] or W.Action(G.UnlockRecipe, slot) then

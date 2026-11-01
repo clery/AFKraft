@@ -6,8 +6,8 @@ The catalog uses fixed Classic-era WoWhead tooltip snapshots, checked on 2026-11
 
 - Zone tables are curated minigame pools, not complete live mob loot tables or authentic drop percentages. Riverpaw Leather Vest belongs to Elwynn’s gnolls, Stonemason Cloak to Westfall’s Defias, Blackrock Champion’s Axe to Redridge’s Blackrock enemies, and Rathorian’s Cape to the Barrens. Other entries are level-appropriate world finds. Starter weapons are included to supply basic equipment.
 - Source stats stay fixed. WoW required level maps to idle level as `max(1, ceil(requiredLevel / 4))`; items become available as encounter levels reach that requirement. An item’s source WoW requirement is also shown in its tooltip.
-- Crafting chooses the nearest available source item for the selected slot and idle level. It retains the source rarity, rather than recoloring it. Low-level slots with no available source item cannot be crafted yet. Weapon and armor proficiencies, unique-equipped restrictions, and two-handed weapon rules are simplified by the existing six-slot idle inventory.
-- One accessory slot represents a cloak, ring, or necklace; either trinket slot accepts Lifestone. More trinkets and low-level headgear can be added as verified entries later.
+- Crafting chooses the nearest available source item for the selected slot and idle level. It retains the source rarity, rather than recoloring it. Low-level slots with no available source item cannot be crafted yet. Weapon and armor proficiencies, unique-equipped restrictions, and two-handed weapon rules are simplified by the idle inventory.
+- New loot and crafting use ten wearable slots: weapon, armor, head, back, shoulders, hands, waist, legs, feet, and wrists. Rings, necklaces, and trinkets remain in the catalog only to preserve existing saved equipment. Legacy trinket slots appear in Party only when occupied; old items can still be equipped, upgraded, or salvaged. Existing recipe unlocks are retained, but retired trinket recipes cannot be purchased or crafted.
 - An enhancement adds 10% of base stats, additively. Heirloom stats additionally scale by `hero idle level / source idle requirement`. Both are minigame enhancements, not claims about the original WoW item.
 - Existing synthetic saved equipment keeps its identity, stacks, protections, effects, and purchased enhancements. Its old power is converted once into attributes; an active encounter from that older stat model restarts without rewards. New drops and crafts use catalog items.
 - Heartseeking Crossbow’s Shadowbolt proc and Lifestone’s on-use heal are not simulated. Lifestone’s passive regeneration works. Cow King’s Hide retains its resistance values for display; damage schools are not modeled, so those values contribute no power. Tooltips identify these limitations.
@@ -67,3 +67,86 @@ Combat aggregates effective attributes directly. Stamina adds 10 health per poin
 | 13040 | [Heartseeking Crossbow](https://www.wowhead.com/classic/item=13040) |
 | 13043 | [Blade of the Titans](https://www.wowhead.com/classic/item=13043) |
 | 833 | [Lifestone](https://www.wowhead.com/classic/item=833) |
+| 2962 | [Burnt Leather Breeches](https://www.wowhead.com/classic/item=2962) |
+| 2963 | [Burnt Leather Boots](https://www.wowhead.com/classic/item=2963) |
+| 2964 | [Burnt Leather Gloves](https://www.wowhead.com/classic/item=2964) |
+| 2965 | [Warrior's Tunic](https://www.wowhead.com/classic/item=2965) |
+| 2966 | [Warrior's Pants](https://www.wowhead.com/classic/item=2966) |
+| 2967 | [Warrior's Boots](https://www.wowhead.com/classic/item=2967) |
+| 2968 | [Warrior's Gloves](https://www.wowhead.com/classic/item=2968) |
+| 2969 | [Spellbinder Vest](https://www.wowhead.com/classic/item=2969) |
+| 2970 | [Spellbinder Pants](https://www.wowhead.com/classic/item=2970) |
+| 2971 | [Spellbinder Boots](https://www.wowhead.com/classic/item=2971) |
+| 2972 | [Spellbinder Gloves](https://www.wowhead.com/classic/item=2972) |
+| 2974 | [Hunting Pants](https://www.wowhead.com/classic/item=2974) |
+| 2975 | [Hunting Boots](https://www.wowhead.com/classic/item=2975) |
+| 2976 | [Hunting Gloves](https://www.wowhead.com/classic/item=2976) |
+| 2977 | [Veteran Armor](https://www.wowhead.com/classic/item=2977) |
+| 2978 | [Veteran Leggings](https://www.wowhead.com/classic/item=2978) |
+| 2979 | [Veteran Boots](https://www.wowhead.com/classic/item=2979) |
+| 2980 | [Veteran Gloves](https://www.wowhead.com/classic/item=2980) |
+| 2982 | [Seer's Pants](https://www.wowhead.com/classic/item=2982) |
+| 2983 | [Seer's Boots](https://www.wowhead.com/classic/item=2983) |
+| 2984 | [Seer's Gloves](https://www.wowhead.com/classic/item=2984) |
+| 2986 | [Inscribed Leather Pants](https://www.wowhead.com/classic/item=2986) |
+| 2987 | [Inscribed Leather Boots](https://www.wowhead.com/classic/item=2987) |
+| 2988 | [Inscribed Leather Gloves](https://www.wowhead.com/classic/item=2988) |
+| 2989 | [Burnished Tunic](https://www.wowhead.com/classic/item=2989) |
+| 3065 | [Bright Boots](https://www.wowhead.com/classic/item=3065) |
+| 3066 | [Bright Gloves](https://www.wowhead.com/classic/item=3066) |
+| 3067 | [Bright Pants](https://www.wowhead.com/classic/item=3067) |
+| 4035 | [Silver-thread Robe](https://www.wowhead.com/classic/item=4035) |
+| 4036 | [Silver-thread Cuffs](https://www.wowhead.com/classic/item=4036) |
+| 4037 | [Silver-thread Pants](https://www.wowhead.com/classic/item=4037) |
+| 4039 | [Nightsky Cowl](https://www.wowhead.com/classic/item=4039) |
+| 4040 | [Nightsky Gloves](https://www.wowhead.com/classic/item=4040) |
+| 4041 | [Aurora Cowl](https://www.wowhead.com/classic/item=4041) |
+| 4042 | [Aurora Gloves](https://www.wowhead.com/classic/item=4042) |
+| 4043 | [Aurora Bracers](https://www.wowhead.com/classic/item=4043) |
+| 4044 | [Aurora Pants](https://www.wowhead.com/classic/item=4044) |
+| 4045 | [Mistscape Bracers](https://www.wowhead.com/classic/item=4045) |
+| 4071 | [Glimmering Mail Breastplate](https://www.wowhead.com/classic/item=4071) |
+| 4072 | [Glimmering Mail Gauntlets](https://www.wowhead.com/classic/item=4072) |
+| 4073 | [Glimmering Mail Greaves](https://www.wowhead.com/classic/item=4073) |
+| 4694 | [Burnished Pauldrons](https://www.wowhead.com/classic/item=4694) |
+| 4701 | [Inscribed Cloak](https://www.wowhead.com/classic/item=4701) |
+| 4713 | [Silver-thread Cloak](https://www.wowhead.com/classic/item=4713) |
+| 4714 | [Silver-thread Sash](https://www.wowhead.com/classic/item=4714) |
+| 4721 | [Insignia Mantle](https://www.wowhead.com/classic/item=4721) |
+| 13115 | [Sheepshear Mantle](https://www.wowhead.com/classic/item=13115) |
+| 13116 | [Spaulders of the Unseen](https://www.wowhead.com/classic/item=13116) |
+| 13117 | [Ogron's Sash](https://www.wowhead.com/classic/item=13117) |
+| 13118 | [Serpentine Sash](https://www.wowhead.com/classic/item=13118) |
+| 13119 | [Enchanted Kodo Bracers](https://www.wowhead.com/classic/item=13119) |
+| 13120 | [Deepfury Bracers](https://www.wowhead.com/classic/item=13120) |
+| 13121 | [Wing of the Whelpling](https://www.wowhead.com/classic/item=13121) |
+| 13122 | [Dark Phantom Cape](https://www.wowhead.com/classic/item=13122) |
+| 13099 | [Moccasins of the White Hare](https://www.wowhead.com/classic/item=13099) |
+| 13100 | [Furen's Boots](https://www.wowhead.com/classic/item=13100) |
+| 13101 | [Wolfrunner Shoes](https://www.wowhead.com/classic/item=13101) |
+| 13103 | [Pads of the Venom Spider](https://www.wowhead.com/classic/item=13103) |
+| 13105 | [Sutarn's Ring](https://www.wowhead.com/classic/item=13105) |
+| 13106 | [Glowing Magical Bracelets](https://www.wowhead.com/classic/item=13106) |
+| 13107 | [Magiskull Cuffs](https://www.wowhead.com/classic/item=13107) |
+| 13108 | [Tigerstrike Mantle](https://www.wowhead.com/classic/item=13108) |
+| 13109 | [Blackflame Cape](https://www.wowhead.com/classic/item=13109) |
+| 13111 | [Sandals of the Insurgent](https://www.wowhead.com/classic/item=13111) |
+| 13112 | [Winged Helm](https://www.wowhead.com/classic/item=13112) |
+| 13114 | [Troll's Bane Leggings](https://www.wowhead.com/classic/item=13114) |
+| 4666 | [Burnt Leather Belt](https://www.wowhead.com/classic/item=4666) |
+| 3200 | [Burnt Leather Bracers](https://www.wowhead.com/classic/item=3200) |
+| 3213 | [Veteran Bracers](https://www.wowhead.com/classic/item=3213) |
+| 14169 | [Aboriginal Shoulder Pads](https://www.wowhead.com/classic/item=14169) |
+| 1280 | [Cloaked Hood](https://www.wowhead.com/classic/item=1280) |
+| 12987 | [Darkweave Breeches](https://www.wowhead.com/classic/item=12987) |
+| 12977 | [Magefist Gloves](https://www.wowhead.com/classic/item=12977) |
+| 13010 | [Dreamsinger Legguards](https://www.wowhead.com/classic/item=13010) |
+| 13124 | [Ravasaur Scale Boots](https://www.wowhead.com/classic/item=13124) |
+| 13125 | [Elven Chain Boots](https://www.wowhead.com/classic/item=13125) |
+| 13126 | [Battlecaller Gauntlets](https://www.wowhead.com/classic/item=13126) |
+| 13127 | [Frostreaver Crown](https://www.wowhead.com/classic/item=13127) |
+| 13128 | [High Bergg Helm](https://www.wowhead.com/classic/item=13128) |
+| 13129 | [Firemane Leggings](https://www.wowhead.com/classic/item=13129) |
+| 13130 | [Windrunner Legguards](https://www.wowhead.com/classic/item=13130) |
+| 13131 | [Sparkleshell Mantle](https://www.wowhead.com/classic/item=13131) |
+| 13132 | [Skeletal Shoulders](https://www.wowhead.com/classic/item=13132) |

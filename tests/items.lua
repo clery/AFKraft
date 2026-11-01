@@ -36,6 +36,47 @@ case("Catalog identities, source stats and zone references are complete", functi
     assert(C.itemByID[821].stats.agility == 1 and C.itemByID[821].stats.stamina == 2)
     assert(C.itemByID[1455].stats.strength == 8)
 end)
+case("Wearable slots have recipes and zone loot excludes retired jewelry and trinkets", function()
+    local s = state()
+    local hero = s.heroes[1]
+    hero.level = 60
+    local available = {}
+    for _, slot in ipairs(C.equipmentSlots) do
+        available[slot] = true
+        local craft = assert(G.CraftItem(hero, slot, false))
+        assert(craft.slot == slot and not craft.legacy)
+        assert(G.CraftItem(hero, slot, true))
+    end
+    for _, pool in pairs(C.zoneItems) do
+        for _, id in ipairs(pool) do
+            local item = C.itemByID[id]
+            assert(available[item.slot] and not item.legacy)
+        end
+    end
+    s.legacy = 5
+    assert(not G.UnlockRecipe(s, 5) and not G.UnlockRecipe(s, 6))
+    assert(s.legacy == 5)
+    assert(not G.CraftItem(hero, 5, true) and not G.CraftItem(hero, 6, false))
+    assert(C.itemByID[2974].stats.agility == 3)
+    assert(C.itemByID[13101].stats.spellPower == 13)
+end)
+case(
+    "Saved jewelry and both trinket slots retain identities, upgrades and recipe unlocks",
+    function()
+        local s = state()
+        local ring = G.Item(s, 4, 10, 3, false, C.itemByID[13097])
+        local trinket = G.Item(s, 6, 13, 4, true, C.itemByID[833])
+        ring.count, ring.protected, trinket.upgrade = 3, true, 4
+        s.inventory, s.recipes[6] = { ring, trinket }, true
+        s.heroes[1].level = 60
+        local loaded = assert(G.Load(s, 1000))
+        assert(G.Equip(loaded, 1, 2))
+        assert(loaded.heroes[1].gear[6] == trinket and trinket.upgrade == 4)
+        assert(loaded.inventory[1] == ring and ring.count == 3 and ring.protected)
+        assert(loaded.recipes[6])
+        assert(G.Load(loaded, 1000).heroes[1].gear[6] == trinket)
+    end
+)
 case("Zone drops retain catalog stats, requirements and deterministic identity", function()
     local s = state()
     s.zone = "redridge"

@@ -7,7 +7,7 @@ function G.Item(state, slot, level, quality, heirloom, template)
     if not template then
         local distance
         for _, candidate in ipairs(C.items) do
-            if candidate.slot == (slot == 6 and 5 or slot) then
+            if candidate.slot == slot and not candidate.legacy then
                 local score = math.abs(candidate.level - level) * 10
                     + math.abs(candidate.quality - quality)
                     + (not heirloom and candidate.level > level and 100000 or 0)
@@ -33,7 +33,7 @@ function G.ZoneLoot(state, level)
     local candidates = {}
     for _, id in ipairs(pool) do
         local template = C.itemByID[id]
-        if template.level <= level then
+        if not template.legacy and template.level <= level then
             -- Uncommon finds are more frequent than rare finds.
             local weight = template.quality == 3 and 1 or 4
             for _ = 1, weight do
@@ -45,11 +45,7 @@ function G.ZoneLoot(state, level)
         return nil
     end
     local template = candidates[G.Random(state, #candidates)]
-    local slot = template.slot
-    if slot == 5 then
-        slot = G.Random(state, 2) == 1 and 5 or 6
-    end
-    return G.Item(state, slot, template.level, template.quality, false, template)
+    return G.Item(state, template.slot, template.level, template.quality, false, template)
 end
 
 function G.SameItem(a, b)
@@ -315,7 +311,7 @@ function G.Upgrade(state, index, slot)
 end
 
 function G.UnlockRecipe(state, slot)
-    if not C.slots[slot] or state.recipes[slot] then
+    if not C.slots[slot] or slot == 5 or slot == 6 or state.recipes[slot] then
         return false, "Recipe already known."
     end
     if state.legacy < 1 then
