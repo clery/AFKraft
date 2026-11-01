@@ -4,7 +4,7 @@ local A = {
     xpSequence = 0,
 }
 W.Client = A
-A.animations = { cheer = 68 }
+A.animations = { cheer = 68, readyUnarmed = 25, readyBow = 29, readySpell = 51, fireBow = 47 }
 local version = GetBuildInfo and GetBuildInfo() or ""
 A.flavor = version:match("^1%.60%.") and "forever" or "retail"
 A.profiles = {
@@ -96,6 +96,9 @@ function A.ModelSpec(hero, zoneID, enemyName)
 end
 
 function A.FrameModel(model, enemy, spec)
+    if model.SetDoBlend then
+        model:SetDoBlend(true)
+    end
     model:SetPortraitZoom(0)
     model:SetCamDistanceScale(
         spec and spec.framing and spec.framing.cameraDistance or (enemy and 1.7 or 1.5)
@@ -103,32 +106,51 @@ function A.FrameModel(model, enemy, spec)
     model:SetFacing(enemy and -1.05 or 1.05)
 end
 
--- AnimationData sequences; individual creature models may lack the bow pose.
+-- AnimationData sequences; individual creature models may lack weapon poses.
+function A.ReadyAnimation(class, melee)
+    return class == "HUNTER" and not melee and A.animations.readyBow
+        or melee and A.animations.readyUnarmed
+        or A.animations.readySpell
+end
+
 function A.AttackAnimation(class, melee, action)
     if action == "heal" then
         return 53
     end
-    return class == "HUNTER" and not melee and 46 or melee and 16 or 53
+    return class == "HUNTER" and not melee and A.animations.fireBow or melee and 16 or 53
 end
 
+local animationFallbacks = {
+    [47] = { 46, 53 },
+    [46] = { 53 },
+    [29] = { 25, 0 },
+    [51] = { 25, 0 },
+    [25] = { 0 },
+}
+
 function A.AnimateModel(model, animation)
-    return pcall(function()
-        if animation == 46 and model.HasAnimation and not model:HasAnimation(animation) then
-            animation = 53
+    local ok, played = pcall(function()
+        if model.HasAnimation and not model:HasAnimation(animation) then
+            local fallback = animationFallbacks[animation]
+            animation = nil
+            for _, candidate in ipairs(fallback or {}) do
+                if model:HasAnimation(candidate) then
+                    animation = candidate
+                    break
+                end
+            end
         end
-        if not model.HasAnimation or model:HasAnimation(animation) then
+        if animation then
             model:SetAnimation(animation)
+            return true
         end
+        return false
     end)
+    return ok and played
 end
 
 function A.PlayLevelUp(model)
-    return pcall(function()
-        model:ClearModel()
-        model:SetModel(W.ModelAssets.levelUp)
-        model:SetCamera(0)
-        model:SetAnimation(0)
-    end)
+    return A.LoadSpellEffect(model, A.SpellEffectSpec("levelup"))
 end
 
 function A.ConfigureModel(model, spec, enemy)

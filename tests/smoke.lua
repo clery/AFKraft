@@ -2,6 +2,18 @@ if not test then
     return
 end
 
+-- The simulator does not render/load particle M2s. Exercise the real load callback
+-- with an explicit matching FileDataID rather than claiming asset rendering works.
+local function finishEffectLoad(effect)
+    local getter = effect.model.GetModelFileID
+    effect.model.GetModelFileID = function()
+        return effect.spec.fileID
+    end
+    local ok, message = pcall(effect.model:GetScript("OnModelLoaded"), effect.model)
+    effect.model.GetModelFileID = getter
+    assertTrue(ok, message)
+end
+
 local function poolSize(frame, objects)
     local count = 0
     for _, pool in pairs(frame._pool or {}) do
@@ -605,13 +617,14 @@ test("Class effects follow recipients, stay bounded and clear across scene trans
     assertEquals(scene.units[1], pool[3].target)
     for _, effect in ipairs(pool) do
         if effect.active then
+            finishEffectLoad(effect)
             effect.started = GetTime() - effect.duration * 0.5
         end
     end
     scene.effects:Animate(GetTime())
     assertTrue(pool[3].frame:GetAlpha() > 0.9)
     for _ = 1, 60 do
-        scene.effects:Play(scene.units[1], scene.units[6], "bolt", { 0.4, 0.85, 1 })
+        scene.effects:Play(scene.units[1], scene.units[6], "bolt", "MAGE")
     end
     assertEquals(32, #pool)
     scene.effects:Animate(GetTime() + 2)
@@ -619,7 +632,7 @@ test("Class effects follow recipients, stay bounded and clear across scene trans
         assertFalse(effect.active)
         assertFalse(effect.frame:IsShown())
     end
-    scene.effects:Play(scene.units[3], scene.units[1], "shield", { 1, 0.9, 0.55 })
+    scene.effects:Play(scene.units[3], scene.units[1], "shield", "PRIEST")
     assertEquals(32, #pool)
     scene:Layout(true, false)
     assertFalse(pool[1].active)
@@ -628,7 +641,7 @@ end)
 
 test("Hunter poses fall back without requiring bow animations on companion models", function()
     local W = WoWIdle
-    assertEquals(46, W.Client.AttackAnimation("HUNTER", false))
+    assertEquals(47, W.Client.AttackAnimation("HUNTER", false))
     assertEquals(53, W.Client.AttackAnimation("HUNTER", false, "heal"))
     assertEquals(16, W.Client.AttackAnimation("WARRIOR", true))
     local played
@@ -699,12 +712,14 @@ test("New combat effects reuse projectiles for impacts and celebrate living hero
         assertEquals(kind, effects.pool[i].kind)
     end
     local leaf = effects.pool[3]
+    finishEffectLoad(leaf)
     leaf.started = GetTime() - leaf.duration - 0.1
     local count = #effects.pool
     effects:Animate(GetTime())
     assertEquals("impact", leaf.kind)
     assertTrue(leaf.active)
     assertEquals(count, #effects.pool)
+    finishEffectLoad(leaf)
     effects:Animate(GetTime() + 3)
     assertFalse(leaf.active)
     effects:Clear()
@@ -768,4 +783,89 @@ test("Model reactions leave encounter coordinates alone and celebrations return 
     scene:Animate()
     assertTrue(unit.model:GetAlpha() > 0.3 and unit.model:GetAlpha() < 0.8)
     assertEquals(0, unit.visualOffset)
+end)
+
+test(
+    "Hunter shooting completion restores combat stance and the watchdog covers missing callbacks",
+    function()
+        local W = WoWIdle
+        local state = W.Game.New(W.Client.Now())
+        W.Game.AddHero(state, "HUNTER")
+        W.state = state
+        W.Game.StartBattle(state)
+        W.UI:SetTab("adventure")
+        local scene = W.UI.scene
+        scene:Refresh(state)
+        local unit = scene.units[1]
+        unit.x, unit.y = unit.combatant.x, unit.combatant.y
+        unit.velocityX, unit.velocityY = 0, 0
+        unit.modelReady, unit.moving, unit.travelling = true, false, false
+        local animate, played = W.Client.AnimateModel, {}
+        W.Client.AnimateModel = function(model, animation)
+            if model == unit.model then
+                played[#played + 1] = animation
+            end
+            return true
+        end
+        local ok, message = pcall(function()
+            assertEquals(29, W.Client.ReadyAnimation("HUNTER", false))
+            assertEquals(25, W.Client.ReadyAnimation("WARRIOR", true))
+            assertEquals(51, W.Client.ReadyAnimation("MAGE", false))
+            unit.pendingAnimation = W.Client.AttackAnimation("HUNTER", false)
+            scene:Animate()
+            assertEquals(47, played[#played])
+            assertNotNil(unit.animTime)
+            W.Scene.FinishAnimation(unit)
+            assertEquals(29, played[#played])
+            assertEquals(nil, unit.animTime)
+            local count = #played
+            W.Scene.FinishAnimation(unit)
+            assertEquals(count, #played)
+            unit.pendingAnimation = 47
+            scene:Animate()
+            unit.animTime = GetTime() - 0.7
+            scene:Animate()
+            assertEquals(29, played[#played])
+            assertEquals(nil, unit.animTime)
+            state.battle = nil
+            scene:Refresh(state)
+            unit.moving, unit.travelling = false, false
+            unit.animTime = GetTime()
+            W.Scene.FinishAnimation(unit)
+            assertEquals(0, played[#played])
+        end)
+        W.Client.AnimateModel = animate
+        assertTrue(ok, message)
+    end
+)
+
+test("Native spell models wait for matching assets and reject late recycled callbacks", function()
+    local W = WoWIdle
+    local scene = W.UI.scene
+    W.UI:SetTab("adventure")
+    scene.effects:Clear()
+    local source, target = scene.units[1], scene.units[6]
+    source:Show()
+    target:Show()
+    scene.effects:Play(source, target, "shield", "PRIEST")
+    local effect = scene.effects.pool[1]
+    assertEquals(166360, effect.spec.fileID)
+    assertEquals(0, effect.model:GetAlpha())
+    finishEffectLoad(effect)
+    assertTrue(effect.loaded)
+    assertEquals(1, effect.model:GetAlpha())
+    assertEquals(1599028, W.Client.SpellEffectSpec("impact", "MAGE").fileID)
+    scene.effects:Clear()
+    effect.model:GetScript("OnModelLoaded")(effect.model)
+    assertFalse(effect.active)
+    assertFalse(effect.loaded)
+    scene.effects:Play(source, target, "bolt", "MAGE")
+    assertFalse(effect.loaded)
+    scene.effects:Animate(GetTime() + 2)
+    assertFalse(effect.active)
+    assertFalse(effect.frame:IsShown())
+    local flavor = W.Client.flavor
+    W.Client.flavor = "forever"
+    assertEquals(nil, W.Client.SpellEffectSpec("shield"))
+    W.Client.flavor = flavor
 end)

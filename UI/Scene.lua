@@ -7,7 +7,18 @@ local function baseAnimation(unit)
     if unit.celebrateUntil and GetTime() < unit.celebrateUntil then
         return W.Client.animations.cheer
     end
-    return (unit.moving or unit.travelling) and 5 or 0
+    if unit.moving or unit.travelling then
+        return 5
+    end
+    return unit.inCombat and W.Client.ReadyAnimation(unit.class, unit.melee) or 0
+end
+
+function Scene.FinishAnimation(unit)
+    if unit.animTime and not unit.dead then
+        -- Clear first: restoring the looping stance must not finish the attack again.
+        unit.animTime, unit.animDuration = nil, nil
+        W.Client.AnimateModel(unit.model, baseAnimation(unit))
+    end
 end
 
 -- A critically damped spring preserves velocity when quarter-second targets
@@ -70,8 +81,10 @@ local function playLevelUp(unit)
         unit.levelUp:SetAllPoints(unit.viewport)
         unit.levelUp:EnableMouse(false)
         unit.levelUp:SetScript("OnModelLoaded", function(model)
-            model:SetCamera(0)
-            model:SetAnimation(0)
+            W.Client.FrameSpellEffect(model, W.Client.SpellEffectSpec("levelup"))
+            if model:IsShown() then
+                unit.levelUpUntil = GetTime() + 3
+            end
         end)
     end
     unit.levelUp:Show()
@@ -123,6 +136,11 @@ function Scene.Create(parent)
         unit.model:SetScript("OnModelLoaded", function()
             modelLoaded(unit, not friendly)
         end)
+        if unit.model:HasScript("OnAnimFinished") then
+            unit.model:SetScript("OnAnimFinished", function()
+                Scene.FinishAnimation(unit)
+            end)
+        end
         unit.plate = CreateFrame("Frame", nil, self.nameplates)
         unit.plate:SetSize(132, 52)
         unit.plate:SetPoint("TOP", unit, "TOP")
@@ -247,7 +265,14 @@ function Scene:Refresh(s)
             unit.class = hero and hero.class
             unit.combatant = combatant
             unit.melee = combatant and combatant.melee or false
+            unit.inCombat = s.battle ~= nil and combatant ~= nil
             unit.travelling = hero ~= nil and self.travelling
+            if unit.wasInCombat ~= unit.inCombat then
+                unit.wasInCombat = unit.inCombat
+                if unit.modelReady and not unit.dead and not unit.animTime then
+                    W.Client.AnimateModel(unit.model, baseAnimation(unit))
+                end
+            end
             local x = combatant and combatant.x or (30 + (i - 1) * 112)
             local y = combatant and combatant.y or 110
             unit.targetX, unit.targetY = x, y
@@ -452,6 +477,11 @@ function Scene:Animate()
             if unit.pendingAnimation ~= W.Client.animations.cheer then
                 unit.actionAt = now
             end
+            -- Completion callbacks restore the stance; this bound also covers models
+            -- that do not deliver OnAnimFinished for their selected sequence.
+            unit.animDuration = unit.pendingAnimation == W.Client.animations.fireBow and 0.65
+                or unit.pendingAnimation == W.Client.animations.cheer and 1.6
+                or 1
             unit.pendingAnimation, unit.animTime = nil, now
         end
         if unit.celebrateUntil and now >= unit.celebrateUntil then
@@ -486,11 +516,8 @@ function Scene:Animate()
             W.Client.AnimateModel(unit.model, 6)
             unit.deathTime = nil
         end
-        if unit.animTime and now - unit.animTime > (unit.celebrateUntil and 1.6 or 1) then
-            if not unit.dead then
-                W.Client.AnimateModel(unit.model, baseAnimation(unit))
-            end
-            unit.animTime = nil
+        if unit.animTime and now - unit.animTime >= (unit.animDuration or 1) then
+            Scene.FinishAnimation(unit)
         end
     end
     self.effects:Animate(now)

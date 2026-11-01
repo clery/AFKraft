@@ -32,6 +32,7 @@ Simulation\Combat.lua
 Simulation\Offline.lua
 Compatibility\Models.lua
 Compatibility\Client.lua
+Compatibility\SpellEffects.lua
 Compatibility\Maps.lua
 Compatibility\Kills.lua
 Compatibility\Gathering.lua
