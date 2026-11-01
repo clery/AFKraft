@@ -131,7 +131,14 @@ test("Starter lessons skip unavailable actions and point at live controls", func
     s.runBest = 4
     ui:SetTab("atlas")
     assertEquals(4, W.Panels.GuideStep(s))
-    assertEquals(ui.atlas.action, ui.guideTarget)
+    local targetMap
+    for _, map in ipairs(ui.atlas.maps) do
+        if W.Client.ZonePosition(ui.atlas.focus.id, map.id) then
+            targetMap = map
+        end
+    end
+    assertNotNil(targetMap)
+    assertEquals(targetMap, ui.guideTarget)
     assertTrue(ui.atlas.focus.level > W.Content.zoneByID[s.zone].level)
     assertTrue(W.Game.IsUnlocked(s, ui.atlas.focus))
 end)

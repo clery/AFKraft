@@ -491,7 +491,7 @@ case("Native map hit testing resolves city submaps to their adventure zone", fun
 end)
 
 case(
-    "Retail markers follow artwork and every region remains clickable without native hit data",
+    "Retail regions follow artwork and remain clickable without native hit data",
     function()
         local client = adapter("12.1.5", { C_Map = {} })
         for _, zone in ipairs(W.Content.zones) do
@@ -501,7 +501,7 @@ case(
                 if x then
                     found = found + 1
                     assert(client.ZoneAtPosition(continent, x, y).id == zone.id)
-                    -- Click well away from the 20-pixel marker on a 616-pixel map.
+                    -- Check a second point inside the region.
                     local offset = zone.id == "westfall" and -0.018 or 0.018
                     assert(
                         client.ZoneAtPosition(continent, x + offset, y + 0.020).id == zone.id,

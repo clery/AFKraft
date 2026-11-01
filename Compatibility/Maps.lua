@@ -139,6 +139,13 @@ local retailRegions = {
     },
 }
 
+function A.ZoneOutline(zoneID, continentID)
+    local region = A.flavor == "retail" and retailRegions[zoneID]
+    if region and region[1] == continentID then
+        return region[4]
+    end
+end
+
 local function contains(outline, x, y)
     local inside = false
     local j = #outline - 1

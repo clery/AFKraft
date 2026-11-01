@@ -20,10 +20,6 @@ local function describe(self, zone)
             .. "  ·  "
             .. (G.IsUnlocked(W.state, zone) and "Click the region to travel." or unlockText(zone))
     )
-    self.action.text:SetText(
-        W.state.zone == zone.id and "Current destination" or "Travel to " .. zone.name
-    )
-    U.Enabled(self.action, G.IsUnlocked(W.state, zone) and W.state.zone ~= zone.id)
 end
 
 local function travel(self, zone)
@@ -53,10 +49,11 @@ local function cursorPosition(map)
         (map:GetTop() - y / scale) / map:GetHeight()
 end
 
-local function highlight(map, x, y)
+local function highlight(map, x, y, texture)
+    texture = texture or map.highlight
     local id = A.MapID(map.id)
-    if not id or not C_Map.GetMapHighlightInfoAtPosition then
-        map.highlight:Hide()
+    if not id or not C_Map or not C_Map.GetMapHighlightInfoAtPosition then
+        texture:Hide()
         return
     end
     -- Use the same zone highlight geometry as Blizzard's map highlight provider.
@@ -71,10 +68,10 @@ local function highlight(map, x, y)
         or not top
         or (not atlas and (not fileID or fileID == 0))
     then
-        map.highlight:Hide()
-        return
+        texture:Hide()
+        return false
     end
-    local texture, w, h = map.highlight, map:GetWidth(), map:GetHeight()
+    local w, h = map:GetWidth(), map:GetHeight()
     texture:ClearAllPoints()
     texture:SetTexCoord(0, u, 0, v)
     if atlas then
@@ -87,6 +84,7 @@ local function highlight(map, x, y)
         texture:SetPoint("TOPLEFT", left * w, -top * h)
     end
     texture:Show()
+    return true
 end
 
 local function createMap(self, parent, id, name, x)
@@ -98,12 +96,12 @@ local function createMap(self, parent, id, name, x)
     U.FrameTreatment(box)
     U.Text(content, name, 18, 13, 21, T.gold)
     local map = CreateFrame("Frame", nil, content)
-    map.id, map.tiles, map.pins = id, {}, {}
+    map.id, map.tiles, map.lockedRegions = id, {}, {}
     map:SetPoint("TOPLEFT", 8, -48)
     map:SetSize(616, 410)
     map:SetClipsChildren(true)
     map:EnableMouse(true)
-    map.highlight = map:CreateTexture(nil, "ARTWORK")
+    map.highlight = map:CreateTexture(nil, "OVERLAY")
     map.highlight:SetAlpha(0.55)
     map.highlight:SetBlendMode("ADD")
     map.highlight:Hide()
@@ -177,52 +175,46 @@ local function paintMap(map)
     end
 end
 
-local function updatePins(self, map)
+local function updateLockedRegions(map)
+    if map.lockedFrontier == W.state.runBest then
+        return
+    end
+    map.lockedFrontier = W.state.runBest
     for _, zone in ipairs(C.zones) do
+        local texture = map.lockedRegions[zone.id]
         local x, y = A.ZonePosition(zone.id, map.id)
-        local pin = map.pins[zone.id]
-        if x and y and W.AtlasPinDebug and W.AtlasPinDebug.enabled then
-            if not pin then
-                pin = CreateFrame("Button", nil, map)
-                map.pins[zone.id] = pin
-                pin:SetSize(20, 25)
-                pin.icon = pin:CreateTexture(nil, "ARTWORK")
-                pin.icon:SetAllPoints()
-                pin:SetScript("OnClick", function()
-                    travel(self, zone)
-                end)
-                pin:SetScript("OnEnter", function()
-                    describe(self, zone)
-                    GameTooltip:SetOwner(pin, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(zone.name, unpack(T.gold))
-                    GameTooltip:AddLine(
-                        C.materials[zone.material] .. " · Frontier " .. zone.level,
-                        0.8,
-                        0.8,
-                        0.7
-                    )
-                    GameTooltip:AddLine(
-                        G.IsUnlocked(W.state, zone) and "Click to travel" or unlockText(zone),
-                        0.8,
-                        0.8,
-                        0.7
-                    )
-                    GameTooltip:Show()
-                end)
-                pin:SetScript("OnLeave", function()
-                    GameTooltip:Hide()
-                end)
+        if x and y and not G.IsUnlocked(W.state, zone) then
+            if not texture then
+                texture = map:CreateTexture(nil, "ARTWORK")
+                texture:SetDesaturated(true)
+                map.lockedRegions[zone.id] = texture
             end
-            pin:ClearAllPoints()
-            pin:SetPoint("CENTER", map, "TOPLEFT", x * map:GetWidth(), -y * map:GetHeight())
-            pin.icon:SetAtlas(
-                W.state.zone == zone.id and "Waypoint-MapPin-Tracked" or "Waypoint-MapPin-Untracked"
-            )
-            pin.icon:SetDesaturated(not G.IsUnlocked(W.state, zone))
-            pin:SetAlpha(G.IsUnlocked(W.state, zone) and 1 or 0.5)
-            pin:Show()
-        elseif pin then
-            pin:Hide()
+            texture:SetVertexColor(0.4, 0.4, 0.4)
+            if not highlight(map, x, y, texture) then
+                local outline = A.ZoneOutline(zone.id, map.id)
+                if outline then
+                    texture:SetVertexColor(1, 1, 1)
+                    local left, right, top, bottom = 1, 0, 1, 0
+                    for i = 1, #outline, 2 do
+                        left, right = math.min(left, outline[i]), math.max(right, outline[i])
+                        top, bottom =
+                            math.min(top, outline[i + 1]), math.max(bottom, outline[i + 1])
+                    end
+                    texture:SetTexture(
+                        "Interface\\AddOns\\WoWIdle\\Assets\\Maps\\" .. zone.id .. ".tga"
+                    )
+                    texture:SetTexCoord(0, 1, 0, 1)
+                    texture:ClearAllPoints()
+                    texture:SetPoint("TOPLEFT", left * map:GetWidth(), -top * map:GetHeight())
+                    texture:SetSize(
+                        (right - left) * map:GetWidth(),
+                        (bottom - top) * map:GetHeight()
+                    )
+                    texture:Show()
+                end
+            end
+        elseif texture then
+            texture:Hide()
         end
     end
 end
@@ -236,7 +228,7 @@ function Atlas.Draw(ui)
         U.Text(self.frame, "Choose your next horizon", 0, 0, 24, T.gold)
         U.Text(
             self.frame,
-            "Hover a destination to inspect it. Click an unlocked region to travel at any time.",
+            "Gray regions are locked. Hover to inspect a destination; click an unlocked region to travel.",
             0,
             39,
             13,
@@ -249,16 +241,13 @@ function Atlas.Draw(ui)
         }
         self.title = U.Text(self.frame, "", 0, 599, 22, T.gold, 900)
         self.detail = U.Text(self.frame, "", 0, 634, 13, T.muted, 920)
-        self.action = U.Button(self.frame, "Travel", 958, 610, 338, 38, function()
-            travel(self, self.focus)
-        end, false, "primary")
         for _, map in ipairs(self.maps) do
             paintMap(map)
         end
     end
     self.frame:Show()
     for _, map in ipairs(self.maps) do
-        updatePins(self, map)
+        updateLockedRegions(map)
     end
     local step, _, destination = W.Panels.GuideStep(W.state)
     local guided = not W.state.guide.dismissed and step == 4

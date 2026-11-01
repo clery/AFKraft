@@ -223,11 +223,6 @@ test(
         assertFalse(W.UI.cards[1]:IsShown())
         local maps = W.UI.atlas.maps
         local map = maps[1]
-        for _, continent in ipairs(maps) do
-            for _, pin in pairs(continent.pins) do
-                assertFalse(pin:IsShown())
-            end
-        end
         local original = GetCursorPosition
         local function click(zoneID)
             local x, y = W.Client.ZonePosition(zoneID, map.id)
@@ -253,6 +248,22 @@ test(
         assertFalse(W.UI.atlas.frame:IsShown())
     end
 )
+
+test("Locked regions are shaded until their frontier unlocks", function()
+    local W = WoWIdle
+    W.state = W.Game.New(W.Client.Now())
+    W.Game.AddHero(W.state, "WARRIOR")
+    W.UI:SetTab("atlas")
+    local map = W.UI.atlas.maps[1]
+    local locked = map.lockedRegions.winterspring
+    assertNotNil(locked)
+    assertTrue(locked:IsShown())
+    assertTrue(map.lockedRegions.durotar == nil or not map.lockedRegions.durotar:IsShown())
+    W.state.runBest = 100
+    W.UI:Refresh()
+    assertFalse(locked:IsShown())
+    W.UI:SetTab("adventure")
+end)
 
 test("Hovering and clicking painted regions uses tooltips and travel at UI scale", function()
     local W = WoWIdle

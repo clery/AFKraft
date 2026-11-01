@@ -150,29 +150,22 @@ function Tutorial.Refresh(ui)
         end
     else
         local focus = ui.atlas.focus
-        if focus and focus.level > C.zoneByID[s.zone].level and G.IsUnlocked(s, focus) then
-            show(
-                ui,
-                ui.atlas.action,
-                "Click Travel to "
-                    .. focus.name
-                    .. " to visit this unlocked frontier. Your idle party travels independently of your WoW character."
-            )
-        else
-            for _, map in ipairs(ui.atlas.maps) do
-                local x = W.Client.ZonePosition(destination.id, map.id)
-                if x then
-                    show(
-                        ui,
-                        map,
-                        "Hover "
-                            .. destination.name
-                            .. " on this map, then click its highlighted region to travel to this unlocked, higher frontier."
-                    )
-                    return
-                end
-            end
-            Tutorial.Hide(ui)
+        if not (focus and focus.level > C.zoneByID[s.zone].level and G.IsUnlocked(s, focus)) then
+            focus = destination
         end
+        for _, map in ipairs(ui.atlas.maps) do
+            local x = W.Client.ZonePosition(focus.id, map.id)
+            if x then
+                show(
+                    ui,
+                    map,
+                    "Hover "
+                        .. focus.name
+                        .. " on this map, then click its highlighted region to travel to this unlocked, higher frontier."
+                )
+                return
+            end
+        end
+        Tutorial.Hide(ui)
     end
 end
