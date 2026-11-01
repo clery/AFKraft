@@ -77,6 +77,56 @@ function W.RegisterSettings()
             width = "full",
         }
     end
+    options.args.debug = {
+        type = "group",
+        name = "Debug",
+        order = 100,
+        args = {
+            description = {
+                type = "description",
+                name = "Development tools. Pin calibration replaces map travel with dragging until disabled. Editing always starts disabled after login or reload.",
+                order = 1,
+            },
+            pinCalibration = {
+                type = "toggle",
+                name = "Enable pin calibration for this session",
+                desc = "Open the world map and drag any pin, including locked destinations. Draft positions are saved separately and only used while calibration is enabled. Close Settings to edit the map.",
+                width = "full",
+                order = 2,
+                get = function()
+                    return W.AtlasPinDebug.enabled
+                end,
+                set = function(_, value)
+                    W.AtlasPinDebug.SetEnabled(value)
+                end,
+            },
+            exportPins = {
+                type = "execute",
+                name = "Copy pin positions",
+                desc = "Open a text box containing all pin coordinates. Press Ctrl+C to copy.",
+                order = 3,
+                disabled = function()
+                    return not W.AtlasPinDebug.enabled
+                end,
+                func = function()
+                    W.AtlasPinDebug.Export()
+                end,
+            },
+            resetPins = {
+                type = "execute",
+                name = "Reset draft positions",
+                desc = "Discard saved calibration drafts and return to the built-in pin positions.",
+                order = 4,
+                disabled = function()
+                    return not W.AtlasPinDebug.enabled
+                end,
+                func = function()
+                    W.AtlasPinDebug.Reset()
+                end,
+            },
+        },
+    }
+    W.Controller:RegisterChatCommand("wipins", W.AtlasPinDebug.Command, false)
     W.settingsOptions = options
     LibStub("AceConfig-3.0"):RegisterOptionsTable("WoWIdle", options)
     W.settingsFrame, W.settingsCategory =

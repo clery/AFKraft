@@ -43,6 +43,7 @@ UI\Backdrop.lua
 UI\Scene.lua
 UI\PartyPanel.lua
 UI\Atlas.lua
+UI\AtlasDebug.lua
 UI\Panels.lua
 UI\Shell.lua
 UI\Settings.lua
