@@ -316,6 +316,8 @@ case("Actor loading binds through its XML template without frame script methods"
         "Hide",
         "SetScript",
         "SetAlpha",
+        "RegisterEvent",
+        "RegisterUnitEvent",
     }) do
         methods[name] = function() end
     end
@@ -326,10 +328,14 @@ case("Actor loading binds through its XML template without frame script methods"
     local client = adapter("12.1.5", {
         CreateFrame = function(kind, _, parent)
             creates = creates + 1
-            assert(kind == ({ "Frame", "PlayerModel", "ModelScene" })[creates])
+            assert(kind == ({ "Frame", "DressUpModel", "ModelScene" })[creates])
             return setmetatable({
                 parent = parent,
                 alpha = 1,
+                scripts = {},
+                SetScript = function(self, script, callback)
+                    self.scripts[script] = callback
+                end,
                 SetAlpha = function(self, alpha)
                     self.alpha = alpha
                 end,
@@ -352,7 +358,104 @@ case("Actor loading binds through its XML template without frame script methods"
     assert(model.appearanceSource.alpha == 0 and model.adventureScene.alpha == 1)
     actor.onModelLoaded()
     assert(called == 1)
+    local refreshed, dressed = 0, 0
+    model.appearanceSource.RefreshUnit = function()
+        refreshed = refreshed + 1
+    end
+    model.appearanceSource.Dress = function()
+        dressed = dressed + 1
+    end
+    model.appearanceUnit = "player"
+    model.scripts.OnEvent(model, "UNIT_INVENTORY_CHANGED", "target")
+    assert(refreshed == 0 and dressed == 0)
+    model.scripts.OnEvent(model, "UNIT_INVENTORY_CHANGED", "player")
+    model.scripts.OnEvent(model, "TRANSMOG_DISPLAYED_OUTFIT_CHANGED")
+    assert(refreshed == 2 and dressed == 2)
+    model.appearanceUnit = nil
+    model.scripts.OnEvent(model, "UNIT_INVENTORY_CHANGED", "player")
+    assert(refreshed == 2 and dressed == 2)
 end)
+
+case(
+    "Native character appearances retain transmog and NPC skins without display-ID conversion",
+    function()
+        local client = adapter("12.1.5")
+        local flags, sourceAlpha, actorAlpha, hidden, animation = {}, 0, 0, false, nil
+        local dressed = 0
+        local source = {
+            ClearModel = function() end,
+            SetAlpha = function(_, alpha)
+                sourceAlpha = alpha
+            end,
+            SetAutoDress = function(_, enabled)
+                flags.auto = enabled
+            end,
+            SetUseTransmogSkin = function(_, enabled)
+                flags.skin = enabled
+            end,
+            SetUseTransmogChoices = function(_, enabled)
+                flags.preview = enabled
+            end,
+            SetObeyHideInTransmogFlag = function(_, enabled)
+                flags.hidden = enabled
+            end,
+            SetUnit = function(_, unit)
+                assert(unit == "player" and flags.auto and flags.skin and flags.hidden)
+                assert(flags.preview == false)
+            end,
+            SetCreature = function(_, id)
+                assert(id == 911 and flags.auto == false and flags.skin == false)
+            end,
+            Dress = function()
+                dressed = dressed + 1
+            end,
+            GetModelFileID = function()
+                return 42
+            end,
+            SetCamera = function() end,
+            SetPortraitZoom = function() end,
+            SetCamDistanceScale = function() end,
+            SetFacing = function(_, facing)
+                assert(facing == 1.05)
+            end,
+            SetAnimation = function(_, value)
+                animation = value
+            end,
+        }
+        local model = {
+            appearanceSource = source,
+            adventureActor = {
+                ClearModel = function() end,
+                SetAlpha = function(_, value)
+                    actorAlpha = value
+                end,
+            },
+            adventureScene = {
+                SetScript = function() end,
+                Show = function()
+                    hidden = false
+                end,
+                Hide = function()
+                    hidden = true
+                end,
+            },
+        }
+        function model:ClearModel()
+            source:ClearModel()
+        end
+        function model:SetUnit(unit)
+            source:SetUnit(unit)
+        end
+        function model:SetCreature(id)
+            source:SetCreature(id)
+        end
+        assert(client.ConfigureModel(model, { key = "player:test", unit = "player" }, false))
+        assert(dressed == 1 and sourceAlpha == 1 and actorAlpha == 0 and hidden)
+        assert(client.AnimateModel(model, 16) and animation == 16)
+        assert(client.ConfigureModel(model, { key = "companion:911", creatureID = 911 }, false))
+        assert(dressed == 1 and sourceAlpha == 1 and actorAlpha == 0 and hidden)
+    end
+)
 
 case("Geometry retries stop after success or a bounded loading window", function()
     local client = adapter("12.1.5")
@@ -490,31 +593,28 @@ case("Native map hit testing resolves city submaps to their adventure zone", fun
     assert(client.ZoneAtPosition("eastern", 0.5, 0.5).id == "elwynn")
 end)
 
-case(
-    "Retail regions follow artwork and remain clickable without native hit data",
-    function()
-        local client = adapter("12.1.5", { C_Map = {} })
-        for _, zone in ipairs(W.Content.zones) do
-            local found = 0
-            for _, continent in ipairs({ "kalimdor", "eastern" }) do
-                local x, y = client.ZonePosition(zone.id, continent)
-                if x then
-                    found = found + 1
-                    assert(client.ZoneAtPosition(continent, x, y).id == zone.id)
-                    -- Check a second point inside the region.
-                    local offset = zone.id == "westfall" and -0.018 or 0.018
-                    assert(
-                        client.ZoneAtPosition(continent, x + offset, y + 0.020).id == zone.id,
-                        zone.id
-                    )
-                end
+case("Retail regions follow artwork and remain clickable without native hit data", function()
+    local client = adapter("12.1.5", { C_Map = {} })
+    for _, zone in ipairs(W.Content.zones) do
+        local found = 0
+        for _, continent in ipairs({ "kalimdor", "eastern" }) do
+            local x, y = client.ZonePosition(zone.id, continent)
+            if x then
+                found = found + 1
+                assert(client.ZoneAtPosition(continent, x, y).id == zone.id)
+                -- Check a second point inside the region.
+                local offset = zone.id == "westfall" and -0.018 or 0.018
+                assert(
+                    client.ZoneAtPosition(continent, x + offset, y + 0.020).id == zone.id,
+                    zone.id
+                )
             end
-            assert(found == 1)
         end
-        assert(not client.ZoneAtPosition("eastern", 0.2, 0.2))
-        assert(not client.ZoneAtPosition("eastern", -0.1, 0.8))
+        assert(found == 1)
     end
-)
+    assert(not client.ZoneAtPosition("eastern", 0.2, 0.2))
+    assert(not client.ZoneAtPosition("eastern", -0.1, 0.8))
+end)
 
 case("Native zone borders take precedence over fallback artwork outlines", function()
     local client = adapter("12.1.5", {

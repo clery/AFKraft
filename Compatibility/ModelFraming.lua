@@ -47,10 +47,10 @@ function A.ModelFit(bottom, top, ground, aspect)
 end
 
 function A.CreateAdventureModel(parent, loaded)
-    -- PlayerModel resolves NPC IDs and retains animation-availability queries.
-    -- Only the bounds-fitted actor draws; never render both copies together.
+    -- Native character models retain complete NPC skins and player outfit data.
+    -- Creature enemies use the separately fitted scene actor.
     local model = CreateFrame("Frame", nil, parent)
-    local source = CreateFrame("PlayerModel", nil, model)
+    local source = CreateFrame("DressUpModel", nil, model)
     source:SetAllPoints(model)
     source:EnableMouse(false)
     source:SetAlpha(0)
@@ -84,9 +84,24 @@ function A.CreateAdventureModel(parent, loaded)
     model.adventureScene, model.adventureActor = scene, actor
     actor:SetAlpha(0)
     source:SetScript("OnModelLoaded", function()
-        source:SetAlpha(0)
+        source:SetAlpha(model.nativeAppearance and 1 or 0)
         loaded()
     end)
+    model:SetScript("OnEvent", function(_, _, unit)
+        if model.appearanceUnit == "player" and (not unit or unit == "player") then
+            source:RefreshUnit()
+            source:Dress()
+        end
+    end)
+    model:RegisterUnitEvent("UNIT_MODEL_CHANGED", "player")
+    model:RegisterUnitEvent("UNIT_INVENTORY_CHANGED", "player")
+    if
+        C_EventUtils
+        and C_EventUtils.IsEventValid
+        and C_EventUtils.IsEventValid("TRANSMOG_DISPLAYED_OUTFIT_CHANGED")
+    then
+        model:RegisterEvent("TRANSMOG_DISPLAYED_OUTFIT_CHANGED")
+    end
     actor.onModelLoaded = loaded
     return model
 end
@@ -116,6 +131,22 @@ function A.FrameAdventureModel(model, enemy, spec)
     local actor, scene = model.adventureActor, model.adventureScene
     if not spec then
         return false
+    end
+    if model.nativeAppearance then
+        local source = model.appearanceSource
+        local file = source:GetModelFileID()
+        if not finite(file) or file <= 0 then
+            return false
+        end
+        source:SetCamera(0)
+        source:SetPortraitZoom(0)
+        source:SetCamDistanceScale(1.7)
+        source:SetFacing(1.05)
+        source:SetAlpha(1)
+        actor:SetAlpha(0)
+        scene:SetScript("OnUpdate", nil)
+        scene:Hide()
+        return true
     end
     if model.adventureKey ~= spec.key then
         model.adventureKey = spec.key

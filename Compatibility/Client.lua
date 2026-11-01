@@ -173,7 +173,10 @@ function A.AnimateModel(model, animation)
             end
         end
         if animation then
-            (model.adventureActor or model):SetAnimation(animation)
+            local target = model.nativeAppearance and model.appearanceSource
+                or model.adventureActor
+                or model
+            target:SetAnimation(animation)
             return true
         end
         return false
@@ -192,16 +195,26 @@ function A.ConfigureModel(model, spec, enemy)
     return pcall(function()
         model:ClearModel()
         if model.adventureScene then
+            model.nativeAppearance = not enemy
+            model.appearanceUnit = spec.unit
             model.adventureKey = nil
             model.adventureFittedKey = nil
             model.adventureActor:ClearModel()
             model.adventureActor:SetAlpha(0)
             model.adventureScene:Show()
             model.appearanceSource:SetAlpha(0)
+            local source = model.appearanceSource
+            source:SetAutoDress(spec.unit ~= nil)
+            source:SetUseTransmogSkin(spec.unit ~= nil)
+            source:SetUseTransmogChoices(false)
+            source:SetObeyHideInTransmogFlag(true)
             A.AwaitAdventureModel(model)
         end
         if spec.unit then
             model:SetUnit(spec.unit)
+            if model.nativeAppearance then
+                model.appearanceSource:Dress()
+            end
         else
             model:SetCreature(spec.creatureID)
         end
