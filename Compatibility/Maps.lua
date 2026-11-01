@@ -112,7 +112,7 @@ local retailRegions = {
     },
     wetlands = {
         "eastern",
-        0.475,
+        0.520,
         0.570,
         {
             0.453,
