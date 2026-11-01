@@ -150,7 +150,8 @@ function Scene.Create(parent)
         -- Transparent model viewports extend beyond the small interaction/nameplate
         -- footprint, leaving room for tails, weapons, particles and attack poses.
         unit.viewport = CreateFrame("Frame", nil, unit)
-        unit.viewport:SetPoint("BOTTOM", unit, "BOTTOM", 0, 0)
+        unit.groundOffset = friendly and 0 or W.ModelAssets.creatureGroundOffset
+        unit.viewport:SetPoint("BOTTOM", unit, "BOTTOM", 0, unit.groundOffset)
         unit.viewport:SetSize(360, 240)
         unit.viewport:SetClipsChildren(false)
         unit.model = W.Client.CreateAdventureModel(unit.viewport, function()
@@ -561,7 +562,7 @@ function Scene:Animate(frameElapsed, simulationFraction)
         end
         if offset ~= unit.visualOffset then
             unit.viewport:ClearAllPoints()
-            unit.viewport:SetPoint("BOTTOM", unit, "BOTTOM", offset, 0)
+            unit.viewport:SetPoint("BOTTOM", unit, "BOTTOM", offset, unit.groundOffset)
             unit.visualOffset = offset
         end
         if unit.deathTime and now - unit.deathTime >= 1.5 then

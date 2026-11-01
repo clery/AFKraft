@@ -578,6 +578,14 @@ test("Adventure models follow combat positions with roomy transparent viewports"
     assertTrue(enemy.viewport:GetWidth() > enemy:GetWidth() * 2)
     assertTrue(enemy.viewport:GetHeight() > 178)
     assertFalse(enemy.viewport:DoesClipChildren())
+    local _, _, _, _, friendlyGround = front.viewport:GetPoint()
+    local _, _, _, _, enemyGround = enemy.viewport:GetPoint()
+    assertEquals(0, friendlyGround)
+    assertEquals(W.ModelAssets.creatureGroundOffset, enemyGround)
+    enemy.actionAt, enemy.visualOffset = GetTime(), nil
+    scene:Animate()
+    local _, _, _, _, actionGround = enemy.viewport:GetPoint()
+    assertEquals(enemyGround, actionGround)
     for i, unit in ipairs(scene.plateOrder) do
         local _, _, _, x, y = unit.plate:GetPoint()
         assertTrue(x >= 0 and x + unit.plate:GetWidth() <= 1284)

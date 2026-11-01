@@ -3,6 +3,9 @@ local _, W = ...
 -- Creature IDs resolve complete NPC appearances, including their baked skins.
 -- Bare race display IDs do not contain a character's composite textures.
 W.ModelAssets = {
+    -- Align the fitted creature camera's ground with native full-body characters
+    -- in the shared 240-unit-high viewport. Parent scaling preserves this in compact mode.
+    creatureGroundOffset = 24,
     -- Complete textured presets; body customizations remain together as authored.
     variants = {
         human_male = { 911, 925, 915, 198, 906 },

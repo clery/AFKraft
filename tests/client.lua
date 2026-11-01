@@ -431,7 +431,7 @@ case(
             SetPortraitZoom = function() end,
             SetCamDistanceScale = function() end,
             SetRotation = function(_, facing, animate)
-                assert(facing == -1.05 and animate == false)
+                assert(facing == 1.05 and animate == false)
             end,
             SetAnimation = function(_, value)
                 animation = value
