@@ -208,7 +208,7 @@ case("Creature framing survives loading and resets when a slot changes creature"
     client.FrameModel(model, true, dust)
     assert(distance == dustDistance)
     client.FrameModel(model, true, normal)
-    assert(distance == 1.15)
+    assert(distance == 1.7)
 end)
 
 case("Native map hit testing resolves city submaps to their adventure zone", function()

@@ -1,5 +1,5 @@
 local _, W = ...
-local C, G = W.Content, W.Game
+local C, G, P = W.Content, W.Game, W.CombatPosition
 local min, max, floor = math.min, math.max, math.floor
 
 local function living(units)
@@ -51,6 +51,7 @@ function G.StartBattle(state)
             attackCD = 1 + i * 0.3,
         }
     end
+    P.Ensure(state, battle)
     state.battle = battle
     G.Emit(state, "encounter", { boss = boss })
 end
@@ -172,6 +173,7 @@ function G.Step(state, seconds)
     end
     local battle = state.battle
     battle.elapsed = battle.elapsed + seconds
+    P.Step(state, battle, seconds)
     for i, unit in ipairs(battle.heroes) do
         if unit.hp > 0 then
             local hero = state.heroes[i]
@@ -207,10 +209,13 @@ function G.Step(state, seconds)
                 elseif specialNeeded then
                     action = "special"
                 end
+                local acted = false
                 if action == "heal" then
+                    acted = true
                     heal(state, recovery, unit.healing * (hero.talents.sustain and 1.6 or 1), i)
                     unit.cd = 6
-                else
+                elseif P.InRange(unit, enemies[1]) then
+                    acted = true
                     local targets = (action == "special" or hero.talents.cleave) and enemies
                         or { enemies[1] }
                     for _, target in ipairs(targets) do
@@ -218,23 +223,33 @@ function G.Step(state, seconds)
                         if hero.talents.execute and target.hp / target.maxHP < 0.35 then
                             amount = amount * 1.5
                         end
-                        hurt(state, target, amount, true, i)
-                        if hero.talents.leech then
-                            heal(state, unit, amount * 0.12, i)
-                        end
-                        if hero.talents.control then
-                            target.attackCD = target.attackCD + 1
+                        if P.InRange(unit, target) then
+                            hurt(state, target, amount, true, i)
+                            if hero.talents.leech then
+                                heal(state, unit, amount * 0.12, i)
+                            end
+                            if hero.talents.control then
+                                target.attackCD = target.attackCD + 1
+                            end
                         end
                     end
                     unit.cd = hero.talents.haste and 4.2 or 6
                 end
-                G.Emit(state, "cast", { source = i, action = action })
+                if acted then
+                    G.Emit(state, "cast", { source = i, action = action })
+                end
             end
-            if unit.attackCD == 0 and #living(battle.enemies) > 0 then
+            if
+                unit.attackCD == 0
+                and #living(battle.enemies) > 0
+                and P.InRange(unit, living(battle.enemies)[1])
+            then
                 local targets = hero.talents.cleave and living(battle.enemies)
                     or { living(battle.enemies)[1] }
                 for _, target in ipairs(targets) do
-                    hurt(state, target, unit.damage, true, i)
+                    if P.InRange(unit, target) then
+                        hurt(state, target, unit.damage, true, i)
+                    end
                 end
                 unit.attackCD = 2
             end
@@ -252,25 +267,21 @@ function G.Step(state, seconds)
                 if #allies == 0 then
                     break
                 end
-                local target = allies[1]
-                for _, a in ipairs(allies) do
-                    if state.heroes[a.id].talents.guard then
-                        target = a
-                        break
+                local target = P.Target(state, battle, true)
+                if P.InRange(enemy, target) then
+                    local talent = state.heroes[target.id].talents
+                    local amount = enemy.damage
+                        * (talent.guard and 0.75 or 1)
+                        * (1 - (target.mitigation or 0))
+                    if talent.guard then
+                        G.Emit(state, "defense")
                     end
+                    hurt(state, target, amount, false, enemy.id)
+                    if talent.thorns then
+                        hurt(state, enemy, amount * 0.30, true, target.id)
+                    end
+                    enemy.attackCD = 2.4
                 end
-                local talent = state.heroes[target.id].talents
-                local amount = enemy.damage
-                    * (talent.guard and 0.75 or 1)
-                    * (1 - (target.mitigation or 0))
-                if talent.guard then
-                    G.Emit(state, "defense")
-                end
-                hurt(state, target, amount, false, enemy.id)
-                if talent.thorns then
-                    hurt(state, enemy, amount * 0.30, true, target.id)
-                end
-                enemy.attackCD = 2.4
             end
         end
     end

@@ -132,7 +132,13 @@ return {
             state.battle.heroes[1].damage = 10000
             state.heroes[1].talents.cleave = true
             state.events = {}
-            W.Game.Step(state, 0.25)
+            local battle = state.battle
+            for _ = 1, 80 do
+                W.Game.Step(state, 0.25)
+                if state.battle ~= battle then
+                    break
+                end
+            end
             local deaths = 0
             for _, event in ipairs(state.events) do
                 if event.kind == "death" and event.enemy then

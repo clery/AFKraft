@@ -25,7 +25,7 @@ Use internal content IDs in saves. Client numeric map and model identifiers belo
 
 ## Simulation and rendering
 
-Combat advances in fixed quarter-second steps with a saved deterministic random seed. The application preserves unprocessed elapsed time and bounds work per frame. Combat emits transient feedback events; the scene consumes them. Animation timing cannot change damage or rewards. Feedback buffers and adventure logs are bounded.
+Combat advances in fixed quarter-second steps with a saved deterministic random seed. The application preserves unprocessed elapsed time and bounds work per frame. Combat emits transient feedback events; the scene consumes them. Encounters track each combatant’s coordinates and current target. Melee units close distance before dealing damage; ranged units hold their formation, and enemy pursuit follows the living front line or its guard. Position updates use the same fixed steps during visible play and offline catch-up. Animation timing cannot change damage or rewards. Feedback buffers and adventure logs are bounded.
 
 Each encounter snapshots its participants. Recruiting during combat adds heroes to the party for the next encounter; victory health and experience updates use the participant snapshot. Prepare all participant results before committing shared rewards. On loading an older save with a completed encounter left unresolved by an error, discard that encounter rather than replaying a partially applied payout.
 

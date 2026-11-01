@@ -9,6 +9,7 @@ local files = {
     "Domain/Prestige.lua",
     "Domain/Adventure.lua",
     "Domain/Rewards.lua",
+    "Simulation/Positioning.lua",
     "Simulation/Combat.lua",
     "Simulation/Offline.lua",
 }
@@ -18,6 +19,7 @@ end
 local cases = {}
 for _, file in ipairs({
     "tests/domain.lua",
+    "tests/positioning.lua",
     "tests/talents.lua",
     "tests/client.lua",
     "tests/sounds.lua",

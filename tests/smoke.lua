@@ -448,7 +448,7 @@ test("Talent icons preserve choices and scroll through expanded trees", function
     assertEquals(restoredMaximum, tree.scroll:GetVerticalScroll())
 end)
 
-test("Adventure nameplates follow formations and enemies enter from the right", function()
+test("Adventure models follow combat positions with roomy transparent viewports", function()
     local W = WoWIdle
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
@@ -462,29 +462,43 @@ test("Adventure nameplates follow formations and enemies enter from the right", 
     W.UI:SetTab("adventure")
     W.Game.StartBattle(state)
     W.UI:Refresh()
+    for _, opponent in ipairs(state.battle.enemies) do
+        opponent.hp, opponent.maxHP = 10000, 10000
+    end
     local scene = W.UI.scene
     local front, ranged, enemy = scene.units[1], scene.units[2], scene.units[6]
     assertTrue(front.melee)
     assertFalse(ranged.melee)
-    assertTrue(front.targetX > ranged.targetX)
     assertTrue(enemy.x > scene.frame:GetWidth())
     local start = enemy.x
-    scene.lastAnimation = GetTime() - 0.05
-    scene:Animate()
-    assertTrue(enemy.x < start)
-    assertTrue(enemy.x > enemy.targetX)
-    assertTrue(enemy.moving)
-    for _ = 1, 100 do
-        scene.lastAnimation = GetTime() - 0.05
-        scene:Animate()
+    for _ = 1, 8 do
+        W.Game.Step(state, 0.25)
+        W.UI:Refresh()
+        for _ = 1, 6 do
+            scene.lastAnimation = GetTime() - 0.05
+            scene:Animate()
+        end
     end
-    assertTrue(math.abs(enemy.x - enemy.targetX) < 1)
-    assertFalse(enemy.moving)
+    assertTrue(enemy.x < start)
+    assertEquals(state.battle.enemies[1], enemy.combatant)
+    assertTrue(math.abs(enemy.x - enemy.combatant.x) < 1)
+    assertEquals(enemy.combatant.targetID, enemy.targetID)
     assertTrue(front.x < enemy.x)
+    assertTrue(enemy.viewport:GetWidth() > enemy:GetWidth() * 2)
+    assertTrue(enemy.viewport:GetHeight() > 178)
+    assertFalse(enemy.viewport:DoesClipChildren())
+    for i, unit in ipairs(scene.plateOrder) do
+        local _, _, _, x, y = unit.plate:GetPoint()
+        assertTrue(x >= 0 and x + unit.plate:GetWidth() <= 1284)
+        for j = 1, i - 1 do
+            local other = scene.plateOrder[j]
+            local _, _, _, otherX, otherY = other.plate:GetPoint()
+            assertTrue(math.abs(y - otherY) >= 40 or math.abs(x - otherX) >= 140)
+        end
+    end
     local _, _, _, _, nameY = front.name:GetPoint()
     local _, _, _, _, healthY = front.hp:GetPoint()
-    local _, _, _, _, modelY = front.viewport:GetPoint()
-    assertTrue(nameY > healthY and healthY > modelY)
+    assertTrue(nameY > healthY)
     local partyX = front.x
     state.battle = nil
     W.UI:Refresh()
@@ -492,10 +506,6 @@ test("Adventure nameplates follow formations and enemies enter from the right", 
     scene:Animate()
     assertTrue(front.travelling)
     assertEquals(partyX, front.x)
-    W.Game.StartBattle(state)
-    W.UI:Refresh()
-    assertEquals(partyX, front.x)
-    assertTrue(enemy.x > scene.frame:GetWidth())
     state.ui.compact = true
     W.UI:ApplyMode()
     assertTrue(enemy.name:IsShown())

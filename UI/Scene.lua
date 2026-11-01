@@ -1,10 +1,7 @@
 local _, W = ...
-local U, T, C = W.Widgets, W.Theme, W.Content
+local U, T, C, P = W.Widgets, W.Theme, W.Content, W.CombatPosition
 local Scene = {}
 W.Scene = Scene
-
--- Presentation roles follow the addon's class defaults, independently of combat rules.
-local meleeClasses = { WARRIOR = true, PALADIN = true, ROGUE = true }
 
 local function baseAnimation(unit)
     return (unit.moving or unit.travelling) and 5 or 0
@@ -38,29 +35,38 @@ function Scene.Create(parent)
     self.status = U.Text(content, "", 980, 24, 12, T.text, 290)
     U.SingleLine(self.status, 290, 20, "RIGHT")
     self.note = U.Text(content, "", 24, 104, 13, T.text, 1150)
+    self.nameplates = CreateFrame("Frame", nil, content)
+    self.nameplates:SetAllPoints(content)
+    self.nameplates:SetFrameLevel(content:GetFrameLevel() + 200)
     self.units = {}
+    self.plateOrder = {}
     for i = 1, 8 do
         local unit = CreateFrame("Frame", nil, content)
         local friendly = i <= 5
-        unit:SetSize(132, 220)
+        unit.index = i
+        unit:SetSize(132, 204)
         unit.sigil = U.Icon(unit, "INV_Misc_QuestionMark", 36, 88, 60)
-        -- Clip only the model, leaving combat text free to rise above the unit.
+        -- Transparent model viewports extend beyond the small interaction/nameplate
+        -- footprint, leaving room for tails, weapons, particles and attack poses.
         unit.viewport = CreateFrame("Frame", nil, unit)
-        unit.viewport:SetPoint("TOPLEFT", 0, -38)
-        unit.viewport:SetSize(132, 178)
-        unit.viewport:SetClipsChildren(true)
+        unit.viewport:SetPoint("BOTTOM", unit, "BOTTOM", 0, 0)
+        unit.viewport:SetSize(friendly and 260 or 360, 240)
+        unit.viewport:SetClipsChildren(false)
         unit.model = CreateFrame("PlayerModel", nil, unit.viewport)
         unit.model:SetAllPoints(unit.viewport)
         unit.model:EnableMouse(false)
         unit.model:SetScript("OnModelLoaded", function()
             modelLoaded(unit, not friendly)
         end)
-        unit.name = U.Text(unit, "", 0, 0, 12, T.text, 132)
+        unit.plate = CreateFrame("Frame", nil, self.nameplates)
+        unit.plate:SetSize(132, 52)
+        unit.plate:SetPoint("TOP", unit, "TOP")
+        unit.name = U.Text(unit.plate, "", 0, 0, 12, T.text, 132)
         U.SingleLine(unit.name, 132, 19, "CENTER")
-        unit.hp = U.Bar(unit, 4, 24, 124, 10, friendly and T.green or { 0.86, 0.38, 0.32 })
-        unit.detail = U.Text(unit, "", 0, 36, 10, T.muted, 132)
+        unit.hp = U.Bar(unit.plate, 4, 24, 124, 10, friendly and T.green or { 0.86, 0.38, 0.32 })
+        unit.detail = U.Text(unit.plate, "", 0, 36, 10, T.muted, 132)
         U.SingleLine(unit.detail, 132, 16, "CENTER")
-        unit.floating = U.Text(unit, "", 24, 58, 19, T.gold)
+        unit.floating = U.Text(unit.plate, "", 24, 58, 19, T.gold)
         U.SingleLine(unit.floating, 84, 26, "CENTER")
         unit.floating:SetAlpha(0)
         unit.floatAnimation = unit.floating:CreateAnimationGroup()
@@ -111,7 +117,7 @@ function Scene:Layout(compact, management)
         unit.name:SetFont("Fonts\\FRIZQT__.TTF", compact and 20 or 12, "")
         unit.name:SetHeight(compact and 24 or 19)
         unit.name:SetWidth(132)
-        unit.detail:SetShown(not compact and not friendly)
+        unit.detail:SetShown(not compact and unit.waiting)
     end
     -- The banner and stage have different aspect ratios even in the same zone.
     self.scenery:SetZone(W.state.zone)
@@ -128,8 +134,10 @@ function Scene:Refresh(s)
         self.lastBattle = s.battle
     end
     local b = s.battle or self.lastBattle
-    local meleeCount, rangedCount = 0, 0
     self.travelling = s.battle == nil
+    if s.battle then
+        P.Ensure(s, s.battle)
+    end
     self.scenery:SetZone(z.id)
     self.chapter:SetText("AZEROTH  /  " .. string.upper(z.name))
     self.caption:SetText(z.subtitle)
@@ -148,6 +156,7 @@ function Scene:Refresh(s)
         local present = hero ~= nil or enemy ~= nil
         unit:SetShown(present and not self.management)
         unit.name:Show()
+        unit.plate:SetShown(present and not self.management)
         if present and not self.management then
             if freshBattle then
                 unit.dead, unit.deathTime, unit.animTime = false, nil, nil
@@ -157,28 +166,22 @@ function Scene:Refresh(s)
                 end
             end
             local class = hero and C.classByID[hero.class]
-            unit.melee = enemy ~= nil or (hero and meleeClasses[hero.class]) or false
+            local combatant = hero and b and b.heroes[i] or enemy
+            unit.combatant = combatant
+            unit.melee = combatant and combatant.melee or false
             unit.travelling = hero ~= nil and self.travelling
-            local x, y
-            if hero then
-                if unit.melee then
-                    x, y = 630 - meleeCount * 140, 100 + (meleeCount % 2) * 30
-                    meleeCount = meleeCount + 1
-                else
-                    x, y = 30 + rangedCount * 140, 100 + (rangedCount % 2) * 30
-                    rangedCount = rangedCount + 1
-                end
-            else
-                x, y = 800 + (i - 6) * 145, 100 + ((i - 6) % 2) * 30
-            end
+            local x = combatant and combatant.x or (30 + (i - 1) * 112)
+            local y = combatant and combatant.y or 110
             unit.targetX, unit.targetY = x, y
             if freshBattle then
-                -- Keep the company visible; each new enemy arrives from offstage right.
-                unit.x = hero and (unit.x or (30 + (i - 1) * 140)) or 1320 + (i - 6) * 145
-                unit.y = unit.y or y
+                unit.pendingAnimation = nil
+                unit.x = hero and (unit.x or x) or x
+                unit.y = hero and (unit.y or y) or y
             else
                 unit.x, unit.y = unit.x or x, unit.y or y
             end
+            unit:ClearAllPoints()
+            unit:SetPoint("TOPLEFT", unit.x, -unit.y)
             local spec = W.Client.ModelSpec(hero, z.id, enemy and enemy.name)
             local key = spec and spec.key or "unavailable"
             if unit.modelKey ~= key then
@@ -209,11 +212,12 @@ function Scene:Refresh(s)
                 hp, maxHP, detail = 1, 1, ""
             end
             unit.name:SetTextColor(unpack(class and class.color or { 0.95, 0.69, 0.53 }))
-            unit.detail:SetShown(not self.compact and (not hero or (b and not b.heroes[i])))
+            unit.waiting = hero ~= nil and b ~= nil and not b.heroes[i]
+            unit.detail:SetShown(not self.compact and unit.waiting)
             unit.hp:SetValue(maxHP > 0 and math.max(0, hp / maxHP) or 0)
             if hp <= 0 and not unit.dead then
                 unit.dead, unit.deathTime = true, GetTime()
-                unit.animTime = nil
+                unit.animTime, unit.pendingAnimation = nil, nil
                 if unit.modelReady then
                     W.Client.AnimateModel(unit.model, 1)
                 end
@@ -239,17 +243,8 @@ function Scene:Refresh(s)
                     -- Basic swings and enemy attacks also animate, even with combat text off.
                     if event.kind == "hit" then
                         local source = self.units[(event.source or 0) + (event.enemy and 0 or 5)]
-                        if
-                            source
-                            and source.modelReady
-                            and not source.dead
-                            and not source.moving
-                        then
-                            W.Client.AnimateModel(
-                                source.model,
-                                source.melee and 16 or (event.enemy and 53 or 16)
-                            )
-                            source.animTime = GetTime()
+                        if source and not source.dead then
+                            source.pendingAnimation = source.melee and 16 or 53
                         end
                     end
                     if unit and unit:IsShown() and s.settings.combatText then
@@ -263,12 +258,9 @@ function Scene:Refresh(s)
                     end
                 elseif event.kind == "cast" then
                     local unit = self.units[event.source]
-                    if unit and unit.modelReady and not unit.dead and not unit.moving then
-                        W.Client.AnimateModel(
-                            unit.model,
-                            (event.action == "heal" or not unit.melee) and 53 or 16
-                        )
-                        unit.animTime = GetTime()
+                    if unit and not unit.dead then
+                        unit.pendingAnimation = (event.action == "heal" or not unit.melee) and 53
+                            or 16
                     end
                 end
             end
@@ -277,21 +269,69 @@ function Scene:Refresh(s)
     end
 end
 
+-- Separate crowded overhead bars into two rows while keeping them near their
+-- owners. Models and their interaction frames retain their actual coordinates.
+local function sortByPosition(a, b)
+    return a.x < b.x or (a.x == b.x and a.index < b.index)
+end
+
+function Scene:PlaceNameplates()
+    local order, count = self.plateOrder, 0
+    for _, unit in ipairs(self.units) do
+        local visible = unit:IsShown() and unit.x and unit.x < 1270
+        unit.plate:SetShown(visible)
+        if visible then
+            count = count + 1
+            order[count] = unit
+        end
+    end
+    for i = #order, count + 1, -1 do
+        order[i] = nil
+    end
+    table.sort(order, sortByPosition)
+    for row = 1, 2 do
+        local previous = -132
+        for i = row, count, 2 do
+            local unit = order[i]
+            unit.plateX = math.max(8, unit.x, previous + 140)
+            previous = unit.plateX
+        end
+        local nextX = 1280
+        local last = count - ((count - row) % 2)
+        for i = last, row, -2 do
+            local unit = order[i]
+            unit.plateX = math.min(unit.plateX, nextX - 140)
+            nextX = unit.plateX
+            local y = 82 + (row - 1) * 40
+            if unit.plateX ~= unit.lastPlateX or y ~= unit.lastPlateY then
+                unit.plate:ClearAllPoints()
+                unit.plate:SetPoint("TOPLEFT", self.nameplates, "TOPLEFT", unit.plateX, -y)
+                unit.lastPlateX, unit.lastPlateY = unit.plateX, y
+            end
+        end
+    end
+end
+
 -- Presentation advances at the frame rate, independently of simulation ticks.
 function Scene:Animate()
     local now = GetTime()
-    local elapsed = math.min(0.05, math.max(0, now - (self.lastAnimation or now)))
+    local elapsed = math.min(0.25, math.max(0, now - (self.lastAnimation or now)))
     self.lastAnimation = now
     if self.management or not self.frame:IsShown() then
         return
     end
     for _, unit in ipairs(self.units) do
+        if unit:IsShown() and unit.combatant then
+            unit.targetX, unit.targetY = unit.combatant.x, unit.combatant.y
+            unit.targetID, unit.targetEnemy = unit.combatant.targetID, unit.combatant.targetEnemy
+        end
         if unit:IsShown() and unit.targetX then
             local dx, dy = unit.targetX - unit.x, unit.targetY - unit.y
             local distance = math.sqrt(dx * dx + dy * dy)
-            local moving = not unit.dead and distance > 0.5
-            if moving then
-                local step = math.min(1, elapsed * 440 / distance)
+            local moving = not unit.dead
+                and (distance > 0.5 or (unit.combatant and unit.combatant.moving))
+            if not unit.dead and distance > 0.5 then
+                local step = math.min(1, elapsed * P.speed * 1.5 / distance)
                 unit.x, unit.y = unit.x + dx * step, unit.y + dy * step
                 unit:ClearAllPoints()
                 unit:SetPoint("TOPLEFT", unit.x, -unit.y)
@@ -304,6 +344,10 @@ function Scene:Animate()
                 end
             end
         end
+        if unit.pendingAnimation and not unit.moving and unit.modelReady and not unit.dead then
+            W.Client.AnimateModel(unit.model, unit.pendingAnimation)
+            unit.pendingAnimation, unit.animTime = nil, now
+        end
         if unit.deathTime and now - unit.deathTime >= 1.5 then
             W.Client.AnimateModel(unit.model, 6)
             unit.deathTime = nil
@@ -315,4 +359,5 @@ function Scene:Animate()
             unit.animTime = nil
         end
     end
+    self:PlaceNameplates()
 end

@@ -96,7 +96,9 @@ end
 
 function A.FrameModel(model, enemy, spec)
     model:SetPortraitZoom(0)
-    model:SetCamDistanceScale(spec and spec.framing and spec.framing.cameraDistance or 1.15)
+    model:SetCamDistanceScale(
+        spec and spec.framing and spec.framing.cameraDistance or (enemy and 1.7 or 1.5)
+    )
     model:SetFacing(enemy and -1.05 or 1.05)
 end
 

@@ -26,6 +26,7 @@ Domain\Inventory.lua
 Domain\Prestige.lua
 Domain\Adventure.lua
 Domain\Rewards.lua
+Simulation\Positioning.lua
 Simulation\Combat.lua
 Simulation\Offline.lua
 Compatibility\Models.lua
