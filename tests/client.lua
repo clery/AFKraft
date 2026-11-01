@@ -73,6 +73,9 @@ local function adapter(version, overrides)
     assert(loadfile("Compatibility/Models.lua"))("WoWIdle", namespace)
     setfenv(chunk, environment)
     chunk("WoWIdle", namespace)
+    local framing = assert(loadfile("Compatibility/ModelFraming.lua"))
+    setfenv(framing, environment)
+    framing("WoWIdle", namespace)
     local maps = assert(loadfile("Compatibility/Maps.lua"))
     setfenv(maps, environment)
     maps("WoWIdle", namespace)
@@ -258,49 +261,219 @@ case("Creature framing survives loading and resets when a slot changes creature"
     assert(distance == 1.7)
 end)
 
-case("Model ground projection is independent of native camera size and pivot", function()
+case("Measured model bounds fit the viewport at every size and origin", function()
     local client = adapter("12.1.5")
-    local size = 2
-    local camera, target, centered
-    local model = {
-        SetCamera = function(_, index)
-            assert(index == 0)
-            camera, target = { size, 0, size * 0.7 }, { 0, 0, size * 0.7 }
-        end,
-        GetCameraPosition = function()
-            return unpack(camera)
-        end,
-        GetCameraTarget = function()
-            return unpack(target)
-        end,
-        SetPortraitZoom = function() end,
-        SetCamDistanceScale = function() end,
-        SetFacing = function() end,
-        SetCustomCamera = function() end,
-        SetCameraPosition = function(_, x, y, z)
-            camera = { x, y, z }
-        end,
-        SetCameraTarget = function(_, x, y, z)
-            target = { x, y, z }
-        end,
-        UseModelCenterToTransform = function(_, value)
-            centered = value
-        end,
-    }
-    for _, scale in ipairs({ 2, 8, 3 }) do
-        size = scale
-        for _ = 1, 2 do
-            client.FrameModel(model, true)
-            assert(centered == false)
-            assert(camera[1] == size and camera[2] == 0)
-            assert(target[1] == 0 and target[2] == 0)
-            assert(camera[3] == target[3])
-            assert(math.abs(target[3] / camera[1] - 0.2) < 0.00001)
+    for _, aspect in ipairs({ 260 / 240, 360 / 240 }) do
+        for _, size in ipairs({ 0.1, 1, 100 }) do
+            for _, pivot in ipairs({ -50, 0, 80 }) do
+                local bottom = { x = -3 * size, y = -size, z = pivot }
+                local top = { x = 5 * size, y = 2 * size, z = pivot + 6 * size }
+                local scale, x, y, z = client.ModelFit(bottom, top, bottom, aspect)
+                assert(scale and scale > 0)
+                assert((bottom.z - z) * scale == 0)
+                local radius = math.sqrt((top.x - bottom.x) ^ 2 + (top.y - bottom.y) ^ 2) / 2
+                local distance = 6 - radius * scale
+                local halfHeight = distance * math.tan(0.25)
+                assert(radius * scale < halfHeight * aspect)
+                assert((top.z - z) * scale - 0.6 < halfHeight)
+                assert(0.6 < halfHeight)
+                assert(math.abs(x / size - 1) < 0.00001 and math.abs(y / size - 0.5) < 0.00001)
+                local larger = client.ModelFit(
+                    { x = bottom.x * 2, y = bottom.y * 2, z = bottom.z * 2 },
+                    { x = top.x * 2, y = top.y * 2, z = top.z * 2 },
+                    { x = bottom.x * 2, y = bottom.y * 2, z = bottom.z * 2 },
+                    aspect
+                )
+                assert(math.abs(larger * 2 / scale - 1) < 0.00001)
+            end
         end
     end
-    size = 0
-    client.FrameModel(model, true)
-    assert(camera[1] == 0) -- Unloaded assets keep their native camera until loading completes.
+    assert(not client.ModelFit(nil, nil, nil, 1))
+    assert(not client.ModelFit({ x = 0, y = 0, z = 0 }, { x = 0, y = 0, z = 0 }, {}, 1))
+end)
+
+case("Actor loading binds through its XML template without frame script methods", function()
+    local called, creates = 0, 0
+    local actor = setmetatable({ SetAlpha = function() end }, {
+        __index = function(_, key)
+            error("Unexpected actor method: " .. key)
+        end,
+    })
+    local methods = {}
+    for _, name in ipairs({
+        "SetAllPoints",
+        "EnableMouse",
+        "SetCameraFieldOfView",
+        "SetCameraPosition",
+        "SetCameraOrientationByAxisVectors",
+        "SetCameraNearClip",
+        "SetCameraFarClip",
+        "SetLightAmbientColor",
+        "SetLightDiffuseColor",
+        "SetLightDirection",
+        "SetLightVisible",
+        "SetModelAlpha",
+        "Hide",
+        "SetScript",
+        "SetAlpha",
+    }) do
+        methods[name] = function() end
+    end
+    methods.CreateActor = function(_, name, template)
+        assert(name == nil and template == "WoWIdleAdventureActorTemplate")
+        return actor
+    end
+    local client = adapter("12.1.5", {
+        CreateFrame = function(kind, _, parent)
+            creates = creates + 1
+            assert(kind == ({ "Frame", "PlayerModel", "ModelScene" })[creates])
+            return setmetatable({
+                parent = parent,
+                alpha = 1,
+                SetAlpha = function(self, alpha)
+                    self.alpha = alpha
+                end,
+                GetModelFileID = function()
+                    return 42
+                end,
+            }, { __index = methods })
+        end,
+    })
+    local model = client.CreateAdventureModel({}, function()
+        called = called + 1
+    end)
+    assert(model.adventureActor == actor and creates == 3)
+    assert(model.appearanceSource.parent == model)
+    assert(model.adventureScene.parent == model)
+    assert(model.appearanceSource.alpha == 0)
+    assert(model.alpha == 1 and model.adventureScene.alpha == 1)
+    assert(model:GetModelFileID() == 42)
+    model:SetAlpha(0.5)
+    assert(model.appearanceSource.alpha == 0 and model.adventureScene.alpha == 1)
+    actor.onModelLoaded()
+    assert(called == 1)
+end)
+
+case("Geometry retries stop after success or a bounded loading window", function()
+    local client = adapter("12.1.5")
+    local update, calls, finishAt = nil, 0, nil
+    local scene = {
+        SetScript = function(_, script, callback)
+            assert(script == "OnUpdate")
+            update = callback
+        end,
+    }
+    local model = {
+        adventureScene = scene,
+        onModelLoaded = function()
+            calls = calls + 1
+            if calls == finishAt then
+                scene:SetScript("OnUpdate", nil)
+            end
+        end,
+    }
+    client.AwaitAdventureModel(model)
+    for _ = 1, 50 do
+        assert(update)
+        update(scene, 0.1)
+    end
+    assert(not update and calls == 50)
+    calls, finishAt = 0, 2
+    client.AwaitAdventureModel(model)
+    update(scene, 0.1)
+    update(scene, 0.1)
+    assert(not update and calls == 2)
+end)
+
+case("Actor framing waits for geometry and stays fixed through animation", function()
+    local client = adapter("12.1.5")
+    local loaded, fits, loads = false, 0, 0
+    local position, actorScale, yaw, transmog
+    local actor = {
+        SetScale = function(_, scale)
+            actorScale = scale
+        end,
+        SetPosition = function(_, x, y, z)
+            position = { x, y, z }
+        end,
+        SetUseCenterForOrigin = function() end,
+        SetUseTransmogSkin = function(_, enabled)
+            transmog = enabled
+        end,
+        SetModelByUnit = function(_, unit, sheathed, autoDress, hideWeapons, nativeForm)
+            assert(transmog == true)
+            assert(unit == "player" and sheathed == false and autoDress == true)
+            assert(hideWeapons == false and nativeForm == true)
+        end,
+        SetAnimation = function() end,
+        SetYaw = function(_, angle)
+            yaw = angle
+        end,
+        SetModelByCreatureDisplayID = function(_, display)
+            assert(display == 123)
+            loads = loads + 1
+        end,
+        IsLoaded = function()
+            return loaded
+        end,
+        GetMaxBoundingBox = function()
+            fits = fits + 1
+            return -2, -1, -3, 2, 1, 5
+        end,
+        GetActiveBoundingBox = function()
+            return -2, -1, -2, 2, 1, 4
+        end,
+        SetAlpha = function() end,
+        Show = function() end,
+    }
+    local visible = false
+    local model = {
+        adventureActor = actor,
+        adventureScene = {
+            SetScript = function() end,
+            GetWidth = function()
+                return 360
+            end,
+            GetHeight = function()
+                return 240
+            end,
+            Show = function()
+                visible = true
+            end,
+        },
+        GetDisplayInfo = function()
+            return 123
+        end,
+    }
+    local spec = { key = "enemy:test", creatureID = 1 }
+    assert(not client.FrameAdventureModel(model, true, spec))
+    assert(not visible and fits == 0)
+    loaded = true
+    assert(client.FrameAdventureModel(model, true, spec))
+    assert(visible and fits == 1 and loads == 1)
+    assert(transmog == false)
+    assert(yaw == 1.05)
+    assert(math.abs(position[3] - 2 * actorScale) < 0.00001)
+    assert(client.FrameAdventureModel(model, true, spec))
+    assert(fits == 1 and loads == 1)
+    local normalScale = actorScale
+    assert(client.FrameAdventureModel(model, true, {
+        key = "enemy:particles",
+        creatureID = 2,
+        framing = { cameraDistance = 2.3 },
+    }))
+    assert(actorScale < normalScale)
+    actor.GetActiveBoundingBox = function() end
+    assert(
+        client.FrameAdventureModel(model, true, { key = "enemy:delayed-bounds", creatureID = 3 })
+    )
+    assert(math.abs(position[3] - 3 * actorScale) < 0.00001)
+    assert(client.FrameAdventureModel(model, false, { key = "companion:test", creatureID = 4 }))
+    assert(yaw == -1.05)
+    assert(client.FrameAdventureModel(model, false, { key = "player:test", unit = "player" }))
+    assert(transmog == true)
+    assert(client.FrameAdventureModel(model, true, { key = "enemy:reset", creatureID = 5 }))
+    assert(transmog == false)
 end)
 
 case("Native map hit testing resolves city submaps to their adventure zone", function()

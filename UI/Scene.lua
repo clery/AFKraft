@@ -77,7 +77,11 @@ local function modelLoaded(unit, enemy)
         if not wasReady then
             unit.appeared = GetTime()
         end
-        pcall(W.Client.FrameModel, unit.model, enemy, unit.modelSpec)
+        local ok, framed = pcall(W.Client.FrameModel, unit.model, enemy, unit.modelSpec)
+        unit.modelReady = ok and framed == true
+        if not unit.modelReady then
+            return
+        end
         W.Client.AnimateModel(
             unit.model,
             unit.dead and (unit.deathTime and 1 or 6) or baseAnimation(unit)
@@ -147,19 +151,13 @@ function Scene.Create(parent)
         -- footprint, leaving room for tails, weapons, particles and attack poses.
         unit.viewport = CreateFrame("Frame", nil, unit)
         unit.viewport:SetPoint("BOTTOM", unit, "BOTTOM", 0, 0)
-        unit.viewport:SetSize(friendly and 260 or 360, 240)
+        unit.viewport:SetSize(360, 240)
         unit.viewport:SetClipsChildren(false)
-        unit.model = CreateFrame("PlayerModel", nil, unit.viewport)
-        unit.model:SetAllPoints(unit.viewport)
-        unit.model:EnableMouse(false)
-        unit.model:SetScript("OnModelLoaded", function()
+        unit.model = W.Client.CreateAdventureModel(unit.viewport, function()
             modelLoaded(unit, not friendly)
         end)
-        if unit.model:HasScript("OnAnimFinished") then
-            unit.model:SetScript("OnAnimFinished", function()
-                Scene.FinishAnimation(unit)
-            end)
-        end
+        unit.model:SetAllPoints(unit.viewport)
+        unit.model:EnableMouse(false)
         unit.plate = CreateFrame("Frame", nil, self.nameplates)
         unit.plate:SetSize(132, 52)
         unit.plate:SetPoint("TOP", unit, "TOP")

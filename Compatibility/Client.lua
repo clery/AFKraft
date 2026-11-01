@@ -127,46 +127,15 @@ function A.FrameModel(model, enemy, spec)
     if model.SetDoBlend then
         model:SetDoBlend(true)
     end
-    -- Discard a previous slot's custom camera before reading the native framing.
-    if model.SetCamera then
-        model:SetCamera(0)
+    if model.adventureScene then
+        return A.FrameAdventureModel(model, enemy, spec)
     end
     model:SetPortraitZoom(0)
     model:SetCamDistanceScale(
         spec and spec.framing and spec.framing.cameraDistance or (enemy and 1.7 or 1.5)
     )
     model:SetFacing(enemy and -1.05 or 1.05)
-    if
-        model.GetCameraPosition
-        and model.GetCameraTarget
-        and model.SetCustomCamera
-        and model.SetCameraPosition
-        and model.SetCameraTarget
-        and model.UseModelCenterToTransform
-    then
-        local x, y, z = model:GetCameraPosition()
-        local tx, ty, tz = model:GetCameraTarget()
-        if
-            type(x) == "number"
-            and type(y) == "number"
-            and type(z) == "number"
-            and type(tx) == "number"
-            and type(ty) == "number"
-            and type(tz) == "number"
-        then
-            local distance = math.sqrt((x - tx) ^ 2 + (y - ty) ^ 2 + (z - tz) ^ 2)
-            if distance > 0 and distance < math.huge then
-                -- Keep the native size fit, but project the ground origin to the
-                -- same viewport height for every creature, independent of size.
-                -- Rotating around the mesh center would move off-center models.
-                local height = distance * 0.2
-                model:UseModelCenterToTransform(false)
-                model:SetCustomCamera(1)
-                model:SetCameraPosition(distance, 0, height)
-                model:SetCameraTarget(0, 0, height)
-            end
-        end
-    end
+    return true
 end
 
 -- AnimationData sequences; individual creature models may lack weapon poses.
@@ -204,7 +173,7 @@ function A.AnimateModel(model, animation)
             end
         end
         if animation then
-            model:SetAnimation(animation)
+            (model.adventureActor or model):SetAnimation(animation)
             return true
         end
         return false
@@ -222,6 +191,15 @@ function A.ConfigureModel(model, spec, enemy)
     end
     return pcall(function()
         model:ClearModel()
+        if model.adventureScene then
+            model.adventureKey = nil
+            model.adventureFittedKey = nil
+            model.adventureActor:ClearModel()
+            model.adventureActor:SetAlpha(0)
+            model.adventureScene:Show()
+            model.appearanceSource:SetAlpha(0)
+            A.AwaitAdventureModel(model)
+        end
         if spec.unit then
             model:SetUnit(spec.unit)
         else

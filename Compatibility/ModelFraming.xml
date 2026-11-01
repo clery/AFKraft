@@ -1,0 +1,11 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Actor name="WoWIdleAdventureActorTemplate" virtual="true">
+        <Scripts>
+            <OnModelLoaded>
+                if self.onModelLoaded then
+                    self.onModelLoaded()
+                end
+            </OnModelLoaded>
+        </Scripts>
+    </Actor>
+</Ui>
