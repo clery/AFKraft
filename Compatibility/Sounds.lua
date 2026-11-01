@@ -54,7 +54,8 @@ local cues = {
     victory = { "soundEncounters", "IG_QUEST_LIST_COMPLETE", 3, 8 },
     bossVictory = { "soundEncounters", "UI_ADVENTURES_ADVENTURE_SUCCESS_COMPLETE", 4, 8 },
     defeat = { "soundEncounters", "UI_ADVENTURES_ADVENTURE_FAILURE_COMPLETE", 4, 8 },
-    levelup = { "soundProgression", "UI_GARRISON_COMMAND_TABLE_FOLLOWER_LEVEL_UP", 5, 2 },
+    -- Native character level-up fanfare (SoundKit 888, sound/spells/levelup.ogg).
+    levelup = { "soundProgression", 888, 5, 4 },
     unlock = { "soundProgression", "UI_GARRISON_FOLLOWER_LEARN_TRAIT", 5, 2 },
     train = { "soundProgression", "UI_GARRISON_FOLLOWER_LEARN_TRAIT", 5, 2 },
     prestige = { "soundProgression", "UI_SCENARIO_ENDING", 6, 2 },
@@ -68,6 +69,7 @@ local cues = {
 local pending, last = nil, {}
 local quietUntil = -math.huge
 local handle
+local levelUpQuietUntil = -math.huge
 
 function Audio.Stop()
     pending = nil
@@ -75,6 +77,7 @@ function Audio.Stop()
         pcall(StopSound, handle)
     end
     handle = nil
+    levelUpQuietUntil = -math.huge
 end
 
 local function audible(state)
@@ -124,10 +127,15 @@ function Audio.Flush()
         return
     end
     local now = GetTime()
+    -- Let the fanfare ring out without an ordinary hit, loot or unlock cue
+    -- stopping it on the next controller frame. Prestige can still supersede it.
+    if now < levelUpQuietUntil and cue[3] <= 5 then
+        return
+    end
     if cue[3] < 4 and now < quietUntil then
         return
     end
-    local kit = SOUNDKIT and SOUNDKIT[cue[2]]
+    local kit = type(cue[2]) == "number" and cue[2] or SOUNDKIT and SOUNDKIT[cue[2]]
     if type(kit) ~= "number" or kit <= 0 or not PlaySound then
         return
     end
@@ -136,6 +144,9 @@ function Audio.Flush()
     local ok, played, soundHandle = pcall(PlaySound, kit, "SFX", false)
     if ok and played then
         handle = soundHandle
+        if kit == 888 then
+            levelUpQuietUntil = now + 4
+        end
         last[cue[1]] = now
         quietUntil = now + (cue[3] >= 4 and 2.5 or 0.65)
     end

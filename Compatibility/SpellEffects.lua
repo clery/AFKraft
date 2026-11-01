@@ -16,7 +16,7 @@ local retail = {
     slash = { fileID = 1274646, width = 160, height = 180 }, -- Cleave impact
     burst = { fileID = 1634276, width = 210, height = 240 }, -- Holy Nova impact
     sparkle = { fileID = 166698, width = 210, height = 240 }, -- Reputation reward
-    levelup = { fileID = 166464, width = 260, height = 240 }, -- Level Up
+    levelup = { fileID = 166464, width = 260, height = 240, glow = 1 }, -- Level Up
     impact = { fileID = 165559, width = 140, height = 160 }, -- Aimed Shot impact
 }
 local impacts = {
@@ -55,6 +55,13 @@ function A.FrameSpellEffect(model, spec, direction)
         return false
     end
     return pcall(function()
+        -- Particle emitters and native bloom are separate from the animated mesh.
+        if model.SetParticlesEnabled then
+            model:SetParticlesEnabled(true)
+        end
+        if model.SetGlow then
+            model:SetGlow(spec.glow or 0)
+        end
         model:SetCamera(0)
         model:SetPortraitZoom(0)
         model:SetCamDistanceScale(1)
@@ -71,6 +78,9 @@ function A.LoadSpellEffect(model, spec)
     end
     return pcall(function()
         model:ClearModel()
+        if model.SetParticlesEnabled then
+            model:SetParticlesEnabled(true)
+        end
         model:SetModel(spec.fileID)
     end)
 end

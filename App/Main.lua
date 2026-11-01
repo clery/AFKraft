@@ -227,7 +227,7 @@ function root.Update(_, dt)
     W.state.lastTime = math.max(W.state.lastTime or 0, A.Now())
     if W.UI then
         if W.UI.frame:IsShown() then
-            W.UI.scene:Animate()
+            W.UI.scene:Animate(dt, elapsed / 0.25)
         else
             W.state.events = nil
         end

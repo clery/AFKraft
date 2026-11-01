@@ -54,18 +54,37 @@ return {
             end
             emit("levelup")
             n.Audio.Flush()
-            assert(#played == 1 and played[1] == #"UI_GARRISON_COMMAND_TABLE_FOLLOWER_LEVEL_UP")
-            advance(3)
+            assert(#played == 1 and played[1] == 888)
+            advance(4)
             emit("hit")
             n.Audio.Flush()
-            advance(3.5)
+            advance(4.5)
             emit("hit")
             n.Audio.Flush()
             assert(#played == 2)
-            advance(5)
+            advance(6)
             emit("hit")
             n.Audio.Flush()
             assert(#played == 3)
+        end,
+    },
+    {
+        "Character level-up fanfare is native and cannot be interrupted by ordinary cues",
+        function()
+            local n, emit, played, advance, env = fixture()
+            env.SOUNDKIT = {}
+            emit("levelup")
+            n.Audio.Flush()
+            assert(#played == 1 and played[1] == 888)
+            env.SOUNDKIT.UI_GARRISON_FOLLOWER_LEARN_TRAIT = 1
+            advance(2.5)
+            emit("unlock")
+            n.Audio.Flush()
+            assert(#played == 1)
+            advance(4)
+            emit("unlock")
+            n.Audio.Flush()
+            assert(#played == 2)
         end,
     },
     {

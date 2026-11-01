@@ -554,7 +554,7 @@ test("Adventure models follow combat positions with roomy transparent viewports"
     scene.lastAnimation = GetTime() - 0.05
     scene:Animate()
     assertTrue(front.travelling)
-    assertEquals(partyX, front.x)
+    assertTrue(front.x < partyX)
     state.ui.compact = true
     W.UI:ApplyMode()
     assertTrue(enemy.name:IsShown())
@@ -693,7 +693,7 @@ test(
     end
 )
 
-test("New combat effects reuse projectiles for impacts and celebrate living heroes", function()
+test("Combat effects reuse projectiles for impacts without level-up flashes on victory", function()
     local W = WoWIdle
     local state = W.Game.New(W.Client.Now())
     for _, class in ipairs({ "WARRIOR", "SHAMAN", "DRUID", "WARLOCK" }) do
@@ -725,6 +725,7 @@ test("New combat effects reuse projectiles for impacts and celebrate living hero
     effects:Clear()
     scene.units[1].dead = true
     effects:Event(scene.units, state, { kind = "victory" })
+    effects:Event(scene.units, state, { kind = "loot" })
     local active = 0
     for _, effect in ipairs(effects.pool) do
         if effect.active then
@@ -733,7 +734,7 @@ test("New combat effects reuse projectiles for impacts and celebrate living hero
             assertTrue(effect.target ~= scene.units[1])
         end
     end
-    assertEquals(3, active)
+    assertEquals(0, active)
     state.events = { { kind = "cast", source = 2, action = "special" } }
     scene:Refresh(state)
     local burst
@@ -744,46 +745,49 @@ test("New combat effects reuse projectiles for impacts and celebrate living hero
     effects:Clear()
 end)
 
-test("Model reactions leave encounter coordinates alone and celebrations return to idle", function()
-    local W = WoWIdle
-    local state = W.Game.New(W.Client.Now())
-    W.Game.AddHero(state, "WARRIOR")
-    W.state = state
-    W.Game.StartBattle(state)
-    W.UI:SetTab("adventure")
-    local scene = W.UI.scene
-    scene:Refresh(state)
-    local unit = scene.units[1]
-    unit.x, unit.y = unit.combatant.x, unit.combatant.y
-    unit.velocityX, unit.velocityY = 0, 0
-    unit.modelReady = true
-    unit.appeared = GetTime() - 0.175
-    state.events = { { kind = "hit", source = 1, target = 1, amount = 1, enemy = false } }
-    scene:Refresh(state)
-    unit.recoilAt, unit.actionAt = GetTime() - 0.15, nil
-    local x, y = unit.combatant.x, unit.combatant.y
-    scene:Animate()
-    assertTrue(unit.visualOffset < -5)
-    assertEquals(x, unit.x)
-    assertEquals(y, unit.y)
-    assertEquals(x, unit.combatant.x)
-    assertTrue(unit.model:GetAlpha() > 0.4 and unit.model:GetAlpha() < 0.6)
-    state.events = { { kind = "victory" } }
-    scene:Refresh(state)
-    assertTrue(unit.celebrateUntil ~= nil)
-    unit.celebrateUntil = GetTime() - 1
-    scene:Animate()
-    assertEquals(nil, unit.celebrateUntil)
-    assertEquals(nil, unit.pendingAnimation)
-    assertEquals(nil, unit.animTime)
-    unit.combatant.hp = 0
-    scene:Refresh(state)
-    unit.defeatedAt = GetTime() - 2
-    unit.appeared = GetTime() - 3
-    scene:Animate()
-    assertTrue(unit.model:GetAlpha() > 0.3 and unit.model:GetAlpha() < 0.8)
-    assertEquals(0, unit.visualOffset)
-end)
+test(
+    "Model reactions leave encounter coordinates alone and victory does not trigger level-up",
+    function()
+        local W = WoWIdle
+        local state = W.Game.New(W.Client.Now())
+        W.Game.AddHero(state, "WARRIOR")
+        W.state = state
+        W.Game.StartBattle(state)
+        W.UI:SetTab("adventure")
+        local scene = W.UI.scene
+        scene:Refresh(state)
+        local unit = scene.units[1]
+        unit.x, unit.y = unit.combatant.x, unit.combatant.y
+        unit.velocityX, unit.velocityY = 0, 0
+        unit.modelReady = true
+        unit.appeared = GetTime() - 0.175
+        state.events = { { kind = "hit", source = 1, target = 1, amount = 1, enemy = false } }
+        scene:Refresh(state)
+        unit.recoilAt, unit.actionAt = GetTime() - 0.15, nil
+        local x, y = unit.combatant.x, unit.combatant.y
+        scene:Animate()
+        assertTrue(unit.visualOffset < -5)
+        assertEquals(x, unit.x)
+        assertEquals(y, unit.y)
+        assertEquals(x, unit.combatant.x)
+        assertTrue(unit.model:GetAlpha() > 0.4 and unit.model:GetAlpha() < 0.6)
+        state.events = { { kind = "victory" } }
+        scene:Refresh(state)
+        assertEquals(nil, unit.celebrateUntil)
+        assertEquals(nil, unit.levelUpUntil)
+        scene:Animate()
+        assertEquals(nil, unit.celebrateUntil)
+        assertEquals(nil, unit.pendingAnimation)
+        assertEquals(nil, unit.animTime)
+        unit.combatant.hp = 0
+        scene:Refresh(state)
+        unit.defeatedAt = GetTime() - 2
+        unit.appeared = GetTime() - 3
+        scene:Animate()
+        assertTrue(unit.model:GetAlpha() > 0.3 and unit.model:GetAlpha() < 0.8)
+        assertEquals(0, unit.visualOffset)
+    end
+)
 
 test(
     "Hunter shooting completion restores combat stance and the watchdog covers missing callbacks",
@@ -869,3 +873,184 @@ test("Native spell models wait for matching assets and reject late recycled call
     assertEquals(nil, W.Client.SpellEffectSpec("shield"))
     W.Client.flavor = flavor
 end)
+
+test("Render motion advances each OnUpdate frame even when GetTime is unchanged", function()
+    local W = WoWIdle
+    local state = W.Game.New(W.Client.Now())
+    W.Game.AddHero(state, "WARRIOR")
+    W.state = state
+    W.Game.StartBattle(state)
+    W.UI.frame:Show()
+    W.UI:SetTab("adventure")
+    local scene = W.UI.scene
+    scene:Refresh(state)
+    local unit = scene.units[1]
+    unit.x, unit.y = unit.combatant.x, unit.combatant.y
+    unit.velocityX, unit.velocityY = 0, 0
+    local clock, fixed = GetTime, GetTime()
+    GetTime = function()
+        return fixed
+    end
+    local ok, message = pcall(function()
+        -- Establish the initial sample, then advance the fixed-step simulation
+        -- only once. All remaining motion must happen on individual render frames.
+        scene:Animate(1 / 60, 0)
+        state.battle.elapsed = 0.25
+        unit.combatant.x = unit.combatant.x + 80
+        for frame = 1, 14 do
+            local x = unit.x
+            scene:Animate(1 / 60, frame / 15)
+            assertTrue(unit.x > x)
+            assertTrue(unit.x - x < 8)
+            local _, _, _, anchoredX = unit:GetPoint()
+            assertTrue(math.abs(anchoredX - unit.x) < 0.001)
+        end
+        -- The next stationary tick must not replay the previous 80-pixel step.
+        state.battle.elapsed = 0.5
+        scene:Animate(1 / 60, 0)
+        assertEquals(unit.combatant.x, unit.previousX)
+        assertEquals(unit.combatant.x, unit.targetX)
+        scene.travelling = true
+        scene:Animate(1 / 60, 0.9)
+        scene:Animate(1 / 60, 0)
+        assertEquals(unit.combatant.x, unit.targetX)
+    end)
+    GetTime = clock
+    assertTrue(ok, message)
+end)
+
+test(
+    "The live controller supplies render elapsed and the fixed-step interpolation fraction",
+    function()
+        local W = WoWIdle
+        local state = W.Game.New(W.Client.Now())
+        W.Game.AddHero(state, "WARRIOR")
+        W.state = state
+        W.Game.StartBattle(state)
+        W.UI.frame:Show()
+        W.UI:SetTab("adventure")
+        local scene, animate = W.UI.scene, W.UI.scene.Animate
+        local calls = 0
+        scene.Animate = function(_, elapsed, fraction)
+            assertEquals(1 / 120, elapsed)
+            assertTrue(fraction >= 0 and fraction < 1)
+            calls = calls + 1
+        end
+        local ok, message = pcall(function()
+            for _ = 1, 60 do
+                W.Controller.Update(nil, 1 / 120)
+            end
+            assertEquals(60, calls)
+        end)
+        scene.Animate = animate
+        assertTrue(ok, message)
+    end
+)
+
+test(
+    "Level-up models enable their native particles and glow alongside the animated mesh",
+    function()
+        local W = WoWIdle
+        local spec = W.Client.SpellEffectSpec("levelup")
+        local particles, glow, loaded
+        local model = {
+            ClearModel = function() end,
+            SetParticlesEnabled = function(_, enabled)
+                particles = enabled
+            end,
+            SetGlow = function(_, value)
+                glow = value
+            end,
+            SetModel = function(_, fileID)
+                assertTrue(particles)
+                loaded = fileID
+            end,
+            SetCamera = function() end,
+            SetPortraitZoom = function() end,
+            SetCamDistanceScale = function() end,
+            SetFacing = function() end,
+            SetAnimation = function() end,
+        }
+        assertTrue(W.Client.LoadSpellEffect(model, spec))
+        assertEquals(166464, loaded)
+        assertTrue(W.Client.FrameSpellEffect(model, spec))
+        assertTrue(particles)
+        assertEquals(1, glow)
+        assertTrue(W.Client.FrameSpellEffect(model, W.Client.SpellEffectSpec("heal")))
+        assertEquals(0, glow)
+    end
+)
+
+test(
+    "The party slides into formation together and keeps a synchronized run through travel",
+    function()
+        local W = WoWIdle
+        local state = W.Game.New(W.Client.Now())
+        for _, class in ipairs({ "WARRIOR", "HUNTER", "ROGUE", "PRIEST", "MAGE" }) do
+            W.Game.AddHero(state, class)
+        end
+        W.state = state
+        W.Game.StartBattle(state)
+        W.UI.frame:Show()
+        W.UI:SetTab("adventure")
+        local scene = W.UI.scene
+        scene:Refresh(state)
+        for i = 1, 5 do
+            local unit = scene.units[i]
+            unit.modelReady = true
+            unit.x = i == 1 and 640 or i == 3 and 590 or unit.homeX
+            unit.y = unit.homeY
+            unit.combatant.x = unit.x
+            unit.combatant.y = unit.y
+        end
+        local battle = state.battle
+        local animate, runs = W.Client.AnimateModel, {}
+        W.Client.AnimateModel = function(model, animation)
+            if animation == 5 then
+                runs[model] = (runs[model] or 0) + 1
+            end
+            return true
+        end
+        local ok, message = pcall(function()
+            state.battle = nil
+            state.events = { { kind = "victory" }, { kind = "loot" } }
+            scene:Refresh(state)
+            assertNotNil(scene.regroup)
+            local front, rogue = scene.units[1], scene.units[3]
+            scene:Animate(0.1, 0)
+            assertTrue(front.x < 640 and front.x > front.homeX)
+            assertTrue(rogue.x < 590 and rogue.x > rogue.homeX)
+            local first = (640 - front.x) / (640 - front.homeX)
+            local third = (590 - rogue.x) / (590 - rogue.homeX)
+            assertTrue(math.abs(first - third) < 0.0001)
+            for _ = 1, 60 do
+                scene:Animate(1 / 60, 0)
+            end
+            assertEquals(nil, scene.regroup)
+            for i = 1, 5 do
+                local unit = scene.units[i]
+                assertEquals(unit.homeX, unit.x)
+                assertEquals(unit.homeY, unit.y)
+                assertEquals(1, runs[unit.model])
+                assertTrue(unit.travelling)
+                assertEquals(nil, unit.levelUpUntil)
+                assertEquals(nil, unit.pendingAnimation)
+            end
+            -- Presentation must not rewrite the finished battle or start another one.
+            assertEquals(640, battle.heroes[1].x)
+            assertEquals(590, battle.heroes[3].x)
+            assertEquals(nil, state.battle)
+            state.events = { { kind = "levelup", target = 2 } }
+            scene:Refresh(state)
+            assertNotNil(scene.units[2].levelUpUntil)
+            assertEquals(nil, scene.units[1].levelUpUntil)
+            W.Game.StartBattle(state)
+            scene:Refresh(state)
+            assertEquals(nil, scene.regroup)
+            assertTrue(scene.units[1].inCombat)
+            assertFalse(scene.units[1].travelling)
+        end)
+        W.Client.AnimateModel = animate
+        assertTrue(ok, message)
+    end
+)

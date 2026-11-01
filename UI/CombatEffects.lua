@@ -2,8 +2,7 @@ local _, W = ...
 local Effects = {}
 W.CombatEffects = Effects
 
-local durations =
-    { shield = 1.1, heal = 0.8, slash = 0.5, burst = 0.8, sparkle = 1.2, impact = 0.6 }
+local durations = { shield = 1.1, heal = 0.8, slash = 0.5, burst = 0.8, impact = 0.6 }
 local projectiles = { arrow = true, bolt = true, shadow = true, leaf = true, lightning = true }
 
 local function position(unit)
@@ -112,15 +111,7 @@ function Effects:Play(source, target, kind, class)
 end
 
 function Effects:Event(units, state, event)
-    if event.kind == "victory" or event.kind == "loot" then
-        for i = 1, 5 do
-            local unit = units[i]
-            if unit and not unit.dead then
-                self:Play(unit, unit, "sparkle")
-            end
-        end
-        return
-    elseif event.kind == "cast" and event.action == "special" then
+    if event.kind == "cast" and event.action == "special" then
         local unit = units[event.source]
         if unit then
             self:Play(unit, unit, "burst", unit.class)

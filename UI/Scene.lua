@@ -4,9 +4,6 @@ local Scene = {}
 W.Scene = Scene
 
 local function baseAnimation(unit)
-    if unit.celebrateUntil and GetTime() < unit.celebrateUntil then
-        return W.Client.animations.cheer
-    end
     if unit.moving or unit.travelling then
         return 5
     end
@@ -17,7 +14,9 @@ function Scene.FinishAnimation(unit)
     if unit.animTime and not unit.dead then
         -- Clear first: restoring the looping stance must not finish the attack again.
         unit.animTime, unit.animDuration = nil, nil
-        W.Client.AnimateModel(unit.model, baseAnimation(unit))
+        local pose = baseAnimation(unit)
+        W.Client.AnimateModel(unit.model, pose)
+        unit.basePose = pose
     end
 end
 
@@ -39,6 +38,22 @@ function Scene.MoveUnit(unit, elapsed)
     unit.y, unit.velocityY = smoothCoordinate(unit.y, unit.velocityY or 0, unit.targetY, elapsed)
     local dx, dy = unit.targetX - unit.x, unit.targetY - unit.y
     return dx * dx + dy * dy > 0.04 or math.abs(unit.velocityX) + math.abs(unit.velocityY) > 0.5
+end
+
+function Scene:BeginRegroup()
+    self.regroup = { elapsed = 0, duration = 0.8 }
+    for i = 1, 5 do
+        local unit = self.units[i]
+        unit.regroupX, unit.regroupY = unit.x, unit.y
+        unit.pendingAnimation, unit.animTime, unit.animDuration = nil, nil, nil
+        unit.actionAt, unit.recoilAt = nil, nil
+        unit.velocityX, unit.velocityY = 0, 0
+        if unit:IsShown() and not unit.dead and unit.modelReady then
+            -- Start the whole company together, including stationary ranged heroes.
+            W.Client.AnimateModel(unit.model, 5)
+            unit.basePose = 5
+        end
+    end
 end
 
 local function modelAlpha(unit, now)
@@ -213,17 +228,20 @@ function Scene:Refresh(s)
     local z = C.zoneByID[s.zone]
     if self.renderState ~= s or self.zone ~= s.zone then
         self.effects:Clear()
+        self.regroup = nil
         self.lastBattle = nil
         self.renderState, self.zone = s, s.zone
     end
     local freshBattle = s.battle and s.battle ~= self.lastBattle
     if freshBattle then
         self.effects:Clear()
+        self.regroup = nil
     end
     if s.battle then
         self.lastBattle = s.battle
     end
     local b = s.battle or self.lastBattle
+    local wasTravelling = self.travelling
     self.travelling = s.battle == nil
     if s.battle then
         P.Ensure(s, s.battle)
@@ -250,8 +268,8 @@ function Scene:Refresh(s)
         if present and not self.management then
             if freshBattle then
                 unit.dead, unit.deathTime, unit.animTime = false, nil, nil
-                unit.moving = nil
-                unit.recoilAt, unit.actionAt, unit.celebrateUntil = nil, nil, nil
+                unit.moving, unit.basePose = nil, nil
+                unit.recoilAt, unit.actionAt = nil, nil
                 if i > 5 then
                     unit.velocityX, unit.velocityY = 0, 0
                     unit.appeared = GetTime()
@@ -264,20 +282,29 @@ function Scene:Refresh(s)
             local combatant = hero and b and b.heroes[i] or enemy
             unit.class = hero and hero.class
             unit.combatant = combatant
+            unit.homeX = combatant and combatant.homeX or 40 + (i - 1) * 112
+            unit.homeY = combatant and combatant.homeY or 96 + (i - 1) * 9
             unit.melee = combatant and combatant.melee or false
             unit.inCombat = s.battle ~= nil and combatant ~= nil
             unit.travelling = hero ~= nil and self.travelling
             if unit.wasInCombat ~= unit.inCombat then
                 unit.wasInCombat = unit.inCombat
-                if unit.modelReady and not unit.dead and not unit.animTime then
+                if
+                    unit.modelReady
+                    and not unit.dead
+                    and not unit.animTime
+                    and not unit.travelling
+                then
                     W.Client.AnimateModel(unit.model, baseAnimation(unit))
                 end
             end
-            local x = combatant and combatant.x or (30 + (i - 1) * 112)
-            local y = combatant and combatant.y or 110
+            local x = unit.travelling and unit.homeX or combatant and combatant.x or unit.homeX
+            local y = unit.travelling and unit.homeY or combatant and combatant.y or unit.homeY
             unit.targetX, unit.targetY = x, y
             if freshBattle then
                 unit.pendingAnimation = nil
+                unit.sampleTime, unit.sampleX, unit.sampleY = nil, nil, nil
+                unit.previousX, unit.previousY = nil, nil
                 unit.x = hero and (unit.x or x) or x
                 unit.y = hero and (unit.y or y) or y
             else
@@ -341,6 +368,9 @@ function Scene:Refresh(s)
             unit.detail:SetText(hp > 0 and detail or "Defeated")
         end
     end
+    if self.travelling and not wasTravelling and b then
+        self:BeginRegroup()
+    end
     if s.events then
         if not self.management then
             for _, event in ipairs(s.events) do
@@ -366,14 +396,6 @@ function Scene:Refresh(s)
                         unit.floatAnimation:Stop()
                         unit.floating:SetAlpha(1)
                         unit.floatAnimation:Play()
-                    end
-                elseif event.kind == "victory" then
-                    for i = 1, 5 do
-                        local unit = self.units[i]
-                        if unit:IsShown() and not unit.dead then
-                            unit.pendingAnimation = W.Client.animations.cheer
-                            unit.celebrateUntil = GetTime() + 1.6
-                        end
                     end
                 elseif event.kind == "levelup" and event.target then
                     local unit = self.units[event.target]
@@ -437,28 +459,61 @@ function Scene:PlaceNameplates()
 end
 
 -- Presentation advances at the frame rate, independently of simulation ticks.
-function Scene:Animate()
+function Scene:Animate(frameElapsed, simulationFraction)
     local now = GetTime()
-    local elapsed = math.min(0.25, math.max(0, now - (self.lastAnimation or now)))
+    -- OnUpdate's elapsed is the render clock. GetTime can lose sub-frame
+    -- precision after long client/system uptimes; retain it only for event ages.
+    local elapsed = math.min(0.1, math.max(0, frameElapsed or now - (self.lastAnimation or now)))
     self.lastAnimation = now
     if self.management or not self.frame:IsShown() then
         return
+    end
+    local regroup = self.regroup
+    local regroupProgress
+    if regroup then
+        regroup.elapsed = math.min(regroup.duration, regroup.elapsed + elapsed)
+        local fraction = regroup.elapsed / regroup.duration
+        regroupProgress = fraction * fraction * (3 - 2 * fraction)
     end
     for _, unit in ipairs(self.units) do
         if unit.levelUpUntil and now >= unit.levelUpUntil then
             stopLevelUp(unit)
         end
-        if unit:IsShown() and unit.combatant then
-            unit.targetX, unit.targetY = unit.combatant.x, unit.combatant.y
+        if unit:IsShown() and unit.travelling then
+            unit.targetX, unit.targetY = unit.homeX, unit.homeY
+        elseif unit:IsShown() and unit.combatant then
+            local combatant = unit.combatant
+            local tick = self.lastBattle and self.lastBattle.elapsed
+            if simulationFraction and tick and not self.travelling then
+                if unit.sampleTime ~= tick then
+                    -- Capture every tick, including stationary samples, so alpha
+                    -- wrapping to zero cannot replay the previous movement.
+                    unit.previousX = unit.sampleX or unit.x
+                    unit.previousY = unit.sampleY or unit.y
+                    unit.sampleX, unit.sampleY = combatant.x, combatant.y
+                    unit.sampleTime = tick
+                end
+                local alpha = math.min(1, math.max(0, simulationFraction))
+                unit.targetX = unit.previousX + (unit.sampleX - unit.previousX) * alpha
+                unit.targetY = unit.previousY + (unit.sampleY - unit.previousY) * alpha
+            else
+                unit.targetX, unit.targetY = combatant.x, combatant.y
+            end
             unit.targetID, unit.targetEnemy = unit.combatant.targetID, unit.combatant.targetEnemy
         end
         if unit:IsShown() and unit.targetX then
             local moving = false
             if not unit.dead then
                 local x, y = unit.x, unit.y
-                moving = Scene.MoveUnit(unit, elapsed)
-                    or (not self.travelling and unit.combatant and unit.combatant.moving)
-                    or false
+                if unit.travelling and regroupProgress and unit.regroupX then
+                    unit.x = unit.regroupX + (unit.homeX - unit.regroupX) * regroupProgress
+                    unit.y = unit.regroupY + (unit.homeY - unit.regroupY) * regroupProgress
+                    moving = regroupProgress < 1 and (unit.x ~= unit.homeX or unit.y ~= unit.homeY)
+                else
+                    moving = Scene.MoveUnit(unit, elapsed)
+                        or (not self.travelling and unit.combatant and unit.combatant.moving)
+                        or false
+                end
                 if x ~= unit.x or y ~= unit.y then
                     unit:ClearAllPoints()
                     unit:SetPoint("TOPLEFT", unit.x, -unit.y)
@@ -467,31 +522,29 @@ function Scene:Animate()
             if moving ~= unit.moving or unit.travelAnimation ~= unit.travelling then
                 unit.moving, unit.travelAnimation = moving, unit.travelling
                 if not unit.dead then
-                    W.Client.AnimateModel(unit.model, baseAnimation(unit))
+                    local pose = baseAnimation(unit)
+                    if pose ~= unit.basePose or unit.animTime then
+                        W.Client.AnimateModel(unit.model, pose)
+                        unit.basePose = pose
+                    end
                     unit.animTime = nil
                 end
             end
         end
-        if unit.pendingAnimation and not unit.moving and unit.modelReady and not unit.dead then
+        if
+            unit.pendingAnimation
+            and not unit.travelling
+            and not unit.moving
+            and unit.modelReady
+            and not unit.dead
+        then
             W.Client.AnimateModel(unit.model, unit.pendingAnimation)
-            if unit.pendingAnimation ~= W.Client.animations.cheer then
-                unit.actionAt = now
-            end
+            unit.basePose = nil
+            unit.actionAt = now
             -- Completion callbacks restore the stance; this bound also covers models
             -- that do not deliver OnAnimFinished for their selected sequence.
-            unit.animDuration = unit.pendingAnimation == W.Client.animations.fireBow and 0.65
-                or unit.pendingAnimation == W.Client.animations.cheer and 1.6
-                or 1
+            unit.animDuration = unit.pendingAnimation == W.Client.animations.fireBow and 0.65 or 1
             unit.pendingAnimation, unit.animTime = nil, now
-        end
-        if unit.celebrateUntil and now >= unit.celebrateUntil then
-            unit.celebrateUntil, unit.animTime = nil, nil
-            if unit.pendingAnimation == W.Client.animations.cheer then
-                unit.pendingAnimation = nil
-            end
-            if not unit.dead then
-                W.Client.AnimateModel(unit.model, baseAnimation(unit))
-            end
         end
         unit.model:SetAlpha(modelAlpha(unit, now))
         -- Reactions offset only the viewport, never the simulation coordinates.
@@ -519,6 +572,9 @@ function Scene:Animate()
         if unit.animTime and now - unit.animTime >= (unit.animDuration or 1) then
             Scene.FinishAnimation(unit)
         end
+    end
+    if regroup and regroup.elapsed >= regroup.duration then
+        self.regroup = nil
     end
     self.effects:Animate(now)
     self:PlaceNameplates()
