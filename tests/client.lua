@@ -795,6 +795,51 @@ case("Uncached equipment requests data once and dresses only after data arrives"
     assert(requests == 1 and tried == 1)
 end)
 
+case("Continent title tiles use unlabeled Retail artwork without replacing decorations", function()
+    local client = adapter("12.1.5")
+    local info = { layerWidth = 3840, layerHeight = 2560, tileWidth = 256, tileHeight = 256 }
+    local original = 12345
+    for _, entry in ipairs({
+        { "kalimdor", 66, "Kalimdor", 65 },
+        { "kalimdor", 70, "Kalimdor", 69 },
+        { "eastern", 96, "EasternKingdoms", 95 },
+        { "eastern", 100, "EasternKingdoms", 99 },
+        { "eastern", 111, "EasternKingdoms", 110 },
+        { "eastern", 115, "EasternKingdoms", 114 },
+    }) do
+        assert(
+            client.MapTileTexture(entry[1], entry[2], original, info)
+                == "Interface\\AdventureMap\\"
+                    .. entry[3]
+                    .. "\\"
+                    .. entry[3]
+                    .. "Taxi"
+                    .. entry[4]
+        )
+    end
+    for _, entry in ipairs({
+        { "kalimdor", 1 },
+        { "kalimdor", 65 },
+        { "kalimdor", 71 },
+        { "kalimdor", 150 },
+        { "eastern", 1 },
+        { "eastern", 95 },
+        { "eastern", 101 },
+        { "eastern", 110 },
+        { "eastern", 116 },
+        { "eastern", 150 },
+        { "elwynn", 66 },
+    }) do
+        assert(client.MapTileTexture(entry[1], entry[2], original, info) == original)
+    end
+    assert(client.MapTileTexture("kalimdor", 66, original, nil) == original)
+    info.layerWidth = 1002
+    assert(client.MapTileTexture("kalimdor", 66, original, info) == original)
+    info.layerWidth = 3840
+    local other = adapter("1.60.1")
+    assert(other.MapTileTexture("kalimdor", 66, original, info) == original)
+end)
+
 case("Native map hit testing resolves city submaps to their adventure zone", function()
     local client = adapter("12.1.5", {
         C_Map = {

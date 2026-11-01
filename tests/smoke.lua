@@ -237,7 +237,10 @@ test(
         local ok, message = pcall(function()
             click("winterspring")
             assertEquals(encounter, state.battle)
+            assertTrue(W.UI.atlas.frame:IsShown())
             click("durotar")
+            assertFalse(W.UI.atlas.frame:IsShown())
+            assertTrue(W.UI.scene.frame:IsShown())
         end)
         GetCursorPosition = original
         assertTrue(ok, message)
@@ -318,6 +321,9 @@ test("Hovering and clicking painted regions uses tooltips and travel at UI scale
         assertEquals("elwynn", W.state.zone)
         map:GetScript("OnMouseUp")(map, "LeftButton")
         assertEquals("durotar", W.state.zone)
+        assertFalse(W.UI.atlas.frame:IsShown())
+        assertTrue(W.UI.scene.frame:IsShown())
+        assertFalse(GameTooltip:IsShown())
     end)
     GetCursorPosition, map.IsMouseOver = original, mouseOver
     assertTrue(ok, message)

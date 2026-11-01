@@ -139,6 +139,34 @@ local retailRegions = {
     },
 }
 
+function A.MapTileTexture(continentID, index, original, info)
+    -- The unlabeled flight-map tiles share this Retail artwork's exact grid.
+    -- Replace only the title area, retaining the sea names and corner artwork.
+    if
+        A.flavor ~= "retail"
+        or not info
+        or info.layerWidth ~= 3840
+        or info.layerHeight ~= 2560
+        or info.tileWidth ~= 256
+        or info.tileHeight ~= 256
+    then
+        return original
+    end
+    local row, column = math.floor((index - 1) / 15), (index - 1) % 15
+    local name
+    if column >= 5 and column <= 9 then
+        if continentID == "kalimdor" and row == 4 then
+            name = "Kalimdor"
+        elseif continentID == "eastern" and (row == 6 or row == 7) then
+            name = "EasternKingdoms"
+        end
+    end
+    if name then
+        return "Interface\\AdventureMap\\" .. name .. "\\" .. name .. "Taxi" .. (index - 1)
+    end
+    return original
+end
+
 function A.MapMask(key, continentID)
     local mask = A.flavor == "retail" and W.RetailMapMasks and W.RetailMapMasks[key]
     if mask and mask.continent == continentID then

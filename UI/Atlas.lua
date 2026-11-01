@@ -26,6 +26,7 @@ local function travel(self, zone)
     if zone and W.Action(G.Travel, zone.id) then
         describe(self, zone)
         W.Notify("Your company is traveling through " .. zone.name .. ".")
+        W.UI:SetTab("adventure")
     end
 end
 
@@ -171,7 +172,7 @@ local function paintMap(map)
             -math.floor((i - 1) / columns) * th * sy
         )
         tile:SetSize(tw * sx, th * sy)
-        tile:SetTexture(texture)
+        tile:SetTexture(A.MapTileTexture(map.id, i, texture, info))
         tile.mapBounds = {
             (i - 1) % columns * tw / width,
             math.floor((i - 1) / columns) * th / height,
