@@ -255,7 +255,7 @@ function Scene:Refresh(s)
         (s.farming and "FARMING" or "ADVANCING")
             .. "  /  Encounter "
             .. s.stage
-            .. (b and b.boss and "  ·  BOSS" or "")
+            .. (b and b.boss and ("  ·  LEVEL " .. b.level .. " BOSS") or "")
     )
     self.note:SetText(
         "Your company keeps adventuring. Equipment, talents, and destinations can be changed at any time."
