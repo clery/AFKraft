@@ -429,7 +429,7 @@ function W.CreateUI()
         U.SingleLine(card.label, 173, 24)
         card.detail = U.Text(card, "", 64, 38, 11, T.muted, 173)
         U.SingleLine(card.detail, 173, 18)
-        card.xp = U.Bar(card, 64, 62, 173, 6, T.gold)
+        card.xp = U.Bar(card, 64, 58, 173, 6, T.gold)
         ui.cards[i] = card
     end
     ui.panel = CreateFrame("Frame", nil, expanded)
