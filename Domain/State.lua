@@ -211,6 +211,7 @@ function G.Load(db, now)
         migrateItem(item)
     end
     for _, hero in ipairs(db.heroes) do
+        G.AppearanceSeed(hero)
         for _, item in pairs(hero.gear or {}) do
             migrateItem(item)
         end

@@ -32,6 +32,7 @@ Simulation\Combat.lua
 Simulation\Offline.lua
 Compatibility\Models.lua
 Compatibility\Client.lua
+Compatibility\Equipment.lua
 Compatibility\ModelFraming.xml
 Compatibility\ModelFraming.lua
 Compatibility\SpellEffects.lua

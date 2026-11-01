@@ -2,6 +2,25 @@ local _, W = ...
 local C, G = W.Content, W.Game
 local min, max, floor = math.min, math.max, math.floor
 
+-- Cosmetic identity never advances the simulation's combat/loot random stream.
+function G.AppearanceSeed(hero)
+    local seed = hero.appearanceSeed
+    if type(seed) == "number" and seed > 0 and seed < 2147483647 and seed == floor(seed) then
+        return seed
+    end
+    seed = 1
+    local identity = tostring(hero.id or "")
+        .. ":"
+        .. tostring(hero.name or "")
+        .. ":"
+        .. tostring(hero.appearance or "")
+    for i = 1, #identity do
+        seed = (seed * 131 + identity:byte(i)) % 2147483647
+    end
+    hero.appearanceSeed = math.max(1, seed)
+    return hero.appearanceSeed
+end
+
 function G.CompanionSlots(state)
     local slots = math.max(1, #state.heroes)
     for i = 2, #C.companionMilestones do
@@ -53,6 +72,7 @@ function G.AddHero(state, classID, identity)
         specialCount = 2,
     }
     state.heroes[#state.heroes + 1] = hero
+    hero.appearanceSeed = state.seed
     G.Emit(state, "recruit")
     G.Log(
         state,

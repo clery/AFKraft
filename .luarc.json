@@ -31,6 +31,7 @@
     "UnitGUID",
     "IsLoggedIn",
     "C_Map",
+    "C_Item",
     "UISpecialFrames",
     "SlashCmdList",
     "test",

@@ -87,14 +87,28 @@ function A.CreateAdventureModel(parent, loaded)
         source:SetAlpha(model.nativeAppearance and 1 or 0)
         loaded()
     end)
-    model:SetScript("OnEvent", function(_, _, unit)
+    model:SetScript("OnEvent", function(_, event, unit, success)
+        if event == "ITEM_DATA_LOAD_RESULT" then
+            if model.pendingEquipment and model.pendingEquipment[unit] then
+                model.pendingEquipment[unit] = nil
+                if success then
+                    model.equipmentAppliedKey = nil
+                    loaded()
+                end
+            end
+            return
+        end
         if model.appearanceUnit == "player" and (not unit or unit == "player") then
+            model.equipmentAppliedKey = nil
             source:RefreshUnit()
-            source:Dress()
+            loaded()
         end
     end)
     model:RegisterUnitEvent("UNIT_MODEL_CHANGED", "player")
     model:RegisterUnitEvent("UNIT_INVENTORY_CHANGED", "player")
+    if C_Item and C_Item.RequestLoadItemDataByID then
+        model:RegisterEvent("ITEM_DATA_LOAD_RESULT")
+    end
     if
         C_EventUtils
         and C_EventUtils.IsEventValid
@@ -138,14 +152,19 @@ function A.FrameAdventureModel(model, enemy, spec)
         if not finite(file) or file <= 0 then
             return false
         end
-        source:SetCamera(0)
+        source:RefreshCamera()
         source:SetPortraitZoom(0)
         source:SetCamDistanceScale(1.7)
-        source:SetFacing(1.05)
+        source:SetRotation(-1.05, false)
         source:SetAlpha(1)
+        local equipped = A.ApplyModelEquipment(model, spec)
         actor:SetAlpha(0)
-        scene:SetScript("OnUpdate", nil)
-        scene:Hide()
+        if equipped then
+            scene:SetScript("OnUpdate", nil)
+            scene:Hide()
+        else
+            scene:Show()
+        end
         return true
     end
     if model.adventureKey ~= spec.key then
@@ -173,8 +192,13 @@ function A.FrameAdventureModel(model, enemy, spec)
     end
     if model.adventureFittedKey ~= spec.key then
         actor:SetAnimation(0)
-        local bottom, top = bounds(actor:GetMaxBoundingBox())
-        local ground = bounds(actor:GetActiveBoundingBox()) or bottom
+        -- All-animation bounds can include long movement/death trajectories and
+        -- shrink a stationary creature to a speck. Fit the standing geometry once.
+        local bottom, top = bounds(actor:GetActiveBoundingBox())
+        if not bottom then
+            bottom, top = bounds(actor:GetMaxBoundingBox())
+        end
+        local ground = bottom
         local scale, x, y, z = A.ModelFit(bottom, top, ground, scene:GetWidth() / scene:GetHeight())
         if not scale then
             return false

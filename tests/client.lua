@@ -73,6 +73,9 @@ local function adapter(version, overrides)
     assert(loadfile("Compatibility/Models.lua"))("WoWIdle", namespace)
     setfenv(chunk, environment)
     chunk("WoWIdle", namespace)
+    local equipment = assert(loadfile("Compatibility/Equipment.lua"))
+    setfenv(equipment, environment)
+    equipment("WoWIdle", namespace)
     local framing = assert(loadfile("Compatibility/ModelFraming.lua"))
     setfenv(framing, environment)
     framing("WoWIdle", namespace)
@@ -370,18 +373,18 @@ case("Actor loading binds through its XML template without frame script methods"
     assert(refreshed == 0 and dressed == 0)
     model.scripts.OnEvent(model, "UNIT_INVENTORY_CHANGED", "player")
     model.scripts.OnEvent(model, "TRANSMOG_DISPLAYED_OUTFIT_CHANGED")
-    assert(refreshed == 2 and dressed == 2)
+    assert(refreshed == 2 and dressed == 0 and called == 3)
     model.appearanceUnit = nil
     model.scripts.OnEvent(model, "UNIT_INVENTORY_CHANGED", "player")
-    assert(refreshed == 2 and dressed == 2)
+    assert(refreshed == 2 and dressed == 0 and called == 3)
 end)
 
 case(
-    "Native character appearances retain transmog and NPC skins without display-ID conversion",
+    "Native characters wear idle equipment without live transmog or display-ID conversion",
     function()
         local client = adapter("12.1.5")
         local flags, sourceAlpha, actorAlpha, hidden, animation = {}, 0, 0, false, nil
-        local dressed = 0
+        local dressed, undressed, tried = 0, 0, {}
         local source = {
             ClearModel = function() end,
             SetAlpha = function(_, alpha)
@@ -400,7 +403,12 @@ case(
                 flags.hidden = enabled
             end,
             SetUnit = function(_, unit)
-                assert(unit == "player" and flags.auto and flags.skin and flags.hidden)
+                assert(
+                    unit == "player"
+                        and flags.auto == false
+                        and flags.skin == false
+                        and flags.hidden
+                )
                 assert(flags.preview == false)
             end,
             SetCreature = function(_, id)
@@ -409,14 +417,21 @@ case(
             Dress = function()
                 dressed = dressed + 1
             end,
+            Undress = function()
+                undressed = undressed + 1
+                tried = {}
+            end,
+            TryOn = function(_, link)
+                tried[#tried + 1] = link
+            end,
             GetModelFileID = function()
                 return 42
             end,
-            SetCamera = function() end,
+            RefreshCamera = function() end,
             SetPortraitZoom = function() end,
             SetCamDistanceScale = function() end,
-            SetFacing = function(_, facing)
-                assert(facing == 1.05)
+            SetRotation = function(_, facing, animate)
+                assert(facing == -1.05 and animate == false)
             end,
             SetAnimation = function(_, value)
                 animation = value
@@ -449,11 +464,24 @@ case(
         function model:SetCreature(id)
             source:SetCreature(id)
         end
-        assert(client.ConfigureModel(model, { key = "player:test", unit = "player" }, false))
-        assert(dressed == 1 and sourceAlpha == 1 and actorAlpha == 0 and hidden)
+        assert(client.ConfigureModel(model, {
+            key = "player:test",
+            unit = "player",
+            equipment = { 25, 821 },
+            equipmentKey = "25:821",
+        }, false))
+        assert(dressed == 0 and undressed == 1 and tried[1] == "item:25" and tried[2] == "item:821")
+        assert(sourceAlpha == 1 and actorAlpha == 0 and hidden)
         assert(client.AnimateModel(model, 16) and animation == 16)
-        assert(client.ConfigureModel(model, { key = "companion:911", creatureID = 911 }, false))
-        assert(dressed == 1 and sourceAlpha == 1 and actorAlpha == 0 and hidden)
+        assert(
+            client.ConfigureModel(
+                model,
+                { key = "companion:911", creatureID = 911, equipment = {}, equipmentKey = "" },
+                false
+            )
+        )
+        assert(dressed == 0 and undressed == 2 and #tried == 0)
+        assert(sourceAlpha == 1 and actorAlpha == 0 and hidden)
     end
 )
 
@@ -524,6 +552,7 @@ case("Actor framing waits for geometry and stays fixed through animation", funct
             return -2, -1, -3, 2, 1, 5
         end,
         GetActiveBoundingBox = function()
+            fits = fits + 1
             return -2, -1, -2, 2, 1, 4
         end,
         SetAlpha = function() end,
@@ -577,6 +606,80 @@ case("Actor framing waits for geometry and stays fixed through animation", funct
     assert(transmog == true)
     assert(client.FrameAdventureModel(model, true, { key = "enemy:reset", creatureID = 5 }))
     assert(transmog == false)
+end)
+
+case(
+    "Appearance choices persist without consuming loot randomness and gear changes model identity",
+    function()
+        local client = adapter("12.1.5")
+        local state = W.Game.New(1000)
+        assert(W.Game.AddHero(state, "WARRIOR"))
+        local hero = state.heroes[1]
+        hero.appearance = "human_male"
+        local before = state.seed
+        local first = client.ModelSpec(hero)
+        assert(client.ModelSpec(hero).creatureID == first.creatureID and state.seed == before)
+        hero.gear[1] = { itemID = 25 }
+        local equipped = client.ModelSpec(hero)
+        assert(equipped.key ~= first.key and equipped.creatureID == first.creatureID)
+        assert(equipped.equipment[1] == 25)
+        hero.gear[4] = { itemID = 13094 }
+        assert(client.ModelSpec(hero).key == equipped.key)
+        hero.gear[4] = { itemID = 1930 }
+        assert(client.ModelSpec(hero).equipment[2] == 1930)
+        local seen = {}
+        for seed = 1, 20 do
+            hero.appearanceSeed = seed
+            seen[client.ModelSpec(hero).creatureID] = true
+        end
+        local count = 0
+        for _ in pairs(seen) do
+            count = count + 1
+        end
+        assert(count == 5)
+        hero.appearanceSeed = nil
+        local migrated = W.Game.Load(W.Game.Copy(state), 1000)
+        local seed = migrated.heroes[1].appearanceSeed
+        assert(seed and W.Game.Load(W.Game.Copy(migrated), 1000).heroes[1].appearanceSeed == seed)
+    end
+)
+
+case("Uncached equipment requests data once and dresses only after data arrives", function()
+    local cached, requests, tried = false, 0, 0
+    local geometry = false
+    local client = adapter("12.1.5", {
+        C_Item = {
+            IsItemDataCachedByID = function()
+                return cached
+            end,
+            RequestLoadItemDataByID = function(id)
+                assert(id == 25)
+                requests = requests + 1
+            end,
+        },
+    })
+    local model = {
+        appearanceSource = {
+            IsGeoReady = function()
+                return geometry
+            end,
+            Undress = function() end,
+            TryOn = function(_, link)
+                assert(link == "item:25")
+                tried = tried + 1
+            end,
+        },
+    }
+    local spec = { equipmentKey = "25", equipment = { 25 } }
+    assert(client.ApplyModelEquipment(model, spec) == false)
+    assert(requests == 0 and tried == 0 and model.equipmentAppliedKey == nil)
+    geometry = true
+    client.ApplyModelEquipment(model, spec)
+    client.ApplyModelEquipment(model, spec)
+    assert(requests == 1 and tried == 0 and model.pendingEquipment[25])
+    cached, model.equipmentAppliedKey = true, nil
+    client.ApplyModelEquipment(model, spec)
+    assert(requests == 1 and tried == 1)
 end)
 
 case("Native map hit testing resolves city submaps to their adventure zone", function()

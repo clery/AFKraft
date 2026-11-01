@@ -3,6 +3,30 @@ local _, W = ...
 -- Creature IDs resolve complete NPC appearances, including their baked skins.
 -- Bare race display IDs do not contain a character's composite textures.
 W.ModelAssets = {
+    -- Complete textured presets; body customizations remain together as authored.
+    variants = {
+        human_male = { 911, 925, 915, 198, 906 },
+        human_female = { 375, 459 },
+        orc_male = { 3153, 3156 },
+        orc_female = { 3157 },
+        dwarf_male = { 1229 },
+        dwarf_female = { 5142 },
+        nightelf_male = { 3597, 3594 },
+        nightelf_female = { 3596 },
+        undead_male = { 2122, 3049 },
+        undead_female = { 2124 },
+        tauren_male = { 3060 },
+        tauren_female = { 3062 },
+    },
+    invisibleItems = {
+        [13094] = true,
+        [13095] = true,
+        [13097] = true,
+        [13002] = true,
+        [13085] = true,
+        [13096] = true,
+        [833] = true,
+    },
     levelUp = "Spells\\LevelUp\\LevelUp.m2",
     -- Particle-heavy creatures need more room than their default portrait camera gives them.
     framing = {

@@ -95,15 +95,30 @@ end
 
 function A.ModelSpec(hero, zoneID, enemyName)
     if hero then
+        local equipment, equipmentKey = A.EquipmentSpec(hero)
         if hero.guid == A.Identity().guid then
-            return { key = "player:" .. hero.guid, unit = "player" }
+            return {
+                key = "player:" .. hero.guid .. ":" .. equipmentKey,
+                unit = "player",
+                equipment = equipment,
+                equipmentKey = equipmentKey,
+            }
         end
         local class = W.ModelAssets.classes[hero.class]
         local id = class and class[hero.appearance]
             or W.ModelAssets.appearances[hero.appearance]
             or class and class.default
+        local variants = W.ModelAssets.variants[hero.appearance]
+        if variants and #variants > 0 then
+            id = variants[W.Game.AppearanceSeed(hero) % #variants + 1]
+        end
         if id then
-            return { key = "companion:" .. id, creatureID = id }
+            return {
+                key = "companion:" .. id .. ":" .. equipmentKey,
+                creatureID = id,
+                equipment = equipment,
+                equipmentKey = equipmentKey,
+            }
         end
         return nil
     end
@@ -199,22 +214,21 @@ function A.ConfigureModel(model, spec, enemy)
             model.appearanceUnit = spec.unit
             model.adventureKey = nil
             model.adventureFittedKey = nil
+            model.equipmentAppliedKey = nil
+            model.pendingEquipment = {}
             model.adventureActor:ClearModel()
             model.adventureActor:SetAlpha(0)
             model.adventureScene:Show()
             model.appearanceSource:SetAlpha(0)
             local source = model.appearanceSource
-            source:SetAutoDress(spec.unit ~= nil)
-            source:SetUseTransmogSkin(spec.unit ~= nil)
+            source:SetAutoDress(false)
+            source:SetUseTransmogSkin(false)
             source:SetUseTransmogChoices(false)
             source:SetObeyHideInTransmogFlag(true)
             A.AwaitAdventureModel(model)
         end
         if spec.unit then
             model:SetUnit(spec.unit)
-            if model.nativeAppearance then
-                model.appearanceSource:Dress()
-            end
         else
             model:SetCreature(spec.creatureID)
         end
