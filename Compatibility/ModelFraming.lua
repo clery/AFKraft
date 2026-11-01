@@ -1,8 +1,39 @@
 local _, W = ...
 local A = W.Client
+local cameraPitch = math.pi / 12
+local cameraCos, cameraSin = math.cos(cameraPitch), math.sin(cameraPitch)
 
 local function finite(value)
     return type(value) == "number" and value == value and math.abs(value) < math.huge
+end
+
+local function elevateCamera(source)
+    if
+        not (
+            source.GetCameraPosition
+            and source.GetCameraTarget
+            and source.SetCustomCamera
+            and source.SetCameraPosition
+            and source.SetCameraTarget
+        )
+    then
+        return
+    end
+    local x, y, z = source:GetCameraPosition()
+    local tx, ty, tz = source:GetCameraTarget()
+    if not (finite(x) and finite(y) and finite(z) and finite(tx) and finite(ty) and finite(tz)) then
+        return
+    end
+    local dx, dy, dz = x - tx, y - ty, z - tz
+    local horizontal = math.sqrt(dx * dx + dy * dy)
+    if horizontal <= 0.001 then
+        return
+    end
+    local distance = math.sqrt(horizontal * horizontal + dz * dz)
+    local factor = distance * cameraCos / horizontal
+    source:SetCustomCamera(1)
+    source:SetCameraPosition(tx + dx * factor, ty + dy * factor, tz + distance * cameraSin)
+    source:SetCameraTarget(tx, ty, tz)
 end
 
 -- Live actors return six coordinates; some API bindings return two vectors.
@@ -139,8 +170,18 @@ function A.CreateAdventureModel(parent, loaded)
     scene:SetAllPoints(model)
     scene:EnableMouse(false)
     scene:SetCameraFieldOfView(0.5)
-    scene:SetCameraPosition(6, 0, 0.6)
-    scene:SetCameraOrientationByAxisVectors(-1, 0, 0, 0, 1, 0, 0, 0, 1)
+    scene:SetCameraPosition(6 * cameraCos, 0, 0.6 + 6 * cameraSin)
+    scene:SetCameraOrientationByAxisVectors(
+        -cameraCos,
+        0,
+        -cameraSin,
+        0,
+        1,
+        0,
+        -cameraSin,
+        0,
+        cameraCos
+    )
     scene:SetCameraNearClip(0.1)
     scene:SetCameraFarClip(100)
     scene:SetLightAmbientColor(0.8, 0.8, 0.8)
@@ -246,10 +287,16 @@ function A.FrameAdventureModel(model, enemy, spec)
             model.spacingRadius = A.ModelRadius(bottom, top, source:GetWidth(), source:GetHeight())
                 or 80
         end
+        -- Restore the model's authored camera before deriving our elevated view,
+        -- so equipment refreshes never accumulate camera changes.
+        if source.SetCamera then
+            source:SetCamera(0)
+        end
         source:RefreshCamera()
         source:SetPortraitZoom(0)
         source:SetCamDistanceScale(1.7)
         source:SetRotation(1.05, false)
+        elevateCamera(source)
         source:SetAlpha(1)
         local equipped = A.ApplyModelEquipment(model, spec)
         actor:SetAlpha(0)

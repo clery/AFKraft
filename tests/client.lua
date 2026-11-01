@@ -420,6 +420,7 @@ case(
         local client = adapter("12.1.5")
         local flags, sourceAlpha, actorAlpha, hidden, animation = {}, 0, 0, false, nil
         local dressed, undressed, tried = 0, 0, {}
+        local cameraPosition
         local fileID
         local source = {
             ClearModel = function()
@@ -484,6 +485,25 @@ case(
                 return 240
             end,
             RefreshCamera = function() end,
+            SetCamera = function(_, index)
+                assert(index == 0)
+                cameraPosition = { 3, 4, 1 }
+            end,
+            GetCameraPosition = function()
+                return unpack(cameraPosition)
+            end,
+            GetCameraTarget = function()
+                return 0, 0, 1
+            end,
+            SetCustomCamera = function(_, index)
+                assert(index == 1)
+            end,
+            SetCameraPosition = function(_, x, y, z)
+                cameraPosition = { x, y, z }
+            end,
+            SetCameraTarget = function(_, x, y, z)
+                assert(x == 0 and y == 0 and z == 1)
+            end,
             SetPortraitZoom = function() end,
             SetCamDistanceScale = function() end,
             SetRotation = function(_, facing, animate)
@@ -547,6 +567,12 @@ case(
         assert(sourceAlpha == 1 and actorAlpha == 0 and hidden)
         assert(model.loadingAppearance == false and flags.warm == false)
         assert(model.spacingRadius > 80)
+        local elevatedZ = cameraPosition[3]
+        assert(elevatedZ > 1)
+        assert(
+            math.abs(cameraPosition[1] ^ 2 + cameraPosition[2] ^ 2 + (elevatedZ - 1) ^ 2 - 25)
+                < 0.00001
+        )
         assert(client.AnimateModel(model, 16) and animation == 16)
         model.adventureActor.IsLoaded = function()
             return false
@@ -567,6 +593,11 @@ case(
         fileID = 42
         assert(client.FrameAdventureModel(model, false, { key = "companion:911" }))
         assert(model.loadingAppearance == false and flags.warm == false)
+        assert(cameraPosition[3] == elevatedZ)
+        source.GetCameraPosition = function()
+            return nil
+        end
+        assert(client.FrameAdventureModel(model, false, { key = "companion:911" }))
     end
 )
 

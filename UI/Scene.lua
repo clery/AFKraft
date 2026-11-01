@@ -452,12 +452,26 @@ function Scene:PlaceModels(elapsed)
             -- A shallow perspective keeps the existing side-on composition. Only
             -- the viewport scales: labels and interaction areas remain readable.
             local y = unit.y or 110
-            unit.renderY = 114 + (y - 114) * 1.55
+            -- Hold the nearest lane inside the stage while opening up the back
+            -- lanes for the elevated camera. Compact mode has a shorter stage.
+            unit.renderY = (self.compact and 128 or 142) + (y - 132) * 1.9
             local scale = 0.9 + 0.1 * math.min(1, math.max(0, (y - 96) / 36))
             if unit.depthScale ~= scale then
                 unit.viewport:SetScale(scale)
                 unit.depthScale = scale
             end
+            -- Bow the melee line towards its opponents. The outer depth lanes
+            -- hang back, so combatants do not converge on one vertical column.
+            local arc = 0
+            if not self.travelling and unit.inCombat and unit.melee and not unit.dead then
+                local friendly = unit.index <= 5
+                local depth =
+                    math.min(1, math.abs((y - (friendly and 114 or 115)) / (friendly and 18 or 15)))
+                arc = (100 * math.cos(depth * math.pi / 2) - 50) * (friendly and 1 or -1)
+            end
+            unit.arcOffset, unit.arcVelocity =
+                smoothCoordinate(unit.arcOffset or 0, unit.arcVelocity or 0, arc, elapsed or 0)
+            unit.stageX = unit.x + unit.arcOffset
             count = count + 1
             order[count] = unit
         end
@@ -477,11 +491,14 @@ function Scene:PlaceModels(elapsed)
         for i = 1, 5 do
             local hero = self.units[i]
             if hero:IsShown() and hero.x and not hero.dead then
-                leftRoom = math.min(leftRoom, hero.x + 66 - radius(hero) - 8)
+                leftRoom = math.min(leftRoom, hero.stageX + 66 - radius(hero) - 8)
                 for j = 6, 8 do
                     local enemy = self.units[j]
                     if enemy:IsShown() and enemy.x and not enemy.dead then
-                        gap = math.max(gap, hero.x + radius(hero) + radius(enemy) + 28 - enemy.x)
+                        gap = math.max(
+                            gap,
+                            hero.stageX + (radius(hero) + radius(enemy)) * 0.9 + 12 - enemy.stageX
+                        )
                     end
                 end
             end
@@ -496,7 +513,7 @@ function Scene:PlaceModels(elapsed)
     for i, unit in ipairs(self.units) do
         if unit:IsShown() and unit.x then
             local x = unit.dead and (unit.renderX or unit.x)
-                or unit.x + (i <= 5 and -left or gap - left)
+                or unit.stageX + (i <= 5 and -left or gap - left)
             unit.renderX = x
             if unit.placedX ~= x or unit.placedY ~= unit.renderY then
                 unit:ClearAllPoints()
