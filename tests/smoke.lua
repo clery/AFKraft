@@ -249,7 +249,7 @@ test(
     end
 )
 
-test("All continent artwork is gray and only accessible regions regain color", function()
+test("Only land is gray while sea, parchment and accessible regions retain color", function()
     local W = WoWIdle
     W.state = W.Game.New(W.Client.Now())
     W.Game.AddHero(W.state, "WARRIOR")
@@ -257,7 +257,14 @@ test("All continent artwork is gray and only accessible regions regain color", f
     for _, map in ipairs(W.UI.atlas.maps) do
         assertTrue(#map.tiles > 0)
         for _, tile in ipairs(map.tiles) do
+            assertFalse(tile:IsDesaturated())
+        end
+        assertNotNil(map.grayRegion)
+        assertTrue(#map.grayRegion.tiles > 0)
+        assertTrue(#map.grayRegion.tiles < #map.tiles)
+        for _, tile in ipairs(map.grayRegion.tiles) do
             assertTrue(tile:IsDesaturated())
+            assertEquals(1, tile:GetNumMaskTextures())
         end
     end
     local map = W.UI.atlas.maps[1]

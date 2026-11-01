@@ -1,47 +1,96 @@
-"""Build Retail alpha masks from the authored region outlines."""
+"""Build zone-only alpha masks against extracted Retail continent artwork."""
 
-import re
-import struct
+import argparse
+import json
+import math
 from pathlib import Path
 
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
+
 ROOT = Path(__file__).resolve().parents[1]
-SIZE = 128
 
 
-def contains(points, x, y):
-    inside = False
-    previous = points[-1]
-    for current in points:
-        xi, yi = current
-        xj, yj = previous
-        if (yi > y) != (yj > y) and x < (xj - xi) * (y - yi) / (yj - yi) + xi:
-            inside = not inside
-        previous = current
-    return inside
+def polygon_mask(size, outlines):
+    image = Image.new("L", size)
+    draw = ImageDraw.Draw(image)
+    for outline in outlines:
+        draw.polygon([tuple(point) for point in outline], fill=255)
+    return image
+
+
+def artwork(source, name, size):
+    # Retail's continent artwork is a 15 by 10 grid of 256-pixel tiles.
+    image = Image.new("RGB", (3840, 2560))
+    for index in range(150):
+        tile = source / name / (name + str(index + 1) + ".blp")
+        with Image.open(tile) as part:
+            image.paste(part, ((index % 15) * 256, (index // 15) * 256))
+    return image.resize(size, Image.Resampling.LANCZOS)
+
+
+def land_mask(image, outlines):
+    # The guide follows the shoreline; chroma excludes the blue coastal water.
+    # Enclosed gaps are filled so labels, roads, lakes and city icons stay in-zone.
+    original = polygon_mask(image.size, outlines)
+    guide = original.filter(ImageFilter.MaxFilter(41))
+    # The northern islands approach the warm parchment edge; keep their traced caps.
+    guide.paste(original.crop((0, 0, image.width, 150)), (0, 0))
+    warm = Image.new("L", image.size)
+    channels = [channel.tobytes() for channel in image.split()]
+    warm.putdata([255 if r - b > 70 and g - b > 40 else 0
+                  for r, g, b in zip(*channels)])
+    result = ImageChops.multiply(guide, warm)
+    result = result.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.MinFilter(3))
+    flooded = result.copy()
+    ImageDraw.floodfill(flooded, (0, 0), 128)
+    result = flooded.point(lambda value: 0 if value == 128 else 255)
+    return ImageChops.multiply(result, guide)
+
+
+def save_mask(output, key, mask):
+    box = mask.getbbox()
+    if not box:
+        raise ValueError("Empty map mask: " + key)
+    left, top, right, bottom = box
+    # A transparent one-pixel border prevents clamping from leaking color.
+    left, top = max(0, left - 1), max(0, top - 1)
+    right, bottom = min(mask.width, right + 1), min(mask.height, bottom + 1)
+    cropped = mask.crop((left, top, right, bottom))
+    width = 2 ** math.ceil(math.log2(cropped.width))
+    height = 2 ** math.ceil(math.log2(cropped.height))
+    alpha = cropped.resize((width, height), Image.Resampling.LANCZOS)
+    image = Image.new("RGBA", alpha.size, (255, 255, 255, 0))
+    image.putalpha(alpha)
+    image.save(output / (key + ".tga"), compression=None)
+    return [left / mask.width, top / mask.height, right / mask.width, bottom / mask.height]
 
 
 def main():
-    source = (ROOT / "Compatibility/Maps.lua").read_text()
-    regions = source.split("local retailRegions = {", 1)[1].split("\n}\n", 1)[0]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-dir", type=Path, required=True,
+                        help="Extracted interface/worldmap directory; kept outside the repository")
+    args = parser.parse_args()
+    data = json.loads((ROOT / "Assets/Maps/regions.json").read_text())
+    size = tuple(data["canvas"])
     output = ROOT / "Assets/Maps"
-    output.mkdir(parents=True, exist_ok=True)
-    for name, body in re.findall(r"    (\w+) = \{(.*?)\n    \},", regions, re.S):
-        numbers = [float(value) for value in re.findall(r"\d+\.\d+", body)]
-        points = list(zip(numbers[2::2], numbers[3::2]))
-        xs, ys = zip(*points)
-        left, right, top, bottom = min(xs), max(xs), min(ys), max(ys)
-        pixels = bytearray()
-        for row in range(SIZE):
-            for column in range(SIZE):
-                x = left + (column + 0.5) / SIZE * (right - left)
-                y = top + (row + 0.5) / SIZE * (bottom - top)
-                inside = contains(points, x, y)
-                # Transparent edges prevent the mask from extending beyond its rectangle.
-                inside = inside and 0 < row < SIZE - 1 and 0 < column < SIZE - 1
-                pixels.extend((255, 255, 255, 255) if inside else (0, 0, 0, 0))
-        # Uncompressed BGRA, top-left origin, eight alpha bits.
-        header = struct.pack("<BBBHHBHHHHBB", 0, 0, 2, 0, 0, 0, 0, 0, SIZE, SIZE, 32, 40)
-        (output / (name + ".tga")).write_bytes(header + pixels)
+    lands = {}
+    entries = {}
+    for continent, outlines in data["land"].items():
+        name = "kalimdor" if continent == "kalimdor" else "easternkingdoms"
+        lands[continent] = land_mask(artwork(args.source_dir, name, size), outlines)
+        entries[continent] = (continent, save_mask(output, continent, lands[continent]))
+    for key, zone in data["zones"].items():
+        continent = zone["continent"]
+        shape = polygon_mask(size, [zone["outline"]])
+        shape = ImageChops.multiply(shape, lands[continent])
+        entries[key] = (continent, save_mask(output, key, shape))
+    lines = ["-- Generated by scripts/prepare_map_masks.py from Retail artwork-aligned traces.",
+             "local _, W = ...", "W.RetailMapMasks = {"]
+    for key, (continent, bounds) in sorted(entries.items()):
+        values = ", ".join(format(value, ".9f") for value in bounds)
+        lines.append('    %s = { continent = "%s", bounds = { %s } },' % (key, continent, values))
+    lines.extend(["}", ""])
+    (ROOT / "Compatibility/MapMasks.lua").write_text("\n".join(lines))
 
 
 if __name__ == "__main__":

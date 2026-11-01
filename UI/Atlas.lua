@@ -172,32 +172,38 @@ local function paintMap(map)
         )
         tile:SetSize(tw * sx, th * sy)
         tile:SetTexture(texture)
-        tile:SetDesaturated(true)
+        tile.mapBounds = {
+            (i - 1) % columns * tw / width,
+            math.floor((i - 1) / columns) * th / height,
+            ((i - 1) % columns + 1) * tw / width,
+            (math.floor((i - 1) / columns) + 1) * th / height,
+        }
+        tile:SetDesaturated(false)
         tile:Show()
     end
 end
 
-local function createColorRegion(map, zone, outline)
+local function createMaskedRegion(map, key, bounds, desaturated)
     if not map.CreateMaskTexture then
         return
     end
-    local left, right, top, bottom = 1, 0, 1, 0
-    for i = 1, #outline, 2 do
-        left, right = math.min(left, outline[i]), math.max(right, outline[i])
-        top, bottom = math.min(top, outline[i + 1]), math.max(bottom, outline[i + 1])
-    end
+    local left, top, right, bottom = unpack(bounds)
     local region = { tiles = {} }
     local mask = map:CreateMaskTexture()
-    mask:SetTexture("Interface\\AddOns\\WoWIdle\\Assets\\Maps\\" .. zone.id .. ".tga")
+    mask:SetTexture("Interface\\AddOns\\WoWIdle\\Assets\\Maps\\" .. key .. ".tga")
     mask:SetPoint("TOPLEFT", left * map:GetWidth(), -top * map:GetHeight())
     mask:SetSize((right - left) * map:GetWidth(), (bottom - top) * map:GetHeight())
     region.mask = mask
     for _, source in ipairs(map.tiles) do
-        local tile = map:CreateTexture(nil, "ARTWORK")
-        tile:SetAllPoints(source)
-        tile:SetTexture(source:GetTexture())
-        tile:AddMaskTexture(mask)
-        region.tiles[#region.tiles + 1] = tile
+        local area = source.mapBounds
+        if area[1] < right and area[3] > left and area[2] < bottom and area[4] > top then
+            local tile = map:CreateTexture(nil, "ARTWORK", nil, desaturated and 0 or 1)
+            tile:SetAllPoints(source)
+            tile:SetTexture(source:GetTexture())
+            tile:SetDesaturated(desaturated)
+            tile:AddMaskTexture(mask)
+            region.tiles[#region.tiles + 1] = tile
+        end
     end
     return region
 end
@@ -207,15 +213,20 @@ local function updateAccessibleRegions(map)
         return
     end
     map.coloredFrontier = W.state.runBest
-    -- The complete map stays gray, including destinations outside current content.
-    -- Only regions the player can actually visit restore the original map colors.
+    -- Gray the land only; the base artwork keeps sea and parchment in color.
+    if not map.grayRegion then
+        local bounds = A.MapMask(map.id, map.id)
+        if bounds then
+            map.grayRegion = createMaskedRegion(map, map.id, bounds, true)
+        end
+    end
     for _, zone in ipairs(C.zones) do
         local region = map.colorRegions[zone.id]
         local unlocked = G.IsUnlocked(W.state, zone)
         if unlocked and not region then
-            local outline = A.ZoneOutline(zone.id, map.id)
-            if outline then
-                region = createColorRegion(map, zone, outline)
+            local bounds = A.MapMask(zone.id, map.id)
+            if bounds then
+                region = createMaskedRegion(map, zone.id, bounds, false)
                 map.colorRegions[zone.id] = region
             end
         end

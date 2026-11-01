@@ -37,6 +37,7 @@ Compatibility\ModelFraming.xml
 Compatibility\ModelFraming.lua
 Compatibility\SpellEffects.lua
 Compatibility\Maps.lua
+Compatibility\MapMasks.lua
 Compatibility\Kills.lua
 Compatibility\Gathering.lua
 Compatibility\Dungeons.lua

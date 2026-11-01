@@ -139,6 +139,13 @@ local retailRegions = {
     },
 }
 
+function A.MapMask(key, continentID)
+    local mask = A.flavor == "retail" and W.RetailMapMasks and W.RetailMapMasks[key]
+    if mask and mask.continent == continentID then
+        return mask.bounds
+    end
+end
+
 function A.ZoneOutline(zoneID, continentID)
     local region = A.flavor == "retail" and retailRegions[zoneID]
     if region and region[1] == continentID then
