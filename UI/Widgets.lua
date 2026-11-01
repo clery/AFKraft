@@ -261,7 +261,7 @@ function U.Choice(parent, label, x, y, w, options, value, choose)
     return dropdown
 end
 
-function U.Bar(parent, x, y, w, h, color)
+function U.Bar(parent, x, y, w, h, color, nameplate)
     local b = CreateFrame("StatusBar", nil, parent)
     b:SetPoint("TOPLEFT", x, -y)
     b:SetSize(w, h)
@@ -273,6 +273,16 @@ function U.Bar(parent, x, y, w, h, color)
     bg:SetAllPoints()
     bg:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
     bg:SetVertexColor(0.15, 0.15, 0.15, 1)
+    if nameplate then
+        -- Use the same fill and dark surround as native Retail nameplates.
+        b:GetStatusBarTexture():SetAtlas("UI-HUD-CoolDownManager-Bar")
+        bg:SetAtlas("UI-HUD-CoolDownManager-Bar-BG")
+        bg:SetVertexColor(1, 1, 1, 1)
+        bg:ClearAllPoints()
+        bg:SetPoint("TOPLEFT", b, "TOPLEFT", -2, 3)
+        bg:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 6, -6)
+        return b
+    end
     -- Keep the outline thickness independent of the bar aspect ratio.
     for _, edge in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do
         local border = b:CreateTexture(nil, "OVERLAY")
