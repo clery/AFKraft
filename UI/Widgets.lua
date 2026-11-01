@@ -274,13 +274,7 @@ function U.Bar(parent, x, y, w, h, color, nameplate)
     bg:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
     bg:SetVertexColor(0.15, 0.15, 0.15, 1)
     if nameplate then
-        -- Use the same fill and dark surround as native Retail nameplates.
-        b:GetStatusBarTexture():SetAtlas("UI-HUD-CoolDownManager-Bar")
-        bg:SetAtlas("UI-HUD-CoolDownManager-Bar-BG")
-        bg:SetVertexColor(1, 1, 1, 1)
-        bg:ClearAllPoints()
-        bg:SetPoint("TOPLEFT", b, "TOPLEFT", -2, 3)
-        bg:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 6, -6)
+        W.Client.StyleNameplate(b, bg)
         return b
     end
     -- Keep the outline thickness independent of the bar aspect ratio.

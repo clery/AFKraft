@@ -30,6 +30,34 @@ A.profiles = {
 }
 A.profile = A.profiles[A.flavor]
 
+function A.StyleNameplate(bar, background)
+    local options = NamePlateSetupOptions
+    local classic = A.flavor == "forever"
+    if options and type(options.useClassicHealthBar) == "boolean" then
+        classic = options.useClassicHealthBar
+    end
+    background:ClearAllPoints()
+    background:SetVertexColor(1, 1, 1, 1)
+    if classic then
+        bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-TargetingFrame-BarFill")
+        background:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-BarFill")
+        background:SetAllPoints(bar)
+        background:SetVertexColor(0.15, 0.15, 0.15, 1)
+        local border = bar:CreateTexture(nil, "OVERLAY")
+        border:SetTexture("Interface\\Tooltips\\Nameplate-Border")
+        -- The health surround occupies the first 107 pixels of the 256x32
+        -- sheet; omit the adjoining level box and the transparent padding.
+        border:SetTexCoord(0, 107 / 256, 0.5, 1)
+        border:SetPoint("CENTER")
+        border:SetSize(bar:GetWidth() + 8, bar:GetHeight() + 6)
+    else
+        bar:GetStatusBarTexture():SetAtlas("UI-HUD-CoolDownManager-Bar")
+        background:SetAtlas("UI-HUD-CoolDownManager-Bar-BG")
+        background:SetPoint("TOPLEFT", bar, "TOPLEFT", -2, 3)
+        background:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 6, -6)
+    end
+end
+
 local function readable(v)
     return not issecretvalue or not issecretvalue(v)
 end

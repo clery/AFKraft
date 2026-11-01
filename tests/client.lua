@@ -82,6 +82,53 @@ local function adapter(version, overrides)
     return namespace.Client, secret
 end
 
+case("Nameplate artwork follows native style on each client", function()
+    for _, version in ipairs({ "12.1.5", "1.60.1" }) do
+        for _, classic in ipairs({ true, false }) do
+            local client =
+                adapter(version, { NamePlateSetupOptions = { useClassicHealthBar = classic } })
+            local calls = {}
+            local function region(kind)
+                return setmetatable({}, {
+                    __index = function(_, method)
+                        return function(_, ...)
+                            calls[kind .. method] = { ... }
+                        end
+                    end,
+                })
+            end
+            local bar, background, fill, border =
+                region("bar"), region("bg"), region("fill"), region("border")
+            function bar:GetStatusBarTexture()
+                return fill
+            end
+            function bar:CreateTexture()
+                return border
+            end
+            function bar:GetWidth()
+                return 124
+            end
+            function bar:GetHeight()
+                return 10
+            end
+            client.StyleNameplate(bar, background)
+            if classic then
+                assert(
+                    calls.barSetStatusBarTexture[1]
+                        == "Interface\\TargetingFrame\\UI-TargetingFrame-BarFill"
+                )
+                assert(calls.borderSetTexture[1] == "Interface\\Tooltips\\Nameplate-Border")
+                assert(calls.borderSetTexCoord[3] == 0.5)
+                assert(not calls.fillSetAtlas and not calls.bgSetAtlas)
+            else
+                assert(calls.fillSetAtlas[1] == "UI-HUD-CoolDownManager-Bar")
+                assert(calls.bgSetAtlas[1] == "UI-HUD-CoolDownManager-Bar-BG")
+                assert(not calls.borderSetTexture)
+            end
+        end
+    end
+end)
+
 case("Both clients register only public reward events", function()
     for _, version in ipairs({ "12.1.5", "1.60.1" }) do
         local client = adapter(version)

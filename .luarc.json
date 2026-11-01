@@ -8,6 +8,7 @@
     "Libs"
   ],
   "diagnostics.globals": [
+    "NamePlateSetupOptions",
     "PlaySound",
     "StopSound",
     "SOUNDKIT",
