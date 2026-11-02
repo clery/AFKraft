@@ -81,18 +81,25 @@ test("Party stat guide restores the shared tooltip width when hidden", function(
     W.state = s
     W.UI.selected = 1
     W.UI:SetTab("party")
-    local help
+    local help, helpIcon
     for button in W.UI.panel._pool.button:EnumerateActive() do
         if button:GetWidth() == 32 and button:GetHeight() == 28 then
             help = button
             local icon = button._pool.rect:EnumerateActive()()
             assertNotNil(icon:GetTexture())
+            helpIcon = icon
         end
     end
     assertNotNil(help)
     local width, force = GameTooltip:GetMinimumWidth()
     help:GetScript("OnEnter")(help)
     assertEquals(380, GameTooltip:GetMinimumWidth())
+    assertTrue(helpIcon.helpHover:IsPlaying())
+    help:GetScript("OnLeave")(help)
+    assertFalse(helpIcon.helpHover:IsPlaying())
+    help:GetScript("OnEnter")(help)
+    help:Hide()
+    assertFalse(helpIcon.helpHover:IsPlaying())
     GameTooltip:Hide()
     local restored, restoredForce = GameTooltip:GetMinimumWidth()
     assertEquals(width, restored)
