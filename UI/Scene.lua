@@ -664,12 +664,14 @@ function Scene:Animate(frameElapsed, simulationFraction)
             and unit.modelReady
             and not unit.dead
         then
-            W.Client.AnimateModel(unit.model, unit.pendingAnimation)
+            local haste = unit.combatant and unit.combatant.haste or 1
+            local _, speed = W.Client.AnimateModel(unit.model, unit.pendingAnimation, haste)
             unit.basePose = nil
             unit.actionAt = now
             -- Completion callbacks restore the stance; this bound also covers models
             -- that do not deliver OnAnimFinished for their selected sequence.
-            unit.animDuration = unit.pendingAnimation == W.Client.animations.fireBow and 0.65 or 1
+            unit.animDuration = (unit.pendingAnimation == W.Client.animations.fireBow and 0.65 or 1)
+                / (speed or 1)
             unit.pendingAnimation, unit.animTime = nil, now
         end
         updateModelVisibility(unit, now)
@@ -694,6 +696,9 @@ function Scene:Animate(frameElapsed, simulationFraction)
         if unit.deathTime and now - unit.deathTime >= 1.5 then
             W.Client.AnimateModel(unit.model, 6)
             unit.deathTime = nil
+        end
+        if unit.animTime then
+            W.Client.AdvanceModelAnimation(unit.model, now - unit.animTime)
         end
         if unit.animTime and now - unit.animTime >= (unit.animDuration or 1) then
             Scene.FinishAnimation(unit)

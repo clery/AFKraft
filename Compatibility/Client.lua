@@ -175,7 +175,9 @@ local animationFallbacks = {
     [25] = { 0 },
 }
 
-function A.AnimateModel(model, animation)
+function A.AnimateModel(model, animation, speed)
+    speed = type(speed) == "number" and speed > 0 and speed < math.huge and speed or 1
+    model.animationSequence, model.animationSpeed = nil, nil
     local ok, played = pcall(function()
         if model.HasAnimation and not model:HasAnimation(animation) then
             local fallback = animationFallbacks[animation]
@@ -191,12 +193,28 @@ function A.AnimateModel(model, animation)
             local target = model.nativeAppearance and model.appearanceSource
                 or model.adventureActor
                 or model
-            target:SetAnimation(animation)
+            if target == model.adventureActor then
+                target:SetAnimation(animation, nil, speed)
+            else
+                target:SetAnimation(animation)
+                if speed ~= 1 and target.SetSequenceTime then
+                    model.animationSequence, model.animationSpeed = animation, speed
+                else
+                    speed = 1
+                end
+            end
             return true
         end
         return false
     end)
-    return ok and played
+    return ok and played, speed
+end
+
+function A.AdvanceModelAnimation(model, elapsed)
+    if model.animationSequence then
+        local target = model.nativeAppearance and model.appearanceSource or model
+        target:SetSequenceTime(model.animationSequence, elapsed * model.animationSpeed * 1000)
+    end
 end
 
 function A.PlayLevelUp(model)

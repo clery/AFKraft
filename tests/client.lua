@@ -944,4 +944,35 @@ case("A different client discovers its own map IDs without importing Retail IDs"
     assert(x == 0.5 and math.abs(y - 0.75) < 0.0001)
 end)
 
+case("Haste scales native and actor animations and resets on stance changes", function()
+    local client = adapter("12.0.5")
+    local sequence, offset, actorSpeed
+    local source = {
+        SetAnimation = function() end,
+        SetSequenceTime = function(_, id, timeOffset)
+            sequence, offset = id, timeOffset
+        end,
+    }
+    local model = { nativeAppearance = true, appearanceSource = source }
+    local played, speed = client.AnimateModel(model, 16, 2)
+    assert(played and speed == 2)
+    client.AdvanceModelAnimation(model, 0.25)
+    assert(sequence == 16 and offset == 500)
+    client.AnimateModel(model, 25)
+    client.AdvanceModelAnimation(model, 0.5)
+    assert(offset == 500 and model.animationSequence == nil)
+    model.nativeAppearance = false
+    model.adventureActor = {
+        SetAnimation = function(_, _, _, animationSpeed)
+            actorSpeed = animationSpeed
+        end,
+    }
+    client.AnimateModel(model, 53, 1.5)
+    assert(actorSpeed == 1.5)
+    client.AnimateModel(model, 0)
+    assert(actorSpeed == 1)
+    client.AnimateModel(model, 16, 0 / 0)
+    assert(actorSpeed == 1)
+end)
+
 return cases
