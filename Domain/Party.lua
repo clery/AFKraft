@@ -143,21 +143,37 @@ function G.ItemPower(item, hero, extraUpgrade)
     return floor(power * 10 + 0.5) / 10
 end
 
-function G.ItemDescription(item, hero)
+function G.ItemDescription(item, hero, compare)
     if not item then
         return "Empty slot"
     end
     local lines = {}
     local stats = G.ItemStats(item, hero)
+    local previous = compare and hero and G.ItemStats(hero.gear[item.slot], hero) or {}
+    local lost = {}
     for _, key in ipairs(C.itemStatOrder) do
-        if stats[key] and stats[key] > 0 then
-            lines[#lines + 1] = string.format("+%.1f %s", stats[key], C.itemStatNames[key])
+        local value, old = stats[key] or 0, previous[key] or 0
+        local delta = value - old
+        if value > 0 then
+            local color = compare and delta > 0 and "|cff1eff00"
+                or compare and delta < 0 and "|cffff6060"
+                or "|cffffffff"
+            lines[#lines + 1] = color
+                .. string.format("+%.1f %s", value, C.itemStatNames[key])
+                .. (compare and delta ~= 0 and string.format(" (%+.1f)", delta) or "")
+                .. "|r"
+        elseif compare and old > 0 then
+            lost[#lost + 1] = string.format("|cffff6060-%.1f %s|r", old, C.itemStatNames[key])
         end
+    end
+    if #lost > 0 then
+        lines[#lines + 1] = "\n|cffffffffLost on equip:|r"
+        lines[#lines + 1] = table.concat(lost, "\n")
     end
     local armorType = G.ItemArmorType(item)
     if armorType then
         lines[#lines + 1] = C.armorNames[armorType] or "Unknown armor"
-        if hero then
+        if hero and not compare then
             local allowed, reason = G.CanWearArmor(hero, item)
             if not allowed then
                 lines[#lines + 1] = reason
@@ -166,18 +182,12 @@ function G.ItemDescription(item, hero)
     end
     if item.slot == 1 then
         lines[#lines + 1] = C.weaponNames[G.ItemWeaponType(item)] or "Unknown weapon"
-        if hero then
+        if hero and not compare then
             local allowed, reason = G.CanUseWeapon(hero, item)
             if not allowed then
                 lines[#lines + 1] = reason
             end
         end
-    end
-    if item.itemID then
-        lines[#lines + 1] = "Classic item #"
-            .. item.itemID
-            .. " · WoW level "
-            .. item.requiredLevel
     end
     if item.heirloom then
         lines[#lines + 1] = "Idle heirloom: stats scale with hero level."
@@ -185,7 +195,6 @@ function G.ItemDescription(item, hero)
     if (item.upgrade or 0) > 0 then
         lines[#lines + 1] = "Idle enhancement: +" .. item.upgrade * 10 .. "% stats."
     end
-    lines[#lines + 1] = "Power is an idle class-weighted estimate."
     if item.itemID == 13074 then
         lines[#lines + 1] = "Source bonus: +6 Defense (not simulated)."
     end

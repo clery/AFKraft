@@ -494,4 +494,30 @@ case("Crafting lesson progress and the exact reward survive reload until equippe
     assert(s.heroes[1].gear[1].uid == uid)
     assert(s.guide.crafted and s.guide.craftItem == nil and s.guide.craftHero == nil)
 end)
+case(
+    "Equipment descriptions show stat gains, losses and unchanged values without source clutter",
+    function()
+        local s = state()
+        local hero = s.heroes[1]
+        hero.gear[2] = { stats = { stamina = 4, agility = 3, spirit = 2, armor = 10 } }
+        local item = {
+            slot = 2,
+            stats = { stamina = 6, agility = 1, armor = 10 },
+            itemID = 1,
+            requiredLevel = 60,
+        }
+        local text = G.ItemDescription(item, hero, true)
+        assert(text:find("|cff1eff00+6.0 Stamina (+2.0)|r", 1, true))
+        assert(text:find("|cffff6060+1.0 Agility (-2.0)|r", 1, true))
+        assert(text:find("|cffffffff+10.0 Armor|r", 1, true))
+        assert(text:find("|cffff6060-2.0 Spirit|r", 1, true))
+        assert(not text:find("Classic item", 1, true) and not text:find("WoW level", 1, true))
+        hero.gear[2] = nil
+        text = G.ItemDescription(item, hero, true)
+        assert(text:find("|cff1eff00+6.0 Stamina (+6.0)|r", 1, true))
+        assert(not text:find("Lost on equip", 1, true))
+        text = G.ItemDescription(item, hero)
+        assert(text:find("|cffffffff+6.0 Stamina|r", 1, true))
+    end
+)
 return cases

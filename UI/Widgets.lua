@@ -198,15 +198,48 @@ function U.Icon(parent, name, x, y, size)
     return t
 end
 
-function U.Tooltip(frame, title, text)
+local tooltipWidth, tooltipWidthForce
+local tooltipWidthHooked = false
+
+function U.Tooltip(frame, title, text, width)
     local enter, leave = frame:GetScript("OnEnter"), frame:GetScript("OnLeave")
     frame:SetScript("OnEnter", function(self)
         if enter then
             enter(self)
         end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        if width then
+            if not tooltipWidthHooked then
+                GameTooltip:HookScript("OnHide", function()
+                    if tooltipWidth then
+                        GameTooltip:SetMinimumWidth(tooltipWidth, tooltipWidthForce)
+                        tooltipWidth, tooltipWidthForce = nil, nil
+                    end
+                end)
+                tooltipWidthHooked = true
+            end
+            tooltipWidth, tooltipWidthForce = GameTooltip:GetMinimumWidth()
+            GameTooltip:SetMinimumWidth(width)
+        end
         GameTooltip:SetText(title, unpack(T.gold))
-        GameTooltip:AddLine(text, 0.8, 0.85, 0.85, true)
+        if width then
+            for value in (text .. "\n"):gmatch("([^\n]*)\n") do
+                local red, green, blue = value:match("^|c%x%x(%x%x)(%x%x)(%x%x)")
+                if red then
+                    GameTooltip:AddLine(
+                        value,
+                        tonumber(red, 16) / 255,
+                        tonumber(green, 16) / 255,
+                        tonumber(blue, 16) / 255,
+                        true
+                    )
+                else
+                    GameTooltip:AddLine(value ~= "" and value or " ", 0.8, 0.85, 0.85, true)
+                end
+            end
+        else
+            GameTooltip:AddLine(text, 0.8, 0.85, 0.85, true)
+        end
         GameTooltip:Show()
     end)
     frame:SetScript("OnLeave", function(self)

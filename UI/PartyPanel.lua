@@ -25,6 +25,21 @@ local function line(parent, value, x, y, width, size, color)
     )
 end
 
+local function qualityText(item)
+    local colors = { "ffffffff", "ff1eff00", "ff0070dd", "ffa335ee" }
+    return "|c" .. (colors[item.quality] or colors[1]) .. C.qualityNames[item.quality] .. "|r"
+end
+
+local function statGuide(hero)
+    return "|cffffffffPrimary stat: "
+        .. C.itemStatNames[C.primaryStats[hero.class]]
+        .. "|r\n"
+        .. "Strength / Agility / Intellect: your class’s primary stat increases attack damage. Other primary stats do not increase attack damage. Intellect also increases healing for every class.\n\n"
+        .. "Stamina: increases maximum health.\nSpirit: increases healing.\nHaste: speeds up attacks and special ability cooldowns.\nArmor: reduces incoming damage, with diminishing returns.\nWeapon DPS / Attack Power: increase attack damage.\nSpell Power: increases damage and healing.\nHealing Power: increases healing.\nHealth / 5 sec: restores health during combat.\nResistances: currently informational; do not reduce damage.\n\n"
+        .. "Power estimates an item’s value for this class; it is not a combat stat. Talents and prestige can further modify combat stats.\n\n"
+        .. "Inventory stats: |cff1eff00green = gain|r, |cffff6060red = loss|r, |cffffffffwhite = unchanged|r compared with this hero’s gear in that slot. Parentheses show the change; lost stats appear below."
+end
+
 local function costText(state, cost)
     local function amount(value, available, label)
         return (available >= value and "|cffdfbc79" or "|cffff8e82")
@@ -126,7 +141,10 @@ end
 local function equipment(ui, p, s, hero, index)
     local class, stats = C.classByID[hero.class], G.Stats(s, hero)
     local outfit = W.ModelAssets.starterOutfits[hero.class] or W.ModelAssets.starterOutfits.MAGE
-    line(p, hero.name .. "’s equipment", 0, 0, 320, 20, class.color)
+    line(p, hero.name .. "’s equipment", 0, 0, 280, 20, class.color)
+    local help = U.Button(p, "?", 288, 0, 32, 28, function() end)
+    help.text:SetJustifyH("CENTER")
+    U.Tooltip(help, "Equipment stat guide", statGuide(hero), 380)
     line(
         p,
         "Level " .. hero.level .. " " .. class.name .. "  ·  " .. U.Number(stats.hp) .. " health",
@@ -207,7 +225,7 @@ local function equipment(ui, p, s, hero, index)
             b,
             item and item.name or name,
             item
-                    and (C.qualityNames[item.quality] .. " · " .. G.ItemPower(item, hero) .. " power\n" .. G.ItemDescription(
+                    and (qualityText(item) .. " · " .. G.ItemPower(item, hero) .. " power\n" .. G.ItemDescription(
                         item,
                         hero
                     ) .. "\nSelect to view upgrades and matching inventory.")
@@ -497,21 +515,17 @@ local function inventory(ui, p, s, hero, index)
             U.Tooltip(
                 b,
                 item.name,
-                C.qualityNames[item.quality]
+                qualityText(item)
                     .. " · "
                     .. power
                     .. " power\n"
-                    .. G.ItemDescription(item, hero)
-                    .. "\nCurrently equipped: "
-                    .. (previous and previous.name or "Empty")
-                    .. " ("
-                    .. G.ItemPower(previous, hero)
-                    .. " power).\n"
-                    .. (previous and G.ItemDescription(previous, hero) .. "\n" or "")
+                    .. G.ItemDescription(item, hero, true)
+                    .. "\n\n"
                     .. (
-                        not levelOK and restriction
-                        or "Click to equip. Your previous item returns to inventory."
-                    )
+                        not levelOK and ("|cffff6060" .. restriction .. "|r")
+                        or "Click to equip on " .. hero.name .. "."
+                    ),
+                320
             )
         end
     end

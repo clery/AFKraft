@@ -72,3 +72,27 @@ test("Party equipment buttons enforce class armor restrictions", function()
     clothButton:GetScript("OnClick")(clothButton)
     assertEquals(cloth, s.heroes[1].gear[2])
 end)
+
+test("Party stat guide restores the shared tooltip width when hidden", function()
+    local W = WoWIdle
+    local s = W.Game.New(W.Client.Now())
+    W.Game.AddHero(s, "WARRIOR")
+    s.guide.dismissed = true
+    W.state = s
+    W.UI.selected = 1
+    W.UI:SetTab("party")
+    local help
+    for button in W.UI.panel._pool.button:EnumerateActive() do
+        if button.text:GetText() == "?" then
+            help = button
+        end
+    end
+    assertNotNil(help)
+    local width, force = GameTooltip:GetMinimumWidth()
+    help:GetScript("OnEnter")(help)
+    assertEquals(380, GameTooltip:GetMinimumWidth())
+    GameTooltip:Hide()
+    local restored, restoredForce = GameTooltip:GetMinimumWidth()
+    assertEquals(width, restored)
+    assertEquals(force, restoredForce)
+end)
