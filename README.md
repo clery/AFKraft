@@ -66,11 +66,13 @@ In **Party**, select an equipment slot to compare items and preview the cost of 
 
 Crafting turns materials and Essence into targeted equipment. Configure salvage rules in the minigame to handle unwanted loot and protect items you want to keep. Talents and conditional ability priorities let you refine each hero's role as your party develops.
 
+Talent selections and earned points survive prestige, and respecs stay free. Hero levels stop at 60. Personal level records award a point every two levels, starting at level 1; repeating those levels never awards points twice. At level 20, permanent **Mastery** unlocks: victories at or above that hero's hardest completed encounter level grant Mastery XP, with double XP for bosses. Every Mastery rank grants another permanent talent point, up to the tree's 48-point total. The first rank costs 100 XP, and each later rank costs 50 more. Mastery continues when character levels are capped. The Talents view shows both tracks.
+
 ## Prestige and heirlooms
 
 Defeat a **level 8 milestone boss** to unlock prestige. Open **Legacy** to preview the rewards and reset consequences before confirming.
 
-Prestige starts a new run: hero levels and allocated talents reset, ordinary equipment and purchased run upgrades are lost, and gold, zone materials, and destination progress start over. Your heroes keep their identities and classes.
+Prestige starts a new run: hero levels and training reset, ordinary equipment and purchased run upgrades are lost, and gold, zone materials, and destination progress start over. Your heroes keep their identities, classes, talents, earned talent points, and Mastery. Lower-level encounters after a reset do not grant Mastery XP.
 
 Adventure rank, partial Adventure XP, unspent Essence, discoveries, unlocked recipes, Legacy currency, and heirlooms carry forward. Spent Essence is not refunded. Heirlooms scale with a hero's current idle level, giving future runs a useful foundation.
 

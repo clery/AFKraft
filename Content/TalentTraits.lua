@@ -1,6 +1,10 @@
 local _, W = ...
 local C = W.Content
 
+C.heroLevelCap = 60
+C.talentProgression = { levelsPerPoint = 2 }
+C.mastery = { unlockLevel = 20, baseXP = 100, xpPerRank = 50, bossMultiplier = 2 }
+
 -- Node order follows talentSpecs so existing saved IDs and prerequisites stay intact.
 -- Shared foundations gain a situational bonus; signature mechanics already stand alone.
 local traits = {

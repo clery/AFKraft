@@ -35,6 +35,8 @@ Target occasional meaningful check-ins every 15–30 minutes. Balance the first 
 - Support conditions such as ally health, enemy count, available resources, and target selection.
 - Provide functional class presets before requiring players to configure priorities.
 - Deep class-specific talent paths should alter behavior and interactions, including damage, healing, survival, control, and support. Permit mixing paths.
+- Talent selections and earned points survive ordinary prestige. Personal level records grant points without rewarding repeated levels. Respecs remain free.
+- Hero levels cap at 60. Permanent Mastery unlocks at hero level 20 and awards additional talent points from victories at or above each hero's recorded encounter frontier. Rank XP costs increase gently, independent of character levels.
 - Equipment, talent, and priority changes are available at any time, including during idle combat. Changes preserve current health proportions and cooldowns rather than restarting the encounter.
 - Manual resting is not part of gameplay. Brief transitions let defeated models complete their death animation. Damage numbers rise and fade smoothly.
 - On defeat, recover automatically and farm the last safe encounter. Explain the defeat cause and offer a retry control.
@@ -80,7 +82,7 @@ Prestige becomes available at an initial boss milestone and remains available th
 
 | Resets | Persists |
 | --- | --- |
-| All heroes' idle levels and allocated talents | Hero identities and classes |
+| All heroes' idle levels and training | Hero identities, classes, talents, earned talent points, and Mastery |
 | Ordinary equipment and purchased run upgrades | Talent, effect, and recipe discoveries |
 | Gold and zone materials | Legacy currency and permanent upgrades |
 | Zone and encounter progression | Crafted heirlooms |
@@ -89,6 +91,19 @@ Prestige becomes available at an initial boss milestone and remains available th
 Spent Essence remains spent; prestige does not refund upgrades. Real WoW effort held as unspent Essence carries across resets.
 
 Legacy rewards unlock heirloom recipes; materials and Essence craft them. Heirlooms scale with their owner's current idle level, returning to starting-level power after prestige. They provide a dependable baseline while ordinary drops can outperform them or enable specialized builds.
+
+## Progression layers roadmap
+
+The current foundation separates resettable hero levels (1–60), permanent talents, and Mastery unlocked at level 20. Additional layers should introduce new decisions at spaced milestones, not merely raise the level ceiling. The following milestones are planned and require implementation and playtesting:
+
+| Milestone | New layer | Purpose |
+| --- | --- | --- |
+| Level 30 | Enchanting | Add targeted equipment bonuses and choices beyond basic enhancements. |
+| Level 40 | Titanforging | Improve equipment power through its own upgrade track. |
+| Level 50 | Profession talent trees | Specialize in crafting, enchanting, or titanforging efficiency and power. |
+| Level 60 | Prestige+ | Unlock a harder progression tier and an optional deeper reset with lasting gain multipliers. |
+
+Ordinary prestige keeps talents and Mastery. Prestige+ should reset additional profession and upgrade development in exchange for faster rebuilding and tougher zones. Its permanent rewards can accelerate hero XP, Mastery XP, and resource acquisition. Keep earned talent points permanent; define each additional reset loss explicitly in the preview. Exact multipliers, profession reset boundaries, and subsequent difficulty unlocks remain balance work. Existing enhancement purchases remain usable while the new profession layers are developed.
 
 ## Offline progression
 

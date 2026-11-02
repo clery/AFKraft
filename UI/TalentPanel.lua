@@ -103,7 +103,7 @@ local function drawNode(tree, talent, hero, index)
                 not available and reason
                 or learned and "Click to unlearn and recover the point."
                 or available and "Click to spend one talent point."
-                or "Gain more idle levels to earn talent points."
+                or "Reach new level milestones to earn permanent talent points."
             ),
         320
     )
@@ -115,6 +115,11 @@ function P.Draw(ui, parent, hero, index)
         local frame = CreateFrame("Frame", nil, parent)
         frame:SetPoint("TOPLEFT", 0, -67)
         frame:SetSize(1296, 282)
+        frame.mastery = U.Bar(frame, 760, -63, 536, 18, { 0.35, 0.55, 0.85 })
+        frame.mastery.label = frame.mastery:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        frame.mastery.label:SetPoint("CENTER")
+        frame.mastery.label:SetWidth(520)
+        frame.mastery:EnableMouse(true)
         frame.trees = {}
         for path = 1, 3 do
             frame.trees[path] = createTree(frame, path)
@@ -122,6 +127,32 @@ function P.Draw(ui, parent, hero, index)
         ui.talentTrees = frame
     end
     local talents = G.TalentList(hero)
+    local mastery = G.MasteryProgress(hero)
+    local progress = G.TalentProgress(hero)
+    local bar = ui.talentTrees.mastery
+    local unlocked = G.MasteryUnlocked(hero)
+    local cost = G.MasteryCost(mastery.rank)
+    local complete = progress.earned >= #talents
+    bar:SetValue(complete and 1 or unlocked and mastery.xp / cost or 0)
+    bar.label:SetText(
+        not unlocked and ("Mastery unlocks at hero level " .. C.mastery.unlockLevel)
+            or complete and ("Mastery " .. mastery.rank .. " · All talent points earned")
+            or ("Mastery " .. mastery.rank .. " · " .. mastery.xp .. " / " .. cost .. " XP")
+    )
+    U.Tooltip(
+        bar,
+        "Permanent Mastery",
+        "Unlocks at hero level "
+            .. C.mastery.unlockLevel
+            .. ". Each rank grants one permanent talent point.\n\nEarn XP from victories at or above your hardest completed encounter level ("
+            .. math.max(1, mastery.frontier)
+            .. "). Boss victories award double Mastery XP.\n\nMastery survives ordinary prestige and grows beyond character level "
+            .. C.heroLevelCap
+            .. ". Each rank needs "
+            .. C.mastery.xpPerRank
+            .. " more XP than the previous rank.",
+        360
+    )
     ui.talentTrees:Show()
     for path, tree in ipairs(ui.talentTrees.trees) do
         local spent, count, rows = 0, 0, 1

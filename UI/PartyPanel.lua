@@ -181,7 +181,8 @@ local function equipment(ui, p, s, hero, index)
     )
     line(
         p,
-        hero.level >= G.LevelCap(hero) and "Level cap reached · train to keep growing"
+        hero.level >= C.heroLevelCap and "Level 60 · continue growing through Mastery"
+            or hero.level >= G.LevelCap(hero) and "Level cap reached · train to keep growing"
             or "Select a slot to compare and upgrade",
         0,
         59,
@@ -197,7 +198,13 @@ local function equipment(ui, p, s, hero, index)
     local training = G.TrainingCost(hero)
     local train = U.Button(
         p,
-        "Train: max " .. G.LevelCap(hero) .. " to " .. (G.LevelCap(hero) + 4),
+        G.LevelCap(hero) >= C.heroLevelCap and "Character level cap: 60"
+            or (
+                "Train: max "
+                .. G.LevelCap(hero)
+                .. " to "
+                .. math.min(C.heroLevelCap, G.LevelCap(hero) + 4)
+            ),
         332,
         0,
         240,
@@ -210,14 +217,22 @@ local function equipment(ui, p, s, hero, index)
         false,
         "primary"
     )
-    U.Enabled(train, affordable(s, training))
-    line(p, costText(s, training), 332, 37, 240, 11)
+    U.Enabled(train, G.LevelCap(hero) < C.heroLevelCap and affordable(s, training))
+    line(
+        p,
+        G.LevelCap(hero) >= C.heroLevelCap and "Mastery supplies further growth"
+            or costText(s, training),
+        332,
+        37,
+        240,
+        11
+    )
     U.Tooltip(
         train,
         "Raise the level cap · Equipment stats",
         "Current cap: "
             .. G.LevelCap(hero)
-            .. ". Training raises the maximum level by four; it does not grant levels. Heroes gain experience in idle battles; Adventure XP ranks award the Essence for training.\n\n"
+            .. ". Training raises the maximum level by four, up to 60; it does not grant levels. Mastery unlocks at level 20 and continues beyond the character cap. Heroes gain experience in idle battles; Adventure XP ranks award the Essence for training.\n\n"
             .. table.concat(attributeLines, "\n")
     )
 

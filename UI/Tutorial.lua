@@ -144,7 +144,7 @@ function Tutorial.Refresh(ui)
                 names[path]
                     .. " talent tree"
                     .. example
-                    .. "\n\nHover icons to compare talents. Green talents can be learned now. Mix trees and change talents freely.",
+                    .. "\n\nHover icons to compare talents. Green talents can be learned now. Mix trees and respec freely. Talents and earned points survive prestige.",
                 path + 1
             )
         else

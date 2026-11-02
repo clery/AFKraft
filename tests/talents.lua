@@ -10,7 +10,8 @@ end
 local function hero(class)
     local state = G.New(1000)
     assert(G.AddHero(state, class))
-    state.heroes[1].level = 48
+    state.heroes[1].level = 60
+    state.heroes[1].rank = 14
     return state, state.heroes[1]
 end
 
@@ -94,6 +95,7 @@ case("Legacy builds retain all nine selections in every class", function()
         { "cleave", "execute", "haste", "sustain", "renew", "leech", "guard", "thorns", "control" }
     for _, class in ipairs(C.classes) do
         local state, h = hero(class.id)
+        h.level, h.talentProgress = 48, nil -- A save from the previous point system.
         for _, id in ipairs(legacy) do
             h.talents[id] = true
         end
@@ -157,7 +159,7 @@ case("Expanded points unlock gradually and class-owned IDs cannot cross classes"
     assert(G.Points(h) == 9)
     assert(not h.talents[foreign] and not h.talents.unknown and not h.talents.guard)
     h.level = 100
-    assert(G.Points(h) == 47)
+    assert(G.Points(h) == 29)
 end)
 
 case("Live stat talents preserve health ratio, cooldowns, and death", function()
@@ -540,10 +542,11 @@ case("Boss defenses apply to incoming hits and disappear outside bosses", functi
     assert(hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation)))
 end)
 
-case("Larger trees retain two-level point pacing and all 48 choices reload and refund", function()
+case("All 48 permanent choices reload and refund even after current levels decrease", function()
     for _, class in ipairs(C.classes) do
         local state, h = hero(class.id)
-        h.level, h.rank = 95, 23
+        h.level, h.rank = 60, 14
+        G.RewardMastery(h, 1, 100000, false)
         assert(G.Points(h) == 48)
         for _, node in ipairs(G.TalentList(h)) do
             assert(G.Talent(state, 1, node.id))
@@ -560,9 +563,9 @@ case("Larger trees retain two-level point pacing and all 48 choices reload and r
         end
         assert(G.Points(h) == 48)
         h.level = 49
-        assert(G.Points(h) == 25)
-        h.level = 94
-        assert(G.Points(h) == 47)
+        assert(G.Points(h) == 48)
+        h.level = 54
+        assert(G.Points(h) == 48)
     end
 end)
 

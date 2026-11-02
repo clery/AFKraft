@@ -69,7 +69,11 @@ function G.FinishCatchup(state, job)
                 hero.name
                     .. " reached idle level "
                     .. hero.level
-                    .. " (maximum) while you were away. Train to raise the level cap."
+                    .. (
+                        hero.level == W.Content.heroLevelCap
+                            and " (character maximum) while you were away. Mastery continues in harder encounters."
+                        or " (maximum) while you were away. Train to raise the level cap."
+                    )
             )
         end
     end

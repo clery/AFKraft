@@ -24,7 +24,11 @@ function P.Opportunities(s)
         if unspent > 0 and not talentHero then
             talentHero = i
         end
-        if hero.level >= G.LevelCap(hero) and not cappedHero then
+        if
+            hero.level >= G.LevelCap(hero)
+            and G.LevelCap(hero) < C.heroLevelCap
+            and not cappedHero
+        then
             cappedHero = i
         end
     end
@@ -164,8 +168,23 @@ end
 
 function P.talents(ui, p, s)
     local h, index = selected(ui, s)
-    text(p, h.name .. "  /  " .. G.Points(h) .. " unspent talent points", 0, 0, 21, T.gold)
-    text(p, "Change talents at any time. Earn a point every two idle levels.", 0, 35, 13, T.muted)
+    U.SingleLine(
+        text(p, h.name .. "  /  " .. G.Points(h) .. " unspent talent points", 0, 0, 21, T.gold),
+        720,
+        28
+    )
+    local progress = G.TalentProgress(h)
+    local nextLevel = G.NextTalentLevel(h)
+    local mastery = G.MasteryProgress(h)
+    local hint = nextLevel and ("Next level point: " .. nextLevel .. ". ") or ""
+    if progress.earned >= #G.TalentList(h) then
+        hint = "All permanent talent points earned."
+    elseif G.MasteryUnlocked(h) then
+        hint = hint .. "Mastery XP: encounter level " .. math.max(1, mastery.frontier) .. "+."
+    else
+        hint = hint .. "Mastery unlocks at hero level " .. C.mastery.unlockLevel .. "."
+    end
+    text(p, "Permanent talents. Free respecs. " .. hint, 0, 35, 13, T.muted)
     W.TalentPanel.Draw(ui, p, h, index)
     text(p, "COMBAT PRIORITIES", 0, 372, 12, T.gold)
     local priorities, thresholds = {}, {}
@@ -402,7 +421,7 @@ function P.legacy(ui, p, s)
         text(p, "KEEP", 0, 254, 14, T.gold)
         text(
             p,
-            "Hero identities and classes; heirlooms; recipes and discoveries; Legacy; Adventure rank and partial XP; unspent Essence.",
+            "Hero identities and classes; talents, permanent talent points and Mastery; heirlooms; recipes and discoveries; Legacy; Adventure rank and partial XP; unspent Essence.",
             0,
             287,
             17,
@@ -412,7 +431,7 @@ function P.legacy(ui, p, s)
         text(p, "RESET", 0, 365, 14, T.gold)
         text(
             p,
-            "Hero levels, training and allocated talents; ordinary equipped and stored gear; gold and zone materials; destination and encounter progress.",
+            "Hero levels and training; ordinary equipped and stored gear; gold and zone materials; destination and encounter progress.",
             0,
             398,
             17,

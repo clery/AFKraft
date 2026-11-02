@@ -63,3 +63,13 @@ Whole-rank payouts require 1,300 XP to afford this bundle. The modeled questing,
 Run `lua scripts/balance_activity.lua`. It reads the live reward and upgrade-cost definitions, projects 100 hours, and samples 5,000 efficiency variations per profile at 75–125% of the assumed rates. It also reports how many party-wide training tiers the projected income can fund after the initial bundle. These results are a sensitivity model, not a substitute for playtesting.
 
 Adventure progress stores per-source activity counts and XP totals. Use timed playtests to compare those totals against the assumptions, including dense pack farms, fast quest turn-ins, repeated quests, level scaling, and long manual dungeon runs. Keep these weights provisional until observed rates support them. Do not infer extra rewards from signals the client cannot verify.
+
+## Permanent talents and Mastery
+
+Character levels stop at 60. Each hero retains selected talents, earned points, and their highest level through ordinary prestige. Higher personal level records award a point every two levels, starting at level 1, for up to 30 level-earned points. Repeating old levels and respeccing do not award new points or change Mastery prices.
+
+Mastery unlocks permanently at hero level 20 and uses its own rank and XP bar. Every victory records that hero's highest completed encounter level. Victories at or above that frontier award the encounter's normal hero-XP amount as Mastery XP, doubled for bosses; easier encounters award none. The frontier survives prestige. This rewards pushing harder encounters while permitting steady progress at the current frontier, including offline farming and character-level caps.
+
+Mastery rank-ups grant one permanent talent point. The first costs 100 XP, with 50 XP added to each subsequent price. Eighteen ranks cost 9,450 XP in total; alongside 30 level-earned points, they fill the current 48-talent budget. Reaching level 60 is not required before earning Mastery points. Once all points are earned, further talent Mastery gains stop. Constants live in `Content/TalentTraits.lua`.
+
+Existing saves retain allocated and unspent talent points. Old hero levels above 60 become Mastery ranks once on load, preserving the existing talent budget; older resets that already discarded talents cannot be reconstructed.

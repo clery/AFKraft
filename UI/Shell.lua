@@ -258,10 +258,24 @@ function UI:Refresh(redraw)
                     .. " / "
                     .. cap
                     .. "  ·  "
-                    .. (h.level >= cap and "Train to grow" or class.name)
+                    .. (
+                        h.level >= C.heroLevelCap
+                            and ("Mastery " .. W.Game.MasteryProgress(h).rank)
+                        or h.level >= cap and "Train to grow"
+                        or class.name
+                    )
             )
-            button.xp:SetMinMaxValues(0, h.level * 45)
-            button.xp:SetValue(h.xp)
+            if h.level >= C.heroLevelCap then
+                local mastery = W.Game.MasteryProgress(h)
+                local cost = W.Game.MasteryCost(mastery.rank)
+                button.xp:SetMinMaxValues(0, cost)
+                button.xp:SetValue(
+                    W.Game.TalentProgress(h).earned >= #W.Game.TalentList(h) and cost or mastery.xp
+                )
+            else
+                button.xp:SetMinMaxValues(0, h.level * 45)
+                button.xp:SetValue(h.xp)
+            end
             button.icon:SetTexture("Interface\\Icons\\" .. class.icon)
             button.xp:Show()
         else

@@ -10,6 +10,17 @@ function G.Prestige(state)
     if not state.prestigeUnlocked then
         return false, "Defeat a level 8 milestone boss to unlock prestige."
     end
+    -- Capture every hero's record before any reset mutates their current level.
+    for _, hero in ipairs(state.heroes) do
+        local progress, errorMessage = G.TalentProgress(hero)
+        if not progress then
+            return false, errorMessage
+        end
+        local mastery, masteryError = G.MasteryProgress(hero)
+        if not mastery then
+            return false, masteryError
+        end
+    end
     state.battle, state.rest = nil, 0
     local reward = G.PrestigeReward(state)
     state.legacy = state.legacy + reward
@@ -25,7 +36,7 @@ function G.Prestige(state)
         end
     end
     for _, hero in ipairs(state.heroes) do
-        hero.level, hero.xp, hero.rank, hero.health, hero.talents = 1, 0, 0, 1, {}
+        hero.level, hero.xp, hero.rank, hero.health = 1, 0, 0, 1
         for slot, item in pairs(hero.gear) do
             if not item.heirloom then
                 hero.gear[slot] = nil

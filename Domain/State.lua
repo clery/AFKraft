@@ -248,6 +248,35 @@ function G.Load(db, now)
         migrateItem(item)
     end
     for _, hero in ipairs(db.heroes) do
+        local talentProgress, errorMessage = G.TalentProgress(hero)
+        if not talentProgress then
+            return nil, errorMessage
+        end
+        local missingMastery = hero.mastery == nil
+        local mastery, masteryError = G.MasteryProgress(hero)
+        if not mastery then
+            return nil, masteryError
+        end
+        if missingMastery and db.runBest >= 1 and db.runBest < math.huge then
+            mastery.frontier = math.max(0, floor(db.runBest) - 1)
+        end
+        if hero.level > C.heroLevelCap then
+            -- Older uncapped levels become Mastery ranks without taking away
+            -- their existing talent budget or allocated build.
+            if
+                type(hero.xp) ~= "number"
+                or hero.xp < 0
+                or hero.xp >= math.huge
+                or hero.xp ~= floor(hero.xp)
+            then
+                return nil,
+                    "The saved hero experience is invalid. Your adventure has not been reset."
+            end
+            mastery.rank = mastery.rank + hero.level - C.heroLevelCap
+            mastery.xp = math.min(hero.xp, G.MasteryCost(mastery.rank) - 1)
+            hero.level, hero.xp = C.heroLevelCap, 0
+            db.battle, db.rest = nil, 0
+        end
         G.AppearanceSeed(hero)
         for _, item in pairs(hero.gear or {}) do
             migrateItem(item)

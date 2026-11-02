@@ -11,7 +11,7 @@ local function setup()
     state.paused, state.guide.dismissed = true, true
     state.heroes[1].level = 48
     W.state = state
-    W.UI.selected = 1
+    W.UI.selected, W.UI.recruiting, W.UI.disenchantOpen = 1, false, false
     W.UI.frame:Show()
     W.UI:SetTab("talents")
     return W, state, W.UI
@@ -58,3 +58,48 @@ test(
         assert(node.label:GetWidth() <= 158)
     end
 )
+
+test(
+    "Mastery appears at level 20 and remains visible with its XP after ordinary prestige",
+    function()
+        local W, state, ui = setup()
+        local hero = state.heroes[1]
+        -- Use a new hero record to exercise the unlock, rather than the setup's level-48 record.
+        hero.level, hero.rank, hero.talentProgress = 19, 4, nil
+        ui:Refresh()
+        local bar = ui.talentTrees.mastery
+        assert(bar.label:GetText():find("unlocks at hero level 20", 1, true))
+        assert(bar:GetValue() == 0)
+        hero.level = 20
+        W.Game.RewardMastery(hero, 20, 300, false)
+        ui:Refresh()
+        assert(bar.label:GetText():find("Mastery 2", 1, true))
+        assert(bar:GetValue() == 0.25)
+        state.prestigeUnlocked, state.runBest = true, 21
+        assert(W.Game.Prestige(state))
+        ui:Refresh()
+        assert(hero.level == 1 and bar:GetValue() == 0.25)
+        assert(bar.label:GetText():find("Mastery 2", 1, true))
+    end
+)
+
+test("The level-60 training control stays disabled even when its cost is affordable", function()
+    local _, state, ui = setup()
+    state.heroes[1].level, state.heroes[1].rank = 60, 14
+    state.gold, state.essence = 100000, 100000
+    ui:SetTab("party")
+    assert(not ui.cards[1].detail:GetText():find("Train to grow", 1, true))
+    local found
+    for _, kind in ipairs({ "button", "primary" }) do
+        local pool = ui.panel._pool[kind]
+        if pool then
+            for button in pool:EnumerateActive() do
+                if button.text:GetText() == "Character level cap: 60" then
+                    assert(not button:IsEnabled(), "Level-60 training must be disabled")
+                    found = true
+                end
+            end
+        end
+    end
+    assert(found, "Missing level-60 training control")
+end)

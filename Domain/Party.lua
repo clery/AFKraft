@@ -71,6 +71,8 @@ function G.AddHero(state, classID, identity)
         healBelow = 65,
         specialCount = 2,
     }
+    G.TalentProgress(hero)
+    G.MasteryProgress(hero)
     state.heroes[#state.heroes + 1] = hero
     hero.appearanceSeed = state.seed
     G.Emit(state, "recruit")
@@ -289,19 +291,76 @@ function G.Stats(state, hero)
     })
 end
 
-function G.Points(hero)
-    local count = 0
-    local talents = G.TalentList(hero)
-    for _, v in pairs(hero.talents) do
-        if v then
-            count = count + 1
-        end
+local function positiveInteger(value)
+    return type(value) == "number" and value >= 1 and value < math.huge and value == floor(value)
+end
+
+-- Personal level records award permanent points. Respecs and repeated levels
+-- never advance the record; Mastery grants additional points independently.
+function G.TalentProgress(hero)
+    local limit, spent = #G.TalentList(hero), 0
+    for _ in pairs(hero.talents) do
+        spent = spent + 1
     end
-    return max(0, min(#talents, floor((hero.level + 1) / 2)) - count)
+    if not positiveInteger(hero.level) or limit == 0 then
+        return nil, "The saved hero level or class is invalid. Your adventure has not been reset."
+    end
+    local progress = hero.talentProgress
+    if progress == nil then
+        -- Preserve both allocated and unspent points, including older saves
+        -- whose heroes exceeded the new character-level cap.
+        progress = {
+            bestLevel = min(hero.level, C.heroLevelCap),
+            earned = min(limit, max(spent, floor((hero.level + 1) / 2))),
+        }
+    elseif
+        type(progress) ~= "table"
+        or not positiveInteger(progress.bestLevel)
+        or not positiveInteger(progress.earned)
+        or progress.earned > limit
+    then
+        return nil, "The saved talent progression is invalid. Your adventure has not been reset."
+    end
+    local recordedBest = min(progress.bestLevel, C.heroLevelCap)
+    local previous = 1 + floor((recordedBest - 1) / C.talentProgression.levelsPerPoint)
+    local levelPoints = progress.levelPoints
+    if levelPoints == nil then
+        levelPoints = previous
+    end
+    if
+        not positiveInteger(levelPoints)
+        or levelPoints ~= previous
+        or levelPoints > progress.earned
+    then
+        return nil, "The saved talent progression is invalid. Your adventure has not been reset."
+    end
+    local bestLevel = max(min(hero.level, C.heroLevelCap), recordedBest)
+    local current = 1 + floor((bestLevel - 1) / C.talentProgression.levelsPerPoint)
+    local earned = min(limit, progress.earned + current - levelPoints)
+    if spent > earned then
+        return nil,
+            "The saved talent selections exceed earned points. Your adventure has not been reset."
+    end
+    progress.bestLevel, progress.earned, progress.levelPoints = bestLevel, earned, current
+    hero.talentProgress = progress
+    return progress, spent
+end
+
+function G.Points(hero)
+    local progress, spent = G.TalentProgress(hero)
+    return progress and max(0, progress.earned - spent) or 0
+end
+
+function G.NextTalentLevel(hero)
+    local progress = G.TalentProgress(hero)
+    if progress and progress.earned < #G.TalentList(hero) then
+        local level = progress.levelPoints * C.talentProgression.levelsPerPoint + 1
+        return level <= C.heroLevelCap and level or nil
+    end
 end
 
 function G.LevelCap(hero)
-    return 4 + (hero.rank or 0) * 4
+    return min(C.heroLevelCap, 4 + (hero.rank or 0) * 4)
 end
 
 function G.TrainingCost(hero)
@@ -312,6 +371,9 @@ function G.Train(state, index)
     local hero = state.heroes[index]
     if not hero then
         return false, "Choose a hero."
+    end
+    if G.LevelCap(hero) >= C.heroLevelCap then
+        return false, "The character level cap is 60. Continue growing through Mastery."
     end
     local cost = G.TrainingCost(hero)
     if state.essence < cost.essence or state.gold < cost.gold then
@@ -377,8 +439,19 @@ function G.CanTalent(hero, talent)
     if talent.row > 1 and not previous then
         return false, "Spend at least one point in the previous row of this specialization first."
     end
-    if G.Points(hero) < 1 then
-        return false, "Gain more idle levels to earn talent points."
+    local progress, spent = G.TalentProgress(hero)
+    if not progress then
+        return false, spent
+    end
+    if progress.earned <= spent then
+        local level = G.NextTalentLevel(hero)
+        return false,
+            level and ("Reach idle level " .. level .. " for another permanent talent point.")
+                or (
+                    progress.earned < #G.TalentList(hero)
+                        and "Earn Mastery XP from harder encounters for another permanent talent point."
+                    or "All permanent talent points have been earned."
+                )
     end
     return true
 end

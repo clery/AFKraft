@@ -25,6 +25,7 @@ Content\Backdrops.lua
 Content\Items.lua
 Domain\State.lua
 Domain\Party.lua
+Domain\Mastery.lua
 Domain\Inventory.lua
 Domain\Prestige.lua
 Domain\Adventure.lua

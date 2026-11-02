@@ -230,7 +230,31 @@ local function victory(state, battle)
         result.hero.health = result.health
         result.hero.xp = result.xp
         local previousLevel = result.hero.level
+        local hadMastery = G.MasteryUnlocked(result.hero)
         result.hero.level = result.level
+        G.TalentProgress(result.hero)
+        if not hadMastery and G.MasteryUnlocked(result.hero) then
+            G.Log(
+                state,
+                result.hero.name
+                    .. " unlocked Mastery. Harder encounters now award permanent talent progress."
+            )
+            G.Emit(state, "unlock", { target = result.id, masteryUnlocked = true })
+        end
+        local _, ranks = G.RewardMastery(result.hero, battle.level, xp, battle.boss)
+        if ranks > 0 then
+            G.Log(
+                state,
+                result.hero.name
+                    .. " reached Mastery "
+                    .. result.hero.mastery.rank
+                    .. ". +"
+                    .. ranks
+                    .. " permanent talent"
+                    .. (ranks == 1 and " point." or " points.")
+            )
+            G.Emit(state, "unlock", { target = result.id, mastery = ranks })
+        end
         if result.level > previousLevel then
             G.Emit(state, "levelup", { target = result.id })
         end
@@ -240,7 +264,11 @@ local function victory(state, battle)
                 result.hero.name
                     .. " reached idle level "
                     .. result.level
-                    .. " (maximum). Train to raise the level cap."
+                    .. (
+                        result.level == C.heroLevelCap
+                            and " (character maximum). Mastery continues in harder encounters."
+                        or " (maximum). Train to raise the level cap."
+                    )
             )
         end
     end
