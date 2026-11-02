@@ -809,6 +809,62 @@ item(10046, "Simple Linen Boots", "inv_boots_05", 11, 1, 4, { armor = 11 })
 item(10045, "Simple Linen Pants", "inv_pants_11", 10, 1, 2, { armor = 12 })
 item(2568, "Brown Linen Vest", "inv_shirt_05", 2, 1, 3, { armor = 15 })
 
+-- Classic weapon proficiencies are idle class rules, independent of the live client.
+-- Training and talent requirements are simplified; each hero has one weapon slot.
+C.weaponNames = {
+    sword = "One-Handed Swords",
+    axe = "One-Handed Axes",
+    mace = "One-Handed Maces",
+    staff = "Staves",
+    twoHandSword = "Two-Handed Swords",
+    twoHandAxe = "Two-Handed Axes",
+    bow = "Bows",
+    crossbow = "Crossbows",
+}
+C.classWeapons = {
+    WARRIOR = {
+        sword = true,
+        axe = true,
+        mace = true,
+        staff = true,
+        twoHandSword = true,
+        twoHandAxe = true,
+        bow = true,
+        crossbow = true,
+    },
+    PALADIN = { sword = true, axe = true, mace = true, twoHandSword = true, twoHandAxe = true },
+    HUNTER = {
+        sword = true,
+        axe = true,
+        staff = true,
+        twoHandSword = true,
+        twoHandAxe = true,
+        bow = true,
+        crossbow = true,
+    },
+    ROGUE = { sword = true, mace = true, bow = true, crossbow = true },
+    PRIEST = { mace = true, staff = true },
+    SHAMAN = { axe = true, mace = true, staff = true, twoHandAxe = true },
+    MAGE = { sword = true, staff = true },
+    WARLOCK = { sword = true, staff = true },
+    DRUID = { mace = true, staff = true },
+}
+local weaponItems = {
+    sword = { 25, 935 },
+    axe = { 37, 13014, 13015 },
+    mace = { 36, 13024, 13027, 13028 },
+    staff = { 35, 1539 },
+    twoHandSword = { 13043 },
+    twoHandAxe = { 1455 },
+    bow = { 13022, 13023 },
+    crossbow = { 13040 },
+}
+for weaponType, items in pairs(weaponItems) do
+    for _, id in ipairs(items) do
+        C.itemByID[id].weaponType = weaponType
+    end
+end
+
 C.armorRanks = { cloth = 1, leather = 2, mail = 3, plate = 4 }
 C.armorNames = { cloth = "Cloth", leather = "Leather", mail = "Mail", plate = "Plate" }
 C.classArmor = {

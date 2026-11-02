@@ -30,8 +30,36 @@ function G.CanWearArmor(hero, item)
     return true
 end
 
+function G.ItemWeaponType(item)
+    if not item or item.slot ~= 1 then
+        return nil
+    end
+    local template = C.itemByID[item.itemID]
+    return template and template.weaponType or item.weaponType
+end
+
+function G.CanUseWeapon(hero, item)
+    if not hero or not item or not C.slots[item.slot] then
+        return false, "Choose a hero and equipment item."
+    end
+    if item.slot ~= 1 then
+        return true
+    end
+    local weaponType = G.ItemWeaponType(item)
+    local proficiency = C.classWeapons[hero.class]
+    if not weaponType or not proficiency or not proficiency[weaponType] then
+        return false,
+            "This class cannot use " .. (C.weaponNames[weaponType] or "this weapon") .. "."
+    end
+    return true
+end
+
 function G.CanEquip(hero, item)
     local allowed, reason = G.CanWearArmor(hero, item)
+    if not allowed then
+        return false, reason
+    end
+    allowed, reason = G.CanUseWeapon(hero, item)
     if not allowed then
         return false, reason
     end
@@ -258,6 +286,7 @@ function G.CraftItem(hero, slot, heirloom)
         if
             candidate.slot == slot
             and G.CanWearArmor(hero, candidate)
+            and G.CanUseWeapon(hero, candidate)
             and (heirloom or candidate.level <= hero.level)
         then
             local power = G.ItemPower(

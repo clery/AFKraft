@@ -20,7 +20,9 @@ case("Catalog identities, source stats and zone references are complete", functi
         seen[item.itemID] = true
         assert(item.icon and item.name and next(item.stats))
         assert(item.level >= 1 and C.slots[item.slot] and C.qualityNames[item.quality])
-        if item.slot ~= 1 and item.slot ~= 4 then
+        if item.slot == 1 then
+            assert(C.weaponNames[item.weaponType], item.name .. " is missing a weapon subclass")
+        elseif item.slot ~= 4 then
             assert(C.armorRanks[item.armorType], item.name .. " is missing an armor subclass")
         end
         for key, value in pairs(item.stats) do
@@ -220,6 +222,81 @@ case("Both starting zones provide wearable chest, leg and foot upgrades for ever
             assert(covered[2] and covered[10] and covered[11], zone .. class.id)
         end
     end
+end)
+case("Every class has two usable starter weapons in both starting zones and a recipe", function()
+    for _, class in ipairs(C.classes) do
+        local hero = { class = class.id, level = 1 }
+        for _, zone in ipairs({ "elwynn", "durotar" }) do
+            local count = 0
+            for _, id in ipairs(C.zoneItems[zone]) do
+                local item = C.itemByID[id]
+                if item.slot == 1 and G.CanEquip(hero, item) then
+                    count = count + 1
+                end
+            end
+            assert(count >= 2, zone .. class.id)
+        end
+        for _, heirloom in ipairs({ false, true }) do
+            local craft = assert(G.CraftItem(hero, 1, heirloom))
+            assert(G.CanEquip(hero, craft), class.id)
+        end
+    end
+end)
+case("Weapon proficiencies distinguish classes and one-handed from two-handed weapons", function()
+    local allowed = {
+        WARRIOR = { 25, 35, 36, 37, 1455, 13043, 13022, 13040 },
+        PALADIN = { 25, 36, 37, 1455, 13043 },
+        HUNTER = { 25, 35, 37, 1455, 13043, 13022, 13040 },
+        ROGUE = { 25, 36, 13022, 13040 },
+        PRIEST = { 35, 36 },
+        SHAMAN = { 35, 36, 37, 1455 },
+        MAGE = { 25, 35 },
+        WARLOCK = { 25, 35 },
+        DRUID = { 35, 36 },
+    }
+    for class, ids in pairs(allowed) do
+        local expected = {}
+        for _, id in ipairs(ids) do
+            expected[G.ItemWeaponType(C.itemByID[id])] = true
+        end
+        for _, source in ipairs(C.items) do
+            if source.slot == 1 then
+                local item = G.Copy(source)
+                item.weaponType = nil -- Saved items resolve their canonical type by ID.
+                local hero = { class = class, level = 60 }
+                assert(
+                    G.CanEquip(hero, item) == (expected[source.weaponType] == true),
+                    class .. source.name
+                )
+                item.heirloom = true
+                hero.level = 1
+                assert(G.CanEquip(hero, item) == (expected[source.weaponType] == true))
+            end
+        end
+    end
+end)
+case("Weapon restrictions drive equip, filters, upgrades and saved gear recovery", function()
+    local s = state()
+    local mage = s.heroes[2]
+    s.heroes[1].class = "PRIEST"
+    local axe = G.Item(s, 1, 1, 3, true, C.itemByID[13015])
+    local staff = G.Item(s, 1, 1, 1, false, C.itemByID[35])
+    s.inventory = { axe, staff }
+    assert(not G.IsUpgrade(s, axe))
+    local equipped, reason = G.Equip(s, 2, 1)
+    assert(not equipped and reason:find("cannot use", 1, true))
+    assert(G.ItemDescription(axe, mage):find("cannot use", 1, true))
+    assert(#G.InventoryEntries(s, mage, 1, { availability = "usable" }) == 1)
+    assert(#G.InventoryEntries(s, mage, 1, { availability = "locked" }) == 1)
+    assert(G.EquipBest(s, 2) and mage.gear[1] == staff)
+    s.inventory = {}
+    axe.upgrade, axe.protected, axe.count = 5, true, 3
+    mage.gear[1] = axe
+    G.StartBattle(s)
+    assert(G.Load(s, 1000))
+    assert(not mage.gear[1] and s.inventory[1] == axe and not s.battle)
+    assert(axe.upgrade == 5 and axe.protected and axe.count == 3 and axe.heirloom)
+    assert(G.Load(s, 1000) and #s.inventory == 1)
 end)
 case("Zone drops retain catalog stats, requirements and deterministic identity", function()
     local s = state()

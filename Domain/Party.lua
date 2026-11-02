@@ -164,6 +164,15 @@ function G.ItemDescription(item, hero)
             end
         end
     end
+    if item.slot == 1 then
+        lines[#lines + 1] = C.weaponNames[G.ItemWeaponType(item)] or "Unknown weapon"
+        if hero then
+            local allowed, reason = G.CanUseWeapon(hero, item)
+            if not allowed then
+                lines[#lines + 1] = reason
+            end
+        end
+    end
     if item.itemID then
         lines[#lines + 1] = "Classic item #"
             .. item.itemID
