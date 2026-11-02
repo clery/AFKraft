@@ -50,14 +50,32 @@ local function cursorPosition(map)
         (map:GetTop() - y / scale) / map:GetHeight()
 end
 
-local function highlight(map, x, y)
+local function highlight(map, zone, x, y)
     local texture = map.highlight
+    if not zone then
+        texture:Hide()
+        return
+    end
+    local bounds, mask = A.MapMask(zone.id, map.id, map.artInfo)
+    if bounds then
+        -- Hover, color and travel share one partition, including subdivisions
+        -- that the native continent highlight provider merges or displaces.
+        local left, top, right, bottom = unpack(bounds)
+        texture:ClearAllPoints()
+        texture:SetTexCoord(0, 1, 0, 1)
+        texture:SetTexture(mask, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        texture:SetPoint("TOPLEFT", left * map:GetWidth(), -top * map:GetHeight())
+        texture:SetSize((right - left) * map:GetWidth(), (bottom - top) * map:GetHeight())
+        texture:SetAlpha(0.2)
+        texture:Show()
+        return
+    end
     local id = A.MapID(map.id)
     if not id or not C_Map or not C_Map.GetMapHighlightInfoAtPosition then
         texture:Hide()
         return
     end
-    -- Use the same zone highlight geometry as Blizzard's map highlight provider.
+    -- Unpackaged clients use native ownership and its matching highlight.
     local fileID, atlas, u, v, width, height, left, top =
         C_Map.GetMapHighlightInfoAtPosition(id, x, y)
     if
@@ -73,6 +91,7 @@ local function highlight(map, x, y)
         return false
     end
     local w, h = map:GetWidth(), map:GetHeight()
+    texture:SetAlpha(0.55)
     texture:ClearAllPoints()
     texture:SetTexCoord(0, u, 0, v)
     if atlas then
@@ -117,7 +136,7 @@ local function createMap(self, parent, id, name, x)
         local nx, ny = cursorPosition(frame)
         local zone = A.ZoneAtPosition(id, nx, ny)
         frame.highlight:SetDesaturated(not zone or not G.IsUnlocked(W.state, zone))
-        highlight(frame, nx, ny)
+        highlight(frame, zone, nx, ny)
         if zone ~= frame.hovered then
             frame.hovered = zone
             if zone then

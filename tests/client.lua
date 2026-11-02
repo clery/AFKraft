@@ -1070,4 +1070,20 @@ case("Native geometry export is bounded, cancellable and independent of shipped 
     assert(not scripts.OnUpdate and not called)
 end)
 
+case("Generated coastal hits keep Felwood out of Darkshore and reject open water", function()
+    local client = adapter("12.1.5", { C_Map = {} })
+    for _, point in ipairs({
+        { "darkshore", 552, 170 },
+        { "darkshore", 578, 170 },
+        { "felwood", 592, 185 },
+        { "felwood", 590, 225 },
+        { "thousand_needles", 628, 566 },
+    }) do
+        local zone =
+            client.ZoneAtPosition("kalimdor", (point[2] + 0.5) / 1200, (point[3] + 0.5) / 800)
+        assert(zone and zone.id == point[1], point[1])
+    end
+    assert(not client.ZoneAtPosition("kalimdor", 536.5 / 1200, 205.5 / 800))
+end)
+
 return cases

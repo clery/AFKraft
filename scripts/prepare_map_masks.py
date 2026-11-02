@@ -55,6 +55,34 @@ def fill_holes(mask):
     return flooded.point(lambda value: 0 if value == 128 else 255)
 
 
+def remove_detached_hatching(mask):
+    """Reject tiny horizontal sea strokes without discarding round islands."""
+    width, height = mask.size
+    remaining = {index for index, value in enumerate(mask.tobytes()) if value}
+    result = mask.copy()
+    while remaining:
+        first = min(remaining)
+        remaining.remove(first)
+        pending, component = deque([first]), []
+        left = right = first % width
+        top = bottom = first // width
+        while pending:
+            pixel = pending.popleft()
+            component.append(pixel)
+            x, y = pixel % width, pixel // width
+            left, right, top, bottom = min(left, x), max(right, x), min(top, y), max(bottom, y)
+            for neighbor in (pixel - width, pixel + width,
+                             pixel - 1 if x else -1,
+                             pixel + 1 if x + 1 < width else -1):
+                if neighbor in remaining:
+                    remaining.remove(neighbor)
+                    pending.append(neighbor)
+        if bottom - top + 1 <= 4 and right - left + 1 >= 4 * (bottom - top + 1) and len(component) <= 256:
+            for pixel in component:
+                result.putpixel((pixel % width, pixel // width), 0)
+    return result
+
+
 def land_mask(image, outlines, caps):
     """Trace the actual coast by chroma; coarse guides exclude warm parchment.
 
@@ -76,7 +104,7 @@ def land_mask(image, outlines, caps):
     result = result.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.MaxFilter(3))
     # Close tiny texture-grain interruptions, without the old seven-pixel halo.
     result = result.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.MinFilter(3))
-    return ImageChops.multiply(fill_holes(result), guide)
+    return remove_detached_hatching(ImageChops.multiply(fill_holes(result), guide))
 
 
 def partition(image, land, seeds):
@@ -149,6 +177,23 @@ def partition(image, land, seeds):
         for pixel in component:
             labels[pixel] = label
     return names, labels
+
+
+def clip_click_regions(labels, names, land, inland_water):
+    """Make only visible land and explicitly reviewed inland water interactive.
+
+    The coarse propagation domain is not a hit box: it deliberately spans
+    shore margins, rivers and icon holes to keep the watershed connected.
+    """
+    allowed = land.tobytes()
+    unknown = set(inland_water) - set(names)
+    if unknown:
+        raise ValueError("Unknown inland-water region: " + ", ".join(sorted(unknown)))
+    water = {names.index(name): polygon_mask(land.size, outlines).tobytes()
+             for name, outlines in inland_water.items()}
+    return array("h", (label if allowed[index]
+                        or (label in water and water[label][index]) else -1
+                        for index, label in enumerate(labels)))
 
 
 def native_labels(data, continent, size, expected_art):
@@ -291,6 +336,8 @@ def build(data, source, output, client_data=None, preview=None):
                 else:
                     labels[index] = -1
             names = all_names
+        labels = clip_click_regions(labels, names, land,
+                                    data.get("inlandWater", {}).get(continent, {}))
         entry = dict(save_mask(output, continent, land), continent=continent)
         metadata["masks"][continent] = entry
         centers, review_tiles = {}, []
@@ -299,6 +346,7 @@ def build(data, source, output, client_data=None, preview=None):
                 continue
             mask = Image.new("L", size)
             mask.putdata([255 if owner == label else 0 for owner in labels])
+            hit_mask = mask.copy() if preview else None
             mask = ImageChops.multiply(mask, land)
             if not mask.getbbox():
                 if name not in data["seeds"][continent]:
@@ -316,7 +364,13 @@ def build(data, source, output, client_data=None, preview=None):
                 crop = rendered.crop((max(0, left - 12), max(0, top - 12),
                                       min(size[0], right + 12), min(size[1], bottom + 12)))
                 crop.thumbnail((380, 240))
-                review_tiles.append((name, crop))
+                hit_image = Image.blend(image, Image.new("RGB", size, (30, 190, 235)), 0.5)
+                hit_image = Image.composite(hit_image, image.convert("L").convert("RGB"), hit_mask)
+                left, top, right, bottom = hit_mask.getbbox()
+                hit_crop = hit_image.crop((max(0, left - 12), max(0, top - 12),
+                                           min(size[0], right + 12), min(size[1], bottom + 12)))
+                hit_crop.thumbnail((380, 240))
+                review_tiles.append((name, crop, hit_crop))
             points = data["seeds"][continent].get(name, [])
             valid = [(x, y) for x, y in points
                      if labels[y * size[0] + x] == label and land.getpixel((x, y))]
@@ -332,7 +386,8 @@ def build(data, source, output, client_data=None, preview=None):
         rows = rows_for_labels(labels, *size)
         metadata["continents"][continent] = {"mapID": spec["mapID"], "artSize": spec["size"],
                                              "firstTexture": spec["firstTexture"], "names": names, "centers": centers, "rows": rows,
-                                             "source": "native" if client_data else "artwork", "fallbackZones": fallbacks}
+                                             "source": "native" if client_data else "artwork", "fallbackZones": fallbacks,
+                                             "hitPolicy": "land-and-reviewed-inland-water"}
         if preview:
             preview.mkdir(parents=True, exist_ok=True)
             colors = [tuple(((i + 1) * channel) % 190 + 45 for channel in (67, 131, 191))
@@ -346,13 +401,15 @@ def build(data, source, output, client_data=None, preview=None):
                 for point in points:
                     draw.text(tuple(point), name, fill="white")
             rendered.save(preview / (continent + ".png"))
-            sheet = Image.new("RGB", (1600, math.ceil(len(review_tiles) / 4) * 280), (20, 20, 20))
-            draw = ImageDraw.Draw(sheet)
-            for index, (name, crop) in enumerate(review_tiles):
-                x, y = index % 4 * 400, index // 4 * 280
-                sheet.paste(crop, (x + (400 - crop.width) // 2, y + (245 - crop.height) // 2))
-                draw.text((x + 8, y + 255), name, fill="white")
-            sheet.save(preview / (continent + "-destinations.png"))
+            for tile_index, suffix in [(1, "destinations"), (2, "hit-regions")]:
+                sheet = Image.new("RGB", (1600, math.ceil(len(review_tiles) / 4) * 280), (20, 20, 20))
+                draw = ImageDraw.Draw(sheet)
+                for index, tile in enumerate(review_tiles):
+                    name, crop = tile[0], tile[tile_index]
+                    x, y = index % 4 * 400, index // 4 * 280
+                    sheet.paste(crop, (x + (400 - crop.width) // 2, y + (245 - crop.height) // 2))
+                    draw.text((x + 8, y + 255), name, fill="white")
+                sheet.save(preview / (continent + "-" + suffix + ".png"))
     (output / "geometry.json").write_text(json.dumps(metadata, separators=(",", ":")) + "\n")
     return metadata
 

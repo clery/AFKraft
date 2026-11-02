@@ -143,15 +143,73 @@ class MapMasks(unittest.TestCase):
     def test_deadwind_corridor_is_distinct_from_both_neighbors(self):
         entry = self.geometry["continents"]["eastern"]
         for name, points in {
-            "duskwood": [(590, 655), (595, 670)],
-            "deadwind": [(612, 650), (617, 663), (620, 680)],
-            "swamp_sorrows": [(648, 655), (655, 666)],
+            "duskwood": [(588, 655), (595, 670)],
+            "deadwind": [(595, 650), (603, 663), (607, 679)],
+            "swamp_sorrows": [(625, 650), (648, 655), (655, 666)],
+            "blasted_lands": [(620, 690), (627, 710), (646, 698)],
+            "stranglethorn": [(595, 700)],
         }.items():
             for x, y in points:
                 with self.subTest(name=name, x=x, y=y):
                     label = self.fields["eastern"][y * self.size[0] + x]
                     self.assertEqual(name, entry["names"][label])
                     self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+
+        # The pass ends above the southern regions, rather than following a
+        # decorative path down Blasted Lands' western edge.
+        deadwind = entry["names"].index("deadwind")
+        self.assertNotIn(deadwind, self.fields["eastern"][690 * self.size[0]:])
+
+    def test_darkshore_and_felwood_keep_their_sides_of_the_northern_border(self):
+        entry = self.geometry["continents"]["kalimdor"]
+        for name, points in {
+            "darkshore": [(552, 170), (578, 170), (560, 194), (552, 250)],
+            "felwood": [(592, 185), (603, 205), (590, 225), (580, 250)],
+        }.items():
+            for x, y in points:
+                with self.subTest(name=name, x=x, y=y):
+                    label = self.fields["kalimdor"][y * self.size[0] + x]
+                    self.assertEqual(name, entry["names"][label])
+
+    def test_every_non_land_hit_is_explicitly_reviewed_inland_water(self):
+        for continent, entry in self.geometry["continents"].items():
+            land = self.mask(continent).tobytes()
+            water = {entry["names"].index(name): BUILDER.polygon_mask(self.size, outlines).tobytes()
+                     for name, outlines in self.source.get("inlandWater", {}).get(continent, {}).items()}
+            for index, owner in enumerate(self.fields[continent]):
+                if owner >= 0 and not land[index]:
+                    self.assertTrue(owner in water and water[owner][index],
+                                    (continent, index % self.size[0], index // self.size[0], entry["names"][owner]))
+        entry = self.geometry["continents"]["kalimdor"]
+        self.assertEqual(-1, self.fields["kalimdor"][205 * self.size[0] + 536])
+        self.assertEqual("thousand_needles", entry["names"][self.fields["kalimdor"][566 * self.size[0] + 628]])
+
+    def test_detached_sea_hatching_is_not_land_or_a_click_target(self):
+        mask = Image.new("L", (64, 32))
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(mask)
+        draw.rectangle((2, 2, 25, 3), fill=255)
+        draw.rectangle((4, 12, 9, 17), fill=255)
+        draw.rectangle((30, 10, 60, 28), fill=255)
+        cleaned = BUILDER.remove_detached_hatching(mask)
+        self.assertEqual(0, cleaned.getpixel((12, 2)))
+        self.assertEqual(255, cleaned.getpixel((6, 14)))
+        self.assertEqual(255, cleaned.getpixel((45, 18)))
+
+    def test_propagation_margins_are_not_clickable_and_water_cannot_borrow_an_owner(self):
+        from array import array
+        land = Image.new("L", (8, 4))
+        land.putpixel((1, 1), 255)
+        owners = array("h", [0] * 32)
+        owners[1 * 8 + 6] = 1
+        outlines = {"lake": [[[4, 0], [7, 0], [7, 3], [4, 3]]]}
+        clipped = BUILDER.clip_click_regions(owners, ["lake", "coast"], land, outlines)
+        self.assertEqual(0, clipped[1 * 8 + 1])
+        self.assertEqual(-1, clipped[1 * 8 + 2])
+        self.assertEqual(0, clipped[1 * 8 + 5])
+        self.assertEqual(-1, clipped[1 * 8 + 6])
+        with self.assertRaises(ValueError):
+            BUILDER.clip_click_regions(owners, ["lake", "coast"], land, {"unknown": outlines["lake"]})
 
     def test_native_import_rejects_wrong_artwork_and_malformed_runs(self):
         expected = {"profile": "forever", "mapID": 1414, "size": [1024, 768], "firstTexture": 123}

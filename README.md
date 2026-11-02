@@ -103,7 +103,7 @@ The prototype already includes automatic party combat, zone travel, equipment, c
 
 Full class-specific talent trees, final dungeon-completion mappings, and prestige pacing are still in development. Each class has three 16-talent specialization trees (48 talents per class), mixing shared foundations with signature mechanics and situational bonuses for its combat style. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
 
-For design details and contribution guidance, see [the game design](DESIGN.md), [balance notes](BALANCE.md), [architecture](ARCHITECTURE.md), and [development tooling](TOOLING.md).
+For design details and contribution guidance, see [the game design](DESIGN.md), [balance notes](BALANCE.md), [architecture](ARCHITECTURE.md), and [development tooling](TOOLING.md) and [map maintenance and porting](MAPS.md).
 
 ## License and credits
 
