@@ -1253,3 +1253,35 @@ C.zoneItems = {
         13130,
     },
 }
+
+-- Expanded destinations share curated pools from the same progression band.
+-- These are idle encounter rewards, independent of live creature drop tables.
+C.zoneItems.dun_morogh = C.zoneItems.elwynn
+C.zoneItems.teldrassil = C.zoneItems.elwynn
+C.zoneItems.mulgore = C.zoneItems.durotar
+C.zoneItems.tirisfal = C.zoneItems.elwynn
+C.zoneItems.loch_modan = C.zoneItems.westfall
+C.zoneItems.darkshore = C.zoneItems.barrens
+C.zoneItems.silverpine = C.zoneItems.westfall
+C.zoneItems.stonetalon = C.zoneItems.ashenvale
+C.zoneItems.hillsbrad = C.zoneItems.wetlands
+C.zoneItems.thousand_needles = C.zoneItems.desolace
+C.zoneItems.alterac = C.zoneItems.duskwood
+C.zoneItems.arathi = C.zoneItems.stranglethorn
+C.zoneItems.badlands = C.zoneItems.tanaris
+C.zoneItems.swamp_sorrows = C.zoneItems.stranglethorn
+C.zoneItems.dustwallow = C.zoneItems.stranglethorn
+C.zoneItems.feralas = C.zoneItems.tanaris
+C.zoneItems.hinterlands = C.zoneItems.tanaris
+C.zoneItems.azshara = C.zoneItems.tanaris
+C.zoneItems.searing_gorge = C.zoneItems.tanaris
+C.zoneItems.blasted_lands = C.zoneItems.winterspring
+C.zoneItems.felwood = C.zoneItems.winterspring
+C.zoneItems.ungoro = C.zoneItems.winterspring
+C.zoneItems.burning_steppes = C.zoneItems.winterspring
+C.zoneItems.western_plaguelands = C.zoneItems.winterspring
+C.zoneItems.deadwind = C.zoneItems.winterspring
+C.zoneItems.eastern_plaguelands = C.zoneItems.winterspring
+C.zoneItems.silithus = C.zoneItems.winterspring
+C.zoneItems.moonglade = C.zoneItems.tanaris
+C.zoneItems.blackrock_mountain = C.zoneItems.winterspring

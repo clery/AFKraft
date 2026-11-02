@@ -36,6 +36,63 @@ case("Content uses unique stable IDs and valid references", function()
     equal(#C.equipmentSlots, 10)
     equal(#C.classes, 9)
 end)
+case("Classic outdoor roster supports travel, combat, loot and saved destinations", function()
+    equal(#C.zones, 41)
+    for _, id in ipairs({
+        "dun_morogh",
+        "teldrassil",
+        "mulgore",
+        "tirisfal",
+        "loch_modan",
+        "darkshore",
+        "silverpine",
+        "stonetalon",
+        "hillsbrad",
+        "thousand_needles",
+        "alterac",
+        "arathi",
+        "badlands",
+        "swamp_sorrows",
+        "dustwallow",
+        "feralas",
+        "hinterlands",
+        "azshara",
+        "searing_gorge",
+        "blasted_lands",
+        "felwood",
+        "ungoro",
+        "burning_steppes",
+        "western_plaguelands",
+        "deadwind",
+        "eastern_plaguelands",
+        "silithus",
+        "moonglade",
+        "blackrock_mountain",
+    }) do
+        assert(C.zoneByID[id], id)
+    end
+    for _, zone in ipairs(C.zones) do
+        local state = party()
+        state.runBest = 18
+        assert(G.Travel(state, zone.id))
+        equal(state.zone, zone.id)
+        assert(G.ZoneLoot(state, zone.level))
+        state.rest, state.stage = 0, 1
+        G.StartBattle(state)
+        assert(#state.battle.enemies > 0)
+        local names = {}
+        for _, name in ipairs(zone.enemies) do
+            names[name] = true
+        end
+        for _, enemy in ipairs(state.battle.enemies) do
+            assert(names[enemy.name], zone.id)
+        end
+        state.battle, state.rest, state.stage = nil, 0, 5
+        G.StartBattle(state)
+        equal(state.battle.enemies[1].name, zone.boss)
+        equal(assert(G.Load(G.Copy(state), 1000)).zone, zone.id)
+    end
+end)
 case("Party allows duplicates but never a sixth hero", function()
     local s = G.New(0)
     for _ = 1, 5 do

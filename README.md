@@ -28,7 +28,7 @@ Your heroes' levels, equipment, and combat belong to the minigame. Their growth 
 
 ## Adventure through Azeroth
 
-Choose destinations on clickable maps of **Kalimdor** and the **Eastern Kingdoms**. The current prototype includes twelve starter zones with enemy groups, local resources, and milestone bosses. Your idle destination is independent of your real character's location.
+Choose destinations on clickable maps of **Kalimdor** and the **Eastern Kingdoms**. The outdoor roster covers 41 Classic destinations, including all six starting regions, the leveling and endgame zones, Moonglade, Deadwind Pass, and the Blackrock Mountain hub. Cities, dungeons, and raids are not destinations. Each region has enemies, a milestone boss, local resources, and a curated loot pool. New regions temporarily share existing landscape backdrops and loot pools from a similar progression band; frontier levels and rewards remain provisional. Your idle destination is independent of your real character's location.
 
 Battles earn hero experience, gold, equipment, and crafting materials. Push forward when your party is ready, or keep farming to improve its gear. After a defeat, the party falls back to a safe encounter. Traveling abandons the current encounter without its rewards and preserves your heroes' current health.
 
@@ -99,7 +99,7 @@ Audio can be muted entirely or by category, including combat, encounters, progre
 
 The prototype already includes automatic party combat, zone travel, equipment, crafting, salvage, talents, ability priorities, offline catch-up, prestige, and scaling heirlooms.
 
-Full class-specific talent trees, the complete launch-zone roster, final dungeon-completion mappings, and prestige pacing are still in development. Each class has three specialization trees with signature mechanics and situational talent bonuses for its combat style. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
+Full class-specific talent trees, final dungeon-completion mappings, and prestige pacing are still in development. Each class has three specialization trees with signature mechanics and situational talent bonuses for its combat style. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
 
 For design details and contribution guidance, see [the game design](DESIGN.md), [balance notes](BALANCE.md), [architecture](ARCHITECTURE.md), and [development tooling](TOOLING.md).
 

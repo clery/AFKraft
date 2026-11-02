@@ -893,13 +893,16 @@ case("Retail regions follow artwork and remain clickable without native hit data
             local x, y = client.ZonePosition(zone.id, continent)
             if x then
                 found = found + 1
-                assert(client.ZoneAtPosition(continent, x, y).id == zone.id)
-                -- Check a second point inside the region.
-                local offset = zone.id == "westfall" and -0.018 or 0.018
-                assert(
-                    client.ZoneAtPosition(continent, x + offset, y + 0.020).id == zone.id,
-                    zone.id
-                )
+                assert(client.ZoneAtPosition(continent, x, y).id == zone.id, zone.id)
+                -- Check interior points toward every edge, including narrow hubs.
+                local outline = client.ZoneOutline(zone.id, continent)
+                assert(outline)
+                for i = 1, #outline, 2 do
+                    local px = x + (outline[i] - x) * 0.1
+                    local py = y + (outline[i + 1] - y) * 0.1
+                    local hit = client.ZoneAtPosition(continent, px, py)
+                    assert(hit and hit.id == zone.id, zone.id)
+                end
             end
         end
         assert(found == 1)

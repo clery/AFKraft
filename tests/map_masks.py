@@ -59,7 +59,7 @@ class MapMasks(unittest.TestCase):
         self.assertEqual(0, self.alpha("kalimdor", 440, 80))
 
     def test_every_descriptor_has_a_client_compatible_alpha_texture(self):
-        self.assertEqual(14, len(self.bounds))
+        self.assertEqual(43, len(self.bounds))
         for key in self.bounds:
             with self.subTest(key=key):
                 with Image.open(ROOT / "Assets/Maps" / (key + ".tga")) as image:
