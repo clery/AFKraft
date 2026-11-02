@@ -143,11 +143,15 @@ function G.StartBattle(state)
     G.Emit(state, "encounter", { boss = boss })
 end
 
-local function hurt(state, target, amount, enemy, source)
+local function hurt(state, target, amount, enemy, source, passive)
     amount = floor(max(1, amount))
     local wasAlive = target.hp > 0
     target.hp = max(0, target.hp - amount)
-    G.Emit(state, "hit", { target = target.id, enemy = enemy, amount = amount, source = source })
+    G.Emit(
+        state,
+        "hit",
+        { target = target.id, enemy = enemy, amount = amount, source = source, passive = passive }
+    )
     if wasAlive and target.hp == 0 then
         G.Emit(state, "death", { target = target.id, enemy = enemy })
     end
@@ -284,7 +288,7 @@ function G.Step(state, seconds)
                 dot.pending = (dot.pending or 0) + dot.damage * min(seconds, dot.remaining)
                 local amount = floor(dot.pending)
                 if amount > 0 then
-                    hurt(state, enemy, amount, true, source)
+                    hurt(state, enemy, amount, true, source, true)
                     dot.pending = dot.pending - amount
                 end
             end
@@ -528,7 +532,7 @@ function G.Step(state, seconds)
                         target.cd = max(0, target.cd - 1)
                     end
                     if talent.thorns and amount > 0 then
-                        hurt(state, enemy, amount * 0.30, true, target.id)
+                        hurt(state, enemy, amount * 0.30, true, target.id, true)
                     end
                     enemy.attackCD = 2.4
                 end

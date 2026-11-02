@@ -1484,3 +1484,25 @@ test(
         end
     end
 )
+
+test("Passive damage does not replay the source attack animation", function()
+    local W = WoWIdle
+    local state = W.Game.New(W.Client.Now())
+    W.Game.AddHero(state, "WARRIOR")
+    W.Game.StartBattle(state)
+    W.state = state
+    W.UI:SetTab("adventure")
+    local scene = W.UI.scene
+    local source = scene.units[1]
+    source.pendingAnimation = nil
+    state.events = {
+        { kind = "hit", source = 1, target = 1, enemy = true, amount = 2, passive = true },
+    }
+    scene:Refresh(state)
+    assertEquals(nil, source.pendingAnimation)
+    state.events = {
+        { kind = "hit", source = 1, target = 1, enemy = true, amount = 10 },
+    }
+    scene:Refresh(state)
+    assertNotNil(source.pendingAnimation)
+end)

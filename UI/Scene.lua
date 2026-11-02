@@ -391,8 +391,8 @@ function Scene:Refresh(s)
                 self.effects:Event(self.units, s, event)
                 if event.kind == "hit" or event.kind == "heal" then
                     local unit = self.units[event.target + (event.enemy and 5 or 0)]
-                    -- Basic swings and enemy attacks also animate, even with combat text off.
-                    if event.kind == "hit" then
+                    -- Passive damage changes health and combat text without replaying the attack.
+                    if event.kind == "hit" and not event.passive then
                         local source = self.units[(event.source or 0) + (event.enemy and 0 or 5)]
                         if source and not source.dead then
                             source.pendingAnimation =
