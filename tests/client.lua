@@ -82,6 +82,7 @@ local function adapter(version, overrides)
     local maps = assert(loadfile("Compatibility/Maps.lua"))
     setfenv(maps, environment)
     maps("WoWIdle", namespace)
+    assert(loadfile("Compatibility/MapMasks.lua"))("WoWIdle", namespace)
     local dungeons = assert(loadfile("Compatibility/Dungeons.lua"))
     setfenv(dungeons, environment)
     dungeons("WoWIdle", namespace)
@@ -898,6 +899,9 @@ end)
 case("Native map hit testing resolves city submaps to their adventure zone", function()
     local client = adapter("12.1.5", {
         C_Map = {
+            GetMapArtLayerTextures = function()
+                return { 999999 }
+            end,
             GetMapInfoAtPosition = function()
                 return { mapID = 84, parentMapID = 37 }
             end,
@@ -918,13 +922,9 @@ case("Retail regions follow artwork and remain clickable without native hit data
             if x then
                 found = found + 1
                 assert(client.ZoneAtPosition(continent, x, y).id == zone.id, zone.id)
-                -- Check interior points toward every edge, including narrow hubs.
-                local outline = client.ZoneOutline(zone.id, continent)
-                assert(outline)
-                for i = 1, #outline, 2 do
-                    local px = x + (outline[i] - x) * 0.1
-                    local py = y + (outline[i + 1] - y) * 0.1
-                    local hit = client.ZoneAtPosition(continent, px, py)
+                -- Query adjacent pixels in the same shared label field.
+                for _, offset in ipairs({ -0.0001, 0.0001 }) do
+                    local hit = client.ZoneAtPosition(continent, x + offset, y)
                     assert(hit and hit.id == zone.id, zone.id)
                 end
             end
@@ -935,9 +935,12 @@ case("Retail regions follow artwork and remain clickable without native hit data
     assert(not client.ZoneAtPosition("eastern", -0.1, 0.8))
 end)
 
-case("Native zone borders take precedence over fallback artwork outlines", function()
+case("Unmatched artwork uses native borders instead of a stale color partition", function()
     local client = adapter("12.1.5", {
         C_Map = {
+            GetMapArtLayerTextures = function()
+                return { 999999 }
+            end,
             GetMapInfoAtPosition = function()
                 return { mapID = 999, mapType = 3, parentMapID = 13 }
             end,
@@ -997,6 +1000,74 @@ case("Haste scales native and actor animations and resets on stance changes", fu
     assert(actorSpeed == 1)
     client.AnimateModel(model, 16, 0 / 0)
     assert(actorSpeed == 1)
+end)
+
+case("Native geometry export is bounded, cancellable and independent of shipped masks", function()
+    local scripts, captured = {}, nil
+    local frame = {
+        SetScript = function(_, name, fn)
+            scripts[name] = fn
+        end,
+        Hide = function() end,
+    }
+    local client = adapter("12.1.5", {
+        CreateFrame = function()
+            return frame
+        end,
+        C_Map = {
+            GetMapArtLayers = function()
+                return { { layerWidth = 3840, layerHeight = 2560 } }
+            end,
+            GetMapArtLayerTextures = function(id)
+                return { id == 12 and 272075 or 2353944 }
+            end,
+            GetMapInfoAtPosition = function(id, x, y)
+                if y < 0.25 then
+                    return nil
+                end
+                if x > 0.75 then
+                    return { mapID = 999, parentMapID = 0 }
+                end
+                return { mapID = id == 12 and 1 or 37, parentMapID = id }
+            end,
+            GetMapInfo = function() end,
+        },
+    })
+    assert(not client.ExportMapGeometry(function() end, 0, 16))
+    assert(client.ExportMapGeometry(function(result)
+        captured = result
+    end, 16, 16) == frame)
+    local step = scripts.OnUpdate
+    step()
+    assert(captured == nil)
+    for _ = 1, 20 do
+        if scripts.OnUpdate then
+            scripts.OnUpdate()
+        end
+    end
+    assert(captured and captured.profile == "retail")
+    assert(not scripts.OnUpdate)
+    for _, id in ipairs({ "kalimdor", "eastern" }) do
+        local map = captured.continents[id]
+        assert(#map.rows == 16)
+        assert(#map.names == 2)
+        assert(map.names[1] == (id == "kalimdor" and "durotar" or "elwynn"))
+        assert(map.names[2] == "_map_999")
+        for _, row in ipairs(map.rows) do
+            local width = 0
+            for _, run in ipairs(row) do
+                assert(run[1] >= 1 and run[2] >= -1 and run[2] < #map.names)
+                width = width + run[1]
+            end
+            assert(width == 16)
+        end
+    end
+    local called = false
+    assert(client.ExportMapGeometry(function()
+        called = true
+    end, 16, 16))
+    scripts.OnHide()
+    assert(not scripts.OnUpdate and not called)
 end)
 
 return cases

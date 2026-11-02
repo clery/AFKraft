@@ -155,6 +155,7 @@ local function paintMap(map)
     if not textures or not info then
         return
     end
+    map.artInfo = info
     local tw, th = info.tileWidth or 256, info.tileHeight or 256
     local width, height = info.layerWidth or 1002, info.layerHeight or 668
     local columns = math.ceil(width / tw)
@@ -184,14 +185,15 @@ local function paintMap(map)
     end
 end
 
-local function createMaskedRegion(map, key, bounds, desaturated)
+local function createMaskedRegion(map, texture, bounds, texCoord, desaturated)
     if not map.CreateMaskTexture then
         return
     end
     local left, top, right, bottom = unpack(bounds)
     local region = { tiles = {} }
     local mask = map:CreateMaskTexture()
-    mask:SetTexture("Interface\\AddOns\\WoWIdle\\Assets\\Maps\\" .. key .. ".tga")
+    mask:SetTexture(texture)
+    mask:SetTexCoord(0, texCoord[1], 0, texCoord[2])
     mask:SetPoint("TOPLEFT", left * map:GetWidth(), -top * map:GetHeight())
     mask:SetSize((right - left) * map:GetWidth(), (bottom - top) * map:GetHeight())
     region.mask = mask
@@ -216,18 +218,18 @@ local function updateAccessibleRegions(map)
     map.coloredFrontier = W.state.runBest
     -- Gray the land only; the base artwork keeps sea and parchment in color.
     if not map.grayRegion then
-        local bounds = A.MapMask(map.id, map.id)
+        local bounds, uv, texture = A.MapMask(map.id, map.id, map.artInfo)
         if bounds then
-            map.grayRegion = createMaskedRegion(map, map.id, bounds, true)
+            map.grayRegion = createMaskedRegion(map, texture, bounds, uv, true)
         end
     end
     for _, zone in ipairs(C.zones) do
         local region = map.colorRegions[zone.id]
         local unlocked = G.IsUnlocked(W.state, zone)
         if unlocked and not region then
-            local bounds = A.MapMask(zone.id, map.id)
+            local bounds, uv, texture = A.MapMask(zone.id, map.id, map.artInfo)
             if bounds then
-                region = createMaskedRegion(map, zone.id, bounds, false)
+                region = createMaskedRegion(map, texture, bounds, uv, false)
                 map.colorRegions[zone.id] = region
             end
         end
