@@ -351,6 +351,9 @@ case("Actor loading binds through its XML template without frame script methods"
     methods.SetKeepModelOnHide = function(self, keep)
         self.keepModel = keep
     end
+    methods.SetIsFrameBuffer = function(self, enabled)
+        self.isFrameBuffer = enabled
+    end
     local client = adapter("12.1.5", {
         CreateFrame = function(kind, _, parent)
             creates = creates + 1
@@ -375,6 +378,7 @@ case("Actor loading binds through its XML template without frame script methods"
         called = called + 1
     end)
     assert(model.adventureActor == actor and creates == 3)
+    assert(model.isFrameBuffer == true)
     assert(model.appearanceSource.parent == model)
     assert(model.adventureScene.parent == model)
     assert(model.appearanceSource.alpha == 0)

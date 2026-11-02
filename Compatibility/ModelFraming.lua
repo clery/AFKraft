@@ -147,6 +147,11 @@ function A.CreateAdventureModel(parent, loaded)
     -- Native character models retain complete NPC skins and player outfit data.
     -- Creature enemies use the separately fitted scene actor.
     local model = CreateFrame("Frame", nil, parent)
+    -- Composite each character independently so animated geometry cannot depth-test
+    -- against neighboring viewports. Scene ground positions determine draw order.
+    if model.SetIsFrameBuffer then
+        model:SetIsFrameBuffer(true)
+    end
     local source = CreateFrame("DressUpModel", nil, model)
     source:SetAllPoints(model)
     source:EnableMouse(false)
