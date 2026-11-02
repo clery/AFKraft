@@ -46,7 +46,7 @@ Check fullscreen, expanded, and compact sizes; text clipping; map tiles; tab cha
 
 ## Native combat visuals
 
-Combat spell effects use native M2 model files through PlayerModel, with FileDataIDs isolated in `Compatibility/SpellEffects.lua`. Spell IDs and SpellVisualKit IDs are different namespaces; do not substitute one for another. Current asset mappings target Retail. Unverified clients and unavailable models skip the effect rather than drawing replacement spell shapes.
+Combat spell effects use native M2 model files through PlayerModel, with FileDataIDs isolated in `Compatibility/SpellEffects.lua`. Spell IDs and SpellVisualKit IDs are different namespaces; do not substitute one for another. Spell models use an explicit side camera and a drawable one-pixel viewport during loading; readiness checks cover cached assets that do not deliver another load callback. Current asset mappings target Retail. Unverified clients and unavailable models skip the effect rather than drawing replacement spell shapes.
 
 The UI simulator does not render these particle models or deliver every model animation callback. Its tests explicitly simulate asset completion to verify pooling, impacts, stance restoration, and cleanup. In Retail, check hunter shots returning to a ready stance, melee/caster combat stances, Frostbolt flight and impact, priest shields, healing, and level-up effects. Repeat in full-size and compact views, including reload and hide/show transitions; verify particle scale, direction, camera framing, and absence of lingering effects.
 

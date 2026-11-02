@@ -10,6 +10,20 @@ local function position(unit)
     return (unit.renderX or unit.x or 0) + 66, -(unit.renderY or unit.y or 110) - 204 + 104 * scale
 end
 
+local function finishLoad(effect)
+    local model, spec = effect.model, effect.spec
+    if
+        effect.active
+        and not effect.loaded
+        and spec
+        and model:GetModelFileID() == spec.fileID
+        and W.Client.FrameSpellEffect(model, spec, effect.direction)
+    then
+        effect.loaded, effect.started = true, GetTime()
+        model:SetSize(spec.width, spec.height)
+    end
+end
+
 local function release(effect)
     effect.active, effect.loaded = false, false
     effect.source, effect.target, effect.spec = nil, nil, nil
@@ -53,16 +67,9 @@ function Effects:Acquire()
     effect.model = CreateFrame("PlayerModel", nil, effect.frame)
     effect.model:SetPoint("CENTER")
     effect.model:EnableMouse(false)
-    effect.model:SetAlpha(0)
-    effect.model:SetScript("OnModelLoaded", function(model)
-        local spec = effect.spec
-        -- Ignore callbacks from cleared or recycled models. Loading is asynchronous.
-        if effect.active and spec and model:GetModelFileID() == spec.fileID then
-            if W.Client.FrameSpellEffect(model, spec, effect.direction) then
-                effect.loaded, effect.started = true, GetTime()
-                model:SetAlpha(1)
-            end
-        end
+    effect.model:SetScript("OnModelLoaded", function()
+        -- A repeated callback must not restart a projectile already in flight.
+        finishLoad(effect)
     end)
     self.pool[#self.pool + 1] = effect
     return effect
@@ -71,14 +78,16 @@ end
 function Effects:Load(effect, kind)
     effect.kind = kind
     effect.spec = W.Client.SpellEffectSpec(kind, effect.class)
-    effect.loaded = false
+    effect.loaded, effect.checked = false, nil
     effect.requested = GetTime()
-    effect.model:SetAlpha(0)
+    -- A transparent/hidden model can defer resource preparation indefinitely.
+    -- Keep a drawable one-pixel viewport until framing is ready.
+    effect.model:SetAlpha(1)
+    effect.model:SetSize(1, 1)
     if not effect.spec then
         release(effect)
         return false
     end
-    effect.model:SetSize(effect.spec.width, effect.spec.height)
     effect.model:Show()
     if not W.Client.LoadSpellEffect(effect.model, effect.spec) then
         release(effect)
@@ -104,14 +113,12 @@ function Effects:Play(source, target, kind, class)
         or 1
     effect.x, effect.y = position(source)
     effect.duration = durations[kind] or 0.45
-    if not self:Load(effect, kind) then
-        return
-    end
     local x, y = position(effect.projectile and source or target)
     effect.frame:ClearAllPoints()
     effect.frame:SetPoint("CENTER", self.frame, "TOPLEFT", x, y)
     effect.frame:SetAlpha(1)
     effect.frame:Show()
+    self:Load(effect, kind)
 end
 
 function Effects:Event(units, state, event)
@@ -154,8 +161,13 @@ function Effects:Animate(now)
             if not target:IsShown() or not effect.source:IsShown() then
                 release(effect)
             elseif not effect.loaded then
-                -- A missing asset stays invisible; never replace it with a drawn sprite.
-                if now - effect.requested >= 1.5 then
+                -- Cached assets may become ready without another load callback.
+                -- Bound readiness queries to ten per second while loading only.
+                if not effect.checked or now - effect.checked >= 0.1 then
+                    effect.checked = now
+                    finishLoad(effect)
+                end
+                if not effect.loaded and now - effect.requested >= 1.5 then
                     release(effect)
                 end
             elseif

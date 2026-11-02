@@ -62,9 +62,11 @@ function A.FrameSpellEffect(model, spec, direction)
         if model.SetGlow then
             model:SetGlow(spec.glow or 0)
         end
-        model:SetCamera(0)
-        model:SetPortraitZoom(0)
-        model:SetCamDistanceScale(1)
+        -- Spell M2s need not contain the portrait camera used by characters.
+        -- Look across the missile axis so its authored trail is visible in profile.
+        model:SetCustomCamera(1)
+        model:SetCameraPosition(0, -8, 0.75)
+        model:SetCameraTarget(0, 0, 0.75)
         model:SetFacing(direction == -1 and math.pi or 0)
         if not model.HasAnimation or model:HasAnimation(0) then
             model:SetAnimation(0)

@@ -1022,7 +1022,8 @@ test("Native spell models wait for matching assets and reject late recycled call
     scene.effects:Play(source, target, "shield", "PRIEST")
     local effect = scene.effects.pool[1]
     assertEquals(166360, effect.spec.fileID)
-    assertEquals(0, effect.model:GetAlpha())
+    assertEquals(1, effect.model:GetAlpha())
+    assertEquals(1, effect.model:GetWidth())
     finishEffectLoad(effect)
     assertTrue(effect.loaded)
     assertEquals(1, effect.model:GetAlpha())
@@ -1041,6 +1042,43 @@ test("Native spell models wait for matching assets and reject late recycled call
     assertEquals(nil, W.Client.SpellEffectSpec("shield"))
     W.Client.flavor = flavor
 end)
+
+test(
+    "Cached native missiles complete loading without a callback and callbacks do not rewind flight",
+    function()
+        local W = WoWIdle
+        local scene = W.UI.scene
+        W.UI:SetTab("adventure")
+        local effects = scene.effects
+        effects:Clear()
+        local source, target = scene.units[1], scene.units[6]
+        source:Show()
+        target:Show()
+        effects:Play(source, target, "bolt", "MAGE")
+        local effect = effects.pool[1]
+        local getter = effect.model.GetModelFileID
+        effect.model.GetModelFileID = function()
+            return effect.spec.fileID
+        end
+        local ok, message = pcall(function()
+            assertEquals(1, effect.model:GetWidth())
+            assertTrue(effect.frame:IsShown())
+            effects:Animate(GetTime())
+            assertTrue(effect.loaded)
+            assertEquals(effect.spec.width, effect.model:GetWidth())
+            effect.started = GetTime() - 0.2
+            local started = effect.started
+            effect.model:GetScript("OnModelLoaded")(effect.model)
+            assertEquals(started, effect.started)
+            effects:Animate(GetTime())
+            local _, _, _, x = effect.frame:GetPoint()
+            assertTrue(math.abs(x - effect.x) > 0.01)
+        end)
+        effect.model.GetModelFileID = getter
+        effects:Clear()
+        assertTrue(ok, message)
+    end
+)
 
 test("Render motion advances each OnUpdate frame even when GetTime is unchanged", function()
     local W = WoWIdle
@@ -1133,9 +1171,15 @@ test(
                 assertTrue(particles)
                 loaded = fileID
             end,
-            SetCamera = function() end,
-            SetPortraitZoom = function() end,
-            SetCamDistanceScale = function() end,
+            SetCustomCamera = function(_, index)
+                assertEquals(1, index)
+            end,
+            SetCameraPosition = function(_, x, y, z)
+                assertEquals(0, x)
+                assertTrue(y < 0)
+                assertEquals(0.75, z)
+            end,
+            SetCameraTarget = function() end,
             SetFacing = function() end,
             SetAnimation = function() end,
         }
