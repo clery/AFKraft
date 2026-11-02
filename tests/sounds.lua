@@ -115,6 +115,40 @@ return {
         end,
     },
     {
+        "Audio mutes other panels, discards queued cues and resumes in compact mode",
+        function()
+            local n, emit, played, advance, env = fixture()
+            local stopped = {}
+            env.StopSound = function(handle)
+                stopped[#stopped + 1] = handle
+            end
+            emit("hit")
+            n.Audio.Flush()
+            assert(#played == 1)
+            advance(2)
+            emit("levelup")
+            for _, tab in ipairs({ "party", "talents", "crafting", "atlas", "legacy", "loot" }) do
+                n.state.ui.tab = tab
+                emit("hit")
+                n.Audio.Flush()
+                assert(#played == 1)
+            end
+            assert(#stopped == 1)
+            n.state.ui.tab = "adventure"
+            n.Audio.Flush()
+            assert(#played == 1)
+            emit("hit")
+            n.Audio.Flush()
+            assert(#played == 2)
+            advance(4)
+            n.state.ui.tab = "party"
+            n.state.ui.compact = true
+            emit("hit")
+            n.Audio.Flush()
+            assert(#played == 3)
+        end,
+    },
+    {
         "Unavailable client kits are silent and do not break playback",
         function()
             local n, emit, played, advance, env = fixture()

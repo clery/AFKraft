@@ -122,6 +122,9 @@ function UI:Layout()
     self.canvas:SetScale(scale)
     self.canvas:SetSize(width, height)
     local management = not compact and (W.state.ui.tab or "adventure") ~= "adventure"
+    if management then
+        W.Audio.Stop()
+    end
     local atlas = not compact and W.state.ui.tab == "atlas"
     local company = not compact and (W.state.ui.tab == "legacy" or W.state.ui.tab == "loot")
     self.scene:Layout(compact, management)

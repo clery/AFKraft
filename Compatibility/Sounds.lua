@@ -198,6 +198,7 @@ local function audible(state)
     return state == W.state
         and not W.catchup
         and state.settings.soundEnabled
+        and (state.ui.compact or (state.ui.tab or "adventure") == "adventure")
         and W.UI
         and W.UI.frame:IsShown()
 end
