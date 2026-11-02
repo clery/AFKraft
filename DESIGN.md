@@ -35,6 +35,7 @@ Audit date: 2026-11-02. **Implemented** means present in source; **partial** mea
 | Equipment and inventory | Implemented: [item content](Content/Items.lua), [transactions](Domain/Inventory.lua) | Ten wearable slots, comparisons, filters, protection, and a manual equip-best command. Equip-best is not an unattended purchasing or equipment automation feature. |
 | Targeted crafting, basic enhancement, heirlooms | Implemented: [inventory commands](Domain/Inventory.lua) | Craft previews, material/Essence costs, item enhancements, and Legacy-purchased heirloom recipes. Basic enhancement is not the proposed enchanting or titanforging system. |
 | Automatic salvage and manual disenchanting | Implemented: [loot rules and workbench commands](Domain/Inventory.lua) | Salvage uses broad rarity/upgrade/new-effect keep rules. Disenchanting handles stored stacks and returns gold/Relic dust. Detailed inventory filters are not equivalent to detailed automatic salvage rules. |
+| Gear-set collections | Proposed | No permanent set ledger, zone-specific collection rewards, duplicate protection, or Prestige+ collection ranks exist yet. Item-effect discoveries are not set collections. |
 | Enchanting and titanforging | Proposed | Separate item-modification decisions and upgrade tracks; no current command or progression ledger provides them. |
 | Profession talent trees | Proposed | Separate crafting/enchanting/titanforging specializations, not extra spending from the combat talent budget. |
 | Zone travel and encounter progression | Partial: [travel/retry](Domain/Party.lua), [world map](UI/Atlas.lua) | Manual destination changes, automatic encounters within a zone, and defeat fallback exist. No saved zone-change schedule or route executor exists. |
@@ -208,6 +209,36 @@ Automatically salvage unwanted ordinary loot. Current keep rules cover rarity, p
 
 Display shared inventory by effective item power, descending, with stable ordering for equal-power items and clear comparisons against the selected hero's equipment.
 
+## Gear-set collections — draft
+
+Rare equipment from idle encounters can also fill a permanent, account-wide collection book. This gives a familiar zone a specific long-term goal and connects exploration, loot, route planning, and Prestige+ without requiring players to store obsolete gear. These are minigame drops, not a requirement to collect items in the real WoW character's bags.
+
+### Discovery and permanent bonuses
+
+- Register each distinct piece once on acquisition, before automatic salvage or other inventory disposal. Equipping, consuming, or manually claiming the item is not required. Any party composition can register a piece, regardless of armor proficiency; normal equipment restrictions remain unchanged.
+- Grant modest permanent bonuses at visible partial-set milestones and a distinct completion bonus. Avoid an all-or-nothing reward that makes every drop before the last piece feel useless. Exact thresholds and coefficients remain open for balancing.
+- Keep the book, earned bonuses, piece ranks, and bad-luck progress through ordinary prestige and Prestige+. Selling, disenchanting, replacing, or losing the physical equipment never revokes the discovery.
+- Give sets recognizable themes rather than making every collection another universal damage multiplier. Candidate themes include basic-attack effectiveness, survival against a particular enemy family, or material yield. Keep party-wide benefits modest and class-specific mechanics in class talents; no set should make a class's defining ability universally available.
+- Completion provides an enduring improvement, not a mandatory key to the next zone or difficulty. Balance progression for incomplete collections and reserve completionist goals for optional depth.
+
+A working example is a Defias-themed collection associated with Westfall encounters. A future Deadmines dungeon could add its own collection or additional acquisition sources. This is an idle-content proposal, not a claim about canonical item drop locations: verify exact item identities, artwork, and client-specific sources before implementation. Do not make an outdoor collection require a dungeon that does not exist yet.
+
+### Higher-difficulty upgrades
+
+Each collection piece records its highest acquired Prestige+ tier. A higher-tier copy replaces that record rather than creating a separate book or erasing earlier completion. A first drop at a higher tier also counts as discovering the piece; lower-tier copies never downgrade it.
+
+Use the lowest recorded tier across all pieces as the set's completed upgrade rank. For example, upgrading all but one piece to Prestige+1 keeps the base completion reward; acquiring the remaining Prestige+1 piece upgrades that reward. Show both piece progress and the next completed-rank reward. Higher ranks improve the existing bonus with gentle, diminishing increments, replacing the previous rank's value rather than stacking full copies of it. Exact rank limits and increments remain open; permanent collection rank is separate from an item's enhancement, enchantment, or titanforge level.
+
+Ordinary duplicate copies still follow normal equipment/salvage rules and never repeatedly award permanent stats. Changing difficulty, resetting, crafting the same item, or replaying a reward receipt must not produce extra discoveries or ranks. Crafted items do not count as rare collection drops in the initial design.
+
+### Target farming and bad-luck protection
+
+The book shows each piece's eligible zones/enemy families, required difficulty, discovered state, highest tier, and progress toward a guaranteed missing piece. Publish drop eligibility and chances once tuned. Let players choose a collection target for planning; choosing a target does not silently change drop probabilities.
+
+Propose a visible per-collection, per-difficulty guarantee counter: eligible victories advance it, and reaching the threshold grants a randomly selected piece still missing at that difficulty. A normal qualifying drop that fills a missing piece restarts that counter; irrelevant duplicates do not. If that rank is complete, no counter advances. Persist partial counters across resets, process online and eligible offline victories identically, and make each reward atomic. A higher-tier drop satisfies the same piece at lower tiers; it cannot generate additional conversion rewards from those tiers. Thresholds are implementation placeholders until completion-time distributions are tested. This uses progress records rather than introducing another spendable currency.
+
+Saved routes may later wait for a collection milestone before moving on. They must expose a time/victory limit and fallback destination so optional collecting cannot trap a run indefinitely. Keep the collection book in the expanded view, with a short new-piece/upgrade summary after offline catch-up; avoid a popup or inventory action for every duplicate.
+
 ## Prestige and heirlooms
 
 Prestige becomes available at an initial boss milestone and remains available thereafter. Preview legacy rewards and all losses before confirmation. Rewards grow with achieved run milestones; empty resets yield nothing.
@@ -225,6 +256,7 @@ Ordinary prestige is implemented. The Prestige+ column is the proposed contract,
 | Legacy balance, earned/purchased permanent bonuses and heirloom recipes | Keep | Keep; a deeper reset does not revoke purchases advertised as permanent |
 | Ordinary equipment, gold and zone materials | Reset | Reset |
 | Owned heirlooms and existing permanent investment in them | Keep; stats scale back with hero level | Keep; future cycle-only modifications must be identified separately before purchase |
+| Collection discoveries, permanent bonuses, highest piece/set ranks, and guarantee counters | Proposed: keep | Keep; physical ordinary gear still resets |
 | Ability ownership, purchased automation modes, rule capacity, and route capability | Proposed: keep | Keep |
 | Rule/profile data, route templates, enabled preferences | Proposed: keep | Keep |
 | Active boost effects and cooldowns | Proposed: end active effects; keep cooldown progress | Same; no reset-based free activation |
@@ -335,7 +367,7 @@ The source contains model actors, animation methods, map APIs, and activity even
 
 ## Implementation sequence before balance tuning
 
-This draft is the review stage. No new ability, automation, route, profession, or Prestige+ system is implemented by this document.
+This draft is the review stage. No new ability, automation, route, collection, profession, or Prestige+ system is implemented by this document.
 
 | Phase | Deliverable | Completion evidence before proceeding |
 | --- | --- | --- |
@@ -344,8 +376,9 @@ This draft is the review stage. No new ability, automation, route, profession, o
 | 2 | On-cooldown automation | The same commands work without repeated clicks; enabled settings survive reset and reload. |
 | 3 | Conditional rules and profiles | Useful presets, deterministic conflict resolution, waiting reasons, manual override, and safe offline behavior. |
 | 4 | Route editor and online executor | Milestone transitions between encounters, eligible-target checks, override/resume, and permanent templates with fresh run cursors. |
+| 4a | Outdoor gear-set collection book and acquisition ledger | One representative set, partial/completion bonuses, registration before disposal, retained guarantee progress, and online/offline reward parity; dungeon sources remain future scope. |
 | 5 | Enchanting, titanforging, then profession trees | Distinct useful choices, reliable progression, explicit cycle/permanent investment, and transaction safety. |
-| 6 | Tiered progress and Prestige+ | Level-60 entry, migrated tier-aware records, deeper reset with retained capabilities, and faster-gain rewards working end to end. |
+| 6 | Tiered progress and Prestige+ | Level-60 entry, migrated tier-aware records, deeper reset with retained capabilities, collection rank upgrades, and faster-gain rewards working end to end. |
 | 7 | Balancing and playtest iteration | Reproducible combined-system scenarios, observed bottlenecks, and comparisons against the pacing hypotheses below. |
 
 Supported-client validation and visual quality continue throughout. Maintain the intended launch-class/outdoor-zone coverage, but use a representative route and party to verify each new system before extending its content. Use working placeholder coefficients for implementation; do not treat their initial values as balance conclusions.
@@ -354,6 +387,7 @@ Supported-client validation and visual quality continue throughout. Maintain the
 
 - Deterministic combat, priority ordering, healing, threat, control, and defeat fallback.
 - Crafting costs, inventory transactions, salvage protection, and full inventory behavior.
+- Collection registration before salvage/full-inventory handling; missing-piece guarantees; higher-tier first discoveries; duplicate/replayed receipts; mixed-tier completion; and retention of bonuses/ranks/counters across both resets. Verify no class or equipment requirement blocks registration.
 - Same-class alt replacement and persistence across character switches.
 - Ordinary prestige and Prestige+ preview/retention matrices, including talents, Mastery, Essence, heirlooms, purchased abilities, automation modes, saved rules, route templates, and enabled preferences. Test a purchased always-eligible automation at level 1 immediately after each reset, without repurchasing or re-earning its original unlock milestone.
 - Manual/automatic ability equivalence; expiry and cooldown boundaries; same-effect stacking; loadout swaps; simultaneous requests; death/health preservation; and unchanged behavior while the UI is hidden.
@@ -379,6 +413,7 @@ Existing values in [BALANCE.md](BALANCE.md) and content files describe the curre
 | Do resets feel rewarding? | Time and interactions to regain the previous frontier, reach new content, afford a meaningful permanent purchase, and rebuild cycle investments. Separate ordinary prestige from Prestige+. |
 | Is there a dominant farm/reset loop? | Reward per total elapsed adventure time, including rebuild time; compare short resets, deep pushes, frontier farming, difficulty switching, and boss loops. |
 | Do idle/offline modes remain worthwhile? | Progress per eligible simulated hour and resource use at matched starting states; account separately for active attention, real WoW activity, and elapsed offline time. |
+| Do collections reward exploration without blocking progression? | Median and long-tail eligible victories/time to first piece, partial milestones, completion, and each higher-tier upgrade; duplicate frequency, guarantee activations, route detours, and parties with incomplete sets. |
 | Does the economy remain understandable? | Source/sink totals per currency, savings toward unlocks, activation cost visibility, deterministic craft payback, and protection against profitable circular transactions. |
 
 Begin with fixed seeds and a small reproducible scenario set: new account, first reset, established automation, level-20 Mastery, level-40 equipment/professions, level-60 cap, and first Prestige+ rebuild. Include difficult bosses, healing/defense parties, low-resource runs, long absences, and bad-loot cases. Follow numerical comparisons with observation of real check-ins and interface friction.
