@@ -36,8 +36,7 @@ local function statGuide(hero)
         .. "|r\n"
         .. "Strength / Agility / Intellect: your class’s primary stat increases attack damage. Other primary stats do not increase attack damage. Intellect also increases healing for every class.\n\n"
         .. "Stamina: increases maximum health.\nSpirit: increases healing.\nHaste: speeds up attacks and special ability cooldowns.\nArmor: reduces incoming damage, with diminishing returns.\nWeapon DPS / Attack Power: increase attack damage.\nSpell Power: increases damage and healing.\nHealing Power: increases healing.\nHealth / 5 sec: restores health during combat.\nResistances: currently informational; do not reduce damage.\n\n"
-        .. "Power estimates an item’s value for this class; it is not a combat stat. Talents and prestige can further modify combat stats.\n\n"
-        .. "Inventory stats: |cff1eff00green = gain|r, |cffff6060red = loss|r, |cffffffffwhite = unchanged|r compared with this hero’s gear in that slot. Parentheses show the change; lost stats appear below."
+        .. "Power estimates an item’s value for this class; it is not a combat stat. Talents and prestige can further modify combat stats."
 end
 
 local function costText(state, cost)
@@ -142,8 +141,13 @@ local function equipment(ui, p, s, hero, index)
     local class, stats = C.classByID[hero.class], G.Stats(s, hero)
     local outfit = W.ModelAssets.starterOutfits[hero.class] or W.ModelAssets.starterOutfits.MAGE
     line(p, hero.name .. "’s equipment", 0, 0, 280, 20, class.color)
-    local help = U.Button(p, "?", 288, 0, 32, 28, function() end)
-    help.text:SetJustifyH("CENTER")
+    local help = U.Button(p, "", 288, 0, 32, 28, function() end)
+    help.text:Hide()
+    U.Begin(help)
+    local icon = U.Rect(help, 2, 0, 28, 28, T.text, 1, "ARTWORK")
+    icon:SetParent(help.content or help)
+    icon:SetTexture("Interface\\common\\help-i")
+    U.EndBuild(help)
     U.Tooltip(help, "Equipment stat guide", statGuide(hero), 380)
     line(
         p,

@@ -83,8 +83,10 @@ test("Party stat guide restores the shared tooltip width when hidden", function(
     W.UI:SetTab("party")
     local help
     for button in W.UI.panel._pool.button:EnumerateActive() do
-        if button.text:GetText() == "?" then
+        if button:GetWidth() == 32 and button:GetHeight() == 28 then
             help = button
+            local icon = button._pool.rect:EnumerateActive()()
+            assertNotNil(icon:GetTexture())
         end
     end
     assertNotNil(help)
