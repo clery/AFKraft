@@ -19,6 +19,7 @@ Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 
 Content.lua
+Content\TalentTraits.lua
 Content\Backdrops.lua
 Content\Items.lua
 Domain\State.lua

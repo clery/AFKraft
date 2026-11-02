@@ -441,4 +441,95 @@ case("Periodic damage expires, preserves fractional ticks, and survives reload",
     assert(not next(enemy.dots) and hp - enemy.hp == total)
 end)
 
+case("Every talent has its own icon and mechanical description", function()
+    local icons, descriptions, names, count = {}, {}, {}, 0
+    for _, class in ipairs(C.classes) do
+        for _, node in ipairs(C.talentsByClass[class.id]) do
+            local icon = node.icon:lower()
+            assert(not names[node.name], node.name .. " repeats another talent name")
+            names[node.name] = true
+            assert(not icons[icon], node.name .. " shares an icon with " .. (icons[icon] or ""))
+            assert(not descriptions[node.text], node.name .. " repeats another talent's effects")
+            icons[icon], descriptions[node.text] = node.name, node.name
+            if node.trait then
+                count = count + 1
+            end
+        end
+    end
+    assert(count == 189)
+end)
+
+local function traitEncounter(class, name)
+    local state, h = hero(class)
+    local selected
+    for _, node in ipairs(G.TalentList(h)) do
+        if node.name == name then
+            h.talents[node.id], selected = true, node
+        end
+    end
+    assert(selected and selected.trait)
+    G.StartBattle(state)
+    local unit, enemy = state.battle.heroes[1], state.battle.enemies[1]
+    unit.x, unit.y, enemy.x, enemy.y = 600, 100, 700, 100
+    enemy.hp, enemy.maxHP, enemy.attackCD = 100000, 100000, 100
+    unit.attackCD = 100
+    h.priority = "attack"
+    return state, h, unit, enemy, selected
+end
+
+case("Opening strike bonuses expire and respec immediately removes the bonus", function()
+    local s, h, unit, enemy, node = traitEncounter("ROGUE", "Shadowstep")
+    local hp = enemy.hp
+    G.Step(s, 0.25)
+    assert(hp - enemy.hp == math.floor(unit.damage * 1.7 * 1.24))
+    s.battle.elapsed, unit.cd = 6, 0
+    hp = enemy.hp
+    G.Step(s, 0.25)
+    assert(hp - enemy.hp == math.floor(unit.damage * 1.7))
+    s.battle.elapsed, unit.cd = 0, 0
+    h.talents[node.id] = nil
+    hp = enemy.hp
+    G.Step(s, 0.25)
+    assert(hp - enemy.hp == math.floor(unit.damage * 1.7))
+end)
+
+case("Poison synergy changes basic attacks only while the target has a physical dot", function()
+    local s, _, unit, enemy = traitEncounter("ROGUE", "Seal Fate")
+    unit.cd, unit.attackCD = 100, 0
+    enemy.dots = { [1] = { damage = 0, remaining = 5, physical = true } }
+    local hp = enemy.hp
+    G.Step(s, 0.25)
+    assert(hp - enemy.hp == math.floor(unit.damage * 1.18))
+    enemy.dots, unit.attackCD = nil, 0
+    hp = enemy.hp
+    G.Step(s, 0.25)
+    assert(hp - enemy.hp == math.floor(unit.damage))
+end)
+
+case("Shielded healing bonuses inspect the recipient and survive reloading", function()
+    local s, h, unit = traitEncounter("PRIEST", "Grace")
+    h.priority, h.healBelow = "heal", 100
+    unit.hp, unit.shield = 1, 10
+    local expected = math.floor(unit.healing * 1.26)
+    assert(G.Load(s, 1000))
+    G.Step(s, 0.25)
+    assert(unit.hp == math.min(unit.maxHP, 1 + expected))
+    unit.hp, unit.shield, unit.cd = 1, 0, 0
+    G.Step(s, 0.25)
+    assert(unit.hp == math.min(unit.maxHP, 1 + math.floor(unit.healing)))
+end)
+
+case("Boss defenses apply to incoming hits and disappear outside bosses", function()
+    local s, _, unit, enemy = traitEncounter("WARRIOR", "Shield Discipline")
+    unit.cd, unit.attackCD = 100, 100
+    s.battle.boss, enemy.attackCD = true, 0
+    local hp = unit.hp
+    G.Step(s, 0.25)
+    assert(hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation) * 0.9))
+    s.battle.boss, enemy.attackCD = false, 0
+    hp = unit.hp
+    G.Step(s, 0.25)
+    assert(hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation)))
+end)
+
 return cases

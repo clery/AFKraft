@@ -99,7 +99,8 @@ local function drawNode(tree, talent, hero, index)
                 or learned and "Click to unlearn and recover the point."
                 or available and "Click to spend one talent point."
                 or "Gain more idle levels to earn talent points."
-            )
+            ),
+        320
     )
     b:Show()
 end

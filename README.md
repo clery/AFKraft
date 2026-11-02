@@ -99,7 +99,7 @@ Audio can be muted entirely or by category, including combat, encounters, progre
 
 The prototype already includes automatic party combat, zone travel, equipment, crafting, salvage, talents, ability priorities, offline catch-up, prestige, and scaling heirlooms.
 
-Full class-specific talent trees, the complete launch-zone roster, final dungeon-completion mappings, and prestige pacing are still in development. Current talents share a mechanical foundation with class-specific ability names and roles. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
+Full class-specific talent trees, the complete launch-zone roster, final dungeon-completion mappings, and prestige pacing are still in development. Each class has three specialization trees with signature mechanics and situational talent bonuses for its combat style. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
 
 For design details and contribution guidance, see [the game design](DESIGN.md), [balance notes](BALANCE.md), [architecture](ARCHITECTURE.md), and [development tooling](TOOLING.md).
 

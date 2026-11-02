@@ -21,6 +21,78 @@ local function bleedingOrPoisoned(target)
     return false
 end
 
+-- Build once per step so talent edits take effect immediately without persisting caches.
+local function activeTraits(state)
+    local result = {}
+    for i, hero in ipairs(state.heroes) do
+        local traits = {}
+        for _, node in ipairs(G.TalentList(hero)) do
+            if node.trait and hero.talents[node.id] then
+                traits[#traits + 1] = node.trait
+            end
+        end
+        result[i] = traits
+    end
+    return result
+end
+
+local function traitApplies(condition, battle, unit, target, kind)
+    local subject = kind == "healing" and target or unit
+    if condition == "opening" then
+        return battle.elapsed <= 6
+    elseif condition == "late" then
+        return battle.elapsed > 12
+    elseif condition == "boss" then
+        return battle.boss
+    elseif condition == "healthy" then
+        return subject.hp > subject.maxHP * 0.8
+    elseif condition == "wounded" then
+        return subject.hp < subject.maxHP * 0.5
+    elseif condition == "critical" then
+        return subject.hp < subject.maxHP * 0.3
+    elseif condition == "shielded" then
+        return (subject.shield or 0) > 0
+    elseif condition == "ally" then
+        return target ~= unit
+    elseif condition == "armored" then
+        return unit.hp / unit.maxHP > target.hp / target.maxHP
+    end
+    local count = 0
+    for _, enemy in ipairs(battle.enemies) do
+        if enemy.hp > 0 then
+            count = count + 1
+            if kind == "healing" then
+                if condition == "execute" and enemy.hp < enemy.maxHP * 0.35 then
+                    return true
+                elseif condition == "bleed" and bleedingOrPoisoned(enemy) then
+                    return true
+                end
+            end
+        end
+    end
+    if condition == "group" then
+        return count >= 2
+    elseif condition == "solo" then
+        return count == 1
+    elseif kind ~= "healing" and condition == "execute" then
+        return target.hp < target.maxHP * 0.35
+    elseif kind ~= "healing" and condition == "bleed" then
+        return bleedingOrPoisoned(target)
+    end
+    return false
+end
+
+local function traitMultiplier(traits, kind, battle, unit, target)
+    local bonus = 0
+    for _, trait in ipairs(traits) do
+        if trait.kind == kind and traitApplies(trait.condition, battle, unit, target, kind) then
+            bonus = bonus + trait.amount
+        end
+    end
+    -- Defensive bonuses stack additively, with a floor to keep damage meaningful.
+    return kind == "defense" and max(0.4, 1 - bonus) or 1 + bonus
+end
+
 function G.StartBattle(state)
     if #state.heroes == 0 then
         return
@@ -204,6 +276,7 @@ function G.Step(state, seconds)
     local battle = state.battle
     battle.elapsed = battle.elapsed + seconds
     P.Step(state, battle, seconds)
+    local traits = activeTraits(state)
     for _, enemy in ipairs(battle.enemies) do
         for source, dot in pairs(enemy.dots or {}) do
             local owner = battle.heroes[source]
@@ -265,8 +338,14 @@ function G.Step(state, seconds)
                 local acted = false
                 if action == "heal" then
                     acted = true
-                    local restored =
-                        heal(state, recovery, unit.healing * (talents.sustain and 1.6 or 1), i)
+                    local restored = heal(
+                        state,
+                        recovery,
+                        unit.healing
+                            * (talents.sustain and 1.6 or 1)
+                            * traitMultiplier(traits[i], "healing", battle, unit, recovery),
+                        i
+                    )
                     if talents.beacon and recovery ~= unit then
                         heal(state, unit, restored * 0.4, i)
                     end
@@ -289,7 +368,9 @@ function G.Step(state, seconds)
                     local targets = (action == "special" or talents.cleave) and enemies
                         or { enemies[1] }
                     for _, target in ipairs(targets) do
-                        local amount = unit.damage * (action == "special" and 0.95 or 1.7)
+                        local amount = unit.damage
+                            * (action == "special" and 0.95 or 1.7)
+                            * traitMultiplier(traits[i], "strike", battle, unit, target)
                         if talents.aim and target.hp > target.maxHP * 0.8 then
                             amount = amount * 1.45
                         end
@@ -390,6 +471,7 @@ function G.Step(state, seconds)
                                 or talents.windfury and unit.swings % 3 == 0 and 2
                                 or 1
                             )
+                        amount = amount * traitMultiplier(traits[i], "basic", battle, unit, target)
                         if talents.atonement then
                             heal(state, lowest, min(target.hp, amount) * 0.15, i)
                         end
@@ -429,6 +511,7 @@ function G.Step(state, seconds)
                     local amount = enemy.damage
                         * (talent.guard and 0.75 or 1)
                         * (1 - (target.mitigation or 0))
+                        * traitMultiplier(traits[target.id], "defense", battle, target, enemy)
                     if talent.guard then
                         G.Emit(state, "defense")
                     end
