@@ -167,7 +167,7 @@ function G.Salvage(state, item)
 end
 
 -- Manual disenchanting uses item identity so a refreshed/sorted view cannot destroy a neighbor.
-function G.DisenchantReward(item)
+function G.DisenchantReward(item, quantity)
     if not item or item.heirloom or item.protected or not C.slots[item.slot] then
         return nil
     end
@@ -186,6 +186,12 @@ function G.DisenchantReward(item)
     then
         return nil
     end
+    if quantity ~= nil then
+        if quantity ~= 1 and quantity ~= 10 and quantity ~= 100 then
+            return nil
+        end
+        count = math.min(count, quantity)
+    end
     return {
         gold = math.floor(item.level * item.quality) * count,
         relic = math.max(1, item.quality - 1) * count,
@@ -193,18 +199,23 @@ function G.DisenchantReward(item)
     }
 end
 
-function G.Disenchant(state, item)
-    local reward = G.DisenchantReward(item)
+function G.Disenchant(state, item, quantity)
+    local reward = G.DisenchantReward(item, quantity)
     if not reward then
         return false, "Heirlooms and protected items cannot be disenchanted."
     end
     for index, stored in ipairs(state.inventory) do
         if stored == item then
-            table.remove(state.inventory, index)
+            local remaining = (item.count or 1) - reward.count
+            if remaining > 0 then
+                item.count = remaining
+            else
+                table.remove(state.inventory, index)
+            end
             state.gold = state.gold + reward.gold
             state.materials.relic = state.materials.relic + reward.relic
             state.stats.salvaged = state.stats.salvaged + reward.count
-            if state.guide.craftItem == item.uid then
+            if remaining == 0 and state.guide.craftItem == item.uid then
                 state.guide.craftItem, state.guide.craftHero = nil, nil
             end
             local message = "Disenchanted "
@@ -221,6 +232,48 @@ function G.Disenchant(state, item)
         end
     end
     return false, "This item is no longer in the shared inventory."
+end
+
+-- Bulk actions intentionally cover the shared inventory, independent of view filters.
+function G.DisenchantAllReward(state)
+    local total = { gold = 0, relic = 0, count = 0 }
+    for _, item in ipairs(state.inventory) do
+        local reward = G.DisenchantReward(item)
+        if reward then
+            for key, value in pairs(reward) do
+                total[key] = total[key] + value
+            end
+        end
+    end
+    return total
+end
+
+function G.DisenchantAll(state)
+    local total = G.DisenchantAllReward(state)
+    if total.count == 0 then
+        return false, "No unprotected equipment to disenchant."
+    end
+    for index = #state.inventory, 1, -1 do
+        local item = state.inventory[index]
+        if G.DisenchantReward(item) then
+            table.remove(state.inventory, index)
+            if state.guide.craftItem == item.uid then
+                state.guide.craftItem, state.guide.craftHero = nil, nil
+            end
+        end
+    end
+    state.gold = state.gold + total.gold
+    state.materials.relic = state.materials.relic + total.relic
+    state.stats.salvaged = state.stats.salvaged + total.count
+    local message = "Disenchanted "
+        .. total.count
+        .. " items · +"
+        .. total.gold
+        .. " gold, +"
+        .. total.relic
+        .. " Relic dust."
+    G.Log(state, message)
+    return true, message
 end
 
 function G.Loot(state, item)

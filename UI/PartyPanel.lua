@@ -459,6 +459,9 @@ local function inventory(ui, p, s, hero, index)
             local delta = power - G.ItemPower(previous, hero)
             local levelOK, restriction = G.CanEquip(hero, item)
             local b = U.Button(p, "", 608, y, 688, 46, function()
+                if not levelOK then
+                    return
+                end
                 ui.gearSlot = item.slot
                 if W.Action(G.Equip, index, n) then
                     W.Notify("Equipped " .. item.name .. " on " .. hero.name .. ".")
@@ -473,13 +476,14 @@ local function inventory(ui, p, s, hero, index)
             b.text:Hide()
             U.Begin(b)
             U.Enabled(b, levelOK)
+            b:SetMotionScriptsWhileDisabled(true)
             U.Icon(b, item.icon or slotIcons[item.slot], 12, 7, 32):SetParent(b.content or b)
             line(
                 b,
                 item.name .. ((item.count or 1) > 1 and "  ×" .. item.count or ""),
                 58,
                 5,
-                406,
+                360,
                 13,
                 C.qualityColors[item.quality]
             )
@@ -493,20 +497,21 @@ local function inventory(ui, p, s, hero, index)
                     .. " power",
                 58,
                 27,
-                406,
+                360,
                 11,
                 levelOK and T.muted or { 1, 0.55, 0.51 }
             )
-            line(
+            local deltaLabel = line(
                 b,
                 (delta > 0 and "+" or "") .. delta,
-                476,
+                456,
                 14,
-                90,
+                68,
                 15,
                 levelOK and delta > 0 and T.green or T.muted
-            ):SetJustifyH("RIGHT")
-            line(
+            )
+            deltaLabel:SetJustifyH("RIGHT")
+            local equipLabel = line(
                 b,
                 not levelOK and "Locked" or "Equip",
                 584,
@@ -514,7 +519,88 @@ local function inventory(ui, p, s, hero, index)
                 90,
                 12,
                 levelOK and T.gold or T.muted
-            ):SetJustifyH("CENTER")
+            )
+            equipLabel:SetJustifyH("CENTER")
+            local quantity = ui.disenchantQuantity or 1
+            local reward = G.DisenchantReward(item, quantity)
+            local protect = U.Button(
+                b,
+                item.protected and "Unprotect" or "Protect",
+                430,
+                7,
+                100,
+                32,
+                function()
+                    item.protected = not item.protected
+                    ui:Refresh()
+                end,
+                item.protected
+            )
+            U.Enabled(protect, not item.heirloom)
+            protect:SetMotionScriptsWhileDisabled(true)
+            local destroy = U.Button(
+                b,
+                "Disenchant " .. (reward and reward.count or quantity),
+                540,
+                7,
+                136,
+                32,
+                function()
+                    W.Action(G.Disenchant, item, quantity)
+                end
+            )
+            b.disenchantButton, b.protectButton = destroy, protect
+            U.Enabled(destroy, reward ~= nil)
+            destroy:SetMotionScriptsWhileDisabled(true)
+            U.Tooltip(
+                destroy,
+                "Disenchant " .. item.name,
+                reward
+                        and ("Destroy " .. reward.count .. " copies for " .. reward.gold .. " gold and " .. reward.relic .. " Relic dust. This cannot be undone.")
+                    or "Heirlooms and protected items cannot be disenchanted.",
+                320
+            )
+            U.Tooltip(
+                protect,
+                "Protect equipment",
+                "Protected stacks are skipped by disenchanting and automatic salvage.",
+                320
+            )
+            local function showActions(shown)
+                protect:SetShown(shown)
+                destroy:SetShown(shown)
+                deltaLabel:SetShown(not shown)
+                equipLabel:SetShown(not shown)
+            end
+            showActions(b:IsMouseOver())
+            local enter = b:GetScript("OnEnter")
+            b:SetScript("OnEnter", function(self)
+                if enter then
+                    enter(self)
+                end
+                showActions(true)
+            end)
+            local function leave()
+                if not b:IsMouseOver() then
+                    showActions(false)
+                end
+            end
+            local rowLeave = b:GetScript("OnLeave")
+            b:SetScript("OnLeave", function(self)
+                if rowLeave then
+                    rowLeave(self)
+                end
+                leave()
+            end)
+            for _, action in ipairs({ protect, destroy }) do
+                local actionLeave = action:GetScript("OnLeave")
+                action:SetScript("OnLeave", function(self)
+                    if actionLeave then
+                        actionLeave(self)
+                    end
+                    leave()
+                end)
+            end
             U.EndBuild(b)
             U.Tooltip(
                 b,
@@ -571,6 +657,49 @@ local function inventory(ui, p, s, hero, index)
             end
         )
     end
+    line(p, "Disenchant", 608, 367, 108, 12, T.muted)
+    for position, quantity in ipairs({ 1, 10, 100 }) do
+        local choice = U.Button(
+            p,
+            tostring(quantity),
+            720 + (position - 1) * 56,
+            360,
+            52,
+            26,
+            function()
+                ui.disenchantQuantity = quantity
+                ui:Refresh()
+            end,
+            (ui.disenchantQuantity or 1) == quantity
+        )
+        choice.text:SetJustifyH("CENTER")
+        U.Tooltip(
+            choice,
+            "Disenchant quantity",
+            "Hover an inventory item to disenchant up to "
+                .. quantity
+                .. " copies. Smaller stacks yield only their remaining copies.",
+            320
+        )
+    end
+    local total = G.DisenchantAllReward(s)
+    local all = U.Button(p, "Disenchant all", 1076, 360, 220, 26, function()
+        W.Action(G.DisenchantAll)
+    end)
+    U.Enabled(all, total.count > 0)
+    U.Tooltip(
+        all,
+        "Disenchant all unprotected equipment",
+        "Permanently destroys "
+            .. total.count
+            .. " items across all pages and filters for "
+            .. total.gold
+            .. " gold and "
+            .. total.relic
+            .. " Relic dust. Includes upgrades. "
+            .. "Equipped gear, heirlooms and protected stacks are kept. The quantity selector does not limit this action.",
+        360
+    )
     local previous = U.Button(p, "Previous", 608, 389, 116, 32, function()
         ui.bagPage = page - 1
         ui:Refresh()

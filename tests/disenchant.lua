@@ -70,4 +70,56 @@ case("Disenchant rejects invalid counts without changing state", function()
     end
     assert(#s.inventory == 1 and s.stats.salvaged == 0)
 end)
+case("Disenchant quantities clamp to the stack and retain identities and guide targets", function()
+    for _, quantity in ipairs({ 1, 10, 100 }) do
+        local s = G.New(0)
+        local item = G.Item(s, 1, 3, 2)
+        item.count = 150
+        s.inventory = { item }
+        s.guide.craftItem, s.guide.craftHero = item.uid, 1
+        local reward = G.DisenchantReward(item, quantity)
+        assert(reward.count == quantity)
+        assert(G.Disenchant(s, item, quantity))
+        assert(item.count == 150 - quantity and s.inventory[1] == item)
+        assert(s.guide.craftItem == item.uid and s.guide.craftHero == 1)
+        assert(s.gold == reward.gold and s.materials.relic == reward.relic)
+        assert(s.stats.salvaged == quantity)
+        local loaded = G.Load(G.Copy(s), 0)
+        assert(loaded.inventory[1].count == item.count)
+        assert(loaded.materials.relic == reward.relic)
+    end
+    local s = G.New(0)
+    local item = G.Item(s, 1, 1, 2)
+    item.count = 4
+    s.inventory = { item }
+    assert(G.DisenchantReward(item, 100).count == 4)
+    assert(not G.Disenchant(s, item, 5))
+    assert(item.count == 4)
+    assert(G.Disenchant(s, item, 100))
+    assert(#s.inventory == 0 and s.stats.salvaged == 4)
+end)
+
+case("Disenchant all skips protected and heirloom stacks and awards exactly once", function()
+    local s = G.New(0)
+    G.AddHero(s, "WARRIOR")
+    local item, protected, heirloom =
+        G.Item(s, 1, 1, 2), G.Item(s, 1, 1, 2), G.Item(s, 1, 1, 2, true)
+    item.count, protected.protected = 120, true
+    local equipped = G.Item(s, 1, 1, 2)
+    s.heroes[1].gear[1] = equipped
+    s.inventory = { protected, item, heirloom, G.Item(s, 2, 1, 2) }
+    s.guide.craftItem, s.guide.craftHero = item.uid, 1
+    local total = G.DisenchantAllReward(s)
+    assert(total.count == 121)
+    assert(#s.inventory == 4 and s.gold == 0)
+    assert(G.DisenchantAll(s))
+    assert(#s.inventory == 2 and s.inventory[1] == protected and s.inventory[2] == heirloom)
+    assert(s.heroes[1].gear[1] == equipped and s.essence == 0)
+    assert(not s.guide.craftItem)
+    assert(s.gold == total.gold and s.materials.relic == total.relic)
+    assert(s.stats.salvaged == total.count)
+    assert(not G.DisenchantAll(s))
+    assert(s.gold == total.gold)
+end)
+
 return cases

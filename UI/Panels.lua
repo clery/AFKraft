@@ -546,7 +546,7 @@ function P.loot(ui, p, s)
     text(p, "KEEP THE TREASURES. SALVAGE THE REST.", 0, 0, 19, T.gold)
     text(
         p,
-        "Set rules for future drops, or disenchant stored stacks below for gold and Relic dust.",
+        "Automatically salvage future drops below the chosen quality. Manage stored equipment in Party.",
         0,
         33,
         14,
@@ -599,43 +599,27 @@ function P.loot(ui, p, s)
     )
     local entries = G.InventoryEntries(s, s.heroes[ui.selected])
     local pages = math.max(1, math.ceil(#entries / 3))
-    ui.lootPage = math.min(ui.lootPage or 0, pages - 1)
+    ui.lootPage = math.max(0, math.min(ui.lootPage or 0, pages - 1))
     local start = ui.lootPage * 3 + 1
     for row = 1, 3 do
-        local item = entries[start + row - 1] and entries[start + row - 1].item
+        local index = start + row - 1
+        local item = entries[index] and entries[index].item
         if item then
-            local x = (row - 1) * 440
-            text(p, item.name .. " x" .. (item.count or 1), x, 178, 15, T.text, 415)
-            local reward = G.DisenchantReward(item)
-            text(
+            button(
                 p,
-                reward and (reward.gold .. " gold + " .. reward.relic .. " Relic dust")
-                    or "Protected from disenchanting",
-                x,
-                210,
-                13,
-                T.muted,
-                415
-            )
-            button(p, item.protected and "Unprotect" or "Protect", x, 246, 130, function()
-                item.protected = not item.protected
-                ui:Refresh()
-            end, item.protected):SetEnabled(not item.heirloom)
-            local destroy = button(p, "Disenchant stack", x + 145, 246, 270, function()
-                W.Action(G.Disenchant, item)
-            end)
-            destroy:SetEnabled(reward ~= nil)
-            U.Tooltip(
-                destroy,
-                "Disenchant stack",
-                "Permanently destroys every copy in this stack for the displayed rewards. Protect items you want to keep."
+                (item.protected and "Protected · " or "Protect · ") .. item.name,
+                (row - 1) * 440,
+                178,
+                415,
+                function()
+                    item.protected = not item.protected
+                    ui:Refresh()
+                end,
+                item.protected
             )
         end
     end
-    if #entries == 0 then
-        text(p, "No stored equipment to disenchant.", 0, 178, 15, T.muted, 600)
-    end
-    button(p, "Next items · " .. (ui.lootPage + 1) .. " / " .. pages, 0, 310, 240, function()
+    button(p, "Next items · " .. (ui.lootPage + 1) .. " / " .. pages, 0, 227, 240, function()
         ui.lootPage = (ui.lootPage + 1) % pages
         ui:Refresh()
     end):SetEnabled(pages > 1)
