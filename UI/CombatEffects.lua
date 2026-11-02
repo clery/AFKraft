@@ -17,8 +17,8 @@ end
 local function finishLoad(effect)
     local model, spec = effect.model, effect.spec
     if effect.active and not effect.loaded and spec and model:GetModelFileID() == spec.fileID then
-        -- Resizing can rebuild a PlayerModel camera. Set the final viewport before
-        -- configuring it, and leave room for trails and off-center particle emitters.
+        -- Size before projection setup; padding leaves room for native trails
+        -- without increasing their apparent size.
         model:SetSize(spec.width * viewportScale, spec.height * viewportScale)
         if W.Client.FrameSpellEffect(model, spec, effect.direction, viewportScale) then
             effect.loaded, effect.started = true, GetTime()
@@ -66,13 +66,11 @@ function Effects:Acquire()
     effect.frame = CreateFrame("Frame", nil, self.frame)
     effect.frame:SetSize(1, 1)
     effect.frame:EnableMouse(false)
-    effect.model = CreateFrame("PlayerModel", nil, effect.frame)
-    effect.model:SetPoint("CENTER")
-    effect.model:EnableMouse(false)
-    effect.model:SetScript("OnModelLoaded", function()
+    effect.model = W.Client.CreateSpellEffectModel(effect.frame, function()
         -- A repeated callback must not restart a projectile already in flight.
         finishLoad(effect)
     end)
+    effect.model:SetPoint("CENTER")
     self.pool[#self.pool + 1] = effect
     return effect
 end

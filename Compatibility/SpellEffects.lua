@@ -6,11 +6,11 @@ local A = W.Client
 -- These are model files, not spell IDs or SpellVisualKit IDs. Camera composition
 -- and particle rendering still require verification in the actual target client.
 local retail = {
-    bolt = { fileID = 1598570, width = 110, height = 90, missile = true }, -- Frostbolt missile
-    arrow = { fileID = 1608507, width = 100, height = 70, missile = true }, -- Multi-Shot arrow
-    shadow = { fileID = 1955423, width = 110, height = 90, missile = true }, -- Shadow Bolt missile
-    leaf = { fileID = 1513210, width = 110, height = 90, missile = true }, -- Wrath missile
-    lightning = { fileID = 529304, width = 110, height = 90, missile = true }, -- Lightning Bolt missile
+    bolt = { fileID = 1598570, width = 110, height = 90, yawOffset = math.pi }, -- Frostbolt missile
+    arrow = { fileID = 1608507, width = 100, height = 70, yawOffset = math.pi }, -- Multi-Shot arrow
+    shadow = { fileID = 1955423, width = 110, height = 90, yawOffset = math.pi }, -- Shadow Bolt missile
+    leaf = { fileID = 1513210, width = 110, height = 90, yawOffset = math.pi }, -- Wrath missile
+    lightning = { fileID = 529304, width = 110, height = 90, yawOffset = math.pi }, -- Lightning Bolt missile
     shield = { fileID = 166360, width = 220, height = 240 }, -- Holy Word Shield, chest
     heal = { fileID = 166197, width = 210, height = 240 }, -- Flash Heal
     slash = { fileID = 1274646, width = 160, height = 180, cameraHeight = 0 }, -- Cleave impact
@@ -50,9 +50,60 @@ function A.SpellEffectSpec(kind, class)
     return kind == "impact" and impacts[class] or retail[kind]
 end
 
+function A.CreateSpellEffectModel(parent, loaded)
+    local scene = CreateFrame("ModelScene", nil, parent)
+    scene:EnableMouse(false)
+    scene:SetCameraFieldOfView(0.5)
+    scene:SetCameraNearClip(0.1)
+    scene:SetCameraFarClip(200)
+    scene:SetLightAmbientColor(1, 1, 1)
+    scene:SetLightDiffuseColor(0, 0, 0)
+    scene:SetLightVisible(true)
+    local actor = scene:CreateActor(nil, "WoWIdleAdventureActorTemplate")
+    scene.spellActor = actor
+    actor.onModelLoaded = function()
+        loaded(scene)
+    end
+    scene.GetModelFileID = function()
+        return actor:GetModelFileID()
+    end
+    scene.ClearModel = function()
+        actor:ClearModel()
+    end
+    return scene
+end
+
+local function frameSpellActor(scene, spec, direction, viewportScale)
+    local actor = scene.spellActor
+    if not actor:IsLoaded() then
+        return false
+    end
+    -- Explicit world-space projection avoids PlayerModel's portrait camera and
+    -- automatic model normalization. Padding increases distance, not effect size.
+    local height = spec.cameraHeight or 0
+    scene:SetCameraPosition(0, -8 * (viewportScale or 1), height)
+    scene:SetCameraOrientationByAxisVectors(0, 1, 0, 1, 0, 0, 0, 0, 1)
+    actor:SetUseCenterForOrigin(false, false, false)
+    actor:SetPosition(0, 0, 0)
+    actor:SetScale(1)
+    actor:SetPitch(0)
+    actor:SetRoll(0)
+    -- Native missiles face opposite the impact models in this side camera.
+    actor:SetYaw(((direction == -1 and math.pi or 0) + (spec.yawOffset or 0)) % (2 * math.pi))
+    actor:SetAnimation(0)
+    actor:SetAlpha(1)
+    actor:Show()
+    return true
+end
+
 function A.FrameSpellEffect(model, spec, direction, viewportScale)
     if not spec then
         return false
+    end
+    if model.spellActor then
+        local ok, framed = pcall(frameSpellActor, model, spec, direction, viewportScale)
+        model.spellError = not ok and framed or nil
+        return ok and framed == true
     end
     return pcall(function()
         -- Particle emitters and native bloom are separate from the animated mesh.
@@ -70,13 +121,12 @@ function A.FrameSpellEffect(model, spec, direction, viewportScale)
         local height = spec.cameraHeight or 0.75
         model:SetCameraPosition(0, -8 * (viewportScale or 1), height)
         model:SetCameraTarget(0, 0, height)
-        -- Rotate the authored missile axis into the screen's horizontal axis.
-        -- Keep direction independent of the custom camera's roll.
+        -- Legacy frames are used only for the separate level-up effect.
         local facing = direction == -1 and -1 or 1
         model:SetCameraRoll(0)
         model:SetRoll(0)
-        model:SetPitch(spec.missile and -facing * math.pi / 2 or 0)
-        model:SetFacing(not spec.missile and facing == -1 and math.pi or 0)
+        model:SetPitch(0)
+        model:SetFacing(facing == -1 and math.pi or 0)
         if not model.HasAnimation or model:HasAnimation(0) then
             model:SetAnimation(0)
         end
@@ -86,6 +136,17 @@ end
 function A.LoadSpellEffect(model, spec)
     if not spec then
         return false
+    end
+    if model.spellActor then
+        local ok = pcall(function()
+            local actor = model.spellActor
+            actor:ClearModel()
+            actor:SetAlpha(0)
+            return actor:SetModelByFileID(spec.fileID)
+        end)
+        -- Actual readiness is checked with IsLoaded and a matching file ID;
+        -- unsupported/missing assets expire through the bounded load timeout.
+        return ok
     end
     return pcall(function()
         model:ClearModel()

@@ -2,16 +2,49 @@ if not test then
     return
 end
 
+-- Retail exposes this actor loader, but the simulator has no implementation.
+-- Stub missing actor APIs; asset completion remains explicit in each test.
+local loadSpellEffect = WoWIdle.Client.LoadSpellEffect
+WoWIdle.Client.LoadSpellEffect = function(model, spec)
+    if model.spellActor then
+        for _, method in ipairs({
+            "SetModelByFileID",
+            "SetUseCenterForOrigin",
+            "SetPitch",
+            "SetRoll",
+            "SetYaw",
+            "SetAnimation",
+            "Show",
+        }) do
+            if not model.spellActor[method] then
+                model.spellActor[method] = function()
+                    return false
+                end
+            end
+        end
+    end
+    return loadSpellEffect(model, spec)
+end
+
 -- The simulator does not render/load particle M2s. Exercise the real load callback
 -- with an explicit matching FileDataID rather than claiming asset rendering works.
 local function finishEffectLoad(effect)
     local getter = effect.model.GetModelFileID
+    local actor = effect.model.spellActor
+    local isLoaded = actor.IsLoaded
+    actor.IsLoaded = function()
+        return true
+    end
     effect.model.GetModelFileID = function()
         return effect.spec.fileID
     end
-    local ok, message = pcall(effect.model:GetScript("OnModelLoaded"), effect.model)
+    local ok, message = pcall(actor.onModelLoaded)
+    actor.IsLoaded = isLoaded
     effect.model.GetModelFileID = getter
     assertTrue(ok, message)
+    if not effect.loaded then
+        error(effect.model.spellError or "Effect did not finish loading")
+    end
 end
 
 local function poolSize(frame, objects)
@@ -1082,6 +1115,64 @@ test(
     end
 )
 
+test("Spell scenes keep model axes horizontal and padding preserves projected size", function()
+    local W = WoWIdle
+    local distance, yaw, axes
+    local noop = function() end
+    local actor = {
+        IsLoaded = function()
+            return true
+        end,
+        SetUseCenterForOrigin = noop,
+        SetPosition = noop,
+        SetScale = noop,
+        SetPitch = noop,
+        SetRoll = noop,
+        SetAnimation = noop,
+        SetAlpha = noop,
+        Show = noop,
+        SetYaw = function(_, value)
+            yaw = value
+        end,
+    }
+    local scene = {
+        spellActor = actor,
+        SetCameraPosition = function(_, _, y)
+            distance = -y
+        end,
+        SetCameraOrientationByAxisVectors = function(_, ...)
+            axes = { ... }
+        end,
+    }
+    local spec = W.Client.SpellEffectSpec("arrow", "HUNTER")
+    assertTrue(W.Client.FrameSpellEffect(scene, spec, 1, 1))
+    local pixelsPerUnit = spec.height / (2 * math.tan(0.25) * distance)
+    assertEquals(math.pi, yaw)
+    -- Forward +Y, screen right +X, screen up +Z: no inherited portrait roll.
+    assertEquals(1, axes[2])
+    assertEquals(1, axes[4])
+    assertEquals(1, axes[9])
+    assertTrue(W.Client.FrameSpellEffect(scene, spec, -1, 3))
+    assertEquals(0, yaw)
+    assertTrue(math.abs(pixelsPerUnit - spec.height * 3 / (2 * math.tan(0.25) * distance)) < 0.001)
+    for _, kind in ipairs({ "bolt", "arrow", "shadow", "leaf", "lightning" }) do
+        local missile = W.Client.SpellEffectSpec(kind)
+        assertTrue(W.Client.FrameSpellEffect(scene, missile, 1, 3))
+        assertEquals(math.pi, yaw)
+        assertTrue(W.Client.FrameSpellEffect(scene, missile, -1, 3))
+        assertEquals(0, yaw)
+    end
+    local impact = W.Client.SpellEffectSpec("slash")
+    assertTrue(W.Client.FrameSpellEffect(scene, impact, 1, 3))
+    assertEquals(0, yaw)
+    assertTrue(W.Client.FrameSpellEffect(scene, impact, -1, 3))
+    assertEquals(math.pi, yaw)
+    actor.IsLoaded = function()
+        return false
+    end
+    assertFalse(W.Client.FrameSpellEffect(scene, spec, 1, 3))
+end)
+
 test("Native spell models wait for matching assets and reject late recycled callbacks", function()
     local W = WoWIdle
     local scene = W.UI.scene
@@ -1100,7 +1191,7 @@ test("Native spell models wait for matching assets and reject late recycled call
     assertEquals(1, effect.model:GetAlpha())
     assertEquals(1599028, W.Client.SpellEffectSpec("impact", "MAGE").fileID)
     scene.effects:Clear()
-    effect.model:GetScript("OnModelLoaded")(effect.model)
+    effect.model.spellActor.onModelLoaded()
     assertFalse(effect.active)
     assertFalse(effect.loaded)
     scene.effects:Play(source, target, "bolt", "MAGE")
@@ -1128,6 +1219,11 @@ test(
         effects:Play(source, target, "bolt", "MAGE")
         local effect = effects.pool[1]
         local getter = effect.model.GetModelFileID
+        local actor = effect.model.spellActor
+        local isLoaded = actor.IsLoaded
+        actor.IsLoaded = function()
+            return true
+        end
         effect.model.GetModelFileID = function()
             return effect.spec.fileID
         end
@@ -1139,13 +1235,14 @@ test(
             assertEquals(effect.spec.width * 3, effect.model:GetWidth())
             effect.started = GetTime() - 0.2
             local started = effect.started
-            effect.model:GetScript("OnModelLoaded")(effect.model)
+            effect.model.spellActor.onModelLoaded()
             assertEquals(started, effect.started)
             effects:Animate(GetTime())
             local _, _, _, x = effect.frame:GetPoint()
             assertTrue(math.abs(x - effect.x) > 0.01)
         end)
         effect.model.GetModelFileID = getter
+        actor.IsLoaded = isLoaded
         effects:Clear()
         assertTrue(ok, message)
     end
@@ -1271,13 +1368,6 @@ test(
         assertEquals(1, glow)
         assertTrue(W.Client.FrameSpellEffect(model, W.Client.SpellEffectSpec("heal")))
         assertEquals(0, glow)
-        local missile = W.Client.SpellEffectSpec("arrow", "HUNTER")
-        assertTrue(W.Client.FrameSpellEffect(model, missile, 1))
-        assertEquals(-math.pi / 2, pitch)
-        assertEquals(0, roll)
-        assertEquals(0, facing)
-        assertTrue(W.Client.FrameSpellEffect(model, missile, -1))
-        assertEquals(math.pi / 2, pitch)
         assertTrue(W.Client.FrameSpellEffect(model, spec))
         assertEquals(0, roll)
         assertEquals(0, pitch)
