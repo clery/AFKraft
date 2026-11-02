@@ -329,9 +329,15 @@ local function victory(state, battle)
 end
 
 function G.Step(state, seconds)
-    if #state.heroes == 0 then
+    if #state.heroes == 0 or seconds <= 0 then
         return
     end
+    local attackSpeed = 1
+        + (C.boostByID.battleOrders.attackSpeed - 1)
+            * G.BoostStepFraction(state, "battleOrders", seconds)
+    local damageTaken = 1
+        - (1 - C.boostByID.ironResolve.damageTaken)
+            * G.BoostStepFraction(state, "ironResolve", seconds)
     state.clock = state.clock + seconds
     if state.rest and state.rest > 0 then
         state.rest = max(0, state.rest - seconds)
@@ -378,7 +384,7 @@ function G.Step(state, seconds)
                 unit.rejuvenation = hot > seconds and hot - seconds or nil
             end
             unit.cd = max(0, unit.cd - seconds * (unit.haste or 1))
-            unit.attackCD = max(0, unit.attackCD - seconds * (unit.haste or 1))
+            unit.attackCD = max(0, unit.attackCD - seconds * (unit.haste or 1) * attackSpeed)
             local allies = living(battle.heroes)
             local lowest = allies[1]
             for _, a in ipairs(allies) do
@@ -589,6 +595,10 @@ function G.Step(state, seconds)
                     end
                     if talent.soulLink and target.hp > target.maxHP * 0.5 then
                         amount = amount * 0.8
+                    end
+                    -- Cap boost mitigation at 90% without weakening stronger defenses.
+                    if damageTaken < 1 then
+                        amount = min(amount, max(enemy.damage * 0.1, amount * damageTaken))
                     end
                     local absorbed = min(target.shield or 0, amount)
                     target.shield = (target.shield or 0) - absorbed

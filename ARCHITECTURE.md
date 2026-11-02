@@ -46,6 +46,8 @@ The scene retains the completed battle through its short transition so defeated 
 
 ## Interface lifecycle
 
+Commander boost content lives in `Content/Boosts.lua`; `Domain/Boosts.lua` owns permanent purchases, the single equipped slot, activation validation, and saved effect/cooldown deadlines. All deadlines use `state.clock`, advanced only by simulated adventure time. Combat applies Battle Orders only to basic-attack cooldown progress and Iron Resolve before shield absorption without rewriting combatant stats. Offline reconciliation merges the simulated clock and boost ledger together. Prestige ends effects while preserving ownership, loadout, and cooldown progress. The Commander panel manages purchases and equipment; full/compact Adventure controls share the same activation command and show separate effect/readiness timers.
+
 The shell owns fullscreen, windowed, and compact layouts. Adventure emphasizes the stage; management uses a shallow banner and a larger working area. `UI/PartyPanel.lua` owns recruitment, equipment selection, inventory comparisons, and purchase previews. Training and upgrade quotes come from the same domain cost functions used by the transactions.
 
 `UI/AdventureBar.lua` presents the same account-wide progress in full and compact modes, including rate explanations and rank-payout feedback. Its tooltip distinguishes Adventure XP from hero experience.

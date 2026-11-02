@@ -23,7 +23,9 @@ Content\TalentTraits.lua
 Content\TalentExpansion.lua
 Content\Backdrops.lua
 Content\Items.lua
+Content\Boosts.lua
 Domain\State.lua
+Domain\Boosts.lua
 Domain\Party.lua
 Domain\Mastery.lua
 Domain\Inventory.lua

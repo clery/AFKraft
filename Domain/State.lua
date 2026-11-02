@@ -66,6 +66,7 @@ function G.New(now)
         safe = {},
         battle = nil,
         clock = 0,
+        boosts = { owned = {}, readyAt = {}, activeUntil = {} },
         encounter = 0,
         paused = false,
         lastTime = now,
@@ -172,6 +173,9 @@ function G.Load(db, now)
         or type(progress.sources) ~= "table"
     then
         return nil, "The saved Adventure XP is invalid. Your adventure has not been reset."
+    end
+    if not G.ValidateBoosts(db) then
+        return nil, "The saved commander boosts are invalid. Your adventure has not been reset."
     end
     if migrated then
         G.Log(db, "Adventure XP unlocked. Existing Essence and hero progression retained.")

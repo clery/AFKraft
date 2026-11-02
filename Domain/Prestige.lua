@@ -22,6 +22,7 @@ function G.Prestige(state)
         end
     end
     state.battle, state.rest = nil, 0
+    state.boosts.activeUntil = {}
     local reward = G.PrestigeReward(state)
     state.legacy = state.legacy + reward
     state.prestiges = state.prestiges + 1

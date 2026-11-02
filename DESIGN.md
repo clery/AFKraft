@@ -1,6 +1,6 @@
 # WoWIdle — Design Document
 
-Status: research-informed draft for review, 2026-11-02. This revision proposes design and implementation order; it does not implement new features or retune existing balance constants. The audit below distinguishes current source behavior from proposed work. An implemented feature still requires supported-client validation and playtesting.
+Status: research-informed draft for review, with the implementation audit updated 2026-11-03 for the first manual commander boosts. The audit below distinguishes current source behavior from proposed work. New boost values are provisional; existing balance constants are unchanged. An implemented feature still requires supported-client validation and playtesting.
 
 ## Vision
 
@@ -23,7 +23,7 @@ Target occasional meaningful check-ins every 15–30 minutes. Balance the first 
 
 ## Implementation audit
 
-Audit date: 2026-11-02. **Implemented** means present in source; **partial** means a foundation exists but does not provide the full proposed feature; **proposed** means no implementation is being claimed. Code references identify the relevant entry points.
+Audit date: 2026-11-02; commander boosts updated 2026-11-03. **Implemented** means present in source; **partial** means a foundation exists but does not provide the full proposed feature; **proposed** means no implementation is being claimed. Code references identify the relevant entry points.
 
 | Feature | Current status | Boundary or next step |
 | --- | --- | --- |
@@ -39,13 +39,13 @@ Audit date: 2026-11-02. **Implemented** means present in source; **partial** mea
 | Enchanting and titanforging | Proposed | Separate item-modification decisions and upgrade tracks; no current command or progression ledger provides them. |
 | Profession talent trees | Proposed | Separate crafting/enchanting/titanforging specializations, not extra spending from the combat talent budget. |
 | Zone travel and encounter progression | Partial: [travel/retry](Domain/Party.lua), [world map](UI/Atlas.lua) | Manual destination changes, automatic encounters within a zone, and defeat fallback exist. No saved zone-change schedule or route executor exists. |
-| Player-triggered temporary party boosts | Proposed | No permanent ability catalog, purchase ledger, activation controls, effect-duration system for commander boosts, or cooldown ledger. Existing class procs are a different feature. |
+| Player-triggered temporary party boosts | Initial implementation: [catalog](Content/Boosts.lua), [commands](Domain/Boosts.lua), [controls](UI/Panels.lua) | Battle Orders and Iron Resolve; permanent Essence purchases, one equipped/active boost, five-minute effects, ten-minute cooldowns, full/compact activation. Values remain provisional; additional boosts and alternative acquisition paths remain proposed. |
 | Boost automation | Proposed | No automatic cooldown activation, conditional boost rules, or saved boost profiles. Existing hero priorities remain separate. |
 | Route planning | Proposed | No route editor, persistent templates, milestone interpreter, or per-run route cursor. |
 | Ordinary prestige and Legacy | Implemented: [prestige](Domain/Prestige.lua) | Level-8 milestone unlock, run reset, retained talents/Mastery, Legacy rewards, and the current +4 percentage points to health/damage/healing per rewarded chapter. |
 | Prestige+ and difficulty tiers | Proposed | No deeper reset, tiered zone progress, new tier currency, or tier reward multiplier exists yet. Ordinary prestige is not Prestige+. |
-| Offline play | Implemented safe farming: [catch-up](Simulation/Offline.lua) | Up to 24 hours, bounded deterministic catch-up, including current Mastery behavior. No first-time destination progression, route execution, commander boosts, or automated resets offline. |
-| Fullscreen, windowed, compact views and onboarding | Implemented foundations: [shell](UI/Shell.lua), [tutorial](UI/Tutorial.lua) | Expanded management and an interactive compact view. Boost controls and automation/route management remain proposed. |
+| Offline play | Implemented safe farming: [catch-up](Simulation/Offline.lua) | Up to 24 hours, bounded deterministic catch-up, including Mastery and already-active commander boosts/cooldowns. No first-time destination progression, route execution, automatic boost activation, or automated resets offline. |
+| Fullscreen, windowed, compact views and onboarding | Implemented foundations: [shell](UI/Shell.lua), [tutorial](UI/Tutorial.lua) | Expanded management, Commander purchases/loadout, and full/compact boost activation. Automation/route management remain proposed. |
 | Client coverage and final pacing | Partial | Retail is the current development/simulator target; Forever integration, asset behavior, activity signals, and the complete pacing model are not established by source coverage alone. |
 
 ## Party and identity
@@ -93,6 +93,8 @@ These examples describe the proposed complete game, not additional implemented f
 - Ten current equipment slots per hero: weapon, armor, head, back, shoulders, hands, waist, legs, feet, and wrists. Removed accessory/trinket IDs remain reserved for save compatibility.
 
 ## Commander abilities — draft
+
+The first manual prototype implements Battle Orders and Iron Resolve. Each costs 30 Essence once, with one equipped boost and one concurrent effect. Both last 300 adventure seconds with a 600-second cooldown from activation. Battle Orders accelerates only basic-attack cooldown progress by 25%; quarter-second action resolution determines realized attack throughput. Iron Resolve multiplies incoming damage by 0.8 before shields, stopping additional mitigation at 90% total reduction without weakening builds whose existing defenses are stronger. These are provisional prototype values. Owned boosts, loadout, and cooldown deadlines survive ordinary prestige; active effects end. Eligible offline safe farming advances the same saved simulation clock; ineligible absence does not advance boost time. Automatic activation, further abilities, and alternative purchase paths remain future work.
 
 ### Permanent ownership and acquisition
 

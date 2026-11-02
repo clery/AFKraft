@@ -10,6 +10,7 @@ local tabs = {
     { "atlas", "World map" },
     { "legacy", "Legacy" },
     { "loot", "Loot rules" },
+    { "boosts", "Commander" },
 }
 local tabIcons = {
     adventure = "INV_Misc_Map_01",
@@ -19,6 +20,7 @@ local tabIcons = {
     atlas = "INV_Misc_Map02",
     legacy = "INV_Misc_Book_09",
     loot = "INV_Misc_Bag_10",
+    boosts = "INV_Misc_Book_09",
 }
 
 function UI:SelectHero(index)
@@ -126,7 +128,8 @@ function UI:Layout()
         W.Audio.Stop()
     end
     local atlas = not compact and W.state.ui.tab == "atlas"
-    local company = not compact and (W.state.ui.tab == "legacy" or W.state.ui.tab == "loot")
+    local company = not compact
+        and (W.state.ui.tab == "legacy" or W.state.ui.tab == "loot" or W.state.ui.tab == "boosts")
     self.scene:Layout(compact, management)
     self.scene.frame:SetShown(not atlas and not company)
     for i, card in ipairs(self.cards) do
@@ -339,6 +342,7 @@ function UI:Refresh(redraw)
             or s.ui.tab == "crafting" and "Create ordinary equipment or lasting heirlooms"
             or s.ui.tab == "legacy" and "Permanent rewards, heirlooms and chapter resets"
             or s.ui.tab == "loot" and "Choose what to keep from future drops"
+            or s.ui.tab == "boosts" and "Permanent abilities for temporary party support"
             or "Explore destinations and their unlock requirements"
     )
     self.scene:Refresh(s)
@@ -367,6 +371,7 @@ function UI:Refresh(redraw)
     local message = self.message and GetTime() < (self.messageUntil or 0) and self.message or nil
     self.footer:SetText(message or (W.catchup and "Resolving offline progress…" or ""))
     self.footer:SetShown(message ~= nil or W.catchup ~= nil)
+    W.Panels.RefreshBoosts(self, s, message)
     W.Tutorial.Refresh(self)
     self.compactHint:SetText(message or self.compactHint:GetText())
 end
@@ -536,6 +541,15 @@ function W.CreateUI()
     end)
     ui.compactHint = U.Text(compact, "", 12, 282, 12, T.muted, 550)
     ui.compactHint:SetHeight(24)
+    ui.compactHint:Hide()
+    ui.compactBoost = U.Button(compact, "Commander boosts", 12, 273, 550, 26, function()
+        local id = W.state.boosts.equipped
+        if id then
+            W.Action(W.Game.ActivateBoost, id)
+        else
+            ui:SetTab("boosts")
+        end
+    end)
     ui.adventureCompact = W.AdventureBar.Create(compact, 12, 305, 550)
     U.Text(compact, "Offline earnings: up to 24 hours", 12, 337, 11, T.muted)
     ui.scene = W.Scene.Create(canvas)

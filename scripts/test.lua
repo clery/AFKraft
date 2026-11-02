@@ -6,7 +6,9 @@ local files = {
     "Content/TalentExpansion.lua",
     "Content/Backdrops.lua",
     "Content/Items.lua",
+    "Content/Boosts.lua",
     "Domain/State.lua",
+    "Domain/Boosts.lua",
     "Domain/Party.lua",
     "Domain/Mastery.lua",
     "Domain/Inventory.lua",
@@ -33,6 +35,7 @@ for _, file in ipairs({
     "tests/sounds.lua",
     "tests/activities.lua",
     "tests/adventure.lua",
+    "tests/boosts.lua",
 }) do
     for _, spec in ipairs(assert(loadfile(file))("WoWIdle", W)) do
         cases[#cases + 1] = spec

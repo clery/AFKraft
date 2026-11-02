@@ -118,6 +118,14 @@ function P.adventure(ui, p, s)
         ui.recruiting = label == "Recruit companions"
         ui:SetTab(tab)
     end, false, "primary")
+    ui.boostQuick = button(p, "Commander boosts", 260, 128, 400, function()
+        local id = s.boosts.equipped
+        if id then
+            W.Action(G.ActivateBoost, id)
+        else
+            ui:SetTab("boosts")
+        end
+    end)
     do
         text(p, "YOUR LEGACY", 710, 0, 12, T.gold)
         local reward = G.PrestigeReward(s)
@@ -164,6 +172,108 @@ end
 
 function P.party(ui, p, s)
     W.PartyPanel.Draw(ui, p, s)
+end
+
+function P.boosts(ui, p, s)
+    text(p, "COMMANDER BOOSTS", 0, 0, 24, T.gold)
+    text(
+        p,
+        "Learn once. Equip one boost. Activate without spending more currency.",
+        0,
+        46,
+        16,
+        T.text,
+        1296
+    )
+    text(
+        p,
+        "Five adventure minutes active / ten-minute cooldown from activation. One active effect at a time.",
+        0,
+        80,
+        14,
+        T.muted,
+        1296
+    )
+    ui.boostControls = {}
+    for index, boost in ipairs(C.boosts) do
+        local id = boost.id
+        local x = (index - 1) * 660
+        text(p, boost.name, x, 146, 22, T.gold, 620)
+        text(p, boost.description, x, 188, 16, T.text, 610)
+        text(p, "Permanent unlock: " .. boost.cost .. " Essence", x, 252, 15, T.gold, 620)
+        local purchase = button(
+            p,
+            s.boosts.owned[id] and "Learned permanently" or "Learn · " .. boost.cost .. " Essence",
+            x,
+            298,
+            296,
+            function()
+                W.Action(G.BuyBoost, id)
+            end
+        )
+        local equip = button(p, "Equip", x + 316, 298, 296, function()
+            W.Action(G.EquipBoost, id)
+        end)
+        local activate = button(p, "Activate", x, 350, 296, function()
+            W.Action(G.ActivateBoost, id)
+        end, false, "primary")
+        local status = text(p, "", x, 400, 14, T.muted, 610)
+        ui.boostControls[id] =
+            { purchase = purchase, equip = equip, activate = activate, status = status }
+    end
+    text(
+        p,
+        "Ownership and cooldowns survive chapter resets. Active effects end. Offline timers advance only during eligible safe farming (up to 24 hours).",
+        0,
+        478,
+        14,
+        T.muted,
+        1260
+    )
+end
+
+local function timer(seconds)
+    seconds = math.ceil(seconds)
+    return string.format("%d:%02d", math.floor(seconds / 60), seconds % 60)
+end
+
+function P.RefreshBoosts(ui, s, message)
+    local equipped = s.boosts.equipped
+    local function status(id)
+        local active, cooldown = G.BoostRemaining(s, id)
+        if active > 0 then
+            return "Active " .. timer(active) .. " / Ready " .. timer(cooldown)
+        elseif cooldown > 0 then
+            return "Ready in " .. timer(cooldown)
+        end
+        local _, reason = G.CanActivateBoost(s, id)
+        return reason
+    end
+    for _, control in pairs({ ui.boostQuick, ui.compactBoost }) do
+        if control then
+            local name = equipped and C.boostByID[equipped].name or "Commander boosts"
+            control.text:SetText(name .. (equipped and " · " .. status(equipped) or ""))
+            local ready = not equipped or G.CanActivateBoost(s, equipped)
+            U.Enabled(control, not W.catchup and ready)
+        end
+    end
+    ui.compactBoost:SetShown(not s.ui.locked and message == nil)
+    ui.compactHint:SetShown(s.ui.locked or message ~= nil)
+    if s.ui.tab == "boosts" and not W.catchup then
+        for id, controls in pairs(ui.boostControls or {}) do
+            local owned = s.boosts.owned[id]
+            controls.purchase.text:SetText(
+                owned and "Learned permanently" or "Learn · " .. C.boostByID[id].cost .. " Essence"
+            )
+            U.Enabled(controls.purchase, not owned and s.essence >= C.boostByID[id].cost)
+            controls.equip.text:SetText(equipped == id and "Equipped" or "Equip")
+            U.Enabled(controls.equip, owned and equipped ~= id)
+            U.Enabled(controls.activate, G.CanActivateBoost(s, id))
+            controls.status:SetText(
+                owned and status(id) or "Not learned. Purchase once; future activations are free."
+            )
+        end
+    end
 end
 
 function P.talents(ui, p, s)
@@ -421,7 +531,7 @@ function P.legacy(ui, p, s)
         text(p, "KEEP", 0, 254, 14, T.gold)
         text(
             p,
-            "Hero identities and classes; talents, permanent talent points and Mastery; heirlooms; recipes and discoveries; Legacy; Adventure rank and partial XP; unspent Essence.",
+            "Hero identities and classes; talents, permanent talent points and Mastery; learned boosts, loadout and cooldowns; heirlooms; recipes and discoveries; Legacy; Adventure rank and partial XP; unspent Essence.",
             0,
             287,
             17,
@@ -431,7 +541,7 @@ function P.legacy(ui, p, s)
         text(p, "RESET", 0, 365, 14, T.gold)
         text(
             p,
-            "Hero levels and training; ordinary equipped and stored gear; gold and zone materials; destination and encounter progress.",
+            "Hero levels and training; ordinary equipped and stored gear; gold and zone materials; destination and encounter progress; active commander effects.",
             0,
             398,
             17,
@@ -628,6 +738,7 @@ function P.Draw(ui)
         ui.talentTrees:SetShown(s.ui.tab == "talents" and not W.catchup)
     end
     ui.guideEquipTarget, ui.guideInventoryTarget, ui.guideCraftEquipTarget = nil, nil, nil
+    ui.boostQuick, ui.boostControls = nil, nil
     U.Begin(p)
     if W.catchup then
         text(p, "YOUR PARTY IS RETURNING", 0, 0, 22, T.gold)

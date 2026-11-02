@@ -56,6 +56,8 @@ function G.FinishCatchup(state, job)
         "materials",
         "discoveries",
         "seed",
+        "clock",
+        "boosts",
         "stats",
         "log",
     }) do
