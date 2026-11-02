@@ -2,25 +2,27 @@ local _, W = ...
 local Effects = {}
 W.CombatEffects = Effects
 
+local viewportScale = 3
+
 local durations = { shield = 1.1, heal = 0.8, slash = 0.5, burst = 0.8, impact = 0.6 }
 local projectiles = { arrow = true, bolt = true, shadow = true, leaf = true, lightning = true }
 
 local function position(unit)
     local scale = unit.depthScale or 1
-    return (unit.renderX or unit.x or 0) + 66, -(unit.renderY or unit.y or 110) - 204 + 104 * scale
+    local height = unit.viewport and unit.viewport:GetHeight() or 240
+    return (unit.renderX or unit.x or 0) + 66,
+        -(unit.renderY or unit.y or 110) - 204 + (unit.groundOffset or 0) + height * scale / 2
 end
 
 local function finishLoad(effect)
     local model, spec = effect.model, effect.spec
-    if
-        effect.active
-        and not effect.loaded
-        and spec
-        and model:GetModelFileID() == spec.fileID
-        and W.Client.FrameSpellEffect(model, spec, effect.direction)
-    then
-        effect.loaded, effect.started = true, GetTime()
-        model:SetSize(spec.width, spec.height)
+    if effect.active and not effect.loaded and spec and model:GetModelFileID() == spec.fileID then
+        -- Resizing can rebuild a PlayerModel camera. Set the final viewport before
+        -- configuring it, and leave room for trails and off-center particle emitters.
+        model:SetSize(spec.width * viewportScale, spec.height * viewportScale)
+        if W.Client.FrameSpellEffect(model, spec, effect.direction, viewportScale) then
+            effect.loaded, effect.started = true, GetTime()
+        end
     end
 end
 
@@ -107,9 +109,7 @@ function Effects:Play(source, target, kind, class)
     effect.active, effect.started = true, GetTime()
     effect.source, effect.target, effect.class = source, target, class
     effect.projectile = projectiles[kind] or false
-    effect.direction = effect.projectile
-            and (target.renderX or target.x or 0) < (source.renderX or source.x or 0)
-            and -1
+    effect.direction = (target.renderX or target.x or 0) < (source.renderX or source.x or 0) and -1
         or 1
     effect.x, effect.y = position(source)
     effect.duration = durations[kind] or 0.45

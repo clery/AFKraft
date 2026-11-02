@@ -1011,6 +1011,77 @@ test(
     end
 )
 
+test("Melee impacts follow the scaled creature viewport center", function()
+    local scene = WoWIdle.UI.scene
+    WoWIdle.UI:SetTab("adventure")
+    local source, target = scene.units[1], scene.units[6]
+    source:Show()
+    target:Show()
+    scene.effects:Clear()
+    scene.effects:Play(source, target, "slash", "WARRIOR")
+    local effect = scene.effects.pool[1]
+    local _, _, _, x, y = effect.frame:GetPoint()
+    assertTrue(math.abs((target.renderX or target.x) + 66 - x) < 0.001)
+    local expectedY = -(target.renderY or target.y)
+        - 204
+        + target.groundOffset
+        + target.viewport:GetHeight() * target.depthScale / 2
+    assertTrue(math.abs(expectedY - y) < 0.001)
+    finishEffectLoad(effect)
+    scene.effects:Animate(GetTime())
+    local _, _, _, _, followingY = effect.frame:GetPoint()
+    assertEquals(y, followingY)
+    scene.effects:Clear()
+end)
+
+test(
+    "Native effect framing follows viewport sizing and melee attacks retain both directions",
+    function()
+        local W = WoWIdle
+        local scene = W.UI.scene
+        W.UI:SetTab("adventure")
+        local effects = scene.effects
+        effects:Clear()
+        local source = {
+            renderX = 100,
+            renderY = 110,
+            IsShown = function()
+                return true
+            end,
+        }
+        local target = {
+            renderX = 700,
+            renderY = 110,
+            IsShown = function()
+                return true
+            end,
+        }
+        local frameEffect = W.Client.FrameSpellEffect
+        local framed = 0
+        W.Client.FrameSpellEffect = function(model, spec, direction, padding)
+            assertEquals(spec.width * 3, model:GetWidth())
+            assertEquals(spec.height * 3, model:GetHeight())
+            assertEquals(3, padding)
+            framed = framed + 1
+            return frameEffect(model, spec, direction, padding)
+        end
+        local ok, message = pcall(function()
+            effects:Play(source, target, "slash", "WARRIOR")
+            local outgoing = effects.pool[1]
+            assertEquals(1, outgoing.direction)
+            finishEffectLoad(outgoing)
+            effects:Play(target, source, "slash")
+            local incoming = effects.pool[2]
+            assertEquals(-1, incoming.direction)
+            finishEffectLoad(incoming)
+            assertEquals(2, framed)
+        end)
+        W.Client.FrameSpellEffect = frameEffect
+        effects:Clear()
+        assertTrue(ok, message)
+    end
+)
+
 test("Native spell models wait for matching assets and reject late recycled callbacks", function()
     local W = WoWIdle
     local scene = W.UI.scene
@@ -1065,7 +1136,7 @@ test(
             assertTrue(effect.frame:IsShown())
             effects:Animate(GetTime())
             assertTrue(effect.loaded)
-            assertEquals(effect.spec.width, effect.model:GetWidth())
+            assertEquals(effect.spec.width * 3, effect.model:GetWidth())
             effect.started = GetTime() - 0.2
             local started = effect.started
             effect.model:GetScript("OnModelLoaded")(effect.model)
@@ -1158,7 +1229,7 @@ test(
     function()
         local W = WoWIdle
         local spec = W.Client.SpellEffectSpec("levelup")
-        local particles, glow, loaded
+        local particles, glow, loaded, customCamera, roll, facing, pitch
         local model = {
             ClearModel = function() end,
             SetParticlesEnabled = function(_, enabled)
@@ -1171,16 +1242,26 @@ test(
                 assertTrue(particles)
                 loaded = fileID
             end,
-            SetCustomCamera = function(_, index)
-                assertEquals(1, index)
+            MakeCurrentCameraCustom = function()
+                customCamera = true
             end,
             SetCameraPosition = function(_, x, y, z)
+                assertTrue(customCamera, "Spell camera must be made custom before positioning")
                 assertEquals(0, x)
                 assertTrue(y < 0)
                 assertEquals(0.75, z)
             end,
             SetCameraTarget = function() end,
-            SetFacing = function() end,
+            SetCameraRoll = function(_, value)
+                roll = value
+            end,
+            SetFacing = function(_, value)
+                facing = value
+            end,
+            SetRoll = function() end,
+            SetPitch = function(_, value)
+                pitch = value
+            end,
             SetAnimation = function() end,
         }
         assertTrue(W.Client.LoadSpellEffect(model, spec))
@@ -1190,6 +1271,18 @@ test(
         assertEquals(1, glow)
         assertTrue(W.Client.FrameSpellEffect(model, W.Client.SpellEffectSpec("heal")))
         assertEquals(0, glow)
+        local missile = W.Client.SpellEffectSpec("arrow", "HUNTER")
+        assertTrue(W.Client.FrameSpellEffect(model, missile, 1))
+        assertEquals(-math.pi / 2, pitch)
+        assertEquals(0, roll)
+        assertEquals(0, facing)
+        assertTrue(W.Client.FrameSpellEffect(model, missile, -1))
+        assertEquals(math.pi / 2, pitch)
+        assertTrue(W.Client.FrameSpellEffect(model, spec))
+        assertEquals(0, roll)
+        assertEquals(0, pitch)
+        assertTrue(W.Client.FrameSpellEffect(model, spec, -1))
+        assertEquals(math.pi, facing)
     end
 )
 

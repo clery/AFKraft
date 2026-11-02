@@ -6,14 +6,14 @@ local A = W.Client
 -- These are model files, not spell IDs or SpellVisualKit IDs. Camera composition
 -- and particle rendering still require verification in the actual target client.
 local retail = {
-    bolt = { fileID = 1598570, width = 110, height = 90 }, -- Frostbolt missile
-    arrow = { fileID = 1608507, width = 100, height = 70 }, -- Multi-Shot arrow
-    shadow = { fileID = 1955423, width = 110, height = 90 }, -- Shadow Bolt missile
-    leaf = { fileID = 1513210, width = 110, height = 90 }, -- Wrath missile
-    lightning = { fileID = 529304, width = 110, height = 90 }, -- Lightning Bolt missile
+    bolt = { fileID = 1598570, width = 110, height = 90, missile = true }, -- Frostbolt missile
+    arrow = { fileID = 1608507, width = 100, height = 70, missile = true }, -- Multi-Shot arrow
+    shadow = { fileID = 1955423, width = 110, height = 90, missile = true }, -- Shadow Bolt missile
+    leaf = { fileID = 1513210, width = 110, height = 90, missile = true }, -- Wrath missile
+    lightning = { fileID = 529304, width = 110, height = 90, missile = true }, -- Lightning Bolt missile
     shield = { fileID = 166360, width = 220, height = 240 }, -- Holy Word Shield, chest
     heal = { fileID = 166197, width = 210, height = 240 }, -- Flash Heal
-    slash = { fileID = 1274646, width = 160, height = 180 }, -- Cleave impact
+    slash = { fileID = 1274646, width = 160, height = 180, cameraHeight = 0 }, -- Cleave impact
     burst = { fileID = 1634276, width = 210, height = 240 }, -- Holy Nova impact
     sparkle = { fileID = 166698, width = 210, height = 240 }, -- Reputation reward
     levelup = { fileID = 166464, width = 260, height = 240, glow = 1 }, -- Level Up
@@ -50,7 +50,7 @@ function A.SpellEffectSpec(kind, class)
     return kind == "impact" and impacts[class] or retail[kind]
 end
 
-function A.FrameSpellEffect(model, spec, direction)
+function A.FrameSpellEffect(model, spec, direction, viewportScale)
     if not spec then
         return false
     end
@@ -64,10 +64,19 @@ function A.FrameSpellEffect(model, spec, direction)
         end
         -- Spell M2s need not contain the portrait camera used by characters.
         -- Look across the missile axis so its authored trail is visible in profile.
-        model:SetCustomCamera(1)
-        model:SetCameraPosition(0, -8, 0.75)
-        model:SetCameraTarget(0, 0, 0.75)
-        model:SetFacing(direction == -1 and math.pi or 0)
+        -- Convert the active camera; selecting an absent authored camera by
+        -- index leaves spell models without a usable custom camera.
+        model:MakeCurrentCameraCustom()
+        local height = spec.cameraHeight or 0.75
+        model:SetCameraPosition(0, -8 * (viewportScale or 1), height)
+        model:SetCameraTarget(0, 0, height)
+        -- Rotate the authored missile axis into the screen's horizontal axis.
+        -- Keep direction independent of the custom camera's roll.
+        local facing = direction == -1 and -1 or 1
+        model:SetCameraRoll(0)
+        model:SetRoll(0)
+        model:SetPitch(spec.missile and -facing * math.pi / 2 or 0)
+        model:SetFacing(not spec.missile and facing == -1 and math.pi or 0)
         if not model.HasAnimation or model:HasAnimation(0) then
             model:SetAnimation(0)
         end
