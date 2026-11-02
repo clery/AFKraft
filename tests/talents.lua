@@ -66,12 +66,12 @@ case("Rows require the immediately preceding row in the same specialization", fu
     end
 end)
 
-case("Every class has three distinct eight-node specialization trees", function()
+case("Every class has three sixteen-node specialization trees", function()
     local total = 0
     for _, class in ipairs(C.classes) do
         local paths, ids, names, positions = {}, {}, {}, {}
         local list = C.talentsByClass[class.id]
-        assert(#list == 24)
+        assert(#list == 48)
         for _, node in ipairs(list) do
             assert(not ids[node.id] and not names[node.name])
             assert(C.talentByClassID[class.id][node.id] == node)
@@ -83,10 +83,10 @@ case("Every class has three distinct eight-node specialization trees", function(
             total = total + 1
         end
         for path = 1, #class.paths do
-            assert(paths[path] == 8)
+            assert(paths[path] == 16)
         end
     end
-    assert(total == 216)
+    assert(total == 432)
 end)
 
 case("Legacy builds retain all nine selections in every class", function()
@@ -157,7 +157,7 @@ case("Expanded points unlock gradually and class-owned IDs cannot cross classes"
     assert(G.Points(h) == 9)
     assert(not h.talents[foreign] and not h.talents.unknown and not h.talents.guard)
     h.level = 100
-    assert(G.Points(h) == 23)
+    assert(G.Points(h) == 47)
 end)
 
 case("Live stat talents preserve health ratio, cooldowns, and death", function()
@@ -441,22 +441,30 @@ case("Periodic damage expires, preserves fractional ticks, and survives reload",
     assert(not next(enemy.dots) and hp - enemy.hp == total)
 end)
 
-case("Every talent has its own icon and mechanical description", function()
+case("Expanded trees keep distinct choices while permitting shared foundations", function()
     local icons, descriptions, names, count = {}, {}, {}, 0
+    local unique = {}
     for _, class in ipairs(C.classes) do
         for _, node in ipairs(C.talentsByClass[class.id]) do
             local icon = node.icon:lower()
             assert(not names[node.name], node.name .. " repeats another talent name")
             names[node.name] = true
             assert(not icons[icon], node.name .. " shares an icon with " .. (icons[icon] or ""))
-            assert(not descriptions[node.text], node.name .. " repeats another talent's effects")
-            icons[icon], descriptions[node.text] = node.name, node.name
+            local choice = class.id .. ":" .. node.path .. ":" .. node.text
+            assert(not descriptions[choice], node.name .. " repeats an effect in its own tree")
+            descriptions[choice], unique[node.text] = true, true
+            icons[icon] = node.name
             if node.trait then
                 count = count + 1
             end
         end
     end
-    assert(count == 189)
+    assert(count == 351)
+    local distinct = 0
+    for _ in pairs(unique) do
+        distinct = distinct + 1
+    end
+    assert(distinct >= 300)
 end)
 
 local function traitEncounter(class, name)
@@ -530,6 +538,159 @@ case("Boss defenses apply to incoming hits and disappear outside bosses", functi
     hp = unit.hp
     G.Step(s, 0.25)
     assert(hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation)))
+end)
+
+case("Larger trees retain two-level point pacing and all 48 choices reload and refund", function()
+    for _, class in ipairs(C.classes) do
+        local state, h = hero(class.id)
+        h.level, h.rank = 95, 23
+        assert(G.Points(h) == 48)
+        for _, node in ipairs(G.TalentList(h)) do
+            assert(G.Talent(state, 1, node.id))
+        end
+        assert(G.Points(h) == 0)
+        local loaded = assert(G.Load(state, 1000))
+        h = loaded.heroes[1]
+        for _, node in ipairs(G.TalentList(h)) do
+            assert(h.talents[node.id])
+        end
+        local list = G.TalentList(h)
+        for index = #list, 1, -1 do
+            assert(G.Talent(loaded, 1, list[index].id))
+        end
+        assert(G.Points(h) == 48)
+        h.level = 49
+        assert(G.Points(h) == 25)
+        h.level = 94
+        assert(G.Points(h) == 47)
+    end
+end)
+
+case("Sustained-cast talents begin after three offensive abilities", function()
+    local s, _, unit, enemy = traitEncounter("MAGE", "Rule of Threes")
+    for cast = 1, 4 do
+        unit.cd = 0
+        local hp = enemy.hp
+        G.Step(s, 0.25)
+        local bonus = cast == 4 and 1.26 or 1
+        assert(hp - enemy.hp == math.floor(unit.damage * 1.7 * bonus))
+    end
+end)
+
+case("Burning-target talents distinguish magical dots from bleeds and expired effects", function()
+    local s, _, unit, enemy = traitEncounter("MAGE", "Pyroclasm")
+    for _, sample in ipairs({
+        { physical = true, remaining = 5, bonus = 1 },
+        { physical = false, remaining = 5, bonus = 1.26 },
+        { physical = false, remaining = 0.1, bonus = 1 },
+    }) do
+        enemy.dots =
+            { [1] = { damage = 0, physical = sample.physical, remaining = sample.remaining } }
+        unit.cd = 0
+        local hp = enemy.hp
+        G.Step(s, 0.25)
+        assert(hp - enemy.hp == math.floor(unit.damage * 1.7 * sample.bonus))
+    end
+end)
+
+case("Emergency healing uses the recipient's health and excludes fallen allies", function()
+    local s, h, unit = traitEncounter("PALADIN", "Healing Hands")
+    h.priority, h.healBelow = "heal", 100
+    local ally = G.Copy(unit)
+    ally.id, ally.hp, ally.maxHP, ally.cd, ally.attackCD = 2, 10, 10000, 100, 100
+    s.heroes[2], s.battle.heroes[2] = G.Copy(h), ally
+    local fallen = G.Copy(ally)
+    fallen.id, fallen.hp = 3, 0
+    s.heroes[3], s.battle.heroes[3] = G.Copy(h), fallen
+    G.Step(s, 0.25)
+    assert(ally.hp == 10 + math.floor(unit.healing * 1.28))
+    assert(fallen.hp == 0)
+end)
+
+case("Outnumbered defense counts living participants rather than roster slots", function()
+    local s, h, unit, enemy = traitEncounter("WARRIOR", "Defiant Rage")
+    unit.cd, unit.attackCD = 100, 100
+    local fallen = G.Copy(unit)
+    fallen.id, fallen.hp = 2, 0
+    s.heroes[2], s.battle.heroes[2] = G.Copy(h), fallen
+    local other = G.Copy(enemy)
+    other.id = 2
+    s.battle.enemies[2] = other
+    enemy.attackCD = 0
+    local hp = unit.hp
+    G.Step(s, 0.25)
+    assert(hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation) * 0.88))
+    other.hp, enemy.attackCD = 0, 0
+    hp = unit.hp
+    G.Step(s, 0.25)
+    assert(hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation)))
+end)
+
+case("Shared magical-dot talents let each caster start its own burning-target synergies", function()
+    for _, spec in ipairs({
+        { "SHAMAN", "Flame Shock" },
+        { "WARLOCK", "Agony" },
+        { "PRIEST", "Misery" },
+    }) do
+        local state, _, unit, enemy = traitEncounter(spec[1], spec[2])
+        local hp = enemy.hp
+        G.Step(state, 0.25)
+        local opening = hp - enemy.hp
+        assert(enemy.dots[1] and not enemy.dots[1].physical)
+        assert(enemy.dots[1].remaining == 6)
+        unit.cd, unit.attackCD = 100, 100
+        hp = enemy.hp
+        G.Step(state, 1)
+        assert(hp - enemy.hp == math.floor(unit.damage * 0.12))
+        enemy.dots[1].damage, unit.cd = 0, 0
+        hp = enemy.hp
+        G.Step(state, 0.25)
+        assert(hp - enemy.hp > opening)
+    end
+end)
+
+case("Basic-attack momentum survives reload and starts on the third attack", function()
+    local state, _, unit, enemy = traitEncounter("HUNTER", "Pack Tactics")
+    unit.cd = 100
+    for swing = 1, 3 do
+        unit.attackCD = 0
+        local hp = enemy.hp
+        G.Step(state, 0.25)
+        assert(hp - enemy.hp == math.floor(unit.damage * (swing == 3 and 1.22 or 1)))
+        if swing == 2 then
+            state = assert(G.Load(state, 1000))
+            unit, enemy = state.battle.heroes[1], state.battle.enemies[1]
+        end
+    end
+end)
+
+case("Support defenses react to endangered living allies without counting the fallen", function()
+    local state, h, unit, enemy = traitEncounter("PALADIN", "Shining Protector")
+    unit.cd, unit.attackCD = 100, 100
+    local ally = G.Copy(unit)
+    ally.id, ally.hp, ally.cd, ally.attackCD = 2, 0, 100, 100
+    state.heroes[2], state.battle.heroes[2] = G.Copy(h), ally
+    for _, alive in ipairs({ false, true }) do
+        ally.hp = alive and 1 or 0
+        unit.hp, enemy.attackCD = unit.maxHP, 0
+        local hp = unit.hp
+        G.Step(state, 0.25)
+        local expected = enemy.damage * (1 - unit.mitigation) * (alive and 0.88 or 1)
+        assert(hp - unit.hp == math.floor(expected))
+    end
+end)
+
+case("Full-health defense protects the opening hit without persisting after injury", function()
+    local state, _, unit, enemy = traitEncounter("ROGUE", "Veiled Resilience")
+    unit.cd, unit.attackCD = 100, 100
+    for _, full in ipairs({ true, false }) do
+        unit.hp, enemy.attackCD = full and unit.maxHP or unit.maxHP - 1, 0
+        local hp = unit.hp
+        G.Step(state, 0.25)
+        assert(
+            hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation) * (full and 0.8 or 1))
+        )
+    end
 end)
 
 return cases

@@ -36,6 +36,15 @@ local function activeTraits(state)
     return result
 end
 
+local function burning(target)
+    for _, dot in pairs(target.dots or {}) do
+        if not dot.physical then
+            return true
+        end
+    end
+    return false
+end
+
 local function traitApplies(condition, battle, unit, target, kind)
     local subject = kind == "healing" and target or unit
     if condition == "opening" then
@@ -54,6 +63,21 @@ local function traitApplies(condition, battle, unit, target, kind)
         return (subject.shield or 0) > 0
     elseif condition == "ally" then
         return target ~= unit
+    elseif condition == "patient" then
+        return (unit.casts or 0) >= 3
+    elseif condition == "quick" then
+        return (unit.swings or 0) >= 3
+    elseif condition == "unhurt" then
+        return subject.hp == subject.maxHP
+    elseif condition == "rescue" then
+        return subject.hp < subject.maxHP * 0.2
+    elseif condition == "protect" then
+        for _, ally in ipairs(battle.heroes) do
+            if ally ~= unit and ally.hp > 0 and ally.hp < ally.maxHP * 0.3 then
+                return true
+            end
+        end
+        return false
     elseif condition == "armored" then
         return unit.hp / unit.maxHP > target.hp / target.maxHP
     end
@@ -66,6 +90,8 @@ local function traitApplies(condition, battle, unit, target, kind)
                     return true
                 elseif condition == "bleed" and bleedingOrPoisoned(enemy) then
                     return true
+                elseif condition == "burning" and burning(enemy) then
+                    return true
                 end
             end
         end
@@ -74,6 +100,16 @@ local function traitApplies(condition, battle, unit, target, kind)
         return count >= 2
     elseif condition == "solo" then
         return count == 1
+    elseif condition == "outnumbered" then
+        local allies = 0
+        for _, ally in ipairs(battle.heroes) do
+            if ally.hp > 0 then
+                allies = allies + 1
+            end
+        end
+        return count > allies
+    elseif kind ~= "healing" and condition == "burning" then
+        return burning(target)
     elseif kind ~= "healing" and condition == "execute" then
         return target.hp < target.maxHP * 0.35
     elseif kind ~= "healing" and condition == "bleed" then
@@ -402,14 +438,18 @@ function G.Step(state, seconds)
                             if
                                 talents.wounds
                                 or talents.ignite
+                                or talents.burningWounds
                                 or talents.trap and action == "special"
                             then
                                 target.dots = target.dots or {}
                                 target.dots[i] = {
                                     damage = talents.wounds and unit.damage * 0.18
                                         or talents.ignite and amount * 0.2
+                                        or talents.burningWounds and unit.damage * 0.12
                                         or unit.damage * 0.25,
-                                    remaining = talents.wounds and 4 or 3,
+                                    remaining = talents.wounds and 4
+                                        or talents.burningWounds and 6
+                                        or 3,
                                     physical = talents.wounds or false,
                                 }
                             end

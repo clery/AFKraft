@@ -254,46 +254,55 @@ local conditions = {
     armored = "while your health percentage exceeds the enemy's",
     shielded = "while protected by an absorb shield",
     ally = "when healing another hero",
+    patient = "after you have used three offensive abilities this encounter",
+    quick = "from your third basic attack onward this encounter",
+    unhurt = "while at full health",
+    burning = "while the target has a magical damage-over-time effect",
+    rescue = "while the recipient is below 20% health",
+    protect = "while another living ally is below 30% health",
+    outnumbered = "while living enemies outnumber living heroes",
 }
+
+function C.ApplyTalentTrait(node, entry)
+    node.icon = entry[1]
+    if entry[2] then
+        node.trait = { kind = entry[2], condition = entry[3], amount = entry[4] / 100 }
+        local subject = entry[2] == "healing" and "Direct healing restores"
+            or entry[2] == "basic" and "Basic attacks deal"
+            or entry[2] == "strike" and "Offensive abilities deal"
+            or "Take"
+        local change = entry[2] == "defense" and "% less damage "
+            or entry[2] == "healing" and "% more health "
+            or "% more damage "
+        local condition = conditions[entry[3]]
+        if entry[2] == "healing" then
+            if entry[3] == "healthy" or entry[3] == "wounded" or entry[3] == "critical" then
+                condition = condition:gsub("while ", "while the recipient is ")
+            elseif entry[3] == "shielded" then
+                condition = "while the recipient has an absorb shield"
+            elseif entry[3] == "execute" then
+                condition = "while a living enemy is below 35% health"
+            elseif entry[3] == "bleed" then
+                condition = "while a living enemy is bleeding or poisoned"
+            elseif entry[3] == "burning" then
+                condition = "while a living enemy has a magical damage-over-time effect"
+            elseif entry[3] == "unhurt" then
+                condition = "while the recipient is at full health"
+            end
+        elseif entry[2] == "defense" and entry[3] == "bleed" then
+            condition = "while the attacker is bleeding or poisoned"
+        elseif entry[2] == "defense" and entry[3] == "burning" then
+            condition = "while the attacker has a magical damage-over-time effect"
+        end
+        node.text = node.text .. "\n" .. subject .. " " .. entry[4] .. change .. condition .. "."
+        if entry[2] == "defense" then
+            node.text = node.text .. " Situational damage reduction is capped at 60%."
+        end
+    end
+end
 
 for classID, entries in pairs(traits) do
     for index, entry in ipairs(entries) do
-        local node = C.talentsByClass[classID][index]
-        node.icon = entry[1]
-        if entry[2] then
-            node.trait = { kind = entry[2], condition = entry[3], amount = entry[4] / 100 }
-            local subject = entry[2] == "healing" and "Direct healing restores"
-                or entry[2] == "basic" and "Basic attacks deal"
-                or entry[2] == "strike" and "Offensive abilities deal"
-                or "Take"
-            local change = entry[2] == "defense" and "% less damage "
-                or entry[2] == "healing" and "% more health "
-                or "% more damage "
-            local condition = conditions[entry[3]]
-            if entry[2] == "healing" then
-                if entry[3] == "healthy" or entry[3] == "wounded" or entry[3] == "critical" then
-                    condition = condition:gsub("while ", "while the recipient is ")
-                elseif entry[3] == "shielded" then
-                    condition = "while the recipient has an absorb shield"
-                elseif entry[3] == "execute" then
-                    condition = "while a living enemy is below 35% health"
-                elseif entry[3] == "bleed" then
-                    condition = "while a living enemy is bleeding or poisoned"
-                end
-            elseif entry[2] == "defense" and entry[3] == "bleed" then
-                condition = "while the attacker is bleeding or poisoned"
-            end
-            node.text = node.text
-                .. "\n"
-                .. subject
-                .. " "
-                .. entry[4]
-                .. change
-                .. condition
-                .. "."
-            if entry[2] == "defense" then
-                node.text = node.text .. " Situational damage reduction is capped at 60%."
-            end
-        end
+        C.ApplyTalentTrait(C.talentsByClass[classID][index], entry)
     end
 end

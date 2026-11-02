@@ -56,6 +56,7 @@ local function drawNode(tree, talent, hero, index)
         b:SetSize(44, 44)
         b:SetBackdrop({ edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 12 })
         b.icon = U.Icon(b, talent.icon, 5, 5, 34)
+        b.iconName = talent.icon
         b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
         U.Rect(b, 22, 34, 28, 16, { 0, 0, 0 }, 0.95, "OVERLAY")
         b.rank = U.SingleLine(U.Text(b, "", 19, 33, 12, T.green), 32, 18, "CENTER")
@@ -67,6 +68,10 @@ local function drawNode(tree, talent, hero, index)
             end
         end)
         tree.buttons[talent.id] = b
+    end
+    if b.iconName ~= talent.icon then
+        b.icon:SetTexture("Interface\\Icons\\" .. talent.icon)
+        b.iconName = talent.icon
     end
     local learned = hero.talents[talent.id]
     local available, reason = G.CanTalent(hero, talent)

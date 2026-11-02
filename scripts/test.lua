@@ -3,6 +3,7 @@ local W = {}
 local files = {
     "Content.lua",
     "Content/TalentTraits.lua",
+    "Content/TalentExpansion.lua",
     "Content/Backdrops.lua",
     "Content/Items.lua",
     "Domain/State.lua",

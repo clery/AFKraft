@@ -20,6 +20,7 @@ Libs\AceConfig-3.0\AceConfig-3.0.xml
 
 Content.lua
 Content\TalentTraits.lua
+Content\TalentExpansion.lua
 Content\Backdrops.lua
 Content\Items.lua
 Domain\State.lua
