@@ -166,6 +166,63 @@ function G.Salvage(state, item)
     return true
 end
 
+-- Manual disenchanting uses item identity so a refreshed/sorted view cannot destroy a neighbor.
+function G.DisenchantReward(item)
+    if not item or item.heirloom or item.protected or not C.slots[item.slot] then
+        return nil
+    end
+    local count = item.count or 1
+    if
+        type(count) ~= "number"
+        or count < 1
+        or count == math.huge
+        or count ~= math.floor(count)
+        or type(item.level) ~= "number"
+        or item.level < 1
+        or item.level == math.huge
+        or item.level ~= math.floor(item.level)
+        or type(item.quality) ~= "number"
+        or not C.qualityNames[item.quality]
+    then
+        return nil
+    end
+    return {
+        gold = math.floor(item.level * item.quality) * count,
+        relic = math.max(1, item.quality - 1) * count,
+        count = count,
+    }
+end
+
+function G.Disenchant(state, item)
+    local reward = G.DisenchantReward(item)
+    if not reward then
+        return false, "Heirlooms and protected items cannot be disenchanted."
+    end
+    for index, stored in ipairs(state.inventory) do
+        if stored == item then
+            table.remove(state.inventory, index)
+            state.gold = state.gold + reward.gold
+            state.materials.relic = state.materials.relic + reward.relic
+            state.stats.salvaged = state.stats.salvaged + reward.count
+            if state.guide.craftItem == item.uid then
+                state.guide.craftItem, state.guide.craftHero = nil, nil
+            end
+            local message = "Disenchanted "
+                .. item.name
+                .. " x"
+                .. reward.count
+                .. " · +"
+                .. reward.gold
+                .. " gold, +"
+                .. reward.relic
+                .. " Relic dust."
+            G.Log(state, message)
+            return true, message
+        end
+    end
+    return false, "This item is no longer in the shared inventory."
+end
+
 function G.Loot(state, item)
     if item.quality >= 3 then
         G.Emit(state, "loot")
