@@ -120,6 +120,10 @@ function Effects:Play(source, target, kind, class)
 end
 
 function Effects:Event(units, state, event)
+    -- Poison, bleeds and reflected damage are not another weapon strike/projectile.
+    if event.kind == "hit" and event.passive then
+        return
+    end
     if event.kind == "cast" and event.action == "special" then
         local unit = units[event.source]
         if unit then

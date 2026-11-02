@@ -197,7 +197,9 @@ function A.AnimateModel(model, animation, speed)
                 target:SetAnimation(animation, nil, speed)
             else
                 target:SetAnimation(animation)
-                if speed ~= 1 and target.SetSequenceTime then
+                -- A live unit model has its own animation state. Repeated seeking
+                -- can visibly restart/blend its attack on every rendered frame.
+                if speed ~= 1 and model.appearanceUnit ~= "player" and target.SetSequenceTime then
                     model.animationSequence, model.animationSpeed = animation, speed
                 else
                     speed = 1
