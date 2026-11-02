@@ -597,32 +597,6 @@ function P.loot(ui, p, s)
         14,
         T.muted
     )
-    local entries = G.InventoryEntries(s, s.heroes[ui.selected])
-    local pages = math.max(1, math.ceil(#entries / 3))
-    ui.lootPage = math.max(0, math.min(ui.lootPage or 0, pages - 1))
-    local start = ui.lootPage * 3 + 1
-    for row = 1, 3 do
-        local index = start + row - 1
-        local item = entries[index] and entries[index].item
-        if item then
-            button(
-                p,
-                (item.protected and "Protected · " or "Protect · ") .. item.name,
-                (row - 1) * 440,
-                178,
-                415,
-                function()
-                    item.protected = not item.protected
-                    ui:Refresh()
-                end,
-                item.protected
-            )
-        end
-    end
-    button(p, "Next items · " .. (ui.lootPage + 1) .. " / " .. pages, 0, 227, 240, function()
-        ui.lootPage = (ui.lootPage + 1) % pages
-        ui:Refresh()
-    end):SetEnabled(pages > 1)
 end
 
 function P.Draw(ui)
