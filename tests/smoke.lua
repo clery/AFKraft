@@ -657,6 +657,36 @@ test("Adventure models follow combat positions with roomy transparent viewports"
     assertTrue(front.hp:IsShown())
 end)
 
+test("Character render layers stay ordered when depth lanes swap", function()
+    local scene = WoWIdle.Scene.Create(UIParent)
+    for i, unit in ipairs(scene.units) do
+        unit.x, unit.y = 100 + i * 40, 96 + i * 4
+        unit:Show()
+    end
+    for _, reverse in ipairs({ false, true, false }) do
+        for i, unit in ipairs(scene.units) do
+            unit.y = 96 + (reverse and 9 - i or i) * 4
+        end
+        scene:PlaceModels()
+        -- A stale child level must be repaired even when its unit stays in place.
+        scene.depthOrder[1].model.appearanceSource:SetFrameLevel(900)
+        scene.depthOrder[1].model.adventureScene:SetFrameLevel(900)
+        scene:PlaceModels()
+        local previous = 0
+        for _, unit in ipairs(scene.depthOrder) do
+            local source = unit.model.appearanceSource:GetFrameLevel()
+            local actor = unit.model.adventureScene:GetFrameLevel()
+            assertTrue(unit:GetFrameLevel() > previous)
+            assertTrue(unit.viewport:GetFrameLevel() > unit:GetFrameLevel())
+            assertTrue(unit.model:GetFrameLevel() > unit.viewport:GetFrameLevel())
+            assertTrue(source > unit.model:GetFrameLevel())
+            assertEquals(source, actor)
+            previous = math.max(source, actor)
+        end
+    end
+    scene.frame:Hide()
+end)
+
 test(
     "Model bounds separate opposing bodies and their plates without changing combat coordinates",
     function()

@@ -351,9 +351,6 @@ case("Actor loading binds through its XML template without frame script methods"
     methods.SetKeepModelOnHide = function(self, keep)
         self.keepModel = keep
     end
-    methods.SetIsFrameBuffer = function(self, enabled)
-        self.isFrameBuffer = enabled
-    end
     local client = adapter("12.1.5", {
         CreateFrame = function(kind, _, parent)
             creates = creates + 1
@@ -378,7 +375,6 @@ case("Actor loading binds through its XML template without frame script methods"
         called = called + 1
     end)
     assert(model.adventureActor == actor and creates == 3)
-    assert(model.isFrameBuffer == true)
     assert(model.appearanceSource.parent == model)
     assert(model.adventureScene.parent == model)
     assert(model.appearanceSource.alpha == 0)
@@ -416,6 +412,30 @@ case("Actor loading binds through its XML template without frame script methods"
     model.nativeAppearance = false
     model.appearanceSource.scripts.OnShow()
     assert(called == 4)
+end)
+
+case("Adventure model layers reset after parent reordering", function()
+    local client = adapter("12.1.5")
+    local function frame(level)
+        return {
+            level = level,
+            GetFrameLevel = function(self)
+                return self.level
+            end,
+            SetFrameLevel = function(self, value)
+                self.level = value
+            end,
+        }
+    end
+    local model = frame(100)
+    model.appearanceSource = frame(180)
+    model.adventureScene = frame(190)
+    client.SetAdventureModelFrameLevel(model, 32)
+    assert(model.level == 32)
+    assert(model.appearanceSource.level == 33 and model.adventureScene.level == 33)
+    client.SetAdventureModelFrameLevel(model, 72)
+    assert(model.level == 72)
+    assert(model.appearanceSource.level == 73 and model.adventureScene.level == 73)
 end)
 
 case(

@@ -485,6 +485,15 @@ function Scene:PlaceModels(elapsed)
         if unit:GetFrameLevel() ~= level then
             unit:SetFrameLevel(level)
         end
+        -- Reassign the whole model hierarchy after sorting. Moving a parent
+        -- down through other units must not leave a model in a neighbor's slot.
+        if unit.viewport:GetFrameLevel() ~= level + 1 then
+            unit.viewport:SetFrameLevel(level + 1)
+        end
+        W.Client.SetAdventureModelFrameLevel(unit.model, level + 2)
+        if unit.levelUp and unit.levelUp:GetFrameLevel() ~= level + 4 then
+            unit.levelUp:SetFrameLevel(level + 4)
+        end
     end
     local gap, leftRoom = 0, math.huge
     if not self.travelling then
