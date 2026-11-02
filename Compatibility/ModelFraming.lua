@@ -204,13 +204,18 @@ function A.CreateAdventureModel(parent, loaded)
     model.adventureScene, model.adventureActor = scene, actor
     actor:SetAlpha(0)
     source:SetScript("OnModelLoaded", function()
-        source:SetAlpha(model.nativeAppearance and 1 or 0)
+        if model.applyingEquipment then
+            return
+        end
+        model.equipmentAppliedKey = nil
+        source:SetAlpha(0)
         loaded()
     end)
     source:SetScript("OnHide", function()
         model.equipmentAppliedKey = nil
     end)
     source:SetScript("OnShow", function()
+        A.AwaitAdventureModel(model)
         if model.nativeAppearance then
             local file = source:GetModelFileID()
             if not finite(file) or file <= 0 then
@@ -218,7 +223,6 @@ function A.CreateAdventureModel(parent, loaded)
             end
             model.equipmentAppliedKey = nil
             scene:Show()
-            A.AwaitAdventureModel(model)
             loaded()
         end
     end)
@@ -228,6 +232,7 @@ function A.CreateAdventureModel(parent, loaded)
                 model.pendingEquipment[unit] = nil
                 if success then
                     model.equipmentAppliedKey = nil
+                    A.AwaitAdventureModel(model)
                     loaded()
                 end
             end
@@ -235,6 +240,7 @@ function A.CreateAdventureModel(parent, loaded)
         end
         if model.appearanceUnit == "player" and (not unit or unit == "player") then
             model.equipmentAppliedKey = nil
+            A.AwaitAdventureModel(model)
             source:RefreshUnit()
             loaded()
         end
@@ -266,6 +272,18 @@ function A.AwaitAdventureModel(model)
         end
         elapsed = 0
         attempts = attempts + 1
+        -- A first request can arrive before the unit or creature is available.
+        -- Reissue only missing source loads, never reset an actor already loading.
+        local spec = model.appearanceSpec
+        local file = spec and model:GetModelFileID()
+        if spec and (not finite(file) or file <= 0) and attempts % 10 == 0 then
+            A.PrepareAppearanceLoad(model)
+            if spec.unit then
+                model:SetUnit(spec.unit)
+            else
+                model:SetCreature(spec.creatureID)
+            end
+        end
         if attempts >= 50 then
             scene:SetScript("OnUpdate", nil)
         end
@@ -285,6 +303,13 @@ function A.FrameAdventureModel(model, enemy, spec)
         local source = model.appearanceSource
         local file = source:GetModelFileID()
         if not finite(file) or file <= 0 then
+            return false
+        end
+        if not A.ApplyModelEquipment(model, spec) then
+            -- Keep the drawable loader alive until geometry and item data are
+            -- ready; expanding it now can expose an undressed character.
+            A.PrepareAppearanceLoad(model)
+            scene:Show()
             return false
         end
         finishAppearanceLoad(model)
@@ -310,14 +335,9 @@ function A.FrameAdventureModel(model, enemy, spec)
         source:SetRotation(1.05, false)
         elevateCamera(source)
         source:SetAlpha(1)
-        local equipped = A.ApplyModelEquipment(model, spec)
         actor:SetAlpha(0)
-        if equipped then
-            scene:SetScript("OnUpdate", nil)
-            scene:Hide()
-        else
-            scene:Show()
-        end
+        scene:SetScript("OnUpdate", nil)
+        scene:Hide()
         return true
     end
     if model.adventureKey ~= spec.key then

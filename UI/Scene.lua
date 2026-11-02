@@ -1,6 +1,6 @@
 local _, W = ...
 local U, T, C, P = W.Widgets, W.Theme, W.Content, W.CombatPosition
-local Scene = {}
+local Scene = { showMissingModelIcons = false }
 W.Scene = Scene
 
 local function baseAnimation(unit)
@@ -158,6 +158,7 @@ function Scene.Create(parent)
         unit:SetScript("OnHide", stopLevelUp)
         unit:SetSize(132, 204)
         unit.sigil = U.Icon(unit, "INV_Misc_QuestionMark", 36, 88, 60)
+        unit.sigil:Hide()
         -- Transparent model viewports extend beyond the small interaction/nameplate
         -- footprint, leaving room for tails, weapons, particles and attack poses.
         unit.viewport = CreateFrame("Frame", nil, unit)
@@ -331,6 +332,7 @@ function Scene:Refresh(s)
             if unit.modelKey ~= key then
                 unit.modelReady = false
                 unit.modelKey = key
+                unit.modelRetryAt = GetTime() + 6
                 unit.appeared = GetTime()
                 -- Set before ConfigureModel: loading may finish synchronously or later.
                 unit.modelSpec = spec
@@ -339,6 +341,12 @@ function Scene:Refresh(s)
                 unit.animTime = nil
                 unit.modelConfigured, unit.modelError =
                     W.Client.ConfigureModel(unit.model, spec, enemy ~= nil)
+            elseif not unit.modelReady and spec and GetTime() >= (unit.modelRetryAt or 0) then
+                -- Reopen a bounded retry window after slow streaming, without
+                -- clearing geometry or restarting an actor already in flight.
+                unit.modelRetryAt = GetTime() + 6
+                W.Client.AwaitAdventureModel(unit.model)
+                modelLoaded(unit, enemy ~= nil)
             end
             local hp, maxHP, detail
             if hero then
@@ -373,7 +381,7 @@ function Scene:Refresh(s)
                 W.Client.AnimateModel(unit.model, 0)
             end
             updateModelVisibility(unit, GetTime())
-            unit.sigil:SetShown(not unit.modelReady and hp > 0)
+            unit.sigil:SetShown(self.showMissingModelIcons and not unit.modelReady and hp > 0)
             unit.sigil:SetTexture(
                 "Interface\\Icons\\" .. (class and class.icon or "Ability_Creature_Cursed_02")
             )

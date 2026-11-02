@@ -582,12 +582,21 @@ case(
         function model:SetCreature(id)
             source:SetCreature(id)
         end
-        assert(client.ConfigureModel(model, {
+        local geometryReady = false
+        source.IsGeoReady = function()
+            return geometryReady
+        end
+        local playerSpec = {
             key = "player:test",
             unit = "player",
             equipment = { 25, 821 },
             equipmentKey = "25:821",
-        }, false))
+        }
+        assert(client.ConfigureModel(model, playerSpec, false))
+        assert(model.loadingAppearance and flags.warm and not hidden and undressed == 0)
+        assert(not client.FrameAdventureModel(model, false, playerSpec))
+        geometryReady = true
+        assert(client.FrameAdventureModel(model, false, playerSpec))
         assert(dressed == 0 and undressed == 1 and tried[1] == "item:25" and tried[2] == "item:821")
         assert(sourceAlpha == 1 and actorAlpha == 0 and hidden)
         assert(model.loadingAppearance == false and flags.warm == false)
@@ -625,6 +634,51 @@ case(
         assert(client.FrameAdventureModel(model, false, { key = "companion:911" }))
     end
 )
+
+case("Missing source models are requested again without clearing loaded geometry", function()
+    local client = adapter("12.1.5")
+    for _, spec in ipairs({ { unit = "player" }, { creatureID = 911 } }) do
+        local update, file, requests = nil, nil, 0
+        local model = {
+            appearanceSpec = spec,
+            SetAlpha = function() end,
+            appearanceSource = {
+                ClearAllPoints = function() end,
+                SetPoint = function() end,
+                SetSize = function() end,
+                SetAlpha = function() end,
+            },
+            adventureScene = {
+                SetScript = function(_, _, callback)
+                    update = callback
+                end,
+            },
+            GetModelFileID = function()
+                return file
+            end,
+            SetUnit = function(_, unit)
+                assert(unit == "player")
+                requests = requests + 1
+            end,
+            SetCreature = function(_, id)
+                assert(id == 911)
+                requests = requests + 1
+            end,
+        }
+        client.AwaitAdventureModel(model)
+        for _ = 1, 20 do
+            assert(update)
+            update(model.adventureScene, 0.1)
+        end
+        assert(requests == 2)
+        file = 42
+        for _ = 1, 30 do
+            assert(update)
+            update(model.adventureScene, 0.1)
+        end
+        assert(requests == 2 and update == nil)
+    end
+end)
 
 case("Geometry retries stop after success or a bounded loading window", function()
     local client = adapter("12.1.5")
@@ -843,11 +897,12 @@ case("Uncached equipment requests data once and dresses only after data arrives"
     assert(client.ApplyModelEquipment(model, spec) == false)
     assert(requests == 0 and tried == 0 and model.equipmentAppliedKey == nil)
     geometry = true
-    client.ApplyModelEquipment(model, spec)
-    client.ApplyModelEquipment(model, spec)
+    assert(not client.ApplyModelEquipment(model, spec))
+    assert(not client.ApplyModelEquipment(model, spec))
     assert(requests == 1 and tried == 0 and model.pendingEquipment[25])
-    cached, model.equipmentAppliedKey = true, nil
-    client.ApplyModelEquipment(model, spec)
+    assert(model.equipmentAppliedKey == nil)
+    cached = true
+    assert(client.ApplyModelEquipment(model, spec))
     assert(requests == 1 and tried == 1)
 end)
 

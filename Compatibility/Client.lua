@@ -230,6 +230,7 @@ function A.ConfigureModel(model, spec, enemy)
     return pcall(function()
         model:ClearModel()
         if model.adventureScene then
+            model.appearanceSpec = spec
             model.nativeAppearance = not enemy
             model.appearanceUnit = spec.unit
             model.adventureKey = nil
