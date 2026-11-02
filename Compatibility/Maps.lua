@@ -59,7 +59,7 @@ function A.MapMask(key, continentID, info)
     local profile = geometry(continentID, info)
     local mask = profile and profile.masks[key]
     if profile and mask and mask.continent == continentID then
-        return mask.bounds, mask.texCoord, profile.textureRoot .. key .. ".tga"
+        return mask.bounds, profile.textureRoot .. key .. ".tga"
     end
 end
 

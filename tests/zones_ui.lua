@@ -46,3 +46,49 @@ test("Every outdoor destination supports continent-map travel in both window siz
     W.UI:ApplyMode()
     assert(ok, message)
 end)
+
+test("Padded continent masks use native full-texture coordinates at frontier nine", function()
+    local W = WoWIdle
+    W.Initialize()
+    local state = W.Game.New(W.Client.Now())
+    state.runBest, state.best, state.guide.dismissed = 9, 9, true
+    for _, class in ipairs({ "WARRIOR", "PRIEST", "MAGE", "HUNTER", "DRUID" }) do
+        assertTrue(W.Game.AddHero(state, class))
+        state.heroes[#state.heroes].level = 4
+    end
+    state.zone, state.stage, state.rest = "westfall", 31, 0
+    W.Game.StartBattle(state)
+    assertEquals(9, state.battle.level)
+    W.state = state
+    W.UI.frame:Show()
+    W.UI:SetTab("atlas")
+    for _, map in ipairs(W.UI.atlas.maps) do
+        local function check(region)
+            local ulx, uly, llx, lly, urx, ury, lrx, lry = region.mask:GetTexCoord()
+            assertEquals(0, ulx)
+            assertEquals(0, uly)
+            assertEquals(0, llx)
+            assertEquals(1, lly)
+            assertEquals(1, urx)
+            assertEquals(0, ury)
+            assertEquals(1, lrx)
+            assertEquals(1, lry)
+        end
+        check(map.grayRegion)
+        for _, zone in ipairs(W.Content.zones) do
+            local bounds = W.Client.MapMask(zone.id, map.id, map.artInfo)
+            if bounds then
+                local region = map.colorRegions[zone.id]
+                if W.Game.IsUnlocked(state, zone) then
+                    assertNotNil(region)
+                    check(region)
+                    assertTrue(region.tiles[1]:IsShown())
+                elseif region then
+                    assertFalse(region.tiles[1]:IsShown())
+                end
+            end
+        end
+    end
+    assertFalse(W.Game.IsUnlocked(state, W.Content.zoneByID.stranglethorn))
+    assertFalse(W.Game.IsUnlocked(state, W.Content.zoneByID.winterspring))
+end)

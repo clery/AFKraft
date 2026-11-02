@@ -44,11 +44,10 @@ class MapMasks(unittest.TestCase):
                               zip((left, top, right, bottom), self.size * 2)]
         result = Image.new("L", self.size)
         with Image.open(self.folder / (key + ".tga")) as image:
-            u, v = descriptor["texCoord"]
-            self.assertEqual((end_x - x, end_y - y),
-                             (round(u * image.width), round(v * image.height)))
-            # Padded textures retain the original pixel lattice without rescaling.
-            result.paste(image.getchannel("A").crop((0, 0, end_x - x, end_y - y)), (x, y))
+            self.assertNotIn("texCoord", descriptor)
+            # Model native full-texture projection, without any mask UV cropping.
+            self.assertEqual((end_x - x, end_y - y), image.size)
+            result.paste(image.getchannel("A"), (x, y))
         return result
 
     def test_every_destination_has_geometry_and_an_interior_center(self):
@@ -121,11 +120,10 @@ class MapMasks(unittest.TestCase):
                 self.assertEqual("RGBA", image.mode)
                 self.assertEqual(0, image.width & (image.width - 1))
                 self.assertEqual(0, image.height & (image.height - 1))
-                u, v = self.geometry["masks"][key]["texCoord"]
-                self.assertTrue(0 < u <= 1 and 0 < v <= 1)
-                if u < 1:
-                    self.assertEqual(0, image.getchannel("A").crop(
-                        (round(u * image.width), 0, image.width, image.height)).getextrema()[1])
+                alpha = image.getchannel("A").tobytes()
+                for channel in image.split()[:3]:
+                    self.assertEqual(alpha, channel.tobytes())
+                self.assertEqual(0, image.getchannel("A").getpixel((image.width - 1, image.height - 1)))
 
     def test_generator_uses_one_partition_and_preserves_offshore_components(self):
         image = Image.new("RGB", (32, 20), (150, 120, 60))
@@ -141,6 +139,19 @@ class MapMasks(unittest.TestCase):
         self.assertEqual(BUILDER.rows_for_labels(labels, 32, 20),
                          BUILDER.rows_for_labels(BUILDER.partition(image, land,
                              {"west": [(5, 10)], "east": [(24, 10)]})[1], 32, 20))
+
+    def test_deadwind_corridor_is_distinct_from_both_neighbors(self):
+        entry = self.geometry["continents"]["eastern"]
+        for name, points in {
+            "duskwood": [(590, 655), (595, 670)],
+            "deadwind": [(612, 650), (617, 663), (620, 680)],
+            "swamp_sorrows": [(648, 655), (655, 666)],
+        }.items():
+            for x, y in points:
+                with self.subTest(name=name, x=x, y=y):
+                    label = self.fields["eastern"][y * self.size[0] + x]
+                    self.assertEqual(name, entry["names"][label])
+                    self.assertGreater(self.mask(name).getpixel((x, y)), 127)
 
     def test_native_import_rejects_wrong_artwork_and_malformed_runs(self):
         expected = {"profile": "forever", "mapID": 1414, "size": [1024, 768], "firstTexture": 123}
@@ -166,7 +177,11 @@ class MapMasks(unittest.TestCase):
             with Image.open(Path(directory) / "dot.tga") as image:
                 self.assertEqual((4, 4), image.size)
                 self.assertEqual(255, image.getchannel("A").getpixel((1, 1)))
-                self.assertEqual([0.75, 0.75], descriptor["texCoord"])
+                self.assertNotIn("texCoord", descriptor)
+                left, top, right, bottom = descriptor["bounds"]
+                self.assertAlmostEqual(4 / 19, right - left)
+                self.assertAlmostEqual(4 / 17, bottom - top)
+                self.assertEqual((0, 0, 0, 0), image.getpixel((3, 3)))
 
 
 if __name__ == "__main__":

@@ -185,15 +185,16 @@ local function paintMap(map)
     end
 end
 
-local function createMaskedRegion(map, texture, bounds, texCoord, desaturated)
+local function createMaskedRegion(map, texture, bounds, desaturated)
     if not map.CreateMaskTexture then
         return
     end
     local left, top, right, bottom = unpack(bounds)
     local region = { tiles = {} }
     local mask = map:CreateMaskTexture()
-    mask:SetTexture(texture)
-    mask:SetTexCoord(0, texCoord[1], 0, texCoord[2])
+    -- Native masks use the full padded texture and transparent overflow.
+    -- Avoid cropped mask UVs: the simulator and live client can project them differently.
+    mask:SetTexture(texture, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
     mask:SetPoint("TOPLEFT", left * map:GetWidth(), -top * map:GetHeight())
     mask:SetSize((right - left) * map:GetWidth(), (bottom - top) * map:GetHeight())
     region.mask = mask
@@ -218,18 +219,18 @@ local function updateAccessibleRegions(map)
     map.coloredFrontier = W.state.runBest
     -- Gray the land only; the base artwork keeps sea and parchment in color.
     if not map.grayRegion then
-        local bounds, uv, texture = A.MapMask(map.id, map.id, map.artInfo)
+        local bounds, texture = A.MapMask(map.id, map.id, map.artInfo)
         if bounds then
-            map.grayRegion = createMaskedRegion(map, texture, bounds, uv, true)
+            map.grayRegion = createMaskedRegion(map, texture, bounds, true)
         end
     end
     for _, zone in ipairs(C.zones) do
         local region = map.colorRegions[zone.id]
         local unlocked = G.IsUnlocked(W.state, zone)
         if unlocked and not region then
-            local bounds, uv, texture = A.MapMask(zone.id, map.id, map.artInfo)
+            local bounds, texture = A.MapMask(zone.id, map.id, map.artInfo)
             if bounds then
-                region = createMaskedRegion(map, texture, bounds, uv, false)
+                region = createMaskedRegion(map, texture, bounds, false)
                 map.colorRegions[zone.id] = region
             end
         end

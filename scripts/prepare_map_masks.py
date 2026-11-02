@@ -212,13 +212,15 @@ def save_mask(output, key, mask):
     height = 2 ** math.ceil(math.log2(cropped.height))
     # Pad, NEVER rescale each crop independently. Every mask uses the same pixel
     # lattice and filter footprint, including shared edges and one-pixel borders.
-    image = Image.new("RGBA", (width, height), (255, 255, 255, 0))
-    alpha = Image.new("L", image.size)
+    alpha = Image.new("L", (width, height))
     alpha.paste(cropped, (0, 0))
-    image.putalpha(alpha)
+    # Keep all channels zero outside the mask, including transparent padding.
+    # Project the FULL padded texture at one source pixel per canvas pixel;
+    # cropped mask UVs can render differently between client implementations.
+    image = Image.merge("RGBA", (alpha, alpha, alpha, alpha))
     image.save(output / (key + ".tga"), compression=None)
-    return {"bounds": [left / mask.width, top / mask.height, right / mask.width, bottom / mask.height],
-            "texCoord": [cropped.width / width, cropped.height / height]}
+    return {"bounds": [left / mask.width, top / mask.height,
+                       (left + width) / mask.width, (top + height) / mask.height]}
 
 
 def write_lua(path, profile, metadata):
@@ -229,8 +231,7 @@ def write_lua(path, profile, metadata):
              "    masks = {"]
     for key, mask in sorted(metadata["masks"].items()):
         values = ", ".join(format(value, ".9f") for value in mask["bounds"])
-        uv = ", ".join(format(value, ".9f") for value in mask["texCoord"])
-        lines.append(f'        {key} = {{ continent = {quote(mask["continent"])}, bounds = {{ {values} }}, texCoord = {{ {uv} }} }},')
+        lines.append(f'        {key} = {{ continent = {quote(mask["continent"])}, bounds = {{ {values} }} }},')
     lines.extend(["    },", "    continents = {"])
     for key, entry in metadata["continents"].items():
         w, h = metadata["canvas"]
