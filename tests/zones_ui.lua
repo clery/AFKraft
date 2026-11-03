@@ -149,7 +149,7 @@ test("Scaled coastal clicks select Darkshore and ignore its offshore margin", fu
     assert(ok, message)
 end)
 
-test("Southern Eastern Kingdoms hover and travel use the visible zone masks", function()
+test("Eastern Kingdoms hover and travel use the visible zone masks", function()
     local W = WoWIdle
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
@@ -183,6 +183,15 @@ test("Southern Eastern Kingdoms hover and travel use the visible zone masks", fu
                 return true
             end
             for _, point in ipairs({
+                { "western_plaguelands", 590, 280 },
+                { "western_plaguelands", 600, 300 },
+                { "eastern_plaguelands", 640, 280 },
+                { "eastern_plaguelands", 700, 300 },
+                { "eastern_plaguelands", 755, 250 },
+                { "alterac", 610, 337 },
+                { "alterac", 620, 342 },
+                { "hillsbrad", 596, 360 },
+                { "hillsbrad", 616, 363 },
                 { "duskwood", 588, 655 },
                 { "deadwind", 595, 650 },
                 { "deadwind", 603, 663 },

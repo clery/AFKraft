@@ -140,6 +140,23 @@ class MapMasks(unittest.TestCase):
                          BUILDER.rows_for_labels(BUILDER.partition(image, land,
                              {"west": [(5, 10)], "east": [(24, 10)]})[1], 32, 20))
 
+    def test_plaguelands_and_alterac_are_not_shifted_into_each_other(self):
+        entry = self.geometry["continents"]["eastern"]
+        for name, points in {
+            "western_plaguelands": [(590, 280), (600, 300)],
+            "eastern_plaguelands": [(640, 280), (700, 300), (755, 250)],
+            "alterac": [(610, 337), (620, 342)],
+            "hillsbrad": [(596, 360), (616, 363)],
+            "tirisfal": [(534, 289)],
+            "silverpine": [(520, 350), (550, 350)],
+            "hinterlands": [(650, 350)],
+        }.items():
+            for x, y in points:
+                with self.subTest(name=name, x=x, y=y):
+                    label = self.fields["eastern"][y * self.size[0] + x]
+                    self.assertEqual(name, entry["names"][label])
+                    self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+
     def test_deadwind_corridor_is_distinct_from_both_neighbors(self):
         entry = self.geometry["continents"]["eastern"]
         for name, points in {
