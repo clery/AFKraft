@@ -352,6 +352,12 @@ case("Actor loading binds through its XML template without frame script methods"
     methods.SetKeepModelOnHide = function(self, keep)
         self.keepModel = keep
     end
+    methods.SetIsFrameBuffer = function()
+        error("Adventure scenes must preserve native viewport projection")
+    end
+    methods.SetAllowOverlappedModels = function(self, enabled)
+        self.allowOverlappedModels = enabled
+    end
     local client = adapter("12.1.5", {
         CreateFrame = function(kind, _, parent)
             creates = creates + 1
@@ -378,6 +384,8 @@ case("Actor loading binds through its XML template without frame script methods"
     assert(model.adventureActor == actor and creates == 3)
     assert(model.appearanceSource.parent == model)
     assert(model.adventureScene.parent == model)
+    assert(model.adventureScene.allowOverlappedModels == true)
+    assert(model.appearanceSource.allowOverlappedModels == nil)
     assert(model.appearanceSource.alpha == 0)
     assert(model.appearanceSource.keepModel == true)
     assert(model.alpha == 1 and model.adventureScene.alpha == 1)
@@ -413,6 +421,11 @@ case("Actor loading binds through its XML template without frame script methods"
     model.nativeAppearance = false
     model.appearanceSource.scripts.OnShow()
     assert(called == 4)
+    -- Older clients may not expose native scene overlap control.
+    methods.SetAllowOverlappedModels = nil
+    creates = 0
+    local fallback = client.CreateAdventureModel({}, function() end)
+    assert(fallback.adventureScene.allowOverlappedModels == nil and creates == 3)
 end)
 
 case("Adventure model layers reset after parent reordering", function()

@@ -181,6 +181,11 @@ function A.CreateAdventureModel(parent, loaded)
     local scene = CreateFrame("ModelScene", nil, model)
     scene:SetAllPoints(model)
     scene:EnableMouse(false)
+    -- Allow overlapping creature viewports through the native scene renderer.
+    -- Framebuffer compositing distorts these non-square model viewports.
+    if scene.SetAllowOverlappedModels then
+        scene:SetAllowOverlappedModels(true)
+    end
     scene:SetCameraFieldOfView(0.5)
     scene:SetCameraPosition(6 * cameraCos, 0, 0.6 + 6 * cameraSin)
     scene:SetCameraOrientationByAxisVectors(
