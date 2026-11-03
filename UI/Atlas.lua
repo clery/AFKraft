@@ -7,10 +7,27 @@ local function unlockText(zone)
     return "Unlock: defeat a level " .. math.max(1, zone.level - 1) .. " or higher milestone boss."
 end
 
+local function familySpoils(zone)
+    local spoils, seen = {}, {}
+    local function include(family)
+        local material = C.familyMaterials[family]
+        if material and not seen[material] then
+            seen[material] = true
+            spoils[#spoils + 1] = C.materials[material]
+        end
+    end
+    for _, family in ipairs(zone.enemyFamilies or {}) do
+        include(family)
+    end
+    include(zone.bossFamily)
+    return #spoils > 0 and table.concat(spoils, ", ") or nil
+end
+
 local function describe(self, zone)
     zone = zone or C.zoneByID[W.state.zone]
     self.focus = zone
     self.title:SetText(zone.name)
+    local spoils = familySpoils(zone)
     self.detail:SetText(
         zone.subtitle
             .. "\n"
@@ -19,6 +36,7 @@ local function describe(self, zone)
             .. zone.level
             .. "  ·  "
             .. (G.IsUnlocked(W.state, zone) and "Click the region to travel." or unlockText(zone))
+            .. (spoils and ("\nSecondary spoils: " .. spoils .. " (up to 25%).") or "")
     )
 end
 
@@ -34,6 +52,17 @@ local function zoneTooltip(map, zone)
     GameTooltip:SetOwner(map, "ANCHOR_CURSOR")
     GameTooltip:SetText(zone.name, unpack(T.gold))
     GameTooltip:AddLine(C.materials[zone.material] .. " · Frontier " .. zone.level, 0.8, 0.8, 0.7)
+    local spoils = familySpoils(zone)
+    if spoils then
+        GameTooltip:AddLine("Family spoils: " .. spoils, 0.8, 0.8, 0.7)
+        GameTooltip:AddLine(
+            "Up to 25% additional idle materials, shared across the encounter's enemies.",
+            0.7,
+            0.7,
+            0.7,
+            true
+        )
+    end
     GameTooltip:AddLine(
         G.IsUnlocked(W.state, zone) and "Click to travel" or unlockText(zone),
         0.8,

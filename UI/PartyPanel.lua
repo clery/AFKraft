@@ -47,13 +47,26 @@ local function costText(state, cost)
             .. label
             .. "|r"
     end
-    return amount(cost.essence, state.essence, "Essence")
-        .. "  ·  "
-        .. amount(cost.gold, state.gold, "gold")
+    local parts = { amount(cost.gold, state.gold, "gold") }
+    for _, id in ipairs(C.materialOrder) do
+        local count = cost.materials and cost.materials[id]
+        if count and count > 0 then
+            parts[#parts + 1] = amount(count, state.materials[id], C.materials[id])
+        end
+    end
+    return table.concat(parts, "  ·  ")
 end
 
 local function affordable(state, cost)
-    return state.essence >= cost.essence and state.gold >= cost.gold
+    if state.gold < cost.gold then
+        return false
+    end
+    for id, count in pairs(cost.materials or {}) do
+        if state.materials[id] < count then
+            return false
+        end
+    end
+    return true
 end
 
 local function recruit(ui, p, s)
@@ -182,7 +195,6 @@ local function equipment(ui, p, s, hero, index)
     line(
         p,
         hero.level >= C.heroLevelCap and "Level 60 · continue growing through Mastery"
-            or hero.level >= G.LevelCap(hero) and "Level cap reached · train to keep growing"
             or "Select a slot to compare and upgrade",
         0,
         59,
@@ -195,44 +207,14 @@ local function equipment(ui, p, s, hero, index)
         attributeLines[#attributeLines + 1] =
             string.format("%s: %.1f", C.itemStatNames[key], stats.attributes[key] or 0)
     end
-    local training = G.TrainingCost(hero)
-    local train = U.Button(
-        p,
-        G.LevelCap(hero) >= C.heroLevelCap and "Character level cap: 60"
-            or (
-                "Train: max "
-                .. G.LevelCap(hero)
-                .. " to "
-                .. math.min(C.heroLevelCap, G.LevelCap(hero) + 4)
-            ),
-        332,
-        0,
-        240,
-        34,
-        function()
-            if W.Action(G.Train, index) then
-                W.Notify(hero.name .. " can now reach level " .. G.LevelCap(hero) .. ".")
-            end
-        end,
-        false,
-        "primary"
-    )
-    U.Enabled(train, G.LevelCap(hero) < C.heroLevelCap and affordable(s, training))
-    line(
-        p,
-        G.LevelCap(hero) >= C.heroLevelCap and "Mastery supplies further growth"
-            or costText(s, training),
-        332,
-        37,
-        240,
-        11
-    )
+    local development = U.Button(p, "Party development", 332, 0, 240, 34, function()
+        ui:SetTab("development")
+    end)
+    line(p, "Natural growth to 60 · Mastery at 20", 332, 37, 240, 11)
     U.Tooltip(
-        train,
-        "Raise the level cap · Equipment stats",
-        "Current cap: "
-            .. G.LevelCap(hero)
-            .. ". Training raises the maximum level by four, up to 60; it does not grant levels. Mastery unlocks at level 20 and continues beyond the character cap. Heroes gain experience in idle battles; Adventure XP ranks award the Essence for training.\n\n"
+        development,
+        "Permanent party development · Equipment stats",
+        "Heroes earn levels naturally in idle combat without paid gates. Essence invests in permanent Might, Resolve and Provisioning ranks; redistribute ranks freely in Development.\n\n"
             .. table.concat(attributeLines, "\n")
     )
 
@@ -276,7 +258,7 @@ local function equipment(ui, p, s, hero, index)
 
     local item = hero.gear[selectedSlot]
     if item then
-        local cost = G.UpgradeCost(item)
+        local cost = G.UpgradeCost(item, s)
         line(p, "Upgrade " .. C.slots[selectedSlot], 0, 351, 320, 16, T.gold)
         line(
             p,

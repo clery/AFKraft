@@ -68,6 +68,8 @@ function G.AddHero(state, classID, identity)
         gear = {},
         talents = {},
         priority = "heal",
+        targetMode = "front",
+        resourceThreshold = 0,
         healBelow = 65,
         specialCount = 2,
     }
@@ -282,10 +284,15 @@ function G.Stats(state, hero)
     local primary = total[C.primaryStats[hero.class]] or 0
     local offense = primary * 0.65 + (total.weaponDPS or 0) + (total.attackPower or 0) * 0.325
     local mult = 1 + (state.prestigeStrength or state.prestiges) * 0.04
-    return G.ApplyTalentStats(hero, {
+    local development = G.DevelopmentModifiers(state)
+    local stats = G.ApplyTalentStats(hero, {
         attributes = total,
-        hp = math.floor((105 + hero.level * 19 + (total.stamina or 0) * 10) * mult),
-        damage = (9 + hero.level * 3 + offense + (total.spellPower or 0) * 0.65) * mult,
+        hp = math.floor(
+            (105 + hero.level * 19 + (total.stamina or 0) * 10) * mult * development.health
+        ),
+        damage = (9 + hero.level * 3 + offense + (total.spellPower or 0) * 0.65)
+            * mult
+            * development.damage,
         healing = (
             15
             + hero.level * 5
@@ -295,7 +302,8 @@ function G.Stats(state, hero)
             + (total.spellPower or 0) * 0.6
         )
             * (1 + heal)
-            * mult,
+            * mult
+            * development.healing,
         haste = 1 + (total.haste or 0) / 100,
         mitigation = math.min(
             0.6,
@@ -303,6 +311,8 @@ function G.Stats(state, hero)
         ),
         regen = (total.healthRegen or 0) / 5,
     })
+    stats.mitigation = 1 - (1 - stats.mitigation) * development.damageTaken
+    return stats
 end
 
 local function positiveInteger(value)
@@ -373,12 +383,12 @@ function G.NextTalentLevel(hero)
     end
 end
 
-function G.LevelCap(hero)
-    return min(C.heroLevelCap, 4 + (hero.rank or 0) * 4)
+function G.LevelCap(_)
+    return C.heroLevelCap
 end
 
-function G.TrainingCost(hero)
-    return { essence = 120 + 120 * (hero.rank or 0), gold = 80 }
+function G.TrainingCost(_)
+    return { essence = 0, gold = 0 }
 end
 
 function G.Train(state, index)
@@ -386,19 +396,8 @@ function G.Train(state, index)
     if not hero then
         return false, "Choose a hero."
     end
-    if G.LevelCap(hero) >= C.heroLevelCap then
-        return false, "The character level cap is 60. Continue growing through Mastery."
-    end
-    local cost = G.TrainingCost(hero)
-    if state.essence < cost.essence or state.gold < cost.gold then
-        return false, "Training costs " .. cost.essence .. " Essence and " .. cost.gold .. " gold."
-    end
-    state.essence = state.essence - cost.essence
-    state.gold = state.gold - cost.gold
-    hero.rank = (hero.rank or 0) + 1
-    G.Emit(state, "train")
-    G.Log(state, hero.name .. " can now reach idle level " .. G.LevelCap(hero) .. ".")
-    return true
+    return false,
+        "Training is retired. Heroes grow naturally to level 60; Mastery unlocks at level 20."
 end
 
 function G.PriorityPresets(hero)
@@ -442,7 +441,15 @@ function G.Configure(state, index, key, value)
     if not hero then
         return false
     end
-    if key == "priority" then
+    if key == "resourceThreshold" then
+        if type(value) ~= "number" or value < 0 or value > 100 or value ~= math.floor(value) then
+            return false
+        end
+    elseif key == "targetMode" then
+        if not C.targetModeByID[value] then
+            return false
+        end
+    elseif key == "priority" then
         local valid = false
         for _, id in ipairs(C.priorityModes) do
             if id == value then

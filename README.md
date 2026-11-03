@@ -36,7 +36,7 @@ Close the window with Escape when you want to return to WoW; the adventure conti
 
 ## Your WoW adventures fuel theirs
 
-Eligible activities on your real character fill a shared, account-wide **Adventure XP** bar. Every **100 Adventure XP** awards **60 Essence**, which you can spend on training, crafting, and equipment improvements.
+Eligible activities on your real character fill a shared, account-wide **Adventure XP** bar. Every **100 Adventure XP** awards **60 Essence**, which funds permanent party development and learned Commander abilities. Hero levels and routine equipment require no Essence.
 
 | Activity | Adventure XP |
 | --- | ---: |
@@ -62,9 +62,9 @@ Each hero has ten wearable equipment slots: weapon, armor, head, back, shoulders
 
 Each purchased enhancement adds 10% of the item’s base stats. Heirlooms use the same item identities with separate idle level scaling. WoW item requirements are mapped to idle requirements. Armor follows original class proficiencies, including lighter armor and plate for warriors/paladins or mail for hunters/shamans unlocking at idle level 40. Heirlooms still require the right armor proficiency. Incompatible equipped armor returns to shared inventory on load or prestige. Weapon proficiencies remain simplified. Loot pools and drop rates are adapted for the minigame. See [item sources and stat rules](Content/ITEMS.md) for the catalog, calculations, and currently unsupported item effects.
 
-In **Party**, select an equipment slot to compare items and preview the cost of an upgrade. Choose **Upgrade** to purchase it. Training raises a hero's level cap, letting further idle experience take them higher.
+In **Party**, select an equipment slot to compare items and preview the cost of an upgrade. Choose **Upgrade** to purchase it. Heroes gain levels naturally through idle combat up to 60; Mastery unlocks at 20. Open Development to invest Essence in permanent Might, Resolve and Provisioning ranks, with free redistribution.
 
-Crafting turns materials and Essence into targeted equipment. Configure salvage rules in the minigame to handle unwanted loot and protect items you want to keep. Talents and conditional ability priorities let you refine each hero's role as your party develops.
+Crafting turns gold and idle materials into targeted equipment. Enhancement, enchantment and titanforging also use gold/materials rather than Essence. Configure salvage rules in the minigame to handle unwanted loot and protect items you want to keep. Talents and conditional ability priorities let you refine each hero's role as your party develops.
 
 Talent selections and earned points survive prestige, and respecs stay free. Hero levels stop at 60. Personal level records award a point every two levels, starting at level 1; repeating those levels never awards points twice. At level 20, permanent **Mastery** unlocks: victories at or above that hero's hardest completed encounter level grant Mastery XP, with double XP for bosses. Every Mastery rank grants another permanent talent point, up to the tree's 48-point total. The first rank costs 100 XP, and each later rank costs 50 more. Mastery continues when character levels are capped. The Talents view shows both tracks.
 
@@ -72,7 +72,7 @@ Talent selections and earned points survive prestige, and respecs stay free. Her
 
 Defeat a **level 8 milestone boss** to unlock prestige. Open **Legacy** to preview the rewards and reset consequences before confirming.
 
-Prestige starts a new run: hero levels and training reset, ordinary equipment and purchased run upgrades are lost, and gold, zone materials, and destination progress start over. Your heroes keep their identities, classes, talents, earned talent points, and Mastery. Lower-level encounters after a reset do not grant Mastery XP.
+Prestige starts a new run: hero levels reset, ordinary equipment and purchased run upgrades are lost, and gold, zone materials, and destination progress start over. Your heroes keep their identities, classes, talents, earned talent points, and Mastery. Lower-level encounters after a reset do not grant Mastery XP.
 
 Adventure rank, partial Adventure XP, unspent Essence, discoveries, unlocked recipes, Legacy currency, and heirlooms carry forward. Spent Essence is not refunded. Heirlooms scale with a hero's current idle level, giving future runs a useful foundation.
 

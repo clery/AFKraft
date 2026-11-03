@@ -49,7 +49,7 @@ case(
         hero.level, hero.rank = 20, 4
         G.TalentProgress(hero)
         s.zone, s.stage, s.farming, s.safe.westfall = "westfall", 1, true, 1
-        local collection = C.collections[1]
+        local collection = C.legacyCollections[1]
         for i = 1, 4 do
             s.collectionBook.pieces[collection.pieces[i]] = 0
         end
@@ -83,13 +83,13 @@ case(
         end
         G.FinishCatchup(s, job)
         assert(
-            s.collectionBook.lastEncounter > previous
+            s.collectionBook.lastEncounter == previous
                 and s.encounter >= s.collectionBook.lastEncounter
         )
         local receipt = s.collectionBook.lastEncounter
         s.rest = 0
         win(s)
-        assert(s.collectionBook.lastEncounter > receipt)
+        assert(s.collectionBook.lastEncounter == receipt)
         assert(s.lastOfflineSummary.boostUses == 0 and not s.offline)
     end
 )
@@ -114,6 +114,31 @@ case("Offline summaries show partial Mastery XP and resource gains without a cla
     assert(summary.materials.ore == 3 and summary.gold == 7 and summary.salvaged == 2)
     assert(summary.routeTransitions == 0 and not summary.routesWaiting)
     assert(s.lastTime == 60 and s.log[#s.log]:find("1 minutes away", 1, true))
+    assert(summary.seconds == 60 and summary.interrupted and summary.remainingSeconds == 60)
+    local timestamp, clock, gold, journal = s.lastTime, s.clock, s.gold, #s.log
+    assert(not G.FinishCatchup(s, job))
+    assert(G.CatchupBatch(job, 240))
+    assert(s.lastTime == timestamp and s.clock == clock and s.gold == gold and #s.log == journal)
+end)
+
+case("Offline reports count retained hero progression and stacked equipment", function()
+    local s = party()
+    local hero = s.heroes[1]
+    hero.xp = 40
+    s.safe.elwynn = 1
+    local job = assert(G.BeginCatchup(s, 60))
+    local earned = job.state
+    local h = earned.heroes[1]
+    h.level, h.xp = G.ExperienceResult(h, 20)
+    local item = G.Item(earned, 1, 1, 2)
+    item.count = 3
+    earned.inventory[#earned.inventory + 1] = item
+    job.remaining = 0
+    assert(G.FinishCatchup(s, job))
+    local report = s.lastOfflineSummary
+    assert(report.heroXP == 20 and report.heroLevels == 1 and report.itemsKept == 3)
+    assert(report.seconds == 60 and not report.interrupted and report.remainingSeconds == 0)
+    assert(G.Load(G.Copy(s), 60).lastOfflineSummary.itemsKept == 3)
 end)
 
 case("Future collection watermarks refuse loading without discarding the account", function()
@@ -254,6 +279,50 @@ case("Invalid saved item investments refuse loading without resetting currencies
     item.forgePower = 0.04
     item.enchant = { id = "offense", stats = { weaponDPS = 100 } }
     assert(not G.Load(G.Copy(s), 0))
+end)
+
+case(
+    "Loading legacy collections imports matching identities without mutating rejected saves",
+    function()
+        local old = party()
+        old.outdoorCollections = nil
+        old.collectionBook.pieces[1930], old.collectionBook.pieces[2985] = 4, 2
+        local loaded = assert(G.Load(old, 0))
+        assert(loaded ~= old and old.outdoorCollections == nil)
+        assert(
+            loaded.outdoorCollections.pieces[2985] and not loaded.outdoorCollections.pieces[4701]
+        )
+        assert(loaded.collectionBook.pieces[1930] == 4)
+        old.development.invested = 99
+        assert(not G.Load(old, 0))
+        assert(old.outdoorCollections == nil and old.collectionBook.pieces[1930] == 4)
+    end
+)
+
+case("Live dungeon discoveries survive catch-up without manufacturing outdoor progress", function()
+    local s = party()
+    s.safe.elwynn = 1
+    local job = assert(G.BeginCatchup(s, 60))
+    assert(G.SetCollectionTarget(s, 10399))
+    for serial = 1, 10 do
+        G.CollectionKill(s, {
+            profile = "foreverDungeon16001",
+            npcID = 639,
+            kind = "dungeon",
+            dungeon = true,
+            attributed = true,
+            receipt = string.format("kill:Creature-0-1-1-1-639-%06x", serial),
+        })
+    end
+    assert(s.dungeonCollections.pieces[10399])
+    local kills = s.dungeonCollections.stats.kills
+    while not G.CatchupBatch(job, 31) do
+    end
+    assert(G.FinishCatchup(s, job))
+    assert(s.dungeonCollections.pieces[10399] and G.CollectionTarget(s) == 10399)
+    assert(s.dungeonCollections.stats.kills == kills)
+    assert(s.outdoorCollections.stats.kills == 0 and s.outdoorCollections.stats.discoveries == 0)
+    assert(G.ValidateCollections(s))
 end)
 
 return cases

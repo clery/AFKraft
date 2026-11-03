@@ -8,12 +8,17 @@ for _, file in ipairs({
     "Content/Backdrops.lua",
     "Content/Items.lua",
     "Content/Boosts.lua",
+    "Content/Resources.lua",
     "Content/Collections.lua",
     "Content/Professions.lua",
+    "Content/Development.lua",
     "Domain/State.lua",
+    "Domain/Development.lua",
+    "Domain/Economy.lua",
     "Domain/Boosts.lua",
     "Domain/BoostRules.lua",
     "Domain/Party.lua",
+    "Domain/Resources.lua",
     "Domain/Mastery.lua",
     "Domain/Inventory.lua",
     "Domain/Collections.lua",
@@ -44,7 +49,7 @@ local function party(level, prestiges, tier, mastery, heirlooms)
     for _, class in ipairs({ "WARRIOR", "PRIEST", "MAGE", "ROGUE", "SHAMAN" }) do
         assert(G.AddHero(state, class))
         local hero = state.heroes[#state.heroes]
-        hero.level, hero.rank = level, math.max(0, math.ceil((level - 4) / 4))
+        hero.level, hero.rank = level, 0
         local progress = assert(G.TalentProgress(hero))
         hero.mastery.rank = mastery
         progress.earned = math.min(#G.TalentList(hero), progress.earned + mastery)
@@ -114,28 +119,25 @@ for _, level in ipairs({ 8, 20, 40, 60 }) do
     end
 end
 
+print("Affix-tier checks: same level-60 party, 40 prestige strength, eight Mastery ranks.")
+for _, tier in ipairs({ 2, 5, 8 }) do
+    encounter(60, 40, tier, 8)
+end
+
 print(
-    "Reset comparison: start level 1; retained full talent budget and heirlooms; train when capped."
+    "Reset comparison: start level 1; retained full talent budget and heirlooms; natural growth to 60."
 )
-print(
-    "Fixture supplies training Essence/gold; these are not earnings. Runs stop after 6000 simulation seconds."
-)
+print("No fixture Essence or training is needed. Runs stop after 6000 simulation seconds.")
 print(
     "Prestiges | Goal | Reached | Seconds | Hero level | Legacy | Legacy/min | Strength percentage/min"
 )
 for _, prestiges in ipairs({ 0, 10, 40 }) do
     for _, goal in ipairs({ 8, 12, 20 }) do
         local state = party(1, prestiges, 0, 47, true)
-        state.essence, state.gold = 1000000000, 1000000000
         local ticks = 0
         while state.runBest < goal and ticks < 24000 do
             G.Step(state, 0.25)
             ticks = ticks + 1
-            for index, hero in ipairs(state.heroes) do
-                if hero.level == G.LevelCap(hero) and hero.level < C.heroLevelCap then
-                    G.Train(state, index)
-                end
-            end
         end
         local seconds = ticks / 4
         local reward = G.PrestigeReward(state)

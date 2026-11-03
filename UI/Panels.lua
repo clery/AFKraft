@@ -92,6 +92,28 @@ function P.GuideStep(s, selectedHero)
     end
 end
 
+local function opportunityCard(parent, y, icon, title, detail, tooltip, action)
+    local card = U.Button(parent, "", 710, y, 586, 72, action)
+    U.Begin(card)
+    U.Icon(card, icon, 12, 18, 36):SetParent(card.content or card)
+    card.titleText = U.SingleLine(text(card, title, 62, 10, 16, T.gold, 510), 510, 24)
+    card.detailText = U.SingleLine(text(card, detail, 62, 40, 13, T.text, 510), 510, 22)
+    U.EndBuild(card)
+    U.Tooltip(card, title, tooltip, 380)
+    return card
+end
+
+function P.DevelopmentOpportunity(state)
+    local chosenBranch, selectedQuote
+    for _, branch in ipairs(C.development) do
+        local quote = G.DevelopmentQuote(state, branch.id)
+        if quote and quote.cost and (not selectedQuote or quote.cost < selectedQuote.cost) then
+            chosenBranch, selectedQuote = branch, quote
+        end
+    end
+    return chosenBranch, selectedQuote
+end
+
 function P.adventure(ui, p, s)
     local title, detail, label, tab
     if #s.heroes < G.CompanionSlots(s) then
@@ -126,52 +148,150 @@ function P.adventure(ui, p, s)
             ui:SetTab("boosts")
         end
     end)
-    do
-        text(p, "YOUR LEGACY", 710, 0, 12, T.gold)
-        local reward = G.PrestigeReward(s)
-        text(
-            p,
-            s.prestigeUnlocked and "A new chapter is available" or "Build a lasting inheritance",
-            710,
-            27,
-            21,
-            T.gold,
-            580
-        )
-        text(
-            p,
-            s.prestigeUnlocked
-                    and ("Reset this run for " .. reward .. " Legacy. Review what carries forward before deciding.")
-                or "Defeat a level 8 milestone boss to unlock new chapters and earn Legacy for heirloom recipes.",
-            710,
-            65,
-            14,
-            T.muted,
-            580
-        )
-        button(
-            p,
-            s.prestigeUnlocked and "Review Legacy · +" .. reward or "Explore Legacy",
-            710,
-            128,
-            300,
-            function()
-                ui:SetTab("legacy")
-            end
-        )
-        if s.guide.dismissed and P.GuideStep(s, ui.selected) then
-            button(p, "Show starter guide", 1030, 128, 266, function()
-                s.guide.dismissed = false
-                ui:Refresh()
-            end)
+    local branch, quote = P.DevelopmentOpportunity(s)
+    local upgradeTitle, upgradeDetail =
+        "Development complete", "All three branches are at their rank cap."
+    if branch and quote then
+        upgradeTitle = branch.name
+            .. " rank "
+            .. quote.nextRank
+            .. " | "
+            .. (
+                s.essence >= quote.cost and (quote.cost .. " Essence")
+                or ("Save " .. (quote.cost - s.essence) .. " Essence")
+            )
+        local field, caption = "damage", "Damage"
+        if branch.id == "resolve" then
+            field, caption = "health", "Maximum health"
+        elseif branch.id == "provisioning" then
+            field, caption = "materials", "Zone materials"
         end
+        upgradeDetail = string.format(
+            "%s: %+.1f%% -> %+.1f%% | Review upgrade",
+            caption,
+            (quote.current[field] - 1) * 100,
+            (quote.next[field] - 1) * 100
+        )
+    end
+    ui.adventureDevelopment = opportunityCard(
+        p,
+        0,
+        branch and branch.icon or "Ability_Warrior_BattleShout",
+        upgradeTitle,
+        upgradeDetail,
+        (branch and branch.description or "Your permanent development board is complete.")
+            .. "\nOpen Development to compare every benefit before buying. Rank redistribution is free; learned abilities stay owned.",
+        function()
+            ui:SetTab("development")
+        end
+    )
+    local hunt = W.CollectionPanel.TrackedPiece(s)
+    local huntTitle, huntDetail, huntTooltip =
+        "Choose a collection hunt",
+        "Track one piece in Collections",
+        "Choose a missing piece and inspect its real outdoor or dungeon sources. Unverified source mappings remain disabled. Idle routes do not perform hunts."
+    if hunt then
+        huntTitle = hunt.item.name
+        local progress = hunt.guarantee and (hunt.count .. "/" .. hunt.guarantee .. " saved")
+            or "No source profile"
+        huntDetail = hunt.found and "Discovered | Review completed-set effects"
+            or (
+                progress
+                .. " | "
+                .. (
+                    hunt.available and W.CollectionPanel.SourceLabel(hunt.source)
+                    or "Sources unverified"
+                )
+            )
+        huntTooltip = (
+            hunt.source
+                and (hunt.available and "Eligible family: " or "Unverified family: ") .. W.CollectionPanel.SourceLabel(
+                    hunt.source
+                )
+            or "No verified source is available for this client."
+        )
+            .. "\n"
+            .. progress
+            .. ". Only attributed eligible real "
+            .. hunt.kind
+            .. " kills advance this piece."
+            .. "\nClick to inspect the tracked piece or change your target."
+    end
+    ui.adventureHunt = opportunityCard(
+        p,
+        82,
+        hunt and hunt.item.icon or "INV_Misc_Bag_10",
+        huntTitle,
+        huntDetail,
+        huntTooltip,
+        function()
+            if G.CollectionTarget(s) then
+                ui.collectionPiece = G.CollectionTarget(s)
+                ui.collectionSelected = C.collectionByItem[ui.collectionPiece]
+            end
+            ui:SetTab("collections")
+        end
+    )
+    button(
+        p,
+        s.prestigeUnlocked and "Legacy +" .. G.PrestigeReward(s) or "Explore Legacy",
+        710,
+        173,
+        160,
+        function()
+            ui:SetTab("legacy")
+        end
+    )
+    if P.GuideStep(s, ui.selected) or (W.Tutorial and W.Tutorial.NextLesson(s)) then
+        button(p, s.guide.dismissed and "Show guide" or "Hide guide", 888, 173, 154, function()
+            s.guide.dismissed = not s.guide.dismissed
+            ui:Refresh()
+        end)
+    end
+    local session = G.HuntSessionSummary(s, W.Client.Now())
+    local report = G.HasSessionProgress(session) and session or s.lastHuntSummary
+    ui.adventureSession = nil
+    if report then
+        ui.adventureSession = U.SingleLine(
+            text(
+                p,
+                (report == session and "Session" or "Previous session")
+                    .. " | "
+                    .. (report.adventureXP ~= nil and tostring(report.adventureXP) or "Unrecorded")
+                    .. " Adventure XP | "
+                    .. (report.essence ~= nil and tostring(report.essence) or "Unrecorded")
+                    .. " Essence | Finds: "
+                    .. report.discoveries,
+                0,
+                169,
+                11,
+                T.muted,
+                660
+            ),
+            660,
+            16
+        )
     end
     text(p, "ADVENTURE JOURNAL", 0, 187, 11, T.gold)
+    ui.offlineReport = nil
+    if s.lastOfflineSummary then
+        ui.offlineReport = button(p, "Return report", 1060, 173, 236, function()
+            ui:SetTab("offline")
+        end)
+    end
     U.SingleLine(text(p, s.log[#s.log] or "", 0, 210, 13, T.muted, 1290), 1290, 24)
 end
 
 function P.party(ui, p, s)
     W.PartyPanel.Draw(ui, p, s)
+end
+
+function P.offline(ui, p, s)
+    W.OfflinePanel.Draw(ui, p, s)
+end
+
+function P.development(ui, p, s)
+    W.DevelopmentPanel.Draw(ui, p, s)
 end
 
 function P.routes(ui, p, s)
@@ -498,7 +618,7 @@ function P.talents(ui, p, s)
     text(p, "Permanent talents. Free respecs. " .. hint, 0, 35, 13, T.muted)
     W.TalentPanel.Draw(ui, p, h, index)
     text(p, "COMBAT PRIORITIES", 0, 340, 12, T.gold)
-    U.Choice(p, "Class presets", 0, 362, 180, G.PriorityPresets(h), nil, function(id)
+    U.Choice(p, "Class presets", 0, 354, 180, G.PriorityPresets(h), nil, function(id)
         W.Action(G.ConfigurePreset, index, id)
     end)
     local priorities, thresholds = {}, {}
@@ -512,7 +632,7 @@ function P.talents(ui, p, s)
         p,
         C.priorityNames[h.priority],
         208,
-        362,
+        354,
         280,
         priorities,
         h.priority,
@@ -524,7 +644,7 @@ function P.talents(ui, p, s)
         p,
         "Recover below " .. h.healBelow .. "%",
         508,
-        362,
+        354,
         300,
         thresholds,
         h.healBelow,
@@ -536,7 +656,7 @@ function P.talents(ui, p, s)
         p,
         "Special at " .. h.specialCount .. "+ enemies",
         828,
-        362,
+        354,
         300,
         {
             { id = 1, name = "Special at 1+ enemies" },
@@ -551,15 +671,60 @@ function P.talents(ui, p, s)
     for _, dropdown in ipairs({ priority, threshold, special }) do
         dropdown:SetEnabled(true)
     end
-    text(
+    text(p, "ENEMY TARGET", 0, 402, 12, T.gold)
+    local targetMode = h.targetMode or "front"
+    ui.heroTargetChoice = U.Choice(
         p,
-        "Priorities guide this companion automatically. Recovery uses their healing or defensive ability.",
+        "Target: " .. C.targetModeByID[targetMode].name,
         208,
-        406,
-        12,
-        T.muted,
-        1088
+        394,
+        440,
+        C.targetModes,
+        targetMode,
+        function(value)
+            W.Action(G.Configure, index, "targetMode", value)
+        end
     )
+    U.Tooltip(
+        ui.heroTargetChoice,
+        "Enemy target priority",
+        "Selects the primary enemy for movement, strikes and basic attacks. Health priorities compare percentages; ties use encounter order. Dead enemies are excluded. Area effects still hit living enemies in range. Changes preserve health and cooldowns."
+    )
+    local profile, value = G.HeroResource(h, s.battle and s.battle.heroes[index])
+    if profile then
+        local choices = {}
+        for _, percent in ipairs({ 0, 25, 50, 75, 100 }) do
+            choices[#choices + 1] = {
+                id = percent,
+                name = profile.name .. " abilities >= " .. percent .. "%",
+            }
+        end
+        local percent = h.resourceThreshold or 0
+        ui.heroResourceChoice = U.Choice(
+            p,
+            profile.name .. " abilities >= " .. percent .. "%",
+            668,
+            394,
+            460,
+            choices,
+            percent,
+            function(n)
+                W.Action(G.Configure, index, "resourceThreshold", n)
+            end
+        )
+        U.Tooltip(
+            ui.heroResourceChoice,
+            profile.name .. ": " .. math.floor(value) .. "/" .. profile.maximum,
+            profile.description
+                .. " Strike costs "
+                .. profile.costs.attack
+                .. "; recovery "
+                .. profile.costs.heal
+                .. "; special "
+                .. profile.costs.special
+                .. ". Threshold checked before spending. Basic attacks continue while waiting. These are idle combat resources."
+        )
+    end
 end
 
 function P.crafting(ui, p, s)
@@ -614,17 +779,12 @@ function P.crafting(ui, p, s)
     text(p, description, 850, 58, 14, T.muted, 450)
     text(
         p,
-        cost.essence
-            .. " Essence  /  "
-            .. cost.gold
-            .. " gold\n"
-            .. cost.material
-            .. " "
-            .. C.materials[material],
+        cost.gold .. " gold\n" .. cost.material .. " " .. C.materials[material],
         850,
         141,
         16,
-        T.gold
+        T.gold,
+        450
     )
     local craft = button(p, "Craft for " .. h.name, 850, 233, 446, function()
         W.Action(G.Craft, index, slot, material, heirloom)
@@ -633,7 +793,6 @@ function P.crafting(ui, p, s)
     U.Enabled(
         craft,
         preview ~= nil
-            and s.essence >= cost.essence
             and s.gold >= cost.gold
             and s.materials[material] >= cost.material
             and (not heirloom or s.recipes[slot])
@@ -642,7 +801,7 @@ function P.crafting(ui, p, s)
         craft,
         "Craft targeted equipment",
         (preview and G.ItemDescription(preview, h) .. "\n\n" or "")
-            .. "The full cost is shown above. Earn Essence by playing WoW and materials by adventuring in the matching zone. Heirloom recipes must first be unlocked in Legacy."
+            .. "Gold and idle materials pay the full cost shown above. Heirloom recipes must first be unlocked in Legacy."
     )
     text(
         p,
@@ -745,7 +904,7 @@ function P.legacy(ui, p, s)
         text(p, "RESET", 0, 365, 14, T.gold)
         text(
             p,
-            "Hero levels and training; ordinary equipped and stored gear; gold and zone materials; destination and encounter progress; active commander effects.",
+            "Hero levels; ordinary equipped and stored gear; gold, zone materials and Runic fragments; destination and encounter progress; active commander effects. Natural growth to 60 stays available.",
             0,
             398,
             17,
@@ -1008,6 +1167,7 @@ function P.Draw(ui)
     end
     ui.guideEquipTarget, ui.guideInventoryTarget, ui.guideCraftEquipTarget = nil, nil, nil
     ui.boostQuick, ui.boostControls, ui.boostTiles = nil, nil, nil
+    ui.adventureDevelopment, ui.adventureHunt, ui.adventureSession = nil, nil, nil
     ui.boostRuleControls, ui.boostRulesToggle = nil, nil
     ui.boostAutomationPurchases, ui.boostAutomationEnabled = nil, nil
     U.Begin(p)

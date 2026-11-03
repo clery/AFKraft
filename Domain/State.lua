@@ -40,12 +40,31 @@ function G.New(now)
     return {
         version = C.version,
         itemStatsVersion = 1,
+        economyVersion = 1,
+        development = {
+            ranks = { might = 0, resolve = 0, provisioning = 0 },
+            choices = {},
+            invested = 0,
+        },
         guide = {
             dismissed = false,
             equipped = false,
             talent = false,
             traveled = false,
             crafted = false,
+            lessonBoost = false,
+            lessonAutomation = false,
+            lessonProfiles = false,
+            lessonRoutes = false,
+            lessonCollections = false,
+            lessonHunt = false,
+            lessonEnchanting = false,
+            lessonTitanforging = false,
+            lessonResearch = false,
+            lessonPrestigePlus = false,
+            lessonLegacy = false,
+            lessonMastery = false,
+            lessonDevelopment = false,
         },
         seed = floor(now) % 2147483646 + 1,
         heroes = {},
@@ -60,6 +79,7 @@ function G.New(now)
         materials = { timber = 0, hide = 0, ore = 0, relic = 0 },
         materialRemainders = {},
         routes = {
+            offlineEnabled = false,
             owned = false,
             enabled = false,
             templates = {},
@@ -78,11 +98,28 @@ function G.New(now)
             purchases = {},
         },
         professions = {
+            fragments = 0,
+            recipes = {},
+            lastFragmentEncounter = 0,
             owned = {},
             ranks = { crafting = 0, enchanting = 0, titanforging = 0 },
             xp = { crafting = 0, enchanting = 0, titanforging = 0 },
             allocations = { crafting = {}, enchanting = {}, titanforging = {} },
             bestLevel = 1,
+        },
+        outdoorCollections = {
+            version = 1,
+            pieces = {},
+            counters = {},
+            receipts = {},
+            stats = { kills = 0, discoveries = 0 },
+        },
+        dungeonCollections = {
+            version = 1,
+            pieces = {},
+            counters = {},
+            receipts = {},
+            stats = { kills = 0, discoveries = 0 },
         },
         collectionBook = {
             pieces = {},
@@ -159,6 +196,23 @@ function G.Load(db, now)
     elseif db.version ~= C.version then
         return nil, "This save belongs to an unsupported version. It has not been changed."
     end
+    local previousEconomy = db.economyVersion
+    if
+        previousEconomy == nil
+        or db.outdoorCollections == nil
+        or db.dungeonCollections == nil
+        or (type(db.routes) == "table" and db.routes.offlineEnabled == nil)
+        or (
+            type(db.professions) == "table"
+            and (
+                db.professions.fragments == nil
+                or db.professions.recipes == nil
+                or db.professions.lastFragmentEncounter == nil
+            )
+        )
+    then
+        db = copy(db)
+    end
     local existingGuide = type(db.guide) == "table"
     local needsItemMigration = db.itemStatsVersion ~= 1
     if db.prestigeStrength == nil then
@@ -168,7 +222,9 @@ function G.Load(db, now)
     local defaults = G.New(now)
     for k, v in pairs(defaults) do
         if db[k] == nil then
-            db[k] = copy(v)
+            if k ~= "outdoorCollections" then
+                db[k] = copy(v)
+            end
         elseif type(db[k]) ~= type(v) then
             return nil,
                 "The saved adventure has an invalid " .. k .. " field. It has not been reset."
@@ -264,11 +320,17 @@ function G.Load(db, now)
             return nil, "The saved material progress is invalid. Your adventure has not been reset."
         end
     end
+    if db.routes.offlineEnabled == nil then
+        db.routes.offlineEnabled = false
+    end
     if not G.ValidateRoutes(db) then
         return nil, "The saved routes are invalid. Your adventure has not been reset."
     end
     if not G.ValidateProfiles(db) then
         return nil, "The saved commander profiles are invalid. Your adventure has not been reset."
+    end
+    if not G.ValidateHuntSummary(db) then
+        return nil, "The saved outdoor hunt report is invalid. Your adventure has not been reset."
     end
     if not G.ValidateCollections(db) then
         return nil, "The saved collections are invalid. Your adventure has not been reset."
@@ -420,6 +482,22 @@ function G.Load(db, now)
         migrateItem(item)
     end
     for _, hero in ipairs(db.heroes) do
+        if
+            hero.resourceThreshold ~= nil
+            and (
+                type(hero.resourceThreshold) ~= "number"
+                or hero.resourceThreshold < 0
+                or hero.resourceThreshold > 100
+                or hero.resourceThreshold ~= floor(hero.resourceThreshold)
+            )
+        then
+            return nil,
+                "The saved ability resource threshold is invalid. Your adventure has not been reset."
+        end
+        if hero.targetMode ~= nil and not C.targetModeByID[hero.targetMode] then
+            return nil,
+                "The saved combat target priority is invalid. Your adventure has not been reset."
+        end
         local talentProgress, errorMessage = G.TalentProgress(hero)
         if not talentProgress then
             return nil, errorMessage
@@ -469,6 +547,13 @@ function G.Load(db, now)
         db.itemStatsVersion = 1
     end
     G.ProfessionUnlocks(db)
+    if not G.ValidateDevelopment(db) then
+        return nil, "The saved party development is invalid. Your adventure has not been reset."
+    end
+    if not G.MigrateEconomy(db, previousEconomy) then
+        return nil,
+            "The saved economy cannot be migrated safely. Your adventure has not been reset."
+    end
     db.paused, db.pauseAfter = false, nil
     db.events = nil
     return db

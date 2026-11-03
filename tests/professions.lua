@@ -111,7 +111,7 @@ case("Titanforging is capped, additive potential separate from enhancement and e
     for rank = 1, 5 do
         local preview, cost = G.ForgeQuote(s, 1, 1)
         assert(
-            preview.forge == rank and cost.gold > 0 and cost.essence > 0 and cost.materials.ore > 0
+            preview.forge == rank and cost.gold > 0 and cost.essence == 0 and cost.materials.ore > 0
         )
         assert(item.forge == (rank > 1 and rank - 1 or nil))
         assert(G.Titanforge(s, 1, 1))
@@ -246,7 +246,9 @@ case("Craft specialization previews match paid output and credit work only once"
             and s.materials.ore == material - cost.material
     )
     s.essence = 0
-    assert(not G.Craft(s, 1, 1, "ore", false) and s.professions.xp.crafting == 10)
+    assert(G.Craft(s, 1, 1, "ore", false) and s.professions.xp.crafting == 20)
+    s.materials.ore = 0
+    assert(not G.Craft(s, 1, 1, "ore", false) and s.professions.xp.crafting == 20)
 end)
 
 case(
@@ -277,5 +279,121 @@ case(
         assert(G.Load(G.Copy(s), 10))
     end
 )
+
+case("Tier bosses unlock permanent runic recipes and count each encounter once", function()
+    local s = party()
+    s.tier, s.difficulty.maxTier, s.difficulty.unlocked = 2, 2, true
+    assert(not G.EnchantQuote(s, 1, 1, "runicFury"))
+    s.encounter = 1
+    G.DifficultyVictory(s, { boss = true, level = 20 })
+    assert(s.professions.fragments == 1 and s.professions.recipes.runicFury)
+    G.DifficultyVictory(s, { boss = true, level = 20 })
+    assert(s.professions.fragments == 1)
+    s.tier, s.difficulty.maxTier, s.encounter = 8, 8, 2
+    G.DifficultyVictory(s, { boss = true, level = 20 })
+    assert(s.professions.recipes.runicFortitude and s.professions.recipes.runicClarity)
+    s.professions.fragments = C.runicFragmentCap
+    s.encounter = 3
+    assert(G.ProfessionBossRewards(s, { boss = true, level = 20 }))
+    assert(s.professions.fragments == C.runicFragmentCap)
+    assert(G.Load(G.Copy(s), 0))
+    for _, bad in ipairs({ -1, 0.5, C.runicFragmentCap + 1 }) do
+        local invalid = G.Copy(s)
+        invalid.professions.fragments = bad
+        assert(not G.ValidateProfessions(invalid))
+    end
+end)
+
+case(
+    "Runic enchantment payment is atomic and cannot charge identical modifications twice",
+    function()
+        local s, _, item = party()
+        s.professions.recipes.runicFury = true
+        local preview, cost = G.EnchantQuote(s, 1, 1, "runicFury")
+        assert(preview and cost.fragments == 3 and cost.essence == 0)
+        local base = assert(G.EnchantQuote(s, 1, 1, "offense"))
+        assert(preview.enchant.stats.attackPower > base.enchant.stats.attackPower)
+        local gold, relic, essence = s.gold, s.materials.relic, s.essence
+        s.professions.fragments = 2
+        assert(not G.Enchant(s, 1, 1, "runicFury"))
+        assert(s.gold == gold and s.materials.relic == relic and item.enchant == nil)
+        s.professions.fragments = 3
+        assert(G.Enchant(s, 1, 1, "runicFury"))
+        assert(s.professions.fragments == 0 and s.essence == essence)
+        gold, relic = s.gold, s.materials.relic
+        assert(not G.Enchant(s, 1, 1, "runicFury"))
+        assert(s.gold == gold and s.materials.relic == relic)
+    end
+)
+
+case("Offline bosses supply known runic work but cannot discover new recipes", function()
+    local s = party()
+    s.tier, s.encounter, s.offline = 8, 1, true
+    assert(not G.ProfessionBossRewards(s, { boss = true, level = 20 }))
+    assert(s.professions.fragments == 0 and next(s.professions.recipes) == nil)
+    s.professions.recipes.runicFury = true
+    s.encounter = 2
+    assert(G.ProfessionBossRewards(s, { boss = true, level = 20 }))
+    assert(s.professions.fragments == 1 and not s.professions.recipes.runicClarity)
+    s.encounter = 3
+    assert(not G.ProfessionBossRewards(s, { boss = true, level = 19 }))
+    assert(not G.ProfessionBossRewards(s, { boss = false, level = 60 }))
+    s.tier = 1
+    assert(not G.ProfessionBossRewards(s, { boss = true, level = 60 }))
+end)
+
+case("Runic resources reset while recipe ownership and receipt history survive", function()
+    local s = party()
+    s.professions.recipes.runicFury, s.professions.fragments = true, 9
+    s.encounter, s.professions.lastFragmentEncounter = 8, 8
+    assert(G.ResetAdventure(s, false))
+    assert(s.professions.fragments == 0 and s.professions.recipes.runicFury)
+    assert(s.professions.lastFragmentEncounter == 8)
+    s.professions.fragments = 3
+    assert(G.ResetAdventure(s, true))
+    assert(s.professions.fragments == 0 and s.professions.recipes.runicFury)
+    local old = G.Copy(s)
+    old.professions.fragments, old.professions.recipes, old.professions.lastFragmentEncounter =
+        nil, nil, nil
+    local loaded = assert(G.Load(old, 0))
+    assert(loaded.professions.fragments == 0 and next(loaded.professions.recipes) == nil)
+    assert(old.professions.fragments == nil)
+end)
+
+case("Runic offline boss rewards reconcile once into return totals", function()
+    local s = party(60)
+    s.tier, s.difficulty.maxTier, s.difficulty.unlocked = 2, 2, true
+    s.professions.recipes.runicFury = true
+    s.safe.elwynn, s.stage = 100, 100
+    local job = assert(G.BeginCatchup(s, 60))
+    G.StartBattle(job.state)
+    for _, enemy in ipairs(job.state.battle.enemies) do
+        enemy.hp = 0
+    end
+    G.CatchupBatch(job, 1)
+    assert(job.state.professions.fragments == 1)
+    assert(G.FinishCatchup(s, job))
+    assert(s.professions.fragments == 1 and s.lastOfflineSummary.fragments == 1)
+    assert(not G.FinishCatchup(s, job) and s.professions.fragments == 1)
+    assert(not s.professions.recipes.runicFortitude)
+    assert(G.Load(G.Copy(s), 60))
+end)
+
+case("Runic enchantments use their matching profession specialization", function()
+    local s = party()
+    s.professions.recipes.runicFury = true
+    local base = assert(G.EnchantQuote(s, 1, 1, "runicFury"))
+    s.professions.ranks.enchanting = 7
+    s.professions.allocations.enchanting.defense = 3
+    local unrelated = assert(G.EnchantQuote(s, 1, 1, "runicFury"))
+    assert(unrelated.enchant.stats.attackPower == base.enchant.stats.attackPower)
+    s.professions.allocations.enchanting = { offense = 3 }
+    local specialized, cost = G.EnchantQuote(s, 1, 1, "runicFury")
+    assert(
+        math.abs(specialized.enchant.stats.attackPower - base.enchant.stats.attackPower * 1.3)
+            < 0.00001
+    )
+    assert(cost.fragments == 3 and G.ValidateProfessions(s))
+end)
 
 return cases

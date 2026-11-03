@@ -44,7 +44,16 @@ end
 
 function K.Observe(state, unit)
     if
-        not K.AtCap()
+        not (
+            K.AtCap()
+            or (
+                W.CollectionSources
+                and (
+                    W.CollectionSources.ActiveProfile()
+                    or W.CollectionSources.ActiveProfile("dungeon")
+                )
+            )
+        )
         or not UnitIsDead
         or not UnitIsTrivial
         or not UnitIsTapDenied
@@ -77,7 +86,27 @@ function K.Observe(state, unit)
         end
         -- Loot rights also prove participation for one-shot kills, whose threat
         -- entry can disappear before a unit event observes it.
-        if eligible and not denied and (lootCredit or (record and record.participated)) then
+        local collectionEligible = record
+            and record.collectionEligible
+            and A.Now() - record.seen <= 120
+        if lootCredit and not collectionEligible then
+            local controlled = UnitPlayerControlled(unit)
+            collectionEligible = readable(controlled) and not controlled
+        end
+        if
+            collectionEligible
+            and not denied
+            and (lootCredit or (record and record.participated))
+            and W.CollectionSources
+        then
+            W.CollectionSources.ObserveKill(state, guid)
+        end
+        if
+            K.AtCap()
+            and eligible
+            and not denied
+            and (lootCredit or (record and record.participated))
+        then
             G.ActivityReward(state, "kill:" .. guid, "kill", "Non-trivial creature defeated")
         end
         return
@@ -95,6 +124,7 @@ function K.Observe(state, unit)
             K.units[table.remove(K.order, 1)] = nil
         end
     end
+    record.collectionEligible = not controlled and attackable and not denied
     record.eligible = not trivial and not controlled and attackable and not denied
     record.participated = record.participated or participated(unit)
     record.seen = A.Now()
@@ -122,7 +152,15 @@ function K.Event(state, event, unit)
 end
 
 function K.Tick(state)
-    if K.AtCap() then
+    if
+        K.AtCap()
+        or (
+            W.CollectionSources
+            and (
+                W.CollectionSources.ActiveProfile() or W.CollectionSources.ActiveProfile("dungeon")
+            )
+        )
+    then
         for _, unit in ipairs({ "target", "focus", "mouseover", "softenemy" }) do
             K.Observe(state, unit)
         end

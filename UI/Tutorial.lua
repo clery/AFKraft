@@ -3,6 +3,139 @@ local G, C = W.Game, W.Content
 local Tutorial = {}
 W.Tutorial = Tutorial
 
+local function lesson(state, key, tab, message, eligible)
+    if eligible and not state.guide[key] then
+        return { key = key, tab = tab, message = message }
+    end
+end
+
+-- Only introduce a layer when it is available; already-used layers need no tour.
+function Tutorial.NextLesson(state)
+    if #state.heroes == 0 then
+        return nil
+    end
+    local mastery, enchanted, forged, specialized = false, false, false, false
+    for _, hero in ipairs(state.heroes) do
+        mastery = mastery or (G.MasteryUnlocked(hero) and hero.mastery.rank == 0)
+        for _, item in pairs(hero.gear) do
+            enchanted = enchanted or item.enchant ~= nil
+            forged = forged or (item.forge or 0) > 0
+        end
+    end
+    for _, item in ipairs(state.inventory) do
+        enchanted = enchanted or item.enchant ~= nil
+        forged = forged or (item.forge or 0) > 0
+    end
+    local professions = G.ProfessionUnlocks(state)
+    for _, allocations in pairs(state.professions.allocations) do
+        for _, rank in pairs(allocations) do
+            specialized = specialized or rank > 0
+        end
+    end
+    local owned = next(state.boosts.owned) ~= nil
+    local affordable = owned
+    for _, boost in ipairs(C.boosts) do
+        affordable = affordable or state.essence >= boost.cost or state.legacy >= boost.legacyCost
+    end
+    local automation = state.boosts.automation
+    local collection = next(state.dungeonCollections.pieces) ~= nil
+        or next(state.outdoorCollections.pieces) ~= nil
+        or next(state.collectionBook.pieces) ~= nil
+    local huntAvailable = false
+    local sources = W.CollectionSources
+    local profile = sources and sources.ActiveProfile("outdoor")
+    if profile then
+        for itemID, source in pairs(profile.sources) do
+            huntAvailable = huntAvailable or (source.verified and C.collectionByItem[itemID] ~= nil)
+        end
+    end
+    return lesson(
+        state,
+        "lessonBoost",
+        "boosts",
+        "Commander boosts are permanent purchases with temporary effects. Choose an icon, learn and equip it, then activate when the party needs support. Uses are free; cooldowns persist through resets.",
+        affordable and (state.stats.boostUses or 0) == 0
+    ) or lesson(
+        state,
+        "lessonDevelopment",
+        "development",
+        "Essence develops the whole party through Might, Resolve and Provisioning. Compare current and next benefits before buying; rank investment can be redistributed freely without losing learned abilities. Hero levels and equipment do not require Essence.",
+        state.development.invested == 0 and state.essence >= G.DevelopmentQuote(state, "might").cost
+    ) or lesson(
+        state,
+        "lessonLegacy",
+        "legacy",
+        "Legacy is ready. Review the reset preview before beginning a new chapter. Talents, Mastery, owned tools and unspent Essence stay with your company.",
+        state.prestigeUnlocked and state.prestiges == 0 and G.PrestigeReward(state) > 0
+    ) or lesson(
+        state,
+        "lessonAutomation",
+        "boosts",
+        "Spend Legacy in Commander to learn automation once. Enable the global toggle and this boost's Auto-cast, then choose On cooldown or a condition. The waiting reason explains each decision.",
+        owned
+            and not automation.enabled
+            and (automation.owned.onCooldown or state.legacy >= C.boostAutomation.onCooldown.cost)
+    ) or lesson(
+        state,
+        "lessonProfiles",
+        "profiles",
+        "Profiles save your equipped boost, rules, route preferences and selected collection effect. Save a named setup, then apply it freely. Applying never activates a boost or refreshes its cooldown.",
+        next(automation.owned) ~= nil and next(state.boostProfiles.entries) == nil
+    ) or lesson(
+        state,
+        "lessonRoutes",
+        "routes",
+        "Routes change idle destinations after an encounter. Learn planning, add milestones and save a template; select it and enable Routes. Manual travel pauses it until you resume.",
+        (state.routes.owned or (state.prestigeUnlocked and state.legacy >= 1))
+            and #state.routes.templates == 0
+    ) or lesson(
+        state,
+        "lessonHunt",
+        "collections",
+        "Choose one missing outdoor collection piece, inspect its verified creatures and location, then Track it. Your real WoW character earns discoveries from eligible kills; idle battles and offline routes do not advance the hunt. Tracking never changes the odds.",
+        huntAvailable
+            and state.adventure.rank >= 2
+            and not state.outdoorCollections.target
+            and next(state.outdoorCollections.pieces) == nil
+    ) or lesson(
+        state,
+        "lessonCollections",
+        "collections",
+        "Inspect outdoor or dungeon piece sources, track a piece, and select one completed-set effect. Discoveries persist through resets. Previous idle collection records remain protected legacy history; unverified sources stay disabled.",
+        collection
+    ) or lesson(
+        state,
+        "lessonMastery",
+        "talents",
+        "Mastery is permanently unlocked at idle level 20. Victories at your encounter frontier earn separate XP and permanent talent points, even at a character level cap. Each difficulty has its own frontier.",
+        mastery
+    ) or lesson(
+        state,
+        "lessonEnchanting",
+        "workshop",
+        "Enchanting is unlocked. In Workshop, choose a hero, equipped item and enchantment. Compare the preview and cost before replacing its current enchantment. Heirloom investments survive resets.",
+        professions.enchanting and not enchanted
+    ) or lesson(
+        state,
+        "lessonTitanforging",
+        "workshop",
+        "Titanforging is unlocked. The Workshop Titanforge tab raises an equipped item's base potential separately from enhancement and enchantment. Each investment has a guaranteed preview and cost.",
+        professions.titanforging and not forged
+    ) or lesson(
+        state,
+        "lessonResearch",
+        "workshop",
+        "Profession specializations are unlocked. Successful paid work earns separate profession points. Your saved allocation plan survives Prestige+ and reactivates as work ranks rebuild.",
+        professions.research and not specialized
+    ) or lesson(
+        state,
+        "lessonPrestigePlus",
+        "difficulty",
+        "Prestige+ is ready. Review a deeper reset and an unlocked difficulty. Permanent tools remain; levels, ordinary gear, resources and profession work rebuild. Inheritance rewards each completed tier once.",
+        state.difficulty.unlocked and state.difficulty.ascensions == 0
+    )
+end
+
 function Tutorial.Hide(ui)
     if HelpTip and ui.guideTip then
         HelpTip:Hide(ui.guideOwner, ui.guideTip.text)
@@ -10,7 +143,7 @@ function Tutorial.Hide(ui)
     ui.guideTip, ui.guideTarget = nil, nil
 end
 
-local function show(ui, target, message, nextStep, side)
+local function show(ui, target, message, nextStep, side, lessonKey)
     if not HelpTip or not target or not target:IsShown() then
         Tutorial.Hide(ui)
         return
@@ -30,7 +163,9 @@ local function show(ui, target, message, nextStep, side)
     local state = W.state
     local info = {
         text = message,
-        buttonStyle = nextStep and HelpTip.ButtonStyle.Next or HelpTip.ButtonStyle.Close,
+        buttonStyle = lessonKey and HelpTip.ButtonStyle.GotIt
+            or nextStep and HelpTip.ButtonStyle.Next
+            or HelpTip.ButtonStyle.Close,
         targetPoint = side and HelpTip.Point.LeftEdgeCenter or HelpTip.Point.TopEdgeCenter,
         alignment = HelpTip.Alignment.Center,
         autoEdgeFlipping = true,
@@ -42,7 +177,9 @@ local function show(ui, target, message, nextStep, side)
                 return
             end
             Tutorial.Hide(ui)
-            if nextStep then
+            if lessonKey then
+                state.guide[lessonKey] = true
+            elseif nextStep then
                 ui.guideTree = nextStep
             else
                 state.guide.dismissed = true
@@ -69,7 +206,12 @@ function Tutorial.Refresh(ui)
     end
     local step, hero, destination, craft = W.Panels.GuideStep(s, ui.selected)
     if not step then
-        Tutorial.Hide(ui)
+        local nextLesson = Tutorial.NextLesson(s)
+        if nextLesson then
+            show(ui, ui.tabs[nextLesson.tab], nextLesson.message, nil, true, nextLesson.key)
+        else
+            Tutorial.Hide(ui)
+        end
         return
     end
     local tab = (step == 2 or step == 6) and "party"
@@ -198,7 +340,7 @@ function Tutorial.Refresh(ui)
                     .. craft.item.name
                     .. " (+"
                     .. gain
-                    .. " power). This spends the shown Essence, gold and materials and puts the item in your shared inventory.",
+                    .. " power). This spends the shown gold and idle materials and puts the item in your shared inventory.",
                 nil,
                 true
             )

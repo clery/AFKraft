@@ -210,22 +210,19 @@ case("Same seed and commands produce identical battles", function()
     equal(a.stage, b.stage)
     assert(a.stats.victories > 0)
 end)
-case("Experience stops at an Essence-funded training cap", function()
+case("Natural experience passes the retired training gates without Essence", function()
     local s = party()
     G.Advance(s, 3600)
-    for _, h in ipairs(s.heroes) do
-        assert(h.level <= 4)
-    end
-    s.battle = nil
-    local gold = s.gold
+    assert(s.heroes[1].level > 4 and s.heroes[1].level <= 60)
+    equal(s.essence, 0)
+    local level, xp = G.ExperienceResult(s.heroes[1], 1000000)
+    equal(level, 60)
+    assert(xp < 60 * 45)
+    local gold, experience = s.gold, s.heroes[1].xp
     assert(not G.Train(s, 1))
     equal(s.gold, gold)
-    s.essence = 120
-    s.gold = 80
-    assert(G.Train(s, 1))
-    equal(G.LevelCap(s.heroes[1]), 8)
-    equal(s.essence, 0)
-    equal(s.gold, 0)
+    equal(s.heroes[1].xp, experience)
+    equal(G.LevelCap(s.heroes[1]), 60)
 end)
 case("Talent and priority changes are free during active encounters", function()
     local s = party()
@@ -244,7 +241,7 @@ case("Talent and priority changes are free during active encounters", function()
 end)
 case("Equipment changes update a live fight without healing or resetting cooldowns", function()
     local s = party()
-    s.essence, s.gold = 1000, 1000
+    s.essence, s.gold, s.materials.ore = 1000, 1000, 100
     G.StartBattle(s)
     local unit = s.battle.heroes[1]
     unit.hp, unit.cd, unit.attackCD = unit.maxHP * 0.4, 4, 1.5
@@ -256,7 +253,7 @@ case("Equipment changes update a live fight without healing or resetting cooldow
     equal(unit.cd, 4)
     equal(unit.attackCD, 1.5)
     assert(G.Upgrade(s, 1, 1))
-    assert(G.Train(s, 1))
+    assert(not G.Train(s, 1))
     assert(G.Talent(s, 1, "guard"))
     assert(G.Configure(s, 1, "priority", "attack"))
     equal(unit.cd, 4)
@@ -443,13 +440,14 @@ end)
 case("Crafting is atomic when resources are insufficient", function()
     local s = party()
     s.gold = 100
-    s.materials.ore = 50
+    s.materials.ore = 0
     local gold = s.gold
     assert(not G.Craft(s, 1, 1, "ore", false))
     equal(s.gold, gold)
     equal(#s.inventory, 0)
-    s.essence = 100
+    s.materials.ore = 50
     assert(G.Craft(s, 1, 1, "ore", false))
+    equal(s.essence, 0)
     equal(#s.inventory, 1)
     assert(s.gold < gold)
 end)
@@ -618,7 +616,9 @@ case("Milestone logs notify once while routine XP stays quiet", function()
         notices = {}
         G.AdventureXP(s, 1, "test", "Test")
         equal(#notices, 0)
-        s.heroes[1].level, s.heroes[1].xp = 3, 134
+        s.heroes[1].level, s.heroes[1].xp = 59, 2654
+        s.heroes[1].mastery.frontier = 100
+        s.heroes[1].mastery.frontiers[0] = 100
         G.StartBattle(s)
         for _, enemy in ipairs(s.battle.enemies) do
             enemy.hp = 0
@@ -662,17 +662,17 @@ end)
 case("Offline level caps remain in the final adventure log", function()
     local s = party()
     s.safe.elwynn = 1
-    s.heroes[1].level, s.heroes[1].xp = 3, 134
+    s.heroes[1].level, s.heroes[1].xp = 59, 2654
     local job = assert(G.BeginCatchup(s, 1120))
     while not G.CatchupBatch(job, 100) do
     end
     G.FinishCatchup(s, job)
-    equal(s.heroes[1].level, 4)
+    equal(s.heroes[1].level, 60)
     local count = 0
     for _, message in ipairs(s.log) do
         if
             message:find(
-                s.heroes[1].name .. " reached idle level 4 (maximum) while you were away",
+                s.heroes[1].name .. " reached idle level 60 (character maximum) while you were away",
                 1,
                 true
             )
@@ -699,6 +699,35 @@ case("Optional settings migrate safely and retain disabled preferences", functio
     equal(loaded.settings.combatText, false)
     loaded.settings.combatText = "invalid"
     equal(assert(G.Load(loaded, 1000)).settings.combatText, true)
+end)
+
+case("Defeat feedback distinguishes a living-party timeout from a wipe", function()
+    local function encounter()
+        local state = G.New(1000)
+        assert(G.AddHero(state, "WARRIOR"))
+        G.StartBattle(state)
+        for _, unit in ipairs(state.battle.heroes) do
+            unit.cd, unit.attackCD = 100, 100
+        end
+        for _, enemy in ipairs(state.battle.enemies) do
+            enemy.attackCD = 100
+        end
+        return state
+    end
+    local timeout = encounter()
+    timeout.battle.elapsed = 179.75
+    G.Step(timeout, 0.25)
+    assert(timeout.lastDefeat:find("timed out", 1, true))
+    assert(timeout.lastDefeat:find("100% health", 1, true))
+    assert(timeout.lastDefeat:find("Improve damage", 1, true))
+    assert(timeout.farming and not timeout.battle and timeout.stats.victories == 0)
+    local wipe = encounter()
+    wipe.battle.heroes[1].hp = 0
+    G.Step(wipe, 0.25)
+    assert(wipe.lastDefeat:find("All companions fell", 1, true))
+    assert(wipe.lastDefeat:find("Improve survival", 1, true))
+    assert(not wipe.lastDefeat:find("timed out", 1, true))
+    assert(wipe.farming and not wipe.battle and wipe.stats.victories == 0)
 end)
 
 return cases

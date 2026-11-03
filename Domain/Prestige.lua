@@ -41,6 +41,7 @@ function G.ResetAdventure(state, deep)
     for _, hero in ipairs(state.heroes) do
         G.ReturnUnusableGear(state, hero)
     end
+    state.professions.fragments = 0
     state.gold = 0
     state.materials = { timber = 0, hide = 0, ore = 0, relic = 0 }
     state.materialRemainders = {}

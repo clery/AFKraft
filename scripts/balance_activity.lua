@@ -6,7 +6,10 @@ for _, file in ipairs({
     "Content/Items.lua",
     "Content/Boosts.lua",
     "Content/Professions.lua",
+    "Content/Development.lua",
     "Domain/State.lua",
+    "Domain/Development.lua",
+    "Domain/Boosts.lua",
     "Domain/Party.lua",
     "Domain/Inventory.lua",
     "Domain/Professions.lua",
@@ -16,6 +19,7 @@ for _, file in ipairs({
 end
 local C, G = W.Content, W.Game
 local profiles = {
+    { name = "Idle only", hourly = {} },
     { name = "Mixed questing", hourly = { quest = 8, kill = 80, gather = 4 } },
     { name = "Herb / ore route", hourly = { gather = 60, kill = 20 } },
     { name = "Kill and skin", hourly = { kill = 150, skinning = 150 } },
@@ -28,14 +32,17 @@ local profiles = {
     { name = "Pure mob farming", hourly = { kill = 180 } },
 }
 local seed, samples = G.New(17), 5000
-local firstBundle = 5 * G.TrainingCost({ rank = 0 }).essence
-    + 10 * G.UpgradeCost({ upgrade = 0 }).essence
-    + 5 * G.Cost({}, { level = 4 }, false).essence
+local preview = G.New(0)
+local firstBundle = C.boostByID.battleOrders.cost
+for _, branch in ipairs(C.development) do
+    firstBundle = firstBundle + G.DevelopmentQuote(preview, branch.id).cost
+end
 local bundleXP = math.ceil(firstBundle / C.adventure.essencePerRank) * C.adventure.xpPerRank
-print("Initial bundle: five level-cap raises, ten item upgrades, five level-4 crafts")
+print("Optional first bundle: one rank in each Development branch and Battle Orders")
+print("Hero growth to 60 and routine equipment require no Essence.")
 print(string.format("%d Essence; %d XP after whole-rank payouts", firstBundle, bundleXP))
 print(
-    "Profile | XP/hour | Essence/hour | First bundle hours | P10-P90 XP/hour | 100h Essence | Training tiers"
+    "Profile | XP/hour | Essence/hour | Optional bundle hours | P10-P90 XP/hour | 100h income | Board ranks M/R/P | Unspent"
 )
 for _, profile in ipairs(profiles) do
     local baseline = 0
@@ -54,23 +61,35 @@ for _, profile in ipairs(profiles) do
     end
     table.sort(rates)
     local state = G.New(0)
-    G.AdventureXP(state, math.floor(baseline * 100), "model", profile.name)
-    local income, wallet, tiers = state.essence, state.essence - firstBundle, 1
-    while wallet >= 5 * G.TrainingCost({ rank = tiers }).essence do
-        wallet = wallet - 5 * G.TrainingCost({ rank = tiers }).essence
-        tiers = tiers + 1
+    if baseline > 0 then
+        G.AdventureXP(state, math.floor(baseline * 100), "model", profile.name)
+    end
+    local income = state.essence
+    if state.essence >= C.boostByID.battleOrders.cost then
+        G.BuyBoost(state, "battleOrders")
+    end
+    for _ = 1, C.developmentRankCap do
+        for _, branch in ipairs(C.development) do
+            local quote = G.DevelopmentQuote(state, branch.id)
+            if not quote.maximum and state.essence >= quote.cost then
+                G.BuyDevelopment(state, branch.id)
+            end
+        end
     end
     print(
         string.format(
-            "%s | %.0f | %.0f | %.2f | %.0f-%.0f | %d | %d",
+            "%s | %.0f | %.0f | %s | %.0f-%.0f | %d | %d/%d/%d | %d",
             profile.name,
             baseline,
             baseline / C.adventure.xpPerRank * C.adventure.essencePerRank,
-            bundleXP / baseline,
+            baseline > 0 and string.format("%.2f", bundleXP / baseline) or "not funded",
             rates[math.floor(samples * 0.1)],
             rates[math.floor(samples * 0.9)],
             income,
-            tiers
+            state.development.ranks.might,
+            state.development.ranks.resolve,
+            state.development.ranks.provisioning,
+            state.essence
         )
     )
 end

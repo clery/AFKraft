@@ -435,10 +435,13 @@ function G.Cost(state, hero, heirloom)
     local level = heirloom and 1 or hero.level
     local discount = state.professions and G.ProfessionModifiers(state, "crafting").costMultiplier
         or 1
+    discount = discount * (state.development and G.DevelopmentModifiers(state).costMultiplier or 1)
     return {
-        essence = math.max(1, math.ceil((heirloom and 45 or 4 + level * 2) * discount)),
+        essence = 0,
         gold = math.max(1, math.ceil((heirloom and 30 or level * 8) * discount)),
-        material = math.max(1, math.ceil((heirloom and 12 or 4 + level) * discount)),
+        -- Even full discounts consume more material than the maximum four Ore
+        -- returned by salvaging a crafted item, preventing a closed profit loop.
+        material = math.max(5, math.ceil((heirloom and 12 or 4 + level) * discount)),
     }
 end
 
@@ -493,7 +496,7 @@ function G.CraftingOpportunity(state, heroIndex)
         local heirloom = mode == 2
         local cost = G.Cost(state, hero, heirloom)
         local material
-        if state.essence >= cost.essence and state.gold >= cost.gold then
+        if state.gold >= cost.gold then
             for _, id in ipairs(C.materialOrder) do
                 if state.materials[id] >= cost.material then
                     material = id
@@ -542,12 +545,8 @@ function G.Craft(state, index, slot, material, heirloom)
         return false, "Unlock this heirloom recipe with Legacy first."
     end
     local cost = G.Cost(state, hero, heirloom)
-    if
-        state.essence < cost.essence
-        or state.gold < cost.gold
-        or state.materials[material] < cost.material
-    then
-        return false, "You need more Essence, gold, or materials."
+    if state.gold < cost.gold or state.materials[material] < cost.material then
+        return false, "You need more gold or idle materials."
     end
     local item, reason = G.CraftItem(hero, slot, heirloom, state)
     if not item then
@@ -555,7 +554,6 @@ function G.Craft(state, index, slot, material, heirloom)
     end
     item.uid = state.nextItem
     state.nextItem = state.nextItem + 1
-    state.essence = state.essence - cost.essence
     state.gold = state.gold - cost.gold
     state.materials[material] = state.materials[material] - cost.material
     state.inventory[#state.inventory + 1] = item
@@ -569,9 +567,15 @@ function G.Craft(state, index, slot, material, heirloom)
     return true
 end
 
-function G.UpgradeCost(item)
-    local essence = 8 + (item.upgrade or 0) * 5
-    return { essence = essence, gold = essence * 2 }
+function G.UpgradeCost(item, state)
+    local rank = item.upgrade or 0
+    local discount = state and state.development and G.DevelopmentModifiers(state).costMultiplier
+        or 1
+    return {
+        essence = 0,
+        gold = math.max(1, math.ceil((16 + rank * 10) * discount)),
+        materials = { ore = math.max(1, math.ceil((2 + rank) * discount)) },
+    }
 end
 
 function G.Upgrade(state, index, slot)
@@ -580,12 +584,12 @@ function G.Upgrade(state, index, slot)
     if not item then
         return false, "Equip an item first."
     end
-    local cost = G.UpgradeCost(item)
-    if state.essence < cost.essence or state.gold < cost.gold then
-        return false, "Need " .. cost.essence .. " Essence and " .. cost.gold .. " gold."
+    local cost = G.UpgradeCost(item, state)
+    if state.gold < cost.gold or state.materials.ore < cost.materials.ore then
+        return false, "Need " .. cost.gold .. " gold and " .. cost.materials.ore .. " Ore."
     end
-    state.essence = state.essence - cost.essence
     state.gold = state.gold - cost.gold
+    state.materials.ore = state.materials.ore - cost.materials.ore
     item.upgrade = (item.upgrade or 0) + 1
     G.Emit(state, "upgrade")
     G.RefreshHero(state, index)

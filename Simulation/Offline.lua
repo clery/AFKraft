@@ -3,6 +3,14 @@ local G = W.Game
 local min, max, floor = math.min, math.max, math.floor
 local copy = G.Copy
 
+local function inventoryCount(state)
+    local count = 0
+    for _, item in ipairs(state.inventory) do
+        count = count + (item.count or 1)
+    end
+    return count
+end
+
 function G.BeginCatchup(state, now)
     local seconds = min(86400, max(0, now - (state.lastTime or now)))
     -- Clock rollback must not create earnings once the clock catches up again.
@@ -22,6 +30,11 @@ function G.BeginCatchup(state, now)
     snapshot.stage = safe
     snapshot.farming = true
     snapshot.offline = true
+    snapshot.offlineRoute = {
+        safe = copy(state.safe),
+        tier = state.tier,
+        transitions = 0,
+    }
     return {
         state = snapshot,
         remaining = floor(seconds / 0.25),
@@ -29,13 +42,17 @@ function G.BeginCatchup(state, now)
         gold = snapshot.gold,
         victories = snapshot.stats.victories,
         boostUses = snapshot.stats.boostUses or 0,
+        fragments = snapshot.professions.fragments,
         salvaged = snapshot.stats.salvaged,
         materials = copy(snapshot.materials),
-        collectionPieces = copy(snapshot.collectionBook.pieces),
+        inventoryCount = inventoryCount(snapshot),
     }
 end
 
 function G.CatchupBatch(job, steps)
+    if job.finished then
+        return true
+    end
     local n = min(job.remaining, steps or 1600)
     for _ = 1, n do
         G.Step(job.state, 0.25)
@@ -46,6 +63,9 @@ function G.CatchupBatch(job, steps)
 end
 
 function G.FinishCatchup(state, job)
+    if job.finished then
+        return false
+    end
     local earned = job.state
     local previousHeroes = state.heroes
     for key, value in pairs(state.discoveries) do
@@ -73,6 +93,12 @@ function G.FinishCatchup(state, job)
     }) do
         state[key] = earned[key]
     end
+    if earned.routes.offlineEnabled then
+        state.routes.run = earned.routes.run
+        if earned.offlineRoute.transitions > 0 then
+            state.zone, state.stage, state.farming = earned.zone, earned.stage, true
+        end
+    end
     for i, hero in ipairs(earned.heroes) do
         local previous = previousHeroes[i]
         if previous and previous.level < G.LevelCap(hero) and hero.level == G.LevelCap(hero) then
@@ -81,11 +107,7 @@ function G.FinishCatchup(state, job)
                 hero.name
                     .. " reached idle level "
                     .. hero.level
-                    .. (
-                        hero.level == W.Content.heroLevelCap
-                            and " (character maximum) while you were away. Mastery continues in harder encounters."
-                        or " (maximum) while you were away. Train to raise the level cap."
-                    )
+                    .. " (character maximum) while you were away. Mastery continues in harder encounters."
             )
         end
     end
@@ -94,8 +116,20 @@ function G.FinishCatchup(state, job)
     end
     state.battle = nil
     state.rest = 1
+    local routeReady, routeReason, routeStep = G.RouteStatus(earned)
     local summary = {
+        seconds = job.seconds - job.remaining * 0.25,
+        remainingSeconds = job.remaining * 0.25,
+        interrupted = job.remaining > 0,
+        heroXP = 0,
+        heroLevels = 0,
+        itemsKept = max(0, inventoryCount(state) - (job.inventoryCount or inventoryCount(state))),
         boostUses = (state.stats.boostUses or 0) - (job.boostUses or 0),
+        fragments = max(
+            0,
+            state.professions.fragments - (job.fragments or state.professions.fragments)
+        ),
+        collectionMode = "outdoor",
         discoveries = 0,
         upgrades = 0,
         masteryRanks = 0,
@@ -104,22 +138,26 @@ function G.FinishCatchup(state, job)
         victories = state.stats.victories - job.victories,
         salvaged = state.stats.salvaged - (job.salvaged or state.stats.salvaged),
         materials = {},
-        routeTransitions = 0,
-        routesWaiting = state.routes.enabled,
+        routeTransitions = earned.offlineRoute.transitions,
+        routesWaiting = state.routes.enabled and routeStep ~= nil and not routeReady,
+        routeStatus = routeReason,
     }
     for material, amount in pairs(state.materials) do
         summary.materials[material] = amount - ((job.materials or {})[material] or amount)
     end
-    for itemID, tier in pairs(state.collectionBook.pieces) do
-        local previous = (job.collectionPieces or {})[itemID]
-        if previous == nil then
-            summary.discoveries = summary.discoveries + 1
-        elseif tier > previous then
-            summary.upgrades = summary.upgrades + 1
-        end
-    end
+    -- Outdoor hunting is live-only; the live ledger is never replaced by this snapshot.
     for index, hero in ipairs(state.heroes) do
         local previous = previousHeroes[index]
+        if previous then
+            summary.heroXP = summary.heroXP
+                + max(
+                    0,
+                    45 * (hero.level - previous.level) * (hero.level + previous.level - 1) / 2
+                        + hero.xp
+                        - previous.xp
+                )
+            summary.heroLevels = summary.heroLevels + max(0, hero.level - previous.level)
+        end
         summary.masteryRanks = summary.masteryRanks
             + math.max(
                 0,
@@ -163,6 +201,10 @@ function G.FinishCatchup(state, job)
             .. " collection discoveries, "
             .. summary.upgrades
             .. " upgrades."
-            .. (state.routes.enabled and " Routes wait while offline." or "")
+            .. " "
+            .. summary.routeTransitions
+            .. " offline route transitions."
     )
+    job.finished = true
+    return true
 end

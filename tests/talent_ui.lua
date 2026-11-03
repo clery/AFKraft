@@ -83,23 +83,59 @@ test(
     end
 )
 
-test("The level-60 training control stays disabled even when its cost is affordable", function()
-    local _, state, ui = setup()
-    state.heroes[1].level, state.heroes[1].rank = 60, 14
-    state.gold, state.essence = 100000, 100000
-    ui:SetTab("party")
-    assert(not ui.cards[1].detail:GetText():find("Train to grow", 1, true))
-    local found
-    for _, kind in ipairs({ "button", "primary" }) do
-        local pool = ui.panel._pool[kind]
-        if pool then
-            for button in pool:EnumerateActive() do
-                if button.text:GetText() == "Character level cap: 60" then
-                    assert(not button:IsEnabled(), "Level-60 training must be disabled")
-                    found = true
+test(
+    "Party growth stays natural and the development control remains available at level sixty",
+    function()
+        local _, state, ui = setup()
+        state.heroes[1].level, state.heroes[1].rank = 60, 14
+        state.gold, state.essence = 100000, 100000
+        ui:SetTab("party")
+        assert(not ui.cards[1].detail:GetText():find("Train to grow", 1, true))
+        local found
+        for _, kind in ipairs({ "button", "primary" }) do
+            local pool = ui.panel._pool[kind]
+            if pool then
+                for button in pool:EnumerateActive() do
+                    assert(not button.text:GetText():find("Train:", 1, true))
+                    if button.text:GetText() == "Party development" then
+                        assert(
+                            button:IsEnabled(),
+                            "Permanent development remains available at level 60"
+                        )
+                        found = button
+                    end
                 end
             end
         end
+        assert(found, "Missing party development control")
+        found:GetScript("OnClick")()
+        assertEquals("development", state.ui.tab)
+        assertEquals(100000, state.essence)
     end
-    assert(found, "Missing level-60 training control")
+)
+
+test("Hero target selection changes configuration without resetting active combat", function()
+    local W, state, ui = setup()
+    W.Game.StartBattle(state)
+    local unit = state.battle.heroes[1]
+    local hp, cd = unit.hp, unit.cd
+    local original, chooseTarget = W.Widgets.Choice, nil
+    W.Widgets.Choice = function(parent, label, x, y, width, options, value, choose)
+        local control = original(parent, label, x, y, width, options, value, choose)
+        if options == W.Content.targetModes then
+            chooseTarget = choose
+        end
+        return control
+    end
+    local ok, message = pcall(function()
+        ui:Refresh()
+        assertNotNil(ui.heroTargetChoice)
+        assertTrue(ui.heroTargetChoice:IsEnabled())
+        assert(chooseTarget)("weakest")
+        assertEquals("weakest", state.heroes[1].targetMode)
+        assertEquals(hp, unit.hp)
+        assertEquals(cd, unit.cd)
+    end)
+    W.Widgets.Choice = original
+    assertTrue(ok, message)
 end)

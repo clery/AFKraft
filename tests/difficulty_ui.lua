@@ -38,3 +38,25 @@ test("Prestige+ tier selection previews retention before an explicit deeper rese
     assertEquals(1, state.difficulty.purchases.rebuilding)
     assertEquals(0, state.difficulty.currency)
 end)
+
+test("Difficulty previews expose tier affixes without changing the active adventure", function()
+    local W = WoWIdle
+    local G, ui = W.Game, W.UI
+    local s = G.New(W.Client.Now())
+    G.AddHero(s, "WARRIOR")
+    s.difficulty.unlocked, s.difficulty.maxTier, s.guide.dismissed = true, 8, true
+    W.state = s
+    ui.difficultyTier, ui.difficultyConfirm = 8, false
+    ui:SetTab("difficulty")
+    assertEquals(0, s.tier)
+    for _, id in ipairs({ "relentless", "renewal", "fury" }) do
+        local card = ui.difficultyAffixes[id]
+        assertNotNil(card)
+        card:GetScript("OnEnter")(card)
+        assertTrue(GameTooltip:IsShown())
+        card:GetScript("OnLeave")(card)
+    end
+    click(ui.difficultyTiers[0])
+    assertTrue(next(ui.difficultyAffixes) == nil)
+    assertEquals(0, s.tier)
+end)

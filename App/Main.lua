@@ -84,6 +84,7 @@ function W.Initialize()
     W.state = state
     WoWIdleDB = state
     startingHero(state)
+    G.BeginHuntSession(state, A.Now())
     W.catchup = G.BeginCatchup(state, A.Now())
     W.CreateUI()
     W.Minimap.Create()
@@ -105,6 +106,7 @@ function W.ResetAdventure()
     elapsed = 0
     W.Audio.Stop()
     W.state, WoWIdleDB = state, state
+    G.BeginHuntSession(state, A.Now())
     startingHero(state)
     local ui = W.UI
     for _, key in ipairs({
@@ -179,6 +181,7 @@ function root:Save()
     else
         W.state.lastTime = math.max(W.state.lastTime or 0, A.Now())
     end
+    G.SaveHuntSession(W.state, A.Now())
     W.state.events = nil
 end
 

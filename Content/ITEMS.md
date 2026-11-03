@@ -179,3 +179,21 @@ Combat aggregates effective attributes directly. Stamina adds 10 health per poin
 | 10046 | [Simple Linen Boots](https://www.wowhead.com/classic/item=10046) |
 
 Armor proficiency reference: [Blizzard’s original game manual](https://bnetcmsus-a.akamaihd.net/cms/template_resource/263A8NGR8HLZ1556919642368.pdf). The unlock uses the minigame hero’s idle level, independently of the source item requirement mapping.
+
+## Idle encounter families
+
+Destination enemy-family tags use the Classic tooltip taxonomy of the existing appearance NPC IDs in `Compatibility/Models.lua`, checked 2026-11-03 through `https://nether.wowhead.com/classic/tooltip/npc/NPC_ID`. These are authored idle encounter profiles; they do not query real creature APIs, establish current-client loot sources or enable outdoor collection acquisition. The existing Westfall authored boss/family contract is retained. Seven appearance records omit a creature type (6140, 6510, 7086, 11722, 11724, 11730 and 14473); their corresponding new tags remain `unknown` rather than guessing a taxonomy. Tags align with each destination's enemy order and have a separate boss entry.
+
+Family material choices are minigame rules: humanoids yield timber, beasts/dragonkin/critters hide, machines/giants ore, and elementals/undead/demons Relic dust. Unknown families yield no secondary material. A shared 25% encounter budget prevents extra enemies from multiplying the bonus.
+
+## Forever outdoor collection sources
+
+The Forever item pages were inspected on 2026-11-03, including their rendered “Dropped by” tables and creature links. The selected outdoor sources are Redridge Mongrel (NPC 423, Redridge Mountains) for [Inscribed Cloak 4701](https://www.wowhead.com/forever/item=4701/inscribed-cloak), and Mo'grosh Mystic (NPC 1183, Loch Modan) for [Breastplate 2985](https://www.wowhead.com/forever/item=2985/inscribed-leather-breastplate), [Pants 2986](https://www.wowhead.com/forever/item=2986/inscribed-leather-pants), [Boots 2987](https://www.wowhead.com/forever/item=2987/inscribed-leather-boots), and [Gloves 2988](https://www.wowhead.com/forever/item=2988/inscribed-leather-gloves). These pages list other sources too; this initial profile deliberately uses one confirmed outdoor source per piece. Each linked NPC is marked unchanged in the database. Database evidence establishes the mapping used by the addon; it does not constitute in-game addon validation or guarantee future server loot tables.
+
+The enabled profile is restricted to Forever interface 16001. Its 5% collection discovery chance and 30-kill guarantee are addon rules, separate from Wowhead's real-item drop rates. Retail mappings remain independent and disabled pending their own creature-specific evidence. No offline or simulated kills qualify.
+
+## Forever dungeon collection sources
+
+The Forever item pages and rendered Dropped by tables were inspected on 2026-11-03. The Deadmines profile uses one confirmed creature per piece: [Blackened Defias Armor 10399](https://www.wowhead.com/forever/item=10399/blackened-defias-armor) from Edwin VanCleef (639); [Leggings 10400](https://www.wowhead.com/forever/item=10400/blackened-defias-leggings) and [Gloves 10401](https://www.wowhead.com/forever/item=10401/blackened-defias-gloves) from Defias Overseer (634); [Boots 10402](https://www.wowhead.com/forever/item=10402/blackened-defias-boots) from Defias Strip Miner (4416); and [Belt 10403](https://www.wowhead.com/forever/item=10403/blackened-defias-belt) from Captain Greenskin (647). Display groups these as monster families within The Deadmines; exact creature identities remain in source metadata.
+
+Only Forever interface 16001 party-instance kills qualify. Retail has no enabled dungeon profile. A 20% discovery chance and ten eligible kill guarantee per piece are provisional addon rules, not the real items' loot rates. Offline, outdoor, raid and unattributed kills do not qualify. Database inspection does not establish actual client validation.

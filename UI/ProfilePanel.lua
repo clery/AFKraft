@@ -88,8 +88,12 @@ function P.Draw(ui, parent, state)
         or {
             equipped = state.boosts.equipped,
             automation = state.boosts.automation,
-            route = state.routes
-                and { selected = state.routes.selected, enabled = state.routes.enabled },
+            collection = { effect = state.outdoorCollections.effect },
+            route = state.routes and {
+                selected = state.routes.selected,
+                enabled = state.routes.enabled,
+                offlineEnabled = state.routes.offlineEnabled,
+            },
         }
     local equipped = snapshot.equipped and C.boostByID[snapshot.equipped]
     U.Text(
@@ -136,9 +140,27 @@ function P.Draw(ui, parent, state)
     U.Text(frame, routeName(state, snapshot.route), 470, 360, 16, T.gold, 720)
     U.Text(
         frame,
-        snapshot.route and snapshot.route.enabled and "Route enabled" or "Route paused",
+        (snapshot.route and snapshot.route.enabled and "Route enabled" or "Route paused")
+            .. (
+                snapshot.route
+                    and snapshot.route.offlineEnabled
+                    and " | Offline cleared routes on"
+                or " | Offline routes off"
+            ),
         470,
         390,
+        13,
+        T.muted,
+        720
+    )
+    local effect = snapshot.collection and C.collectionByID[snapshot.collection.effect]
+    U.Text(
+        frame,
+        effect and ("Collection effect: " .. effect.name)
+            or snapshot.collection and "No collection effect"
+            or "Collection effect unchanged",
+        470,
+        418,
         13,
         T.muted,
         720
@@ -165,7 +187,7 @@ function P.Draw(ui, parent, state)
     U.Tooltip(
         ui.profileControls.save,
         "Save current setup",
-        "Snapshot the current equipped boost, automation rules and route preferences. Timers, active effects and currencies are never saved or restored."
+        "Snapshot the current equipped boost, automation rules, route preferences and selected collection effect. Timers, active effects and currencies are never saved or restored."
     )
     ui.profileControls.apply = button(frame, "Apply profile", 726, 446, 236, function()
         W.Action(G.ApplyBoostProfile, ui.selectedProfile)

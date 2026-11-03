@@ -234,6 +234,7 @@ local function encounter(class, effect)
     unit.hp = unit.maxHP * 0.25
     enemy.hp, enemy.maxHP, enemy.attackCD = 100000, 100000, 100
     unit.attackCD = 100
+    unit.resource = 100 -- Isolate talent effects from resource generation.
     h.priority = "attack"
     return state, h, unit, enemy
 end
@@ -483,6 +484,7 @@ local function traitEncounter(class, name)
     unit.x, unit.y, enemy.x, enemy.y = 600, 100, 700, 100
     enemy.hp, enemy.maxHP, enemy.attackCD = 100000, 100000, 100
     unit.attackCD = 100
+    unit.resource = 100 -- Isolate talent effects from resource generation.
     h.priority = "attack"
     return state, h, unit, enemy, selected
 end
@@ -498,6 +500,7 @@ case("Opening strike bonuses expire and respec immediately removes the bonus", f
     assert(hp - enemy.hp == math.floor(unit.damage * 1.7))
     s.battle.elapsed, unit.cd = 0, 0
     h.talents[node.id] = nil
+    unit.resource = 100
     hp = enemy.hp
     G.Step(s, 0.25)
     assert(hp - enemy.hp == math.floor(unit.damage * 1.7))
@@ -572,6 +575,7 @@ end)
 case("Sustained-cast talents begin after three offensive abilities", function()
     local s, _, unit, enemy = traitEncounter("MAGE", "Rule of Threes")
     for cast = 1, 4 do
+        unit.resource = 100
         unit.cd = 0
         local hp = enemy.hp
         G.Step(s, 0.25)

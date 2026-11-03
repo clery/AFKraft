@@ -1,5 +1,5 @@
 local _, W = ...
-local G, U, T = W.Game, W.Widgets, W.Theme
+local G, C, U, T = W.Game, W.Content, W.Widgets, W.Theme
 local D = {}
 W.DifficultyPanel = D
 
@@ -52,10 +52,30 @@ function D.Draw(ui, parent, state)
                 ui:Refresh()
             end
         )
+        local recipes = {}
+        for _, enchant in ipairs(C.enchants) do
+            if enchant.tier and tier >= enchant.tier then
+                recipes[#recipes + 1] = enchant.name
+            end
+        end
+        U.Tooltip(
+            ui.difficultyTiers[tier],
+            "Tier " .. tier,
+            #recipes > 0
+                    and ("While online, idle level-20+ bosses can teach: " .. table.concat(
+                        recipes,
+                        ", "
+                    ) .. ". Eligible bosses award one Runic fragment; recipes stay learned through both resets.")
+                or "Runic boss rewards begin at tier 2. Base enchantments need no fragments."
+        )
         U.Icon(parent, "INV_Misc_Map_01", x + 32, 178, 32)
     end
     local selected = ui.difficultyTier
     local preview = G.PrestigePlusPreview(state, selected)
+    local affixes, names = G.DifficultyAffixes(selected), {}
+    for _, affix in ipairs(affixes) do
+        names[#names + 1] = affix.name
+    end
     if ui.difficultyConfirm then
         ui.difficultyReview, ui.inheritancePurchases = nil, {}
         U.Text(
@@ -65,6 +85,15 @@ function D.Draw(ui, parent, state)
             236,
             20,
             T.gold,
+            1240
+        )
+        U.Text(
+            parent,
+            "Tier affixes: " .. (#names > 0 and table.concat(names, ", ") or "none"),
+            20,
+            266,
+            12,
+            T.muted,
             1240
         )
         U.Text(parent, "KEEP", 20, 282, 16, T.green, 610)
@@ -143,7 +172,20 @@ function D.Draw(ui, parent, state)
         T.muted,
         1296
     )
-    U.Text(parent, "PERMANENT REBUILDING", 0, 368, 16, T.gold, 1296)
+    ui.difficultyAffixes = {}
+    if #affixes == 0 then
+        U.Text(parent, "No tier affixes", 0, 380, 14, T.muted, 1296)
+    end
+    for index, affix in ipairs(affixes) do
+        local card = button(parent, "", (index - 1) * 430, 370, 410, function() end)
+        U.Begin(card)
+        U.Icon(card, affix.icon, 4, 1, 32):SetParent(card.content or card)
+        U.Text(card, affix.name, 46, 8, 14, T.gold, 350)
+        U.EndBuild(card)
+        U.Tooltip(card, affix.name .. " | Tier " .. affix.tier .. "+", affix.description)
+        ui.difficultyAffixes[affix.id] = card
+    end
+    U.Text(parent, "PERMANENT REBUILDING", 0, 430, 16, T.gold, 1296)
     ui.inheritancePurchases = {}
     for index, id in ipairs({ "rebuilding", "supplies" }) do
         local purchase = G.InheritancePurchases[id]
@@ -152,17 +194,17 @@ function D.Draw(ui, parent, state)
             parent,
             purchase.name .. " · " .. rank .. "/" .. purchase.max,
             x,
-            410,
+            472,
             17,
             T.text,
             610
         )
-        U.Text(parent, purchase.description, x, 446, 14, T.muted, 610)
+        U.Text(parent, purchase.description, x, 508, 14, T.muted, 610)
         ui.inheritancePurchases[id] = button(
             parent,
             rank == purchase.max and "Complete" or "Improve · " .. rank + 1 .. " Inheritance",
             x,
-            484,
+            546,
             360,
             function()
                 W.Action(G.BuyInheritance, id)
@@ -177,7 +219,7 @@ function D.Draw(ui, parent, state)
         parent,
         "Review reset · +" .. preview.inheritance .. " Inheritance",
         0,
-        560,
+        610,
         430,
         function()
             ui.difficultyConfirm = true
@@ -185,5 +227,5 @@ function D.Draw(ui, parent, state)
         end
     )
     U.Enabled(ui.difficultyReview, preview.eligible)
-    U.Text(parent, preview.reason, 0, 612, 15, T.muted, 1296)
+    U.Text(parent, preview.reason, 0, 658, 15, T.muted, 1296)
 end

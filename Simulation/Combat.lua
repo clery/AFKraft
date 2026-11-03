@@ -156,6 +156,7 @@ function G.StartBattle(state)
             attackCD = i * 0.1,
             shield = 0,
         }
+        G.EnsureHeroResource(hero, battle.heroes[i])
     end
     -- The opening adventure is fought alone, before the first discovery.
     local opening = G.CompanionSlots(state) == 1
@@ -196,6 +197,13 @@ local function hurt(state, target, amount, enemy, source, passive)
     amount = floor(max(1, amount))
     local wasAlive = target.hp > 0
     target.hp = max(0, target.hp - amount)
+    if not enemy and wasAlive and state.battle then
+        local hero = state.heroes[target.id]
+        local profile = G.HeroResource(hero, target)
+        if profile then
+            G.GainHeroResource(hero, target, profile.damage)
+        end
+    end
     G.Emit(
         state,
         "hit",
@@ -219,7 +227,8 @@ end
 local function victory(state, battle)
     local z = C.zoneByID[state.zone]
     local difficulty = G.DifficultyModifiers(state)
-    local xp = floor((8 + battle.level * 3) * difficulty.heroXP)
+    local development = G.DevelopmentModifiers(state)
+    local xp = floor((8 + battle.level * 3) * difficulty.heroXP * development.heroXP)
     local masteryXP = floor((8 + battle.level * 3) * difficulty.masteryXP)
     local gold = floor((3 + battle.level * 2) * difficulty.gold)
     local results = {}
@@ -238,6 +247,7 @@ local function victory(state, battle)
             1,
             (unit.hp > 0 and unit.hp / unit.maxHP or 0.3)
                 + 0.06
+                + development.recovery
                 + (G.TalentEffects(hero).renew and 0.08 or 0)
         )
         local level, experience = G.ExperienceResult(hero, xp)
@@ -283,41 +293,24 @@ local function victory(state, battle)
                 result.hero.name
                     .. " reached idle level "
                     .. result.level
-                    .. (
-                        result.level == C.heroLevelCap
-                            and " (character maximum). Mastery continues in harder encounters."
-                        or " (maximum). Train to raise the level cap."
-                    )
+                    .. " (character maximum). Mastery continues in harder encounters."
             )
         end
     end
     state.gold = state.gold + gold
     local collection = G.CollectionBonuses(state)
-    local materialGain = (battle.boss and 5 or 1) * collection.materials * difficulty.materials
-        + (state.materialRemainders[z.material] or 0)
-    local materialWhole = floor(materialGain + 0.000000001)
-    state.materialRemainders[z.material] = max(0, materialGain - materialWhole)
-    state.materials[z.material] = state.materials[z.material] + materialWhole
+    for material, amount in pairs(G.EncounterMaterials(z, battle)) do
+        local materialGain = amount
+                * collection.materials
+                * difficulty.materials
+                * development.materials
+            + (state.materialRemainders[material] or 0)
+        local materialWhole = floor(materialGain + 0.000000001)
+        state.materialRemainders[material] = max(0, materialGain - materialWhole)
+        state.materials[material] = state.materials[material] + materialWhole
+    end
     state.stats.victories = state.stats.victories + 1
     state.stats.kills = state.stats.kills + #battle.enemies
-    local family
-    for _, enemy in ipairs(battle.enemies) do
-        if enemy.family == "humanoid" then
-            family = "humanoid"
-            break
-        end
-    end
-    local collectionItem = G.CollectionVictory(state, {
-        receipt = "encounter:" .. state.encounter,
-        zone = state.zone,
-        level = battle.level,
-        family = family,
-        tier = state.tier or 0,
-        boss = battle.boss,
-    })
-    if collectionItem then
-        G.Loot(state, collectionItem)
-    end
     if
         G.Random(state, 100) <= math.min(80, 35 * difficulty.loot)
         or battle.boss
@@ -401,6 +394,11 @@ function G.Step(state, seconds)
     local collection = G.CollectionBonuses(state)
     local difficulty = G.DifficultyModifiers(state)
     for _, enemy in ipairs(battle.enemies) do
+        if enemy.hp > 0 and difficulty.enemyRegen > 0 then
+            local activeSeconds = min(seconds, max(0, battle.elapsed - difficulty.regenAfter))
+            enemy.hp =
+                min(enemy.maxHP, enemy.hp + enemy.maxHP * difficulty.enemyRegen * activeSeconds)
+        end
         for source, dot in pairs(enemy.dots or {}) do
             local owner = battle.heroes[source]
             if enemy.hp > 0 and owner and owner.hp > 0 then
@@ -426,6 +424,11 @@ function G.Step(state, seconds)
             if #enemies == 0 then
                 break
             end
+            G.EnsureHeroResource(hero, unit)
+            local resource = G.HeroResource(hero, unit)
+            if resource then
+                G.GainHeroResource(hero, unit, resource.regen * seconds)
+            end
             unit.hp = min(unit.maxHP, unit.hp + (unit.regen or 0) * seconds)
             if unit.rejuvenation then
                 local hot = unit.rejuvenation
@@ -445,6 +448,7 @@ function G.Step(state, seconds)
             local recovery = canHeal and lowest or unit
             local healNeeded = recovery.hp / recovery.maxHP * 100 < hero.healBelow
             local specialNeeded = #enemies >= hero.specialCount
+            local primary = P.Target(state, battle, false, i)
             if unit.cd == 0 then
                 local action = "attack"
                 if hero.priority == "heal" and healNeeded then
@@ -459,7 +463,9 @@ function G.Step(state, seconds)
                     action = "special"
                 end
                 local acted = false
-                if action == "heal" then
+                local resourceReady = G.CanHeroAbility(hero, unit, action)
+                if resourceReady and action == "heal" then
+                    G.SpendHeroResource(hero, unit, action)
                     acted = true
                     local restored = heal(
                         state,
@@ -486,10 +492,11 @@ function G.Step(state, seconds)
                         recovery.rejuvenation = 6
                     end
                     unit.cd = talents.tides and recovery.hp < recovery.maxHP * 0.5 and 4 or 6
-                elseif P.InRange(unit, enemies[1]) then
+                elseif resourceReady and P.InRange(unit, primary) then
+                    G.SpendHeroResource(hero, unit, action)
                     acted = true
                     local targets = (action == "special" or talents.cleave) and enemies
-                        or { enemies[1] }
+                        or { primary }
                     for _, target in ipairs(targets) do
                         local amount = unit.damage
                             * (action == "special" and 0.95 or 1.7)
@@ -563,11 +570,7 @@ function G.Step(state, seconds)
                     end
                     if talents.chain then
                         for _, target in ipairs(enemies) do
-                            if
-                                target ~= enemies[1]
-                                and target.hp > 0
-                                and P.InRange(unit, target)
-                            then
+                            if target ~= primary and target.hp > 0 and P.InRange(unit, target) then
                                 hurt(state, target, unit.damage * 0.35, true, i)
                             end
                         end
@@ -582,14 +585,13 @@ function G.Step(state, seconds)
                     G.Emit(state, "cast", { source = i, action = action })
                 end
             end
-            if
-                unit.attackCD == 0
-                and #living(battle.enemies) > 0
-                and P.InRange(unit, living(battle.enemies)[1])
-            then
-                local targets = talents.cleave and living(battle.enemies)
-                    or { living(battle.enemies)[1] }
+            local basicTarget = P.Target(state, battle, false, i)
+            if unit.attackCD == 0 and P.InRange(unit, basicTarget) then
+                local targets = talents.cleave and living(battle.enemies) or { basicTarget }
                 unit.swings = (unit.swings or 0) + 1
+                if resource then
+                    G.GainHeroResource(hero, unit, resource.swing)
+                end
                 for _, target in ipairs(targets) do
                     if P.InRange(unit, target) then
                         local amount = unit.damage
@@ -638,7 +640,12 @@ function G.Step(state, seconds)
                 local target = P.Target(state, battle, true)
                 if P.InRange(enemy, target) then
                     local talent = G.TalentEffects(state.heroes[target.id])
+                    local enrage = battle.boss
+                            and battle.elapsed >= difficulty.enrageAfter
+                            and difficulty.bossDamage
+                        or 1
                     local amount = enemy.damage
+                        * enrage
                         * (talent.guard and 0.75 or 1)
                         * (1 - (target.mitigation or 0))
                         * traitMultiplier(traits[target.id], "defense", battle, target, enemy)
@@ -665,7 +672,7 @@ function G.Step(state, seconds)
                     if talent.thorns and amount > 0 then
                         hurt(state, enemy, amount * 0.30, true, target.id, true)
                     end
-                    enemy.attackCD = 2.4
+                    enemy.attackCD = difficulty.enemyAttackInterval
                 end
             end
         end
@@ -682,7 +689,22 @@ function G.Step(state, seconds)
         for _, hero in ipairs(state.heroes) do
             hero.health = 1
         end
-        state.lastDefeat = "The party could not sustain the incoming damage. Farming encounter "
+        local wiped = #living(battle.heroes) == 0
+        local enemyHealth, enemyMaximum = 0, 0
+        for _, enemy in ipairs(battle.enemies) do
+            enemyHealth = enemyHealth + max(0, enemy.hp)
+            enemyMaximum = enemyMaximum + enemy.maxHP
+        end
+        local remaining = enemyMaximum > 0 and math.ceil(enemyHealth / enemyMaximum * 100) or 0
+        state.lastDefeat = (
+            wiped and "All companions fell after " .. floor(battle.elapsed) .. " seconds."
+            or "Encounter timed out after 180 seconds with companions still standing."
+        )
+            .. " Enemies retained "
+            .. remaining
+            .. "% health. "
+            .. (wiped and "Improve survival or recovery. " or "Improve damage or ability priorities. ")
+            .. "Farming encounter "
             .. state.stage
             .. "."
         G.Log(state, state.lastDefeat)

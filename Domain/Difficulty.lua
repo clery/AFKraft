@@ -66,10 +66,34 @@ function G.ValidateDifficulty(state)
     return true
 end
 
+function G.DifficultyAffixes(tier)
+    local active = {}
+    for _, affix in ipairs(C.difficultyAffixes) do
+        if tier >= affix.tier then
+            active[#active + 1] = affix
+        end
+    end
+    return active
+end
+
 function G.DifficultyModifiers(state)
     local tier = state.tier
     local ranks = state.difficulty.purchases
+    local attackInterval, regen, regenAfter, bossDamage, enrageAfter = 2.4, 0, 0, 1, 0
+    for _, affix in ipairs(C.difficultyAffixes) do
+        if tier >= affix.tier then
+            attackInterval = affix.attackInterval or attackInterval
+            regen, regenAfter = affix.regen or regen, affix.regenAfter or regenAfter
+            bossDamage, enrageAfter =
+                affix.bossDamage or bossDamage, affix.enrageAfter or enrageAfter
+        end
+    end
     return {
+        enemyAttackInterval = attackInterval,
+        enemyRegen = regen,
+        regenAfter = regenAfter,
+        bossDamage = bossDamage,
+        enrageAfter = enrageAfter,
         enemyHealth = 1.6 ^ tier,
         enemyDamage = 1.25 ^ tier,
         basicDamageTaken = 1 - math.min(0.3, tier * 0.025),
@@ -92,6 +116,7 @@ function G.DifficultyVictory(state, battle)
         return false
     end
     record.lastEncounter = state.encounter
+    G.ProfessionBossRewards(state, battle)
     record.best = math.max(record.best, battle.level)
     for zone, stage in pairs(state.safe) do
         record.safe[zone] = math.max(record.safe[zone] or 0, stage)
@@ -160,12 +185,12 @@ function G.PrestigePlusPreview(state, targetTier)
             "Adventure rank, partial XP, Essence and Legacy",
             "Heirlooms, collection records and permanent purchases",
             "Boost ownership, cooldowns, rules, profiles and route templates",
-            "Profession ownership, recipes, specializations and allocations",
+            "Profession ownership, learned recipes, specializations and allocations",
             "Unlocked tiers, Inheritance and enabled preferences",
         },
         rebuilt = {
-            "Hero levels, XP, training, ordinary equipment and inventory",
-            "Gold, zone materials and profession cycle ranks/XP",
+            "Hero levels, XP, ordinary equipment and inventory",
+            "Gold, zone materials, Runic fragments and profession cycle ranks/XP",
             "Run destinations, safe encounters and route cursor",
             "Active boosts end; cooldown deadlines remain",
         },

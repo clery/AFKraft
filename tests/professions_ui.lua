@@ -97,3 +97,27 @@ test("Workshop specialization controls use profession points and pooled layouts"
     ui:SetTab("boosts")
     assertFalse(ui.professionFrame:IsShown())
 end)
+
+test("Workshop previews runic recipes and gates payment on fragment stock", function()
+    local W, state = workshop()
+    local ui, G = W.UI, W.Game
+    state.difficulty.unlocked, state.difficulty.maxTier = true, 2
+    ui:Refresh()
+    local control = ui.professionControls.enchants.runicFury
+    assertNotNil(control)
+    click(control)
+    assertFalse(ui.professionControls.commit:IsEnabled())
+    state.professions.recipes.runicFury = true
+    state.professions.fragments = 2
+    ui:Refresh(false)
+    assertFalse(ui.professionControls.commit:IsEnabled())
+    state.professions.fragments = 3
+    ui:Refresh(false)
+    assertTrue(ui.professionControls.commit:IsEnabled())
+    local essence = state.essence
+    click(ui.professionControls.commit)
+    assertEquals("runicFury", state.heroes[1].gear[1].enchant.id)
+    assertEquals(0, state.professions.fragments)
+    assertEquals(essence, state.essence)
+    assertTrue(G.ValidateProfessions(state))
+end)

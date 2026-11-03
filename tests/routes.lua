@@ -176,4 +176,187 @@ case("Malformed saved route receipts and IDs fail validation", function()
     end
 end)
 
+case(
+    "Material route milestones observe current stock without spending or counting past gains",
+    function()
+        local s = party()
+        route(s, { step("durotar", { kind = "material", material = "ore", amount = 100 }) })
+        s.materials.ore = 99
+        assert(not G.RouteStatus(s))
+        s.materials.ore = 100
+        assert(G.RouteStatus(s))
+        s.materials.ore = 90
+        s.encounter = 1
+        assert(not G.RouteBoundary(s) and s.routes.run.cursor == 1)
+        s.materials.ore = 101
+        s.encounter = 2
+        assert(G.RouteBoundary(s) and s.zone == "durotar" and s.materials.ore == 101)
+        assert(not G.RouteBoundary(s))
+        assert(G.Load(G.Copy(s), 0))
+    end
+)
+
+case(
+    "Discovery routes observe outdoor identity only and wait safely for removed catalog pieces",
+    function()
+        local s = party()
+        local itemID = W.Content.collections[1].pieces[1]
+        route(s, { step("durotar", { kind = "collection", itemID = itemID }) })
+        assert(not G.RouteStatus(s))
+        s.outdoorCollections.pieces[itemID] = true
+        assert(G.RouteStatus(s))
+        s.offline, s.encounter = true, 1
+        assert(not G.RouteBoundary(s) and s.routes.run.cursor == 1)
+        s.offline = nil
+        assert(G.RouteBoundary(s))
+        local id = s.routes.selected
+        assert(
+            G.SaveRoute(
+                s,
+                id,
+                "Missing piece",
+                { step("elwynn", { kind = "collection", itemID = 999999999 }) }
+            )
+        )
+        assert(G.ValidateRoutes(s) and not G.RouteStatus(s))
+        local _, reason = G.RouteStatus(s)
+        assert(reason:find("unavailable", 1, true))
+    end
+)
+
+case("New route milestones reject malformed thresholds atomically", function()
+    local s = party()
+    for _, trigger in ipairs({
+        { kind = "material", material = "gold", amount = 100 },
+        { kind = "material", material = "ore", amount = 0 },
+        { kind = "material", material = "ore", amount = 1.5 },
+        { kind = "material", material = "ore", amount = math.huge },
+        { kind = "material", material = "ore", amount = 1000001 },
+        { kind = "collection", itemID = "4701" },
+        { kind = "collection", itemID = 0 },
+    }) do
+        assert(not G.SaveRoute(s, nil, "Invalid", { step("durotar", trigger) }))
+        assert(s.routes.nextID == 1 and #s.routes.templates == 0)
+    end
+end)
+
+case("Offline routes default off and only visit departure-cleared checkpoints", function()
+    local s = party()
+    s.heroes[1].level = 20
+    G.TalentProgress(s.heroes[1])
+    s.safe.elwynn, s.safe.durotar = 1, 1
+    route(s, { step("durotar"), step("elwynn") })
+    assert(not s.routes.offlineEnabled)
+    local old = G.Copy(s)
+    old.routes.offlineEnabled = nil
+    assert(not assert(G.Load(old, 0)).routes.offlineEnabled)
+    assert(G.SetOfflineRoutesEnabled(s, true))
+    local job = assert(G.BeginCatchup(s, 120))
+    assert(job.state.offlineRoute.safe.durotar == 1)
+    while not G.CatchupBatch(job, 1000) do
+    end
+    assert(job.state.offlineRoute.transitions == 2)
+    assert(job.state.stage == 1 and job.state.farming)
+    assert(job.state.routes.run.cursor == 3)
+    assert(job.state.safe.elwynn == 1 and job.state.safe.durotar == 1)
+    assert(G.FinishCatchup(s, job))
+    assert(s.routes.run.cursor == 3 and s.lastOfflineSummary.routeTransitions == 2)
+    local gold, cursor = s.gold, s.routes.run.cursor
+    assert(not G.FinishCatchup(s, job) and s.gold == gold and s.routes.run.cursor == cursor)
+    assert(G.Load(G.Copy(s), 120))
+end)
+
+case(
+    "Offline routes cannot use newly cleared destinations or mismatched tier permissions",
+    function()
+        local s = party()
+        s.safe.elwynn, s.runBest = 1, 100
+        route(s, { step("durotar") })
+        assert(G.SetOfflineRoutesEnabled(s, true))
+        local job = assert(G.BeginCatchup(s, 120))
+        local offline = job.state
+        offline.safe.durotar = 1
+        offline.encounter = 1
+        assert(not G.RouteBoundary(offline))
+        assert(offline.zone == "elwynn" and offline.routes.run.cursor == 1)
+        offline.offlineRoute.safe.durotar = 1
+        offline.offlineRoute.tier = 1
+        offline.encounter = 2
+        assert(not G.RouteBoundary(offline))
+        offline.offlineRoute.tier = 0
+        offline.offlineRoute.transitions = 12
+        offline.encounter = 3
+        assert(not G.RouteBoundary(offline))
+        assert(offline.routes.run.cursor == 1)
+    end
+)
+
+case("Offline route progress and opt-in survive an interrupted catchup without replay", function()
+    local s = party()
+    s.heroes[1].level = 20
+    G.TalentProgress(s.heroes[1])
+    s.safe.elwynn, s.safe.durotar = 1, 1
+    route(s, { step("durotar") })
+    assert(G.SetOfflineRoutesEnabled(s, true))
+    local job = assert(G.BeginCatchup(s, 120))
+    G.CatchupBatch(job, 200)
+    assert(G.FinishCatchup(s, job))
+    assert(s.lastOfflineSummary.routeTransitions == 1 and s.routes.run.cursor == 2)
+    local rest = assert(G.BeginCatchup(s, 120))
+    while not G.CatchupBatch(rest, 1000) do
+    end
+    assert(G.FinishCatchup(s, rest))
+    assert(s.lastOfflineSummary.routeTransitions == 0 and s.routes.run.cursor == 2)
+    assert(s.routes.offlineEnabled and G.ValidateRoutes(s))
+end)
+
+case("Offline routes respect manual pause and never advance outdoor discovery counters", function()
+    local s = party()
+    s.safe.elwynn, s.safe.durotar = 1, 1
+    s.heroes[1].level = 20
+    G.TalentProgress(s.heroes[1])
+    route(s, { step("durotar") })
+    assert(G.SetOfflineRoutesEnabled(s, true))
+    s.routes.run.paused = true
+    local job = assert(G.BeginCatchup(s, 60))
+    while not G.CatchupBatch(job, 1000) do
+    end
+    G.FinishCatchup(s, job)
+    assert(s.routes.run.paused and s.routes.run.cursor == 1)
+    assert(s.lastOfflineSummary.routeTransitions == 0)
+    assert(s.outdoorCollections.stats.kills == 0 and next(s.outdoorCollections.counters) == nil)
+end)
+
+case(
+    "Offline route ownership and preferences survive resets without retaining old checkpoints",
+    function()
+        local s = party()
+        route(s, { step("durotar") })
+        assert(G.SetOfflineRoutesEnabled(s, true))
+        s.prestigeUnlocked, s.runBest = true, 9
+        s.safe.elwynn, s.safe.durotar = 1, 1
+        assert(G.Prestige(s))
+        assert(s.routes.offlineEnabled and s.routes.enabled and next(s.safe) == nil)
+        assert(G.BeginCatchup(s, 60) == nil)
+        s.heroes[1].level = 60
+        G.TalentProgress(s.heroes[1])
+        s.encounter = 1
+        assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
+        assert(G.PrestigePlus(s, 1))
+        assert(s.routes.offlineEnabled and s.routes.enabled and next(s.safe) == nil)
+        assert(s.routes.run.cursor == 1 and #s.routes.templates == 1)
+    end
+)
+
+case("Discovery routes read dungeon discoveries from their own collection ledger", function()
+    local s = party()
+    route(s, { step("durotar", { kind = "collection", itemID = 10399 }) })
+    local ready, reason = G.RouteStatus(s)
+    assert(not ready and reason:find("Blackened Defias Armor", 1, true))
+    s.dungeonCollections.pieces[10399] = true
+    assert(G.RouteStatus(s))
+    s.encounter = 1
+    assert(G.RouteBoundary(s) and s.zone == "durotar")
+end)
+
 return cases

@@ -65,6 +65,14 @@ local function validSteps(steps, saved)
             if not whole(trigger.hero, 1, 5) or not whole(trigger.level, 1, C.heroLevelCap) then
                 return false
             end
+        elseif trigger.kind == "material" then
+            if not C.materials[trigger.material] or not whole(trigger.amount, 1, 1000000) then
+                return false
+            end
+        elseif trigger.kind == "collection" then
+            if not whole(trigger.itemID, 1, 1000000000) then
+                return false
+            end
         elseif trigger.kind == "unlock" then
             if not identifier(trigger.zone) then
                 return false
@@ -87,6 +95,8 @@ function G.ValidateRoutes(state)
         type(routes) ~= "table"
         or type(routes.owned) ~= "boolean"
         or type(routes.enabled) ~= "boolean"
+        or type(routes.offlineEnabled) ~= "boolean"
+        or (routes.offlineEnabled and not routes.owned)
         or (routes.enabled and not routes.owned)
         or type(routes.templates) ~= "table"
         or #routes.templates > 8
@@ -243,6 +253,14 @@ function G.SetRoutesEnabled(state, enabled)
     return true
 end
 
+function G.SetOfflineRoutesEnabled(state, enabled)
+    if type(enabled) ~= "boolean" or (enabled and not state.routes.owned) then
+        return false, "Learn route planning before enabling offline routes."
+    end
+    state.routes.offlineEnabled = enabled
+    return true
+end
+
 function G.ResumeRoute(state)
     if not state.routes.selected then
         return false, "Select a route first."
@@ -288,6 +306,21 @@ function G.RouteStatus(state)
     if not destination then
         return false, "Destination unavailable: " .. step.destination, step, "destination"
     end
+    if state.offline then
+        local permission = state.offlineRoute
+        if not routes.offlineEnabled or not permission then
+            return false, "Offline route travel is disabled.", step
+        end
+        if permission.tier ~= state.tier or permission.transitions >= 12 then
+            return false, "Offline route travel limit reached.", step
+        end
+        if not permission.safe[step.destination] or permission.safe[step.destination] < 1 then
+            return false,
+                "Waiting for an online clear of " .. destination.name .. ".",
+                step,
+                "destination"
+        end
+    end
     local trigger = step.trigger
     if trigger.kind == "boss" then
         local zone = C.zoneByID[trigger.zone]
@@ -313,6 +346,29 @@ function G.RouteStatus(state)
                     .. ").",
                 step
         end
+    elseif trigger.kind == "material" then
+        local held = state.materials[trigger.material] or 0
+        if held < trigger.amount then
+            return false,
+                "Waiting for "
+                    .. trigger.amount
+                    .. " "
+                    .. C.materials[trigger.material]
+                    .. " in stock ("
+                    .. held
+                    .. ").",
+                step
+        end
+    elseif trigger.kind == "collection" then
+        local item = G.CollectionItem(trigger.itemID)
+        if not C.collectionByItem[trigger.itemID] or not item then
+            return false, "Collection piece unavailable: " .. trigger.itemID .. ".", step
+        end
+        if
+            not G.CollectionBook(state, C.collectionByItem[trigger.itemID]).pieces[trigger.itemID]
+        then
+            return false, "Waiting for collection discovery: " .. item.name .. ".", step
+        end
     elseif trigger.kind == "unlock" then
         local zone = C.zoneByID[trigger.zone]
         if not zone then
@@ -331,7 +387,7 @@ end
 function G.RouteBoundary(state)
     local run = state.routes.run
     if
-        state.offline
+        (state.offline and (not state.routes.offlineEnabled or not state.offlineRoute))
         or state.battle
         or state.encounter < 1
         or run.lastEncounter == state.encounter
@@ -350,6 +406,11 @@ function G.RouteBoundary(state)
     local ok = G.Travel(state, step.destination, true)
     if not ok then
         return false
+    end
+    if state.offline then
+        state.stage = state.offlineRoute.safe[step.destination]
+        state.farming = true
+        state.offlineRoute.transitions = state.offlineRoute.transitions + 1
     end
     run.completed[step.id] = true
     run.cursor = run.cursor + 1

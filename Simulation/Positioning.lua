@@ -28,23 +28,35 @@ function P.Ensure(state, battle)
     end
 end
 
-function P.Target(state, battle, enemy)
+function P.Target(state, battle, enemy, heroIndex)
     local units = enemy and battle.heroes or battle.enemies
     local first
+    local configuredHero = heroIndex and state.heroes[heroIndex]
+    local mode = configuredHero and configuredHero.targetMode or "front"
     for _, unit in ipairs(units) do
         if unit.hp > 0 then
-            first = first or unit
             if not enemy then
-                return unit
-            end
-            local hero = state.heroes[unit.id]
-            local talents = hero
-                and (W.Game.TalentEffects and W.Game.TalentEffects(hero) or hero.talents)
-            if talents and (talents.guard or talents.soulLink) then
-                return unit
-            end
-            if unit.x > first.x then
-                first = unit
+                if
+                    not first
+                    or (mode == "weakest" and unit.hp / unit.maxHP < first.hp / first.maxHP)
+                    or (mode == "strongest" and unit.hp / unit.maxHP > first.hp / first.maxHP)
+                then
+                    first = unit
+                end
+                if mode == "front" then
+                    return first
+                end
+            else
+                first = first or unit
+                local hero = state.heroes[unit.id]
+                local talents = hero
+                    and (W.Game.TalentEffects and W.Game.TalentEffects(hero) or hero.talents)
+                if talents and (talents.guard or talents.soulLink) then
+                    return unit
+                end
+                if unit.x > first.x then
+                    first = unit
+                end
             end
         end
     end
@@ -88,12 +100,11 @@ end
 
 function P.Step(state, battle, seconds)
     P.Ensure(state, battle)
-    local enemy = P.Target(state, battle, false)
     local hero = P.Target(state, battle, true)
     -- Resolve every destination before moving any unit, so array order does not
     -- let later combatants pursue coordinates from a different simulation tick.
-    for _, unit in ipairs(battle.heroes) do
-        destination(unit, enemy, false)
+    for index, unit in ipairs(battle.heroes) do
+        destination(unit, P.Target(state, battle, false, index), false)
     end
     for _, unit in ipairs(battle.enemies) do
         destination(unit, hero, true)

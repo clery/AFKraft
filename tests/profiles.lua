@@ -186,4 +186,37 @@ case(
     end
 )
 
+case("Profiles capture one collection effect and reject unavailable effects atomically", function()
+    local s = party()
+    local set = C.collections[1]
+    for _, itemID in ipairs(set.pieces) do
+        s.outdoorCollections.pieces[itemID] = true
+    end
+    assert(G.SetCollectionEffect(s, set.id))
+    local ok, id = G.SaveBoostProfile(s, nil, "Outdoor")
+    assert(ok and s.boostProfiles.entries[id].collection.effect == set.id)
+    assert(G.SetCollectionEffect(s, nil))
+    assert(G.ApplyBoostProfile(s, id))
+    assert(s.outdoorCollections.effect == set.id)
+    assert(G.SetCollectionEffect(s, nil))
+    s.outdoorCollections.pieces[set.pieces[1]] = nil
+    local equipped = s.boosts.equipped
+    assert(not G.ApplyBoostProfile(s, id))
+    assert(s.outdoorCollections.effect == nil and s.boosts.equipped == equipped)
+    s.boostProfiles.entries[id].collection = nil
+    assert(G.ApplyBoostProfile(s, id))
+end)
+
+case("Profiles restore offline route opt-in only after entitlement validation", function()
+    local s = party()
+    assert(G.BuyRoutes(s))
+    assert(G.SetOfflineRoutesEnabled(s, true))
+    local ok, id = G.SaveBoostProfile(s, nil, "Offline supplies")
+    assert(ok)
+    assert(G.SetOfflineRoutesEnabled(s, false))
+    assert(G.ApplyBoostProfile(s, id) and s.routes.offlineEnabled)
+    s.routes.owned, s.routes.offlineEnabled = false, false
+    assert(not G.ApplyBoostProfile(s, id) and not s.routes.offlineEnabled)
+end)
+
 return cases

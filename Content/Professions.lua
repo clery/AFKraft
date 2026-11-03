@@ -95,6 +95,34 @@ C.enchants = {
         stats = { spirit = 4, haste = 3 },
     },
 }
+C.enchants[#C.enchants + 1] = {
+    id = "runicFury",
+    name = "Runic Fury",
+    icon = "Ability_Warrior_BattleShout",
+    branch = "offense",
+    tier = 2,
+    fragments = 3,
+    stats = { attackPower = 8, spellPower = 8 },
+}
+C.enchants[#C.enchants + 1] = {
+    id = "runicFortitude",
+    name = "Runic Fortitude",
+    icon = "Ability_Warrior_ShieldWall",
+    branch = "defense",
+    tier = 5,
+    fragments = 5,
+    stats = { stamina = 10, armor = 32 },
+}
+C.enchants[#C.enchants + 1] = {
+    id = "runicClarity",
+    name = "Runic Clarity",
+    icon = "Spell_Holy_MagicalSentry",
+    branch = "utility",
+    tier = 8,
+    fragments = 8,
+    stats = { spirit = 5, haste = 4 },
+}
+C.runicFragmentCap = 1000
 C.enchantByID = {}
 for _, enchant in ipairs(C.enchants) do
     C.enchantByID[enchant.id] = enchant

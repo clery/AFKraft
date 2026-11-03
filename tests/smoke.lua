@@ -169,6 +169,7 @@ test("Selecting equipment is free and upgrading uses the displayed quote", funct
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
     state.paused, state.essence, state.gold = true, 1000, 1000
+    state.materials.ore = 100
     local hero = state.heroes[1]
     hero.gear[1] = W.Game.Item(state, 1, 1, 2)
     W.state = state
@@ -567,7 +568,7 @@ test("Talent icons preserve choices and scroll through expanded trees", function
     talent.row = 20
     W.UI:Refresh()
     talent.row = row
-    local _, maximum = tree.slider:GetMinMaxValues()
+    local maximum = tree.canvas:GetHeight() - tree.scroll:GetHeight()
     assertTrue(maximum > 1000)
     tree.scroll:GetScript("OnMouseWheel")(tree.scroll, -100)
     assertEquals(maximum, tree.scroll:GetVerticalScroll())
@@ -576,7 +577,7 @@ test("Talent icons preserve choices and scroll through expanded trees", function
     W.UI:SetTab("talents")
     assertTrue(trees == W.UI.talentTrees)
     assertTrue(node == tree.buttons.cleave)
-    local _, restoredMaximum = tree.slider:GetMinMaxValues()
+    local restoredMaximum = tree.canvas:GetHeight() - tree.scroll:GetHeight()
     assertEquals(restoredMaximum, tree.scroll:GetVerticalScroll())
 end)
 
@@ -700,19 +701,24 @@ test(
         hero:Show()
         enemy:Show()
         scene:PlaceModels()
-        assertTrue(enemy.renderX - hero.renderX >= 298)
+        -- Perspective scales the displayed bounds independently of combat coordinates.
+        local displayedRadius = hero.model.spacingRadius * hero.viewport:GetScale()
+            + enemy.model.spacingRadius * enemy.viewport:GetScale()
+        assertTrue(enemy.renderX - hero.renderX >= displayedRadius * 0.9)
         assertEquals(480, hero.x)
         assertEquals(580, enemy.x)
         local _, _, _, x = hero:GetPoint()
-        assertEquals(hero.renderX, x)
+        assertTrue(math.abs(hero.renderX - x) < 0.001)
         scene:PlaceNameplates()
         local _, _, _, plateX = hero.plate:GetPoint()
-        assertEquals(hero.renderX, plateX)
+        assertTrue(math.abs(hero.renderX - plateX) < 0.001)
         local largeGap = enemy.renderX - hero.renderX
         enemy.model.spacingRadius = 60
         scene:PlaceModels(1)
         assertTrue(enemy.renderX - hero.renderX < largeGap)
-        assertTrue(enemy.renderX - hero.renderX >= 208)
+        displayedRadius = hero.model.spacingRadius * hero.viewport:GetScale()
+            + enemy.model.spacingRadius * enemy.viewport:GetScale()
+        assertTrue(enemy.renderX - hero.renderX >= displayedRadius * 0.9)
         scene.travelling = true
         scene:PlaceModels()
         assertEquals(hero.x, hero.renderX)
@@ -797,6 +803,9 @@ test("Talent trees change with class and keep class selections independent", fun
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
     W.Game.AddHero(state, "MAGE")
+    state.heroes[1].level = 3
+    assert(W.Game.TalentProgress(state.heroes[1]))
+    assert(W.Game.Talent(state, 1, "cleave"))
     W.state, W.UI.selected = state, 1
     W.UI.frame:Show()
     W.UI:SetTab("talents")
@@ -1307,7 +1316,7 @@ test("Render motion advances each OnUpdate frame even when GetTime is unchanged"
             assertTrue(unit.x > x)
             assertTrue(unit.x - x < 8)
             local _, _, _, anchoredX = unit:GetPoint()
-            assertTrue(math.abs(anchoredX - unit.x) < 0.001)
+            assertTrue(math.abs(anchoredX - unit.renderX) < 0.001)
         end
         -- The next stationary tick must not replay the previous 80-pixel step.
         state.battle.elapsed = 0.5
@@ -1320,7 +1329,7 @@ test("Render motion advances each OnUpdate frame even when GetTime is unchanged"
         assertEquals(unit.combatant.x, unit.targetX)
     end)
     GetTime = clock
-    assertTrue(ok, message)
+    assert(ok, message)
 end)
 
 test(

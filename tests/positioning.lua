@@ -123,4 +123,77 @@ case("Periodic and reflected hits do not represent fresh attacks", function()
     )
 end)
 
+case(
+    "Hero target priorities use living health percentages with stable ties and matching movement",
+    function()
+        local s = G.New(0)
+        G.AddHero(s, "WARRIOR")
+        G.AddHero(s, "ROGUE")
+        G.StartBattle(s)
+        local b = s.battle
+        for index = 1, 3 do
+            b.enemies[index] = G.Copy(b.enemies[1])
+            b.enemies[index].id = index
+            b.enemies[index].maxHP = index == 2 and 2000 or 1000
+            b.enemies[index].hp = index == 2 and 600 or 800
+        end
+        assert(G.Configure(s, 1, "targetMode", "weakest"))
+        assert(G.Configure(s, 2, "targetMode", "strongest"))
+        assert(P.Target(s, b, false, 1) == b.enemies[2])
+        assert(P.Target(s, b, false, 2) == b.enemies[1])
+        P.Step(s, b, 0.25)
+        assert(b.heroes[1].targetID == 2 and b.heroes[2].targetID == 1)
+        b.enemies[2].hp = 0
+        assert(P.Target(s, b, false, 1) == b.enemies[1])
+        assert(not G.Configure(s, 1, "targetMode", "invalid"))
+        assert(s.heroes[1].targetMode == "weakest")
+        local hp, cd = b.heroes[1].hp, b.heroes[1].cd
+        assert(G.Configure(s, 1, "targetMode", "front"))
+        assert(b.heroes[1].hp == hp and b.heroes[1].cd == cd)
+        assert(G.Load(G.Copy(s), 0))
+        local old = G.Copy(s)
+        old.heroes[1].targetMode = nil
+        assert(G.Load(old, 0))
+        old.heroes[1].targetMode = "removed"
+        assert(not G.Load(old, 0))
+    end
+)
+
+case("Basic attacks and strikes damage the configured primary enemy", function()
+    for _, basic in ipairs({ true, false }) do
+        local s = G.New(0)
+        G.AddHero(s, "MAGE")
+        assert(G.Configure(s, 1, "targetMode", "weakest"))
+        assert(G.Configure(s, 1, "priority", "attack"))
+        G.StartBattle(s)
+        local b, unit = s.battle, s.battle.heroes[1]
+        b.enemies[2] = G.Copy(b.enemies[1])
+        for index, enemy in ipairs(b.enemies) do
+            enemy.id, enemy.x, enemy.y = index, 350, 100
+            enemy.maxHP, enemy.hp, enemy.attackCD = 10000, index == 1 and 9000 or 4000, 100
+        end
+        unit.x, unit.y, unit.damage = 100, 100, 10
+        unit.attackCD, unit.cd = basic and 0 or 100, basic and 100 or 0
+        G.Step(s, 0.25)
+        assert(b.enemies[1].hp == 9000 and b.enemies[2].hp < 4000)
+    end
+end)
+
+case("Hero target preferences survive both prestige resets and same-class replacement", function()
+    local s = G.New(0)
+    G.AddHero(s, "WARRIOR")
+    assert(G.Configure(s, 1, "targetMode", "strongest"))
+    assert(G.Replace(s, 1, { class = "WARRIOR", name = "Replacement", guid = "fixture" }))
+    assert(s.heroes[1].targetMode == "strongest")
+    s.prestigeUnlocked, s.runBest = true, 9
+    assert(G.Prestige(s))
+    assert(s.heroes[1].targetMode == "strongest")
+    s.heroes[1].level = 60
+    G.TalentProgress(s.heroes[1])
+    s.encounter = 1
+    assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
+    assert(G.PrestigePlus(s, 1))
+    assert(s.heroes[1].targetMode == "strongest" and s.heroes[1].level == 1)
+end)
+
 return cases

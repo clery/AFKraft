@@ -16,6 +16,7 @@ local tabs = {
     { "collections", "Collections" },
     { "workshop", "Workshop" },
     { "difficulty", "Prestige+" },
+    { "development", "Development" },
 }
 local tabIcons = {
     adventure = "INV_Misc_Map_01",
@@ -31,6 +32,7 @@ local tabIcons = {
     collections = "INV_Misc_Bag_10",
     workshop = "Trade_BlackSmithing",
     difficulty = "INV_Misc_Map_01",
+    development = "Ability_Warrior_BattleShout",
 }
 
 function UI:SelectHero(index)
@@ -149,6 +151,8 @@ function UI:Layout()
             or W.state.ui.tab == "collections"
             or W.state.ui.tab == "workshop"
             or W.state.ui.tab == "difficulty"
+            or W.state.ui.tab == "offline"
+            or W.state.ui.tab == "development"
         )
     self.scene:Layout(compact, management)
     self.scene.frame:SetShown(not atlas and not company)
@@ -262,6 +266,25 @@ function UI:Refresh(redraw)
         U.Number(s.essence) .. " Essence   /   " .. U.Number(s.gold) .. " Gold"
     )
     self.compactZone:SetText(C.zoneByID[s.zone].name .. "  /  Encounter " .. s.stage)
+    local huntInfo = W.CollectionPanel.TrackedPiece(s)
+    local trackedItem = huntInfo and huntInfo.item
+    self.compactCollectionGoal:SetShown(trackedItem ~= nil and not s.ui.locked)
+    if trackedItem then
+        local available = huntInfo and huntInfo.available
+        local progress = huntInfo and huntInfo.found and "Found"
+            or available and (huntInfo.count .. "/" .. huntInfo.guarantee)
+            or "Unverified"
+        self.compactCollectionGoal.text:SetText(trackedItem.name .. " · " .. progress)
+        self.compactCollectionGoal.icon:SetTexture("Interface\\Icons\\" .. trackedItem.icon)
+        U.Tooltip(
+            self.compactCollectionGoal,
+            "Tracked " .. huntInfo.kind .. " piece",
+            trackedItem.name
+                .. "\n"
+                .. (available and huntInfo.kind .. " kill progress: " .. progress or "Source verification pending. Acquisition is disabled.")
+                .. "\nOpen Collections to change or clear this target."
+        )
+    end
     self.battleState:SetText(
         (
             s.farming and "Farming"
@@ -297,7 +320,6 @@ function UI:Refresh(redraw)
                     .. (
                         h.level >= C.heroLevelCap
                             and ("Mastery " .. W.Game.MasteryProgress(h).rank)
-                        or h.level >= cap and "Train to grow"
                         or class.name
                     )
             )
@@ -335,13 +357,12 @@ function UI:Refresh(redraw)
     self.tabs.talents.notice:SetText(
         points > 0 and (points .. (points == 1 and " point" or " points")) or ""
     )
-    self.tabs.party.notice:SetText(
-        #s.heroes < W.Game.CompanionSlots(s) and "Recruit" or cappedHero and "Train" or ""
-    )
+    self.tabs.party.notice:SetText(#s.heroes < W.Game.CompanionSlots(s) and "Recruit" or "")
     self.tabs.atlas.notice:SetText(routes > 0 and (routes .. " routes") or "")
     self.tabs.legacy.notice:SetText(
         s.prestigeUnlocked and ("+" .. W.Game.PrestigeReward(s) .. " Legacy") or ""
     )
+    local nextLesson = W.Tutorial.NextLesson(s)
     local guidance = table.concat({
         points,
         cappedHero or 0,
@@ -353,6 +374,7 @@ function UI:Refresh(redraw)
         W.Panels.GuideStep(s, self.selected) or 0,
         tostring(s.guide.dismissed),
         W.Game.CompanionSlots(s),
+        nextLesson and nextLesson.key or "",
     }, ":")
     for id, button in pairs(self.tabs) do
         button.text:SetTextColor(unpack(s.ui.tab == id and T.gold or T.muted))
@@ -365,9 +387,12 @@ function UI:Refresh(redraw)
             self.section:SetText(entry[2])
         end
     end
+    if s.ui.tab == "offline" then
+        self.section:SetText("Return report")
+    end
     self.sectionDetail:SetText(
         s.ui.tab == "adventure" and "Your company’s journey through Azeroth"
-            or s.ui.tab == "party" and "Select a companion to manage equipment and training"
+            or s.ui.tab == "party" and "Select a companion to manage equipment and growth"
             or s.ui.tab == "talents" and "Shape a companion’s talents and combat priorities"
             or s.ui.tab == "crafting" and "Create ordinary equipment or lasting heirlooms"
             or s.ui.tab == "legacy" and "Permanent rewards, heirlooms and chapter resets"
@@ -378,22 +403,62 @@ function UI:Refresh(redraw)
             or s.ui.tab == "collections" and "Permanent discoveries and set bonuses"
             or s.ui.tab == "workshop" and "Enchanting, titanforging and profession research"
             or s.ui.tab == "difficulty" and "Deeper resets and permanent Inheritance"
+            or s.ui.tab == "offline" and "Your latest offline adventure"
+            or s.ui.tab == "development" and "Permanent Essence investment for the whole party"
             or "Explore destinations and their unlock requirements"
     )
     self.scene:Refresh(s)
     local featureState
-    if s.ui.tab == "collections" then
-        local progress = W.Game.CollectionProgress(
-            s,
-            self.collectionSelected or s.collectionBook.target or C.collections[1].id
-        )
+    if s.ui.tab == "adventure" then
+        local d, book = s.development, s.outdoorCollections
+        featureState = table.concat({
+            s.essence,
+            s.adventure.totalXP,
+            s.stats.essence or 0,
+            book.stats.kills,
+            book.stats.discoveries,
+            d.ranks.might,
+            d.ranks.resolve,
+            d.ranks.provisioning,
+            d.choices.might or "",
+            d.choices.resolve or "",
+            d.choices.provisioning or "",
+            W.Game.CollectionTarget(s) or "",
+            s.dungeonCollections.stats.kills,
+            s.dungeonCollections.stats.discoveries,
+            tostring(huntInfo and huntInfo.found),
+            huntInfo and huntInfo.count or 0,
+            tostring(s.lastOfflineSummary),
+            tostring(s.farming),
+            s.lastDefeat or "",
+        }, ":")
+    elseif s.ui.tab == "development" then
+        local d = s.development
+        featureState = table.concat({
+            s.essence,
+            d.invested,
+            d.ranks.might,
+            d.ranks.resolve,
+            d.ranks.provisioning,
+            d.choices.might or "",
+            d.choices.resolve or "",
+            d.choices.provisioning or "",
+        }, ":")
+    elseif s.ui.tab == "collections" then
+        local progress =
+            W.Game.CollectionProgress(s, self.collectionSelected or C.collections[1].id)
         featureState = progress
             and table.concat({
                 progress.found,
-                progress.completedRank or -1,
-                progress.tierFound,
-                progress.counter,
-                s.collectionBook.target or "",
+                tostring(progress.complete),
+                s.outdoorCollections.stats.kills,
+                s.outdoorCollections.stats.discoveries,
+                W.Game.CollectionTarget(s) or "",
+                s.dungeonCollections.stats.kills,
+                s.dungeonCollections.stats.discoveries,
+                W.Game.ActiveCollectionEffect(s) or "",
+                self.collectionSelected or "",
+                self.collectionPiece or "",
             }, ":")
     elseif s.ui.tab == "difficulty" then
         local d = s.difficulty
@@ -407,11 +472,17 @@ function UI:Refresh(redraw)
         }, ":")
     elseif s.ui.tab == "workshop" then
         local p = s.professions
+        local recipes = 0
+        for _ in pairs(p.recipes) do
+            recipes = recipes + 1
+        end
         featureState = table.concat({
             s.gold,
             s.essence,
             s.materials.ore,
             s.materials.relic,
+            p.fragments,
+            recipes,
             p.ranks.crafting,
             p.ranks.enchanting,
             p.ranks.titanforging,
@@ -506,8 +577,8 @@ function W.CreateUI()
         help:SetSize(185, 50)
         help:EnableMouse(true)
         local descriptions = {
-            essence = "Earn Essence from Adventure XP ranks by playing your WoW character. Spend it on training, crafting and upgrades. Hero XP comes from idle battles instead.",
-            gold = "Your heroes earn gold from idle battles. Spend it on training, crafting and equipment upgrades. This is separate from your WoW character’s gold.",
+            essence = "Earn Essence from real WoW activity through Adventure XP ranks. Invest it in permanent party development and learned Commander abilities. Hero levels and routine equipment never require Essence.",
+            gold = "Your heroes earn gold from idle battles. Gold and idle materials fund crafting and equipment improvements. This is separate from your WoW character’s gold.",
             legacy = "Earn Legacy by beginning a new chapter after unlocking resets. Spend it on permanent heirloom recipes. Review reset consequences in Legacy.",
         }
         U.Tooltip(help, currency[2], descriptions[currency[1]])
@@ -638,6 +709,20 @@ function W.CreateUI()
     U.SingleLine(ui.compactBoost.text, 500, 18)
     ui.adventureCompact = W.AdventureBar.Create(compact, 12, 305, 550)
     U.Text(compact, "Offline earnings: up to 24 hours", 12, 337, 11, T.muted)
+    ui.compactCollectionGoal = U.Button(compact, "", 230, 331, 332, 24, function()
+        ui.collectionPiece = W.Game.CollectionTarget(W.state)
+        ui.collectionSelected = C.collectionByItem[ui.collectionPiece]
+        ui:SetTab("collections")
+    end)
+    ui.compactCollectionGoal.icon =
+        U.Icon(ui.compactCollectionGoal, "INV_Misc_QuestionMark", 5, 3, 18)
+    ui.compactCollectionGoal.icon:SetParent(
+        ui.compactCollectionGoal.content or ui.compactCollectionGoal
+    )
+    ui.compactCollectionGoal.text:ClearAllPoints()
+    ui.compactCollectionGoal.text:SetPoint("LEFT", 28, 0)
+    U.SingleLine(ui.compactCollectionGoal.text, 294, 18)
+    ui.compactCollectionGoal:Hide()
     ui.scene = W.Scene.Create(canvas)
     local drag = CreateFrame("Frame", nil, f)
     ui.drag = drag

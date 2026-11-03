@@ -38,6 +38,28 @@ function G.ValidateProfessions(state)
     if type(p) ~= "table" then
         return false
     end
+    if p.fragments == nil then
+        p.fragments = 0
+    end
+    if p.recipes == nil then
+        p.recipes = {}
+    end
+    if p.lastFragmentEncounter == nil then
+        p.lastFragmentEncounter = 0
+    end
+    if
+        not whole(p.fragments, 0, C.runicFragmentCap)
+        or type(p.recipes) ~= "table"
+        or not whole(p.lastFragmentEncounter, 0, state.encounter)
+    then
+        return false
+    end
+    for id, known in pairs(p.recipes) do
+        local recipe = C.enchantByID[id]
+        if not recipe or not recipe.tier or known ~= true then
+            return false
+        end
+    end
     if p.bestLevel == nil then
         p.bestLevel = 1
     end
@@ -97,6 +119,39 @@ function G.ValidateProfessions(state)
         end
     end
     G.ProfessionUnlocks(state)
+    return true
+end
+
+function G.ProfessionBossRewards(state, battle)
+    local p = state.professions
+    if
+        type(battle) ~= "table"
+        or battle.boss ~= true
+        or state.tier < 2
+        or not whole(battle.level, 20, 1000000)
+        or state.encounter <= p.lastFragmentEncounter
+    then
+        return false
+    end
+    if state.offline and next(p.recipes) == nil then
+        return false
+    end
+    p.lastFragmentEncounter = state.encounter
+    p.fragments = math.min(C.runicFragmentCap, p.fragments + 1)
+    if not state.offline then
+        for _, recipe in ipairs(C.enchants) do
+            if recipe.tier and state.tier >= recipe.tier and not p.recipes[recipe.id] then
+                p.recipes[recipe.id] = true
+                G.Log(
+                    state,
+                    recipe.name
+                        .. " recipe learned permanently. Runic fragments come from idle tier 2+ level-20+ bosses.",
+                    true
+                )
+                G.Emit(state, "unlock")
+            end
+        end
+    end
     return true
 end
 
@@ -250,11 +305,13 @@ end
 
 local function costFor(state, kind, item, hero, rank)
     local modifiers = G.ProfessionModifiers(state, kind)
-    local discount = modifiers.costMultiplier * (item.heirloom and modifiers.heirloomDiscount or 1)
+    local discount = modifiers.costMultiplier
+        * (item.heirloom and modifiers.heirloomDiscount or 1)
+        * G.DevelopmentModifiers(state).costMultiplier
     local level = math.max(1, item.heirloom and hero.level or item.level)
     return {
         gold = math.max(1, math.ceil((40 + level * 12) * rank * discount)),
-        essence = math.max(1, math.ceil((10 + rank * 5) * discount)),
+        essence = 0,
         materials = {
             relic = math.max(1, math.ceil((3 + rank * 2) * discount)),
             ore = kind == "titanforging" and math.max(1, math.ceil((5 + rank * 3) * discount)) or 0,
@@ -267,12 +324,20 @@ function G.EnchantQuote(state, heroIndex, slot, enchantID)
     if not enchant then
         return nil, nil, "Choose an enchantment."
     end
+    if enchant.tier and not state.professions.recipes[enchantID] then
+        return nil,
+            nil,
+            "Defeat an idle level-20+ boss at tier "
+                .. enchant.tier
+                .. "+ while online to learn this recipe."
+    end
     local item, hero, reason = equipped(state, heroIndex, slot, "enchanting")
     if not item or not hero then
         return nil, nil, reason
     end
     local modifiers = G.ProfessionModifiers(state, "enchanting")
-    local bonus = modifiers["enchant" .. enchantID:sub(1, 1):upper() .. enchantID:sub(2)]
+    local branch = enchant.branch or enchantID
+    local bonus = modifiers["enchant" .. branch:sub(1, 1):upper() .. branch:sub(2)]
     local scale = math.max(1, (item.heirloom and hero.level or item.level) / 10) * bonus
     local preview, same = G.Copy(item), item.enchant and item.enchant.id == enchantID
     preview.enchant =
@@ -290,7 +355,9 @@ function G.EnchantQuote(state, heroIndex, slot, enchantID)
     if same then
         return nil, nil, "This item already has this enchantment at the current strength."
     end
-    return preview, costFor(state, "enchanting", item, hero, 1)
+    local cost = costFor(state, "enchanting", item, hero, 1)
+    cost.fragments = enchant.fragments or 0
+    return preview, cost
 end
 
 function G.ForgeMultiplier(item)
@@ -350,7 +417,7 @@ function G.ForgeQuote(state, heroIndex, slot)
 end
 
 local function pay(state, cost)
-    if state.gold < cost.gold or state.essence < cost.essence then
+    if state.gold < cost.gold or state.professions.fragments < (cost.fragments or 0) then
         return false
     end
     for material, count in pairs(cost.materials) do
@@ -358,7 +425,8 @@ local function pay(state, cost)
             return false
         end
     end
-    state.gold, state.essence = state.gold - cost.gold, state.essence - cost.essence
+    state.gold = state.gold - cost.gold
+    state.professions.fragments = state.professions.fragments - (cost.fragments or 0)
     for material, count in pairs(cost.materials) do
         state.materials[material] = state.materials[material] - count
     end
@@ -372,11 +440,14 @@ local function modify(state, heroIndex, slot, kind, enchantID)
     else
         preview, cost, reason = G.ForgeQuote(state, heroIndex, slot)
     end
-    if not preview then
+    if not preview or not cost then
         return false, reason
     end
     if not pay(state, cost) then
-        return false, "Not enough gold, Essence or materials for this modification."
+        return false,
+            (cost.fragments or 0) > 0
+                    and "Not enough gold, idle materials or Runic fragments for this modification."
+                or "Not enough gold or idle materials for this modification."
     end
     local item = state.heroes[heroIndex].gear[slot]
     if kind == "enchanting" then

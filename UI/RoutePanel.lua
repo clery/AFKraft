@@ -83,7 +83,23 @@ function R.Draw(ui, parent, state)
             W.Action(G.SetRoutesEnabled, value)
         end
     )
-    ui.routeNew = button(frame, "New template", 0, 184, 280, function()
+    ui.routeOffline = U.Checkbox(
+        frame,
+        "Offline cleared routes",
+        0,
+        174,
+        280,
+        state.routes.offlineEnabled,
+        function(value)
+            W.Action(G.SetOfflineRoutesEnabled, value)
+        end
+    )
+    U.Tooltip(
+        ui.routeOffline,
+        "Offline route travel",
+        "Separate opt-in. While away, routes can visit only checkpoints cleared in this run and tier before departure. At most 12 transitions; paused routes stay paused. New destinations, tiers, collection discoveries and resets wait for online play."
+    )
+    ui.routeNew = button(frame, "New template", 0, 214, 280, function()
         draft(ui)
     end)
     ui.routeTemplates = {}
@@ -94,7 +110,7 @@ function R.Draw(ui, parent, state)
             frame,
             route.name .. selected,
             0,
-            224 + (index - 1) * 38,
+            254 + (index - 1) * 38,
             280,
             function()
                 draft(ui, saved)
@@ -152,10 +168,39 @@ function R.Draw(ui, parent, state)
     for value = 5, C.heroLevelCap * 5, 5 do
         bosses[#bosses + 1] = { id = value, name = "Boss " .. value }
     end
+    local materials, amounts, pieces = {}, {}, {}
+    for _, id in ipairs(C.materialOrder) do
+        materials[#materials + 1] = { id = id, name = C.materials[id] }
+    end
+    for _, amount in ipairs({
+        1,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000,
+        100000,
+        1000000,
+    }) do
+        amounts[#amounts + 1] = { id = amount, name = tostring(amount) }
+    end
+    for _, collection in ipairs(C.collections) do
+        for _, itemID in ipairs(collection.pieces) do
+            pieces[#pieces + 1] = { id = itemID, name = G.CollectionItem(itemID).name }
+        end
+    end
     local kinds = {
         { id = "boss", name = "Zone boss" },
         { id = "level", name = "Hero level" },
         { id = "unlock", name = "Unlock zone" },
+        { id = "material", name = "Material stock" },
+        { id = "collection", name = "Discovery" },
     }
     ui.routeSteps = {}
     for index, step in ipairs(preview.steps) do
@@ -179,6 +224,8 @@ function R.Draw(ui, parent, state)
             frame,
             trigger.kind == "boss" and "Zone boss"
                 or trigger.kind == "level" and "Hero level"
+                or trigger.kind == "material" and "Material stock"
+                or trigger.kind == "collection" and "Discovery"
                 or "Unlock zone",
             622,
             y,
@@ -188,11 +235,68 @@ function R.Draw(ui, parent, state)
             function(value)
                 step.trigger = value == "boss" and { kind = value, zone = state.zone, stage = 5 }
                     or value == "level" and { kind = value, hero = 1, level = 5 }
+                    or value == "material" and { kind = value, material = "timber", amount = 100 }
+                    or value == "collection" and {
+                        kind = value,
+                        itemID = C.collections[1].pieces[1],
+                    }
                     or { kind = value, zone = step.destination }
                 ui:Refresh()
             end
         )
-        if trigger.kind == "level" then
+        if trigger.kind == "material" then
+            row.target = U.Choice(
+                frame,
+                C.materials[trigger.material] or "Unavailable",
+                792,
+                y,
+                230,
+                materials,
+                trigger.material,
+                function(value)
+                    trigger.material = value
+                    ui:Refresh()
+                end
+            )
+            row.value = U.Choice(
+                frame,
+                tostring(trigger.amount),
+                1032,
+                y,
+                150,
+                amounts,
+                trigger.amount,
+                function(value)
+                    trigger.amount = value
+                    ui:Refresh()
+                end
+            )
+            U.Tooltip(
+                row.value,
+                "Material stock milestone",
+                "Travel after an encounter when current stock reaches this amount. Materials are not spent. Spending before the encounter boundary can delay this step."
+            )
+        elseif trigger.kind == "collection" then
+            local item = G.CollectionItem(trigger.itemID)
+            row.target = U.Choice(
+                frame,
+                item and item.name or "Unavailable piece",
+                792,
+                y,
+                390,
+                pieces,
+                trigger.itemID,
+                function(value)
+                    trigger.itemID = value
+                    ui:Refresh()
+                end
+            )
+            U.Tooltip(
+                row.target,
+                "Outdoor discovery milestone",
+                "Observes an already earned outdoor or dungeon discovery. Idle routes never move your WoW character or award discoveries."
+            )
+        elseif trigger.kind == "level" then
             row.target = U.Choice(
                 frame,
                 state.heroes[trigger.hero] and state.heroes[trigger.hero].name

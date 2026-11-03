@@ -334,7 +334,7 @@ case("Ordinary source stats stay fixed and upgrades preview the exact result", f
     hero.level = 20
     assert(G.ItemPower(item, hero) == power)
     local quote = G.ItemPower(item, hero, 1)
-    s.essence, s.gold = 1000, 1000
+    s.essence, s.gold, s.materials.ore = 1000, 1000, 100
     assert(G.Upgrade(s, 1, 1))
     assert(G.ItemPower(item, hero) == quote)
     local source = C.itemByID[item.itemID]
@@ -460,6 +460,8 @@ case(
         s.inventory = {}
         assert(G.CraftingOpportunity(s, 1))
         s.essence = 0
+        assert(G.CraftingOpportunity(s, 1))
+        s.gold = 0
         assert(not G.CraftingOpportunity(s, 1))
     end
 )

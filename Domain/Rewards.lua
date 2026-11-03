@@ -30,3 +30,21 @@ function G.ActivityReward(state, key, kind, label)
     end
     return G.AdventureXP(state, reward.xp, kind, label)
 end
+
+-- Base destination output plus a bounded share from explicitly tagged enemies.
+function G.EncounterMaterials(zone, battle)
+    local base = battle.boss and 5 or 1
+    local result = { [zone.material] = base }
+    local count = #battle.enemies
+    if count == 0 then
+        return result
+    end
+    for _, enemy in ipairs(battle.enemies) do
+        local material = W.Content.familyMaterials[enemy.family]
+        if material then
+            result[material] = (result[material] or 0)
+                + base * W.Content.familyMaterialYield / count
+        end
+    end
+    return result
+end

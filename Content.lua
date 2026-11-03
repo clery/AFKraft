@@ -22,6 +22,19 @@ C.slots = {
 C.equipmentSlots = { 1, 2, 3, 4, 7, 8, 9, 10, 11, 12 }
 C.materials = { timber = "Timber", hide = "Hide", ore = "Ore", relic = "Relic dust" }
 C.materialOrder = { "timber", "hide", "ore", "relic" }
+-- Authored idle spoils, not real creature loot or gathering eligibility.
+C.familyMaterials = {
+    humanoid = "timber",
+    beast = "hide",
+    mechanical = "ore",
+    elemental = "relic",
+    undead = "relic",
+    demon = "relic",
+    giant = "ore",
+    dragonkin = "hide",
+    critter = "hide",
+}
+C.familyMaterialYield = 0.25
 C.classes = {
     {
         id = "WARRIOR",
@@ -138,6 +151,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Forest prowler", "Kobold scout", "Riverpaw gnoll" },
         boss = "Hogger",
+        enemyFamilies = { "beast", "humanoid", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "durotar",
@@ -148,6 +163,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Savannah boar", "Scorpid hunter", "Razormane scout" },
         boss = "The Razorback",
+        enemyFamilies = { "beast", "beast", "humanoid" },
+        bossFamily = "beast",
     },
     {
         id = "westfall",
@@ -170,6 +187,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Savannah prowler", "Kolkar outrider", "Bristleback geomancer" },
         boss = "The Crossroads Marauder",
+        enemyFamilies = { "beast", "humanoid", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "redridge",
@@ -180,6 +199,8 @@ C.zones = {
         biome = "fields",
         enemies = { "Blackrock outrider", "Redridge basher", "Black whelp" },
         boss = "The Blackrock Captain",
+        enemyFamilies = { "humanoid", "humanoid", "dragonkin" },
+        bossFamily = "humanoid",
     },
     {
         id = "ashenvale",
@@ -190,6 +211,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Wild nightsaber", "Foulweald warrior", "Fallen keeper" },
         boss = "The Corrupted Ancient",
+        enemyFamilies = { "beast", "humanoid", "elemental" },
+        bossFamily = "elemental",
     },
     {
         id = "duskwood",
@@ -200,6 +223,8 @@ C.zones = {
         biome = "night",
         enemies = { "Restless skeleton", "Nightbane stalker", "Grave robber" },
         boss = "The Hollow Watcher",
+        enemyFamilies = { "undead", "humanoid", "humanoid" },
+        bossFamily = "undead",
     },
     {
         id = "wetlands",
@@ -210,6 +235,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Marsh crocolisk", "Dragonmaw scout", "Lost sailor" },
         boss = "The Mirefang",
+        enemyFamilies = { "beast", "humanoid", "undead" },
+        bossFamily = "beast",
     },
     {
         id = "stranglethorn",
@@ -220,6 +247,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Jungle stalker", "Bloodscalp hunter", "Venture Co. foreman" },
         boss = "The Jungle King",
+        enemyFamilies = { "beast", "humanoid", "humanoid" },
+        bossFamily = "beast",
     },
     {
         id = "desolace",
@@ -230,6 +259,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Magram outrider", "Bone scavenger", "Burning Blade adept" },
         boss = "The Ashen Seer",
+        enemyFamilies = { "humanoid", "beast", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "tanaris",
@@ -240,6 +271,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Wastewander bandit", "Sandfury scout", "Dunemaul brute" },
         boss = "The Sandstorm Herald",
+        enemyFamilies = { "humanoid", "humanoid", "humanoid" },
+        bossFamily = "elemental",
     },
     {
         id = "winterspring",
@@ -250,6 +283,8 @@ C.zones = {
         biome = "snow",
         enemies = { "Frostsaber", "Winterfall shaman", "Ice thistle yeti" },
         boss = "The Winterbound",
+        enemyFamilies = { "beast", "humanoid", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "dun_morogh",
@@ -260,6 +295,8 @@ C.zones = {
         biome = "snow",
         enemies = { "Crag Boar", "Large Crag Boar", "Frostmane Seer" },
         boss = "Bjarn",
+        enemyFamilies = { "beast", "beast", "humanoid" },
+        bossFamily = "beast",
     },
     {
         id = "teldrassil",
@@ -270,6 +307,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Young Thistle Boar", "Webwood Spider", "Rascal Sprite" },
         boss = "Lord Melenas",
+        enemyFamilies = { "beast", "beast", "demon" },
+        bossFamily = "demon",
     },
     {
         id = "mulgore",
@@ -280,6 +319,8 @@ C.zones = {
         biome = "fields",
         enemies = { "Plainstrider", "Adult Plainstrider", "Windfury Sorceress" },
         boss = "Arra'chea",
+        enemyFamilies = { "beast", "beast", "humanoid" },
+        bossFamily = "beast",
     },
     {
         id = "tirisfal",
@@ -290,6 +331,8 @@ C.zones = {
         biome = "night",
         enemies = { "Mindless Zombie", "Darkeye Bonecaster", "Scarlet Warrior" },
         boss = "Captain Dargol",
+        enemyFamilies = { "undead", "undead", "humanoid" },
+        bossFamily = "undead",
     },
     {
         id = "loch_modan",
@@ -300,6 +343,8 @@ C.zones = {
         biome = "fields",
         enemies = { "Elder Black Bear", "Mountain Boar", "Stonesplinter Trogg" },
         boss = "Boss Galgosh",
+        enemyFamilies = { "beast", "beast", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "darkshore",
@@ -310,6 +355,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Strider Clutchmother", "Darkshore Thresher", "Reef Crawler" },
         boss = "Shadowclaw",
+        enemyFamilies = { "beast", "beast", "beast" },
+        bossFamily = "beast",
     },
     {
         id = "silverpine",
@@ -320,6 +367,8 @@ C.zones = {
         biome = "night",
         enemies = { "Ferocious Grizzled Bear", "Moss Stalker", "Pyrewood Watcher" },
         boss = "Thule Ravenclaw",
+        enemyFamilies = { "beast", "beast", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "stonetalon",
@@ -330,6 +379,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Windshear Tunnel Rat", "Blackened Basilisk", "Venture Co. Machine Smith" },
         boss = "Sister Riven",
+        enemyFamilies = { "humanoid", "beast", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "hillsbrad",
@@ -340,6 +391,8 @@ C.zones = {
         biome = "fields",
         enemies = { "Starving Mountain Lion", "Hillsbrad Miner", "Mudsnout Gnoll" },
         boss = "Creepthess",
+        enemyFamilies = { "beast", "humanoid", "humanoid" },
+        bossFamily = "beast",
     },
     {
         id = "thousand_needles",
@@ -350,6 +403,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Gravelsnout Digger", "Galak Wrangler", "Scorpid Reaver" },
         boss = "Ironeye the Invincible",
+        enemyFamilies = { "humanoid", "humanoid", "beast" },
+        bossFamily = "beast",
     },
     {
         id = "alterac",
@@ -360,6 +415,8 @@ C.zones = {
         biome = "snow",
         enemies = { "Stone Fury", "Syndicate Spy", "Syndicate Footpad" },
         boss = "Skhowl",
+        enemyFamilies = { "elemental", "humanoid", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "arathi",
@@ -370,6 +427,8 @@ C.zones = {
         biome = "fields",
         enemies = { "Boulderfist Ogre", "Highland Strider", "Boulderfist Shaman" },
         boss = "Molok the Crusher",
+        enemyFamilies = { "humanoid", "beast", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "badlands",
@@ -380,6 +439,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Lesser Rock Elemental", "Scalding Whelp", "Shadowforge Darkweaver" },
         boss = "Shadowforge Commander",
+        enemyFamilies = { "elemental", "dragonkin", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "swamp_sorrows",
@@ -390,6 +451,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Green Scalebane", "Swampwalker", "Adolescent Whelp" },
         boss = "Jade",
+        enemyFamilies = { "dragonkin", "elemental", "dragonkin" },
+        bossFamily = "dragonkin",
     },
     {
         id = "dustwallow",
@@ -400,6 +463,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Mottled Drywallow Crocolisk", "Bloodfen Raptor", "Strashaz Serpent Guard" },
         boss = "Darkmist Widow",
+        enemyFamilies = { "beast", "beast", "humanoid" },
+        bossFamily = "beast",
     },
     {
         id = "feralas",
@@ -410,6 +475,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Rage Scar Yeti", "Woodpaw Trapper", "Gordunni Ogre" },
         boss = "Gnarl Leafbrother",
+        enemyFamilies = { "humanoid", "humanoid", "humanoid" },
+        bossFamily = "elemental",
     },
     {
         id = "hinterlands",
@@ -420,6 +487,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Mangy Silvermane", "Vilebranch Headhunter", "Silvermane Stalker" },
         boss = "Razortalon",
+        enemyFamilies = { "beast", "humanoid", "beast" },
+        bossFamily = "humanoid",
     },
     {
         id = "azshara",
@@ -430,6 +499,8 @@ C.zones = {
         biome = "fields",
         enemies = { "Highborne Apparition", "Hetaera", "Spitelash Warrior" },
         boss = "Antilos",
+        enemyFamilies = { "undead", "unknown", "humanoid" },
+        bossFamily = "beast",
     },
     {
         id = "searing_gorge",
@@ -440,6 +511,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Blazing Elemental", "Dark Iron Steamsmith", "Twilight Dark Shaman" },
         boss = "Faulty War Golem",
+        enemyFamilies = { "elemental", "humanoid", "humanoid" },
+        bossFamily = "elemental",
     },
     {
         id = "blasted_lands",
@@ -450,6 +523,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Redstone Basilisk", "Ashmane Boar", "Scorpok Stinger" },
         boss = "Magronos the Unyielding",
+        enemyFamilies = { "beast", "beast", "beast" },
+        bossFamily = "humanoid",
     },
     {
         id = "felwood",
@@ -460,6 +535,8 @@ C.zones = {
         biome = "night",
         enemies = { "Cursed Ooze", "Warpwood Moss Flayer", "Toxic Horror" },
         boss = "Kroshius",
+        enemyFamilies = { "unknown", "elemental", "elemental" },
+        bossFamily = "demon",
     },
     {
         id = "ungoro",
@@ -470,6 +547,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Ravasaur", "Bloodpetal Flayer", "Scorching Elemental" },
         boss = "King Mosh",
+        enemyFamilies = { "beast", "unknown", "elemental" },
+        bossFamily = "beast",
     },
     {
         id = "burning_steppes",
@@ -480,6 +559,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Blackrock Sorcerer", "Blackrock Soldier", "Black Dragonspawn" },
         boss = "Thauris Balgarr",
+        enemyFamilies = { "humanoid", "humanoid", "dragonkin" },
+        bossFamily = "humanoid",
     },
     {
         id = "western_plaguelands",
@@ -490,6 +571,8 @@ C.zones = {
         biome = "night",
         enemies = { "Skeletal Flayer", "Rotting Ghoul", "Hungering Wraith" },
         boss = "Foulmane",
+        enemyFamilies = { "undead", "undead", "undead" },
+        bossFamily = "undead",
     },
     {
         id = "deadwind",
@@ -500,6 +583,8 @@ C.zones = {
         biome = "night",
         enemies = { "Restless Shade", "Sky Shadow", "Deadwind Ogre Mage" },
         boss = "Deadwind Brute",
+        enemyFamilies = { "undead", "beast", "humanoid" },
+        bossFamily = "humanoid",
     },
     {
         id = "eastern_plaguelands",
@@ -510,6 +595,8 @@ C.zones = {
         biome = "night",
         enemies = { "Stitched Horror", "Shadowmage", "Frenzied Plaguehound" },
         boss = "Hed'mush the Rotting",
+        enemyFamilies = { "undead", "humanoid", "demon" },
+        bossFamily = "undead",
     },
     {
         id = "silithus",
@@ -520,6 +607,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Hive'Ashi Defender", "Hive'Ashi Swarmer", "Hive'Regal Ambusher" },
         boss = "Lapress",
+        enemyFamilies = { "unknown", "unknown", "unknown" },
+        bossFamily = "unknown",
     },
     {
         id = "moonglade",
@@ -530,6 +619,8 @@ C.zones = {
         biome = "forest",
         enemies = { "Minion of Omen" },
         boss = "Omen",
+        enemyFamilies = { "demon" },
+        bossFamily = "demon",
     },
     {
         id = "blackrock_mountain",
@@ -540,6 +631,8 @@ C.zones = {
         biome = "desert",
         enemies = { "Blackrock Soldier", "Blackrock Sorcerer", "Blazing Elemental" },
         boss = "Overmaster Pyron",
+        enemyFamilies = { "humanoid", "humanoid", "elemental" },
+        bossFamily = "elemental",
     },
 }
 C.zoneByID = {}
@@ -1128,6 +1221,44 @@ for _, class in ipairs(C.classes) do
 end
 -- Historical alias for Warrior content; consumers should use talentsByClass.
 C.talents = C.talentsByClass.WARRIOR
+-- Fixed tier challenges; coefficients are provisional and do not scale recursively.
+C.difficultyAffixes = {
+    {
+        id = "relentless",
+        tier = 2,
+        name = "Relentless",
+        icon = "Ability_Warrior_BattleShout",
+        description = "Enemies attack every 2.16 seconds instead of 2.4 seconds.",
+        attackInterval = 2.16,
+    },
+    {
+        id = "renewal",
+        tier = 5,
+        name = "Renewal",
+        icon = "Spell_Nature_Rejuvenation",
+        description = "After 10 seconds, living enemies restore 0.2% of maximum health per second. Cannot revive enemies.",
+        regen = 0.002,
+        regenAfter = 10,
+    },
+    {
+        id = "fury",
+        tier = 8,
+        name = "Boss fury",
+        icon = "Ability_Warrior_SavageBlow",
+        description = "Bosses deal 20% more damage after 30 seconds. Applies once; does not compound.",
+        bossDamage = 1.2,
+        enrageAfter = 30,
+    },
+}
+C.targetModes = {
+    { id = "front", name = "First living enemy" },
+    { id = "weakest", name = "Lowest health %" },
+    { id = "strongest", name = "Highest health %" },
+}
+C.targetModeByID = {}
+for _, mode in ipairs(C.targetModes) do
+    C.targetModeByID[mode.id] = mode
+end
 C.priorityModes = { "heal", "special", "attack" }
 C.priorityNames = { heal = "Recovery first", special = "Special first", attack = "Strike first" }
 C.qualityNames = { "Common", "Uncommon", "Rare", "Epic" }

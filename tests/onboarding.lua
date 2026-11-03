@@ -2,6 +2,18 @@ if not test then
     return
 end
 
+local register = test
+local function test(name, run)
+    register(name, function()
+        -- Native HelpTips honor this client preference; isolate the test fixture.
+        local hidden = GetCVar("hideHelptips")
+        SetCVar("hideHelptips", 0)
+        local ok, message = pcall(run)
+        SetCVar("hideHelptips", hidden)
+        assert(ok, message)
+    end)
+end
+
 local function opening()
     local W = WoWIdle
     W.Initialize()
@@ -39,6 +51,105 @@ local function click(button)
     button:GetScript("OnClick")(button)
 end
 
+local function advanced()
+    local W, s, ui = opening()
+    s.guide.equipped, s.guide.talent, s.guide.traveled, s.guide.crafted = true, true, true, true
+    return W, s, ui
+end
+
+test(
+    "Milestone lessons acknowledge individually and retain progress after reload and resets",
+    function()
+        local W, s, ui = advanced()
+        local G = W.Game
+        assertTrue(W.Tutorial.NextLesson(s) == nil)
+        s.essence = 30
+        ui:Refresh(false)
+        assertEquals("lessonBoost", W.Tutorial.NextLesson(s).key)
+        assertEquals(ui.tabs.boosts, ui.guideTarget)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        assertTrue(s.guide.lessonBoost)
+        assertFalse(s.guide.dismissed)
+        assertTrue(G.BuyBoost(s, "battleOrders"))
+        s.legacy, s.prestigeUnlocked, s.prestiges = 3, true, 1
+        assertEquals("lessonAutomation", W.Tutorial.NextLesson(s).key)
+        ui:Refresh(false)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        assertTrue(s.guide.lessonAutomation)
+        assertTrue(G.BuyBoostAutomation(s, "onCooldown"))
+        assertEquals("lessonProfiles", W.Tutorial.NextLesson(s).key)
+        ui:Refresh(false)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        assertTrue(s.guide.lessonProfiles)
+        assertEquals("lessonRoutes", W.Tutorial.NextLesson(s).key)
+        ui:Refresh(false)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        assertTrue(s.guide.lessonRoutes)
+        s.collectionBook.pieces[1930] = 0
+        assertEquals("lessonCollections", W.Tutorial.NextLesson(s).key)
+        ui:Refresh(false)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        assertTrue(s.guide.lessonCollections)
+        s = assert(G.Load(G.Copy(s), W.Client.Now()))
+        W.state = s
+        s.runBest = 9
+        assertTrue(G.Prestige(s))
+        assertTrue(G.ResetAdventure(s, true))
+        assertTrue(
+            s.guide.lessonBoost
+                and s.guide.lessonAutomation
+                and s.guide.lessonProfiles
+                and s.guide.lessonRoutes
+                and s.guide.lessonCollections
+        )
+        assertFalse(s.guide.lessonPrestigePlus)
+    end
+)
+
+test(
+    "Later lessons follow permanent hero milestones and respect guide and client preferences",
+    function()
+        local W, s, ui = advanced()
+        local G, h = W.Game, s.heroes[1]
+        local function acknowledge(key)
+            assertEquals(key, W.Tutorial.NextLesson(s).key)
+            ui:Refresh(false)
+            HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+            assertTrue(s.guide[key])
+        end
+        h.level, h.rank = 20, 4
+        G.TalentProgress(h)
+        acknowledge("lessonMastery")
+        h.level, h.rank = 30, 7
+        G.TalentProgress(h)
+        acknowledge("lessonEnchanting")
+        h.level, h.rank = 40, 9
+        G.TalentProgress(h)
+        acknowledge("lessonTitanforging")
+        h.level, h.rank = 50, 12
+        G.TalentProgress(h)
+        acknowledge("lessonResearch")
+        s.difficulty.unlocked, s.difficulty.maxTier = true, 1
+        assertEquals("lessonPrestigePlus", W.Tutorial.NextLesson(s).key)
+        s.guide.dismissed = true
+        ui:Refresh(false)
+        assertTrue(ui.guideTip == nil)
+        click(find(ui, "Show guide"))
+        assertEquals(ui.tabs.difficulty, ui.guideTarget)
+        click(find(ui, "Hide guide"))
+        assertTrue(ui.guideTip == nil)
+        assertFalse(s.guide.lessonPrestigePlus)
+        s.guide.dismissed = false
+        SetCVar("hideHelptips", 1)
+        ui:Refresh(false)
+        assertTrue(ui.guideTip == nil)
+        assertFalse(s.guide.lessonPrestigePlus)
+        SetCVar("hideHelptips", 0)
+        acknowledge("lessonPrestigePlus")
+        assertTrue(W.Tutorial.NextLesson(s) == nil)
+    end
+)
+
 test(
     "Undiscovered companions explain their milestones and discoveries recruit only one hero",
     function()
@@ -73,7 +184,7 @@ test("Starter guide can be dismissed and reopened without losing completed lesso
     assertTrue(s.guide.dismissed)
     W.state = assert(W.Game.Load(s, W.Client.Now()))
     ui:Refresh(false)
-    click(find(ui, "Show starter guide"))
+    click(find(ui, "Show guide"))
     assertFalse(s.guide.dismissed)
     s.stats.victories = 1
     ui:Refresh(false)
@@ -200,7 +311,38 @@ test(
         click(ui.guideTarget)
         assertEquals(uid, s.heroes[1].gear[1].uid)
         assertTrue(s.guide.craftItem == nil)
-        assertTrue(ui.guideTip == nil)
         assertTrue(W.Panels.GuideStep(s, ui.selected) == nil)
+        local nextLesson = W.Tutorial.NextLesson(s)
+        assertNotNil(nextLesson)
+        assertEquals(nextLesson.message, ui.guideTip.text)
+        assertEquals(ui.tabs[nextLesson.tab], ui.guideTarget)
     end
 )
+
+test("First hunt lesson waits for verified sources and retains its acknowledgement", function()
+    local W, s, ui = advanced()
+    for key in pairs(s.guide) do
+        if key:find("^lesson") then
+            s.guide[key] = true
+        end
+    end
+    s.guide.lessonHunt = false
+    s.adventure.rank, s.adventure.totalXP = 2, 100
+    assertTrue(W.Tutorial.NextLesson(s) == nil)
+    local original = W.CollectionSources.ActiveProfile
+    W.CollectionSources.ActiveProfile = function()
+        return { sources = { [4701] = { verified = true } } }
+    end
+    local ok, message = pcall(function()
+        assertEquals("lessonHunt", W.Tutorial.NextLesson(s).key)
+        ui:Refresh()
+        assertEquals(ui.tabs.collections, ui.guideTarget)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        assertTrue(s.guide.lessonHunt)
+        assertTrue(W.Tutorial.NextLesson(s) == nil)
+        local loaded = assert(W.Game.Load(W.Game.Copy(s), W.Client.Now()))
+        assertTrue(loaded.guide.lessonHunt)
+    end)
+    W.CollectionSources.ActiveProfile = original
+    assertTrue(ok, message)
+end)

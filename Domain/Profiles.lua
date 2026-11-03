@@ -53,11 +53,24 @@ local function validEntry(profile)
             return false
         end
     end
+    if profile.collection ~= nil then
+        local selection = profile.collection
+        if
+            type(selection) ~= "table"
+            or (
+                selection.effect ~= nil
+                and (type(selection.effect) ~= "string" or #selection.effect > 100)
+            )
+        then
+            return false
+        end
+    end
     local route = profile.route
     return route == nil
         or (
             type(route) == "table"
             and type(route.enabled) == "boolean"
+            and (route.offlineEnabled == nil or type(route.offlineEnabled) == "boolean")
             and (route.selected == nil or integer(route.selected))
         )
 end
@@ -125,7 +138,10 @@ local function configuration(state, profile)
         if not state.routes then
             return nil, "Route planning is unavailable for this profile."
         end
-        if (profile.route.selected or profile.route.enabled) and not state.routes.owned then
+        if
+            (profile.route.selected or profile.route.enabled or profile.route.offlineEnabled)
+            and not state.routes.owned
+        then
             return nil, "This profile requires route planning."
         end
         local found = profile.route.selected == nil
@@ -137,6 +153,12 @@ local function configuration(state, profile)
         end
         if not found then
             return nil, "This profile references a route that no longer exists."
+        end
+    end
+    if profile.collection then
+        local valid, reason = G.CollectionEffectStatus(state, profile.collection.effect)
+        if not valid then
+            return nil, reason
         end
     end
     return automation
@@ -176,7 +198,14 @@ function G.SaveBoostProfile(state, id, name)
         }
     end
     if state.routes then
-        entry.route = { selected = state.routes.selected, enabled = state.routes.enabled }
+        entry.route = {
+            selected = state.routes.selected,
+            enabled = state.routes.enabled,
+            offlineEnabled = state.routes.offlineEnabled,
+        }
+    end
+    if state.outdoorCollections then
+        entry.collection = { effect = G.ActiveCollectionEffect(state) }
     end
     local ready, reason = configuration(state, entry)
     if not ready then
@@ -198,6 +227,9 @@ function G.ApplyBoostProfile(state, id)
     if not automation then
         return false, reason
     end
+    if profile.collection then
+        G.SetCollectionEffect(state, profile.collection.effect)
+    end
     state.boosts.equipped = profile.equipped
     state.boosts.automation.enabled = automation.enabled
     state.boosts.automation.abilities = automation.abilities
@@ -207,6 +239,9 @@ function G.ApplyBoostProfile(state, id)
             G.ResetRouteRun(state)
         end
         state.routes.enabled = profile.route.enabled
+        if profile.route.offlineEnabled ~= nil then
+            state.routes.offlineEnabled = profile.route.offlineEnabled
+        end
     end
     return true
 end

@@ -189,4 +189,87 @@ case("Prestige+ tier cap stays finite and a failed reset does not pay Inheritanc
     assert(not state.difficulty.records[10].rewarded and state.difficulty.ascensions == 0)
 end)
 
+case("Tier affixes are fixed, cumulative, bounded and independent of reward multipliers", function()
+    for tier = 0, 10 do
+        local s = party()
+        s.tier = tier
+        local affixes = G.DifficultyAffixes(tier)
+        local expected = (tier >= 2 and 1 or 0) + (tier >= 5 and 1 or 0) + (tier >= 8 and 1 or 0)
+        assert(#affixes == expected)
+        local m = G.DifficultyModifiers(s)
+        assert(m.enemyAttackInterval == (tier >= 2 and 2.16 or 2.4))
+        assert(m.enemyRegen == (tier >= 5 and 0.002 or 0))
+        assert(m.bossDamage == (tier >= 8 and 1.2 or 1))
+        assert(m.heroXP == 1 + tier * 0.25 and m.gold == 1 + tier * 0.2)
+    end
+end)
+
+local function affixBattle(tier, boss)
+    local s = party()
+    s.tier, s.stage = tier, boss and 5 or 1
+    G.StartBattle(s)
+    local b, unit = s.battle, s.battle.heroes[1]
+    unit.hp, unit.maxHP, unit.regen, unit.mitigation = 100000, 100000, 0, 0
+    unit.cd, unit.attackCD, unit.x, unit.y = 100, 100, 600, 100
+    local enemy = b.enemies[1]
+    enemy.hp, enemy.maxHP, enemy.damage, enemy.attackCD = 5000, 10000, 100, 100
+    enemy.x, enemy.y = 650, 100
+    return s, b, unit, enemy
+end
+
+case("Renewal starts after its delay, clamps health and never revives dead enemies", function()
+    local s, b, _, enemy = affixBattle(5, false)
+    b.elapsed = 9.75
+    G.Step(s, 0.25)
+    assert(enemy.hp == 5000)
+    G.Step(s, 0.25)
+    assert(enemy.hp == 5005)
+    enemy.hp = 9999
+    G.Step(s, 0.25)
+    assert(enemy.hp == 10000)
+    enemy.hp = 0
+    G.Step(s, 0.25)
+    assert(enemy.hp == 0)
+    s, b, _, enemy = affixBattle(4, false)
+    b.elapsed = 20
+    G.Step(s, 0.25)
+    assert(enemy.hp == 5000)
+end)
+
+case(
+    "Relentless changes attack cadence and boss fury applies once at the exact boundary",
+    function()
+        local s, b, unit, enemy = affixBattle(8, true)
+        b.elapsed, enemy.attackCD = 29.5, 0
+        G.Step(s, 0.25)
+        assert(unit.hp == 99900 and enemy.attackCD == 2.16)
+        enemy.attackCD = 0
+        G.Step(s, 0.25)
+        assert(unit.hp == 99780)
+        enemy.attackCD = 0
+        G.Step(s, 0.25)
+        assert(unit.hp == 99660)
+        s, b, unit, enemy = affixBattle(8, false)
+        b.elapsed, enemy.attackCD = 40, 0
+        G.Step(s, 0.25)
+        assert(unit.hp == 99900)
+    end
+)
+
+case("Affixed offline farming remains deterministic across catchup batch sizes", function()
+    local s = party()
+    s.tier, s.difficulty.maxTier, s.difficulty.unlocked = 8, 8, true
+    s.safe.elwynn = 1
+    local job = assert(G.BeginCatchup(s, 60))
+    local comparison = G.Copy(job.state)
+    G.Advance(comparison, 60)
+    while not G.CatchupBatch(job, 37) do
+    end
+    assert(job.state.gold == comparison.gold and job.state.seed == comparison.seed)
+    assert(
+        job.state.encounter == comparison.encounter
+            and job.state.stats.kills == comparison.stats.kills
+    )
+end)
+
 return cases

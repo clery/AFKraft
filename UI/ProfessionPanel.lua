@@ -12,7 +12,11 @@ local function text(parent, value, x, y, width, color, size)
 end
 
 local function affordable(state, cost)
-    if not cost or state.gold < cost.gold or state.essence < cost.essence then
+    if
+        not cost
+        or state.gold < cost.gold
+        or state.professions.fragments < (cost.fragments or 0)
+    then
         return false
     end
     for material, count in pairs(cost.materials) do
@@ -24,7 +28,10 @@ local function affordable(state, cost)
 end
 
 local function costText(cost)
-    local parts = { cost.gold .. " gold", cost.essence .. " Essence" }
+    local parts = { cost.gold .. " gold" }
+    if (cost.fragments or 0) > 0 then
+        parts[#parts + 1] = cost.fragments .. " Runic fragments"
+    end
     for _, material in ipairs(C.materialOrder) do
         local count = cost.materials[material] or 0
         if count > 0 then
@@ -222,17 +229,66 @@ function P.Draw(ui, parent, state)
     local enchantID = ui.professionEnchant or "offense"
     ui.professionControls.enchants = {}
     if tab == "enchanting" then
-        for index, enchant in ipairs(C.enchants) do
-            local control = U.Button(frame, "", (index - 1) * 428, 128, 406, 76, function()
-                ui.professionEnchant = enchant.id
-                ui:Refresh()
-            end, enchantID == enchant.id)
-            U.Begin(control)
-            U.Icon(control, enchant.icon, 12, 12, 48):SetParent(control.content or control)
-            text(control, enchant.name, 76, 14, 300, T.gold, 19)
-            text(control, enchant.id, 76, 44, 300, T.muted, 12)
-            U.EndBuild(control)
-            ui.professionControls.enchants[enchant.id] = control
+        local visible = 0
+        local expanded = state.difficulty.unlocked or next(p.recipes) ~= nil
+        if expanded then
+            text(
+                frame,
+                "Runic fragments " .. p.fragments .. "/" .. C.runicFragmentCap,
+                890,
+                104,
+                380,
+                T.muted,
+                13
+            )
+        end
+        for _, enchant in ipairs(C.enchants) do
+            if not enchant.tier or expanded then
+                visible = visible + 1
+                local x = (visible - 1) % 3 * 428
+                local y = expanded and (128 + math.floor((visible - 1) / 3) * 56) or 128
+                local control = U.Button(frame, "", x, y, 406, expanded and 50 or 76, function()
+                    ui.professionEnchant = enchant.id
+                    ui:Refresh()
+                end, enchantID == enchant.id)
+                U.Begin(control)
+                U.Icon(control, enchant.icon, 12, expanded and 7 or 12, expanded and 36 or 48)
+                    :SetParent(control.content or control)
+                text(
+                    control,
+                    enchant.name,
+                    expanded and 60 or 76,
+                    expanded and 6 or 14,
+                    330,
+                    T.gold,
+                    expanded and 16 or 19
+                )
+                local status = enchant.tier
+                        and (p.recipes[enchant.id] and (enchant.fragments .. " Runic fragments") or ("Idle tier " .. enchant.tier .. "+ boss, level 20+"))
+                    or enchant.id
+                text(
+                    control,
+                    status,
+                    expanded and 60 or 76,
+                    expanded and 28 or 44,
+                    330,
+                    T.muted,
+                    12
+                )
+                if enchant.tier then
+                    U.Tooltip(
+                        control,
+                        enchant.name,
+                        "Recipe learned permanently while online from an idle level-20+ boss at tier "
+                            .. enchant.tier
+                            .. "+. Runic fragments: one per tier 2+ level-20+ boss, capped at "
+                            .. C.runicFragmentCap
+                            .. ". Previously cleared bosses can supply fragments offline after a recipe is learned. Both resets clear fragments; recipes and heirloom enchantments remain."
+                    )
+                end
+                U.EndBuild(control)
+                ui.professionControls.enchants[enchant.id] = control
+            end
         end
     else
         U.Icon(frame, C.professionByID.titanforging.icon, 0, 132, 56)
