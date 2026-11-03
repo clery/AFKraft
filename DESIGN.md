@@ -1,10 +1,10 @@
 # WoWIdle — Design Document
 
-Status: implementation audit updated 2026-11-03 for boosts, ordered automation, profiles, online routes, outdoor collections, professions, and Prestige+. The audit below distinguishes source behavior from future extensions. Prices, probabilities, capacities, and multipliers are prototype tuning. Implemented source and simulator coverage still require supported-client validation and playtesting.
+Status: implementation audit updated 2026-11-03 for boosts, ordered automation, profiles, online routes, outdoor collections, professions, and Prestige+. The audit below distinguishes source behavior from future extensions. The accepted progression revision separates idle hero growth, Essence-funded party development, source-specific outdoor collections, and Legacy. These adjustments are design targets, not implemented behavior; the audit retains the existing prototype for comparison. Prices, probabilities, capacities, and multipliers are prototype tuning. Implemented source and simulator coverage still require supported-client validation and playtesting.
 
 ## Vision
 
-An account-wide idle party RPG inside World of Warcraft: Forever. Five heroes adventure through miniature side-view dioramas of Azeroth. Normal WoW play fuels their growth; idle adventures supply loot and materials; prestige creates a lasting inheritance.
+An account-wide idle party RPG inside World of Warcraft: Forever. Five heroes adventure through miniature side-view dioramas of Azeroth. Idle adventures supply hero growth, loot, and materials; normal WoW play adds permanent party development and targeted discoveries; prestige creates a lasting inheritance.
 
 The addon should feel like a polished minigame, with visible characters, attacks, spells, enemies, and discoveries. Management supports the adventure scene rather than replacing it.
 
@@ -14,6 +14,7 @@ Target occasional meaningful check-ins every 15–30 minutes. Balance the first 
 
 - **Permanent capabilities, repeatable adventures.** Resets rebuild a run or a progression cycle. Purchased abilities, unlocked professions, automation modes, saved rules, and route templates remain owned through ordinary prestige and Prestige+.
 - **Attention is a resource.** Progress from choosing individual actions to configuring useful routines. An unlock should introduce a decision, remove a repeated task, or do both. Avoid adding another bar solely because its numbers can increase.
+- **Separate progression axes.** Idle growth must remain viable without real WoW activity. Essence never purchases permission to gain hero levels or sustain routine equipment improvements; outdoor collections provide optional goals and build choices.
 - **Active play is optional support.** A well-timed boost can help with a difficult fight. Ordinary progression must remain viable without watching cooldowns or interrupting the player's real WoW activity every few minutes.
 - **Automation preserves agency.** Offer a useful simple default, then optional rules and route planning. The player decides priorities and can inspect why an automated action ran or waited.
 - **Discovery changes the decision space.** New systems should connect to existing builds, equipment, resources, or exploration. Introduce them progressively, with one clear first use rather than many simultaneous configuration screens.
@@ -30,18 +31,18 @@ Audit date: 2026-11-03. **Implemented** means present in source; **partial** mea
 | Account party, companion discoveries, duplicate classes, same-class alt replacement | Implemented: [party rules](Domain/Party.lua) | One active party, up to five heroes; simultaneous parties and raids are future scope. |
 | Routine combat and hero priorities | Implemented: [combat](Simulation/Combat.lua), [configuration](Domain/Party.lua) | Attack/heal/special priorities, health/enemy-count thresholds, and Balanced/Offensive/role-labeled support presets. Hero priorities remain separate from commander rules; arbitrary class scripting is future scope. |
 | Combat talents | Implemented: [base content](Content.lua), [traits](Content/TalentTraits.lua), [additional rows](Content/TalentExpansion.lua) | Nine classes, three 16-node trees each; shared foundations, class mechanics, free respecs, and persistent earned points. These are passive build choices, not commander boost buttons. |
-| Character levels and Mastery | Implemented: [party progression](Domain/Party.lua), [Mastery](Domain/Mastery.lua) | Character cap 60; permanent Mastery unlocks at 20 and awards extra talent points. Rank costs start at 100 XP and increase by 50. Per-tier encounter frontiers migrate the existing record into tier zero. |
-| Adventure XP and Essence | Implemented: [Adventure XP](Domain/Adventure.lua), [activity adapters](Compatibility/Kills.lua) | Real WoW activities award account progress; idle combat does not manufacture Adventure XP. Supported-client reward signals still need live verification. |
+| Character levels and Mastery | Implemented: [party progression](Domain/Party.lua), [Mastery](Domain/Mastery.lua) | Current paid training raises caps by four up to 60; the target removes those paid gates while retaining the 60 ceiling. Permanent Mastery unlocks at 20 and awards extra talent points. Rank costs start at 100 XP and increase by 50. Per-tier encounter frontiers migrate the existing record into tier zero. |
+| Adventure XP and Essence | Implemented: [Adventure XP](Domain/Adventure.lua), [activity adapters](Compatibility/Kills.lua) | Real WoW activities award account progress; idle combat does not manufacture Adventure XP. The permanent party development board is proposed, not implemented. Supported-client reward signals still need live verification. |
 | Equipment and inventory | Implemented: [item content](Content/Items.lua), [transactions](Domain/Inventory.lua) | Ten wearable slots, comparisons, filters, protection, and a manual equip-best command. Equip-best is not an unattended purchasing or equipment automation feature. |
 | Targeted crafting, basic enhancement, heirlooms | Implemented: [inventory commands](Domain/Inventory.lua) | Craft previews, material/Essence costs, enhancements, Legacy-purchased heirloom recipes, and profession modifiers. Basic enhancement, enchanting, and titanforging are distinct investments. |
 | Automatic salvage and manual disenchanting | Implemented: [loot rules and workbench commands](Domain/Inventory.lua) | Rarity/upgrade/new-effect/protection rules plus an optional class/slot/desired-stat keep policy. Policy fields combine to retain matching items in addition to existing protections. Manual stack disenchanting returns gold/Relic dust; it does not enchant equipment. |
-| Gear-set collections | Representative implementation: [catalog](Content/Collections.lua), [ledger](Domain/Collections.lua), [book](UI/CollectionPanel.lua) | Five-piece Westfall outdoor set, permanent partial/completion bonuses, per-tier missing-piece guarantees, receipt deduplication, and highest-piece ranks. Additional sets and dungeon sources are future scope. |
+| Gear-set collections | Representative implementation: [catalog](Content/Collections.lua), [ledger](Domain/Collections.lua), [book](UI/CollectionPanel.lua) | Current five-piece Westfall set comes from simulated victories with cumulative bonuses, per-tier guarantees, and piece ranks. The target replaces acquisition with verified real outdoor sources, individual-piece tracking, and one selectable completed-set effect; source auditing and migration remain work. |
 | Enchanting and titanforging | Implemented: [profession commands](Domain/Professions.lua), [Workshop](UI/ProfessionPanel.lua) | Three targeted enchantments and five forge tiers, with shared quote/transaction validation and retained heirloom investment. No live WoW profession or bag-item modification. |
 | Profession talent trees | Initial implementation: [content](Content/Professions.lua), [progression](Domain/Professions.lua) | Three branches per profession, up to three ranks per branch; separate paid-work progression and saved allocation plans. Broader profession content is future scope. |
 | Zone travel and encounter progression | Implemented: [travel/retry](Domain/Party.lua), [world map](UI/Atlas.lua), [routes](Domain/Routes.lua) | Immediate manual travel, automatic local encounters, defeat fallback, and online milestone routes. Offline travel remains intentionally excluded. |
 | Player-triggered temporary party boosts | Implemented: [catalog](Content/Boosts.lua), [commands](Domain/Boosts.lua), [controls](UI/Panels.lua) | Battle Orders, Iron Resolve, Focused Assault, and Restorative Focus. Permanent Essence or alternative Legacy purchase resolves to one ownership flag; one equipped/active effect, five-minute duration, ten-minute cooldown, full/compact activation. |
 | Boost automation and profiles | Implemented: [commands](Domain/Boosts.lua), [ordered rules](Domain/BoostRules.lua), [profiles](Domain/Profiles.lua) | Permanent on-cooldown/conditional unlocks, global pause and per-boost enable, presets or up to four ordered typed rules, first-match priority, inspectable reasons, and offline execution. Up to eight named profiles retain boost/rule and route preferences. |
-| Route planning | Initial implementation: [executor](Domain/Routes.lua), [editor](UI/RoutePanel.lua) | Up to eight templates with 1–12 distinct destinations; named boss/current-hero-level/unlock milestones; stable step IDs, run cursor, safe waiting, manual override/resume. Collection/material triggers and offline execution are future scope. |
+| Route planning | Initial implementation: [executor](Domain/Routes.lua), [editor](UI/RoutePanel.lua) | Up to eight templates with 1–12 distinct destinations; named boss/current-hero-level/unlock milestones; stable step IDs, run cursor, safe waiting, manual override/resume. Material triggers and offline execution are future scope. Any future collection-aware condition observes discoveries only; routes cannot perform outdoor hunts. |
 | Ordinary prestige and Legacy | Implemented: [prestige](Domain/Prestige.lua) | Level-8 milestone unlock, run reset, retained talents/Mastery and Legacy rewards. Permanent health/damage/healing strength gains 2 percentage points per Legacy earned, separately from chapter count; old saves retain existing strength. |
 | Prestige+ and difficulty tiers | Initial implementation: [difficulty commands](Domain/Difficulty.lua), [preview](UI/DifficultyPanel.lua) | Level-60 hero plus online level-60 boss unlock; tiers 0–10, tier records/Mastery, explicit deeper-reset preview, one-time per-tier Inheritance and permanent rebuilding/supplies purchases. Affixes and new tier-exclusive recipes/resources are future scope. |
 | Offline play | Implemented safe farming: [catch-up](Simulation/Offline.lua) | Up to 24 hours, deterministic Mastery/boost/rule/collection/difficulty rewards and fractional material reconciliation. Saved return totals plus journal summary; no dedicated report panel. Pushing-only rules wait; no first-time destination progression, route execution, or automated resets offline. |
@@ -60,12 +61,12 @@ Audit date: 2026-11-03. **Implemented** means present in source; **partial** mea
 
 ## Core loop
 
-The loop below describes the implemented systems and their intended pacing; implementation boundaries are defined by the audit.
+The loop below describes the accepted target progression. The audit identifies which systems still use the previous prototype behavior.
 
 1. Select an unlocked Azeroth zone and prepare the party.
 2. Automatically fight small enemy groups and boss encounters.
 3. Earn idle experience, gold, equipment, and local materials.
-4. Play WoW to fill an account-wide Adventure XP bar; rank rewards grant Essence for major upgrades.
+4. Play WoW to fill an account-wide Adventure XP bar; rank rewards grant Essence for permanent party development and learned capabilities. Optionally track a collection piece and hunt its verified real outdoor sources.
 5. Craft targeted gear, adjust builds, and attempt harder encounters; use unlocked commander boosts when useful.
 6. Turn familiar decisions into saved ability rules and zone routes as those capabilities unlock.
 7. Prestige for a quicker rebuild with permanent knowledge and controls intact. Eventually enter Prestige+ for a harder tier, deeper cycle rebuilding, and faster gains.
@@ -86,7 +87,7 @@ These examples describe intended check-ins; their pacing and onboarding are not 
 - Current priorities use ally-health and enemy-count thresholds, with Balanced, Offensive, and Healing/Defensive presets. These presets set existing fields; richer class-specific resource/target rules remain future extensions.
 - Deep class-specific talent paths should alter behavior and interactions, including damage, healing, survival, control, and support. Permit mixing paths.
 - Talent selections and earned points survive ordinary prestige. Personal level records grant points without rewarding repeated levels. Respecs remain free.
-- Hero levels cap at 60. Permanent Mastery unlocks at hero level 20 and awards additional talent points from victories at or above each hero's recorded encounter frontier. Rank XP costs increase gently, independent of character levels.
+- Heroes gain levels naturally from idle XP up to 60, without purchased training gates. Retain this ceiling initially to preserve talent and difficulty assumptions; infinite levels are outside this revision. Permanent Mastery unlocks at hero level 20 and awards additional talent points from victories at or above each hero's recorded encounter frontier. Rank XP costs increase gently, independent of character levels.
 - Equipment, talent, and priority changes are available at any time, including during idle combat. Changes preserve current health proportions and cooldowns rather than restarting the encounter.
 - Manual resting is not part of gameplay. Brief transitions let defeated models complete their death animation. Damage numbers rise and fade smoothly.
 - On defeat, recover automatically and farm the last safe encounter. Explain the defeat cause and offer a retry control.
@@ -154,7 +155,7 @@ Unlocking another control mode adds flexibility, not a stronger version of the b
 
 ## Route planning — draft
 
-A route is a saved plan for online zone changes during an adventure. Route planning costs 1 Legacy permanently and starts disabled. Up to eight named templates hold 1–12 distinct destinations with boss, named current-hero-level, or destination-unlock milestones. Editing is a preview until saved. The executor processes at most one step per resolved encounter, preserving stable step IDs and run completion markers. Manual travel pauses the route until resumed; unavailable/locked destinations wait safely. Offline routes, material/collection milestones, and automatic resets remain future extensions. This is not control of the real WoW character.
+A route is a saved plan for online zone changes during an adventure. Route planning costs 1 Legacy permanently and starts disabled. Up to eight named templates hold 1–12 distinct destinations with boss, named current-hero-level, or destination-unlock milestones. Editing is a preview until saved. The executor processes at most one step per resolved encounter, preserving stable step IDs and run completion markers. Manual travel pauses the route until resumed; unavailable/locked destinations wait safely. Offline routes, material milestones, and automatic resets remain future extensions. Collection milestones cannot advance real-world hunting through idle routes; any future collection-aware plan must respect that boundary. This is not control of the real WoW character.
 
 ### Route model
 
@@ -195,15 +196,29 @@ Example plan:
 
 ### Real WoW activity
 
-Kills, quests, level gains, gathering, and confirmed dungeon completions contribute weighted XP to one account-wide Adventure bar. Each rank awards Essence for major upgrades. The initial threshold is 100 XP with a 60-Essence payout; rank, partial XP, and unspent Essence survive prestige. Real WoW activity does not directly grant hero experience. See [BALANCE.md](BALANCE.md) for rates and time assumptions.
+Kills, quests, level gains, gathering, and confirmed dungeon completions contribute weighted XP to one account-wide Adventure bar. Each rank awards Essence for permanent party development and learned capabilities. The initial threshold is 100 XP with a 60-Essence payout; rank, partial XP, and unspent Essence survive prestige. Real WoW activity does not directly grant hero experience. See [BALANCE.md](BALANCE.md) for rates and time assumptions.
 
-Non-gray kills remain eligible at the actual character's level cap. Mining, herbalism, and skinning qualify when their node can grant a profession skill point, even when that gather does not produce one. Skinning gives only a small quarter-point bonus after combat to limit pack-farming efficiency. Gray or failed gathers do not qualify. Boss and dungeon rewards require appropriate boss XP eligibility, with verified recommended level brackets as fallback evidence. Legacy farming and unknown eligibility do not qualify. Essence funds training, targeted crafting, equipment improvements, and heirlooms.
+Non-gray kills remain eligible at the actual character's level cap. Mining, herbalism, and skinning qualify when their node can grant a profession skill point, even when that gather does not produce one. Skinning gives only a small quarter-point bonus after combat to limit pack-farming efficiency. Gray or failed gathers do not qualify. Boss and dungeon rewards require appropriate boss XP eligibility, with verified recommended level brackets as fallback evidence. Legacy farming and unknown eligibility do not qualify. These restrictions govern Adventure XP only. Collection eligibility is separate: a trivial creature can remain a valid collection source. The target removes Essence costs from training and routine crafting, enhancement, enchanting, titanforging, and heirloom production; gold and idle materials fund equipment investment. Existing costs remain prototype behavior until migrated.
 
 Ordinary questing and combat must support progression without mandatory dungeons. Eligible kill attribution and reward amounts require client verification and balance tuning; ambient unrelated deaths must not grant rewards.
 
+### Permanent party development — accepted target
+
+Adventure XP and Essence remain the broad real-activity reward; do not add another general-purpose currency. Invest Essence in a small account-wide development board that survives ordinary prestige and Prestige+.
+
+| Branch | Role | Candidate investments |
+| --- | --- | --- |
+| Might | Offensive party development | Modest damage and healing ranks |
+| Resolve | Survival and recovery | Health, recovery, and survivability ranks |
+| Provisioning | Farming and rebuilding | Idle material yield, crafting efficiency, and rebuilding benefits |
+
+Use a few readable stat ranks with useful milestone choices, rather than a large tree of tiny percentage nodes. For example, a Provisioning milestone could unlock a farming-oriented commander option. Show current benefit, next benefit, and exact price before purchase. Early investments should be useful immediately; later ranks cost more and offer diminishing gains. Branch size, milestones, prices, and coefficients require combined-system testing.
+
+Permit free redistribution of Essence invested in board ranks. Keep learned abilities permanently owned; redistribution cannot revoke or refund permanent capability purchases. Commander abilities remain reusable without activation fees, with the existing Legacy alternative preserving access for idle-only play. Gold and idle materials sustain the repeatable equipment economy so outdoor inactivity cannot recreate a level gate through gear costs. All benefits affect the simulated party only.
+
 ### Idle activity
 
-Automatic combat yields experience, gold, ordinary equipment, and materials. The current destination selects its material; enemy-family metadata also supports collection eligibility and matching-family defense. Richer family-specific resource profiles remain a content extension. Targeted crafting complements random drops and provides a reliable route toward a desired build.
+Automatic combat yields experience, gold, ordinary equipment, and materials. The current destination selects its material; enemy-family metadata supports matching-family combat effects. Simulated collection eligibility is legacy prototype behavior and is removed by the accepted outdoor acquisition model. Richer family-specific resource profiles remain a content extension. Targeted crafting complements random drops and provides a reliable route toward a desired build.
 
 Natural combat experience is free. Allocating or changing talents never costs Essence. All currencies and crafting exist only inside the minigame.
 
@@ -213,37 +228,35 @@ Automatically salvage unwanted ordinary loot. Keep rules cover rarity, potential
 
 Display shared inventory by effective item power, descending, with stable ordering for equal-power items and clear comparisons against the selected hero's equipment.
 
-## Gear-set collections — draft
+## Gear-set collections — accepted target
 
-Rare equipment from idle encounters can also fill a permanent, account-wide collection book. This gives a familiar zone a specific long-term goal and connects exploration, loot, route planning, and Prestige+ without requiring players to store obsolete gear. These are minigame drops, not a requirement to collect items in the real WoW character's bags.
+Collections are a separate account-wide progression axis earned by hunting specific sources in the real outdoor world. The loop is: choose a missing piece, inspect eligible creatures and locations, farm those creatures in WoW, discover the piece, and gain an idle build option. Idle battles continue to provide ordinary equipment, but do not manufacture new outdoor collection discoveries or guarantee progress.
 
-The representative implementation is Westfall Outriders: Stonemason Cloak plus four existing Inscribed Leather catalog pieces. Eligible idle Westfall victories containing a humanoid at idle level 3+ have a prototype 5% set-drop chance, followed by an equal piece roll. Thirty eligible victories without filling a missing piece at that tier guarantee a random missing piece. Two discovered pieces grant +2% basic-attack damage, four grant +3% materials, and completion grants 3% less humanoid damage. Completed higher ranks replace these bonuses using a bounded diminishing increase. Targeting changes planning preference only. The book shows piece tiers, sources, chance, counters, and next-rank reward; registration occurs before normal inventory/salvage handling. Additional sets, canonical source expansion, and collection-driven routes remain future work.
+The current Westfall prototype instead awards curated pieces from simulated humanoid victories and records Prestige+ ranks. This is implementation history, not evidence of canonical loot sources. Audit every proposed item's source on the supported client before enabling outdoor acquisition; do not assume Retail and Forever loot tables match. Additional dungeon collections remain future scope and must not be required to complete an outdoor set.
 
-### Discovery and permanent bonuses
+### Source-specific acquisition
 
-- Register each distinct piece once on acquisition, before automatic salvage or other inventory disposal. Equipping, consuming, or manually claiming the item is not required. Any party composition can register a piece, regardless of armor proficiency; normal equipment restrictions remain unchanged.
-- Grant modest permanent bonuses at visible partial-set milestones and a distinct completion bonus. Avoid an all-or-nothing reward that makes every drop before the last piece feel useless. Exact thresholds and coefficients remain open for balancing.
-- Keep the book, earned bonuses, piece ranks, and bad-luck progress through ordinary prestige and Prestige+. Selling, disenchanting, replacing, or losing the physical equipment never revokes the discovery.
-- Give sets recognizable themes rather than making every collection another universal damage multiplier. Candidate themes include basic-attack effectiveness, survival against a particular enemy family, or material yield. Keep party-wide benefits modest and class-specific mechanics in class talents; no set should make a class's defining ability universally available.
-- Completion provides an enduring improvement, not a mandatory key to the next zone or difficulty. Balance progression for incomplete collections and reserve completionist goals for optional depth.
+- Roll an addon collection reward after an attributable, eligible real-world creature kill. Restrict each piece to verified creatures that can drop that item on the supported client; zone or creature-family matching alone is insufficient.
+- Discoveries represent item identities in the collection book. The actual item need not drop into the player's bags, and no real bag item is created or modified. Addon chances are independent of real loot probabilities and must be labeled accordingly.
+- Keep source identities and client-specific mappings behind compatibility boundaries. Verify observable kill attribution and deduplicate overlapping signals before granting rewards; unavailable evidence must not produce guessed credit.
+- Evaluate collection eligibility independently from Adventure XP. Trivial creatures may qualify for collection hunting without granting Adventure XP. Idle difficulty and Prestige+ do not change outdoor eligibility or manufacture collection ranks.
+- Register a discovery atomically without requiring inventory space, equipment proficiency, equipping, consumption, or a manual claim. Crafted copies, inventory reconstruction, resets, and replayed receipts cannot grant discoveries.
 
-The Westfall collection uses curated outdoor minigame acquisition, not a claim that each item canonically drops from those creatures. Item identities and artwork reuse the existing verified catalog snapshots. A future dungeon could add its own collection or acquisition sources; no outdoor completion currently requires one.
+### Discovery rewards and selectable effects
 
-### Higher-difficulty upgrades
+Grant small permanent discovery rewards at visible partial milestones. Completing a set unlocks a themed selectable effect, such as sustained basic attacks, survival against an enemy family, or material farming. Begin with one active completed-set effect; allow free swaps and save the selection in profiles. Preserve class identity and avoid granting every party a class's defining mechanic.
 
-Each collection piece records its highest acquired Prestige+ tier. A higher-tier copy replaces that record rather than creating a separate book or erasing earlier completion. A first drop at a higher tier also counts as discovering the piece; lower-tier copies never downgrade it.
+Keep discoveries, earned rewards, unlocked effects, selection, and bad-luck progress through both reset types. Physical equipment ownership never controls collection benefits. Bound the aggregate permanent discovery bonuses as the catalog expands; one selectable effect prevents completion effects from all multiplying together. Ordinary idle progression and difficulty access must remain viable with incomplete or absent collections.
 
-Use the lowest recorded tier across all pieces as the set's completed upgrade rank. For example, upgrading all but one piece to Prestige+1 keeps the base completion reward; acquiring the remaining Prestige+1 piece upgrades that reward. Show both piece progress and the next completed-rank reward. Higher ranks improve the existing bonus with gentle, diminishing increments, replacing the previous rank's value rather than stacking full copies of it. Exact rank limits and increments remain open; permanent collection rank is separate from an item's enhancement, enchantment, or titanforge level.
+Do not introduce endless duplicate ranks in the first revision. Completion should finish a goal. Retain existing recorded piece/set ranks as legacy save data during migration, but do not tie new outdoor discoveries to idle Prestige+ tiers. Any future repeat-collection system requires a separate design and value-preserving migration.
 
-Ordinary duplicate copies still follow normal equipment/salvage rules and never repeatedly award permanent stats. Changing difficulty, resetting, crafting the same item, or replaying a reward receipt must not produce extra discoveries or ranks. Crafted items do not count as rare collection drops in the initial design.
+### Individual-piece targeting and bad-luck protection
 
-### Target farming and bad-luck protection
+The book shows each piece's exact eligible creatures, locations, client availability, discovered state, addon chance, and progress toward its guarantee. Track one piece rather than only an entire set. Tracking changes the displayed plan, not drop eligibility or probabilities.
 
-The book shows each piece's eligible zones/enemy families, required difficulty, discovered state, highest tier, and progress toward a guaranteed missing piece. Publish drop eligibility and chances once tuned. Let players choose a collection target for planning; choosing a target does not silently change drop probabilities.
+Maintain a persistent counter per piece and source profile. Only confirmed kills of creatures eligible for that piece advance its counter. Reaching the threshold guarantees that piece from an eligible source; never grant an unrelated missing piece from a creature that cannot supply it. A successful discovery completes its counter; unrelated discoveries and duplicates do not erase progress. Multiple eligible pieces may advance independently from one kill, with rewards deduplicated per kill and piece. Thresholds and resulting completion-time distributions remain tuning work.
 
-Propose a visible per-collection, per-difficulty guarantee counter: eligible victories advance it, and reaching the threshold grants a randomly selected piece still missing at that difficulty. A normal qualifying drop that fills a missing piece restarts that counter; irrelevant duplicates do not. If that rank is complete, no counter advances. Persist partial counters across resets, process online and eligible offline victories identically, and make each reward atomic. A higher-tier drop satisfies the same piece at lower tiers; it cannot generate additional conversion rewards from those tiers. Thresholds are implementation placeholders until completion-time distributions are tested. This uses progress records rather than introducing another spendable currency.
-
-Saved routes may later wait for a collection milestone before moving on. They must expose a time/victory limit and fallback destination so optional collecting cannot trap a run indefinitely. Keep the collection book in the expanded view, with a short new-piece/upgrade summary after offline catch-up; avoid a popup or inventory action for every duplicate.
+No offline or simulated kill advances these counters. Distinguish the player's real hunting destination from the idle party's farming destination. Idle route automation never moves the real character or completes outdoor hunts.
 
 ## Prestige and heirlooms
 
@@ -251,18 +264,19 @@ Prestige becomes available at an initial boss milestone and remains available th
 
 ### Reset contract
 
-Both reset types are implemented. Ability, automation, profession, and route entitlements are account-wide; hero-specific talents and Mastery stay with their hero. A run, recipe, or destination can be temporarily ineligible without removing an owned capability. An acquisition milestone is not rechecked as an ownership gate after a reset.
+Both reset types are implemented; the matrix below specifies target retention, including the proposed board and revised collections. Ability, automation, profession, and route entitlements are account-wide; hero-specific talents and Mastery stay with their hero. A run, recipe, or destination can be temporarily ineligible without removing an owned capability. An acquisition milestone is not rechecked as an ownership gate after a reset.
 
 | State | Ordinary prestige | Prestige+ |
 | --- | --- | --- |
 | Hero identity, class, companions and discoveries | Keep | Keep |
 | Combat talents, earned/unspent talent points, and Mastery | Keep | Keep; never re-award points for repeating an already-paid milestone |
-| Character levels, XP and training | Reset | Reset |
+| Character levels and XP | Reset; no paid training gates | Reset; no paid training gates |
+| Party development board investment and allocation | Keep | Keep; free redistribution remains available |
 | Adventure rank, partial Adventure XP, and unspent Essence | Keep | Keep; real WoW effort is not a run consumable |
 | Legacy balance, earned/purchased permanent bonuses and heirloom recipes | Keep | Keep; a deeper reset does not revoke purchases advertised as permanent |
 | Ordinary equipment, gold and zone materials | Reset | Reset |
 | Owned heirlooms and existing permanent investment in them | Keep; stats scale back with hero level | Keep; future cycle-only modifications must be identified separately before purchase |
-| Collection discoveries, permanent bonuses, highest piece/set ranks, and guarantee counters | Keep | Keep; physical ordinary gear still resets |
+| Collection discoveries, bounded permanent rewards, unlocked/selected effects, and piece guarantee counters | Keep | Keep; preserve legacy rank records during migration; physical ordinary gear still resets |
 | Ability ownership, purchased automation modes, rule capacity, and route capability | Keep | Keep |
 | Rule/profile data, route templates, enabled preferences | Keep | Keep |
 | Active boost effects and cooldowns | End active effects; keep cooldown progress | Same; no reset-based free activation |
@@ -271,17 +285,17 @@ Both reset types are implemented. Ability, automation, profession, and route ent
 | Heirloom enchantments and forging | Keep, scaling with hero level | Keep; ordinary modified items reset with ordinary equipment |
 | Prestige+ tier unlocks, permanent records, Inheritance and its purchases | Keep | Keep after the deeper reset |
 
-Spent Essence remains spent; prestige does not refund upgrades. Real WoW effort held as unspent Essence carries across resets.
+Prestige does not refund purchases. Unspent Essence, board investment, and learned capabilities carry across resets; free board redistribution is independent of resetting.
 
-Legacy rewards unlock heirloom recipes; materials and Essence craft them. Heirlooms scale with their owner's current idle level, returning to starting-level power after prestige. They provide a dependable baseline while ordinary drops can outperform them or enable specialized builds.
+Legacy rewards unlock heirloom recipes; gold and idle materials craft them in the target economy. Current Essence crafting costs must be migrated with the other equipment costs. Heirlooms scale with their owner's current idle level, returning to starting-level power after prestige. They provide a dependable baseline while ordinary drops can outperform them or enable specialized builds.
 
 Ordinary prestige records rewarded chapter count separately from permanent party strength. Each earned Legacy adds 2 percentage points to the shared health/damage/healing multiplier; a level-8 reward of 2 Legacy adds 4 points, while a level-20 reward of 6 adds 12. Loading an older save preserves its previous chapter-based strength. Empty resets and Prestige+ do not add ordinary-prestige strength. These values remain prototype pacing choices.
 
 ## Progression layers and remaining roadmap
 
-Existing character levels (1–60), permanent combat talents, Mastery at 20, Adventure ranks, and ordinary prestige remain distinct axes. New capability unlocks should use lifetime account milestones, such as the first hero reaching a level. After an unlock is earned, later runs and alts inherit access. Run resources and current recipe/item requirements still matter.
+Idle hero growth (levels 1–60, talents, Mastery, and equipment), real-activity party development (Adventure XP and Essence), source-specific outdoor collections, and Legacy/reset progression have separate roles. Remove paid level gates while retaining the level-60 ceiling and Mastery at 20. New capability unlocks should use lifetime account milestones, such as the first hero reaching a level. After an unlock is earned, later runs and alts inherit access. Run resources and current recipe/item requirements still matter.
 
-Current unlocks follow the milestones below; their introduction and pacing remain playtest hypotheses:
+Current capability unlocks follow the milestones below; the proposed board and first outdoor hunt are introduced progressively alongside them; their introduction and pacing remain playtest hypotheses:
 
 | Milestone or experience | Layer | New decision |
 | --- | --- | --- |
@@ -307,7 +321,7 @@ Prestige+ is a separate, optional deeper reset, not a renaming of ordinary prest
 
 One difficulty tier applies to the run and its zones. Tiers 0–10 increase enemy health/damage, add basic-attack resistance, and separately modify hero XP, Mastery XP, gold, materials, and ordinary loot chance. Previously unlocked tiers remain selectable through an eligible deeper reset. Affixes and new tier-specific resources/recipes remain future extensions.
 
-A deeper reset requires a current level-60 hero and a qualifying online boss at encounter level 60+. It rebuilds hero levels/training, ordinary equipment, run resources/progress, and profession work ranks/XP. A completed tier pays Inheritance once, with no repeat payment from replaying that tier. Inheritance buys bounded permanent hero-XP or gold/material rebuilding bonuses. The preview shows target tier, reward, retention, and losses. Reset eligibility must be earned again in the current cycle; the interface and purchased tools remain owned.
+A deeper reset requires a current level-60 hero and a qualifying online boss at encounter level 60+. It rebuilds hero levels, ordinary equipment, run resources/progress, and profession work ranks/XP. A completed tier pays Inheritance once, with no repeat payment from replaying that tier. Inheritance buys bounded permanent hero-XP or gold/material rebuilding bonuses. The preview shows target tier, reward, retention, and losses. Reset eligibility must be earned again in the current cycle; the interface and purchased tools remain owned.
 
 Separate hero-XP, Mastery-XP, gold/material, loot, and challenge modifiers. Idle difficulty must not quietly increase real WoW Adventure XP or mint Essence. Evaluate the combined effects of tier rewards, abilities, professions, and permanent bonuses before selecting multipliers.
 
@@ -323,9 +337,9 @@ Automatic prestige is outside the initial route-planning scope. A later version 
 - Use the same combat rules for online and offline outcomes, with bounded catch-up batches and no rendering.
 - Apply rewards once, advance the saved timestamp, and display a return summary. No manual claim is needed to resume.
 - Handle negative elapsed time, reloads, and character switches without duplicate rewards.
-- Boosts, ordered rules, collections and their guarantee counters use the same commands and simulation timeline during eligible offline farming. Do not estimate a full day at permanent boosted power or award manual activations the player never made.
+- Boosts and ordered rules use the same commands and simulation timeline during eligible offline farming. In the revised collection model, offline simulation grants no outdoor discoveries or guarantee progress; the current simulated collection behavior must be retired. Do not estimate a full day at permanent boosted power or award manual activations the player never made.
 - First route implementation targets online progression while WoW is running, including when the minigame is hidden. Retain the current offline safe-farming policy initially. Later offline routes may use only destinations/checkpoints already cleared in the current run and tier before departure, with separate opt-in and bounded transitions. First-time bosses, new tiers, and automated resets need a later explicit design decision.
-- The saved return summary records gold, victories, material deltas, salvaged items, Mastery XP/ranks, automatic boost uses, collection discoveries/upgrades, and route waits (zero offline transitions). Journal output reports key totals and processed time, including interrupted catch-up. A dedicated report panel remains future presentation work; rewards never require claiming.
+- Current prototype behavior: the saved return summary records gold, victories, material deltas, salvaged items, Mastery XP/ranks, automatic boost uses, collection discoveries/upgrades, and route waits (zero offline transitions). Journal output reports key totals and processed time, including interrupted catch-up. A dedicated report panel remains future presentation work; rewards never require claiming.
 
 ## Presentation and controls
 
@@ -339,13 +353,21 @@ WoW character and creature models form a side-view miniature diorama. For now, u
 
 - Start fullscreen on first explicit entry into the minigame, not automatically on login.
 - Allow a resizable window and remember the preferred expanded geometry.
-- Expanded management includes equipment, talents/priorities, crafting, world map, Legacy, Commander ownership/rules, profiles, routes, collections, Workshop, and Prestige+ previews.
+- Expanded management includes the permanent party development board, equipment, talents/priorities, crafting, world map, Legacy, Commander ownership/rules, profiles, routes, collections, Workshop, and Prestige+ previews.
+
+### Progression feedback — accepted target
+
+The main adventure view should answer three questions without opening a management panel: what the party is doing (encounter, frontier, recent outcome), what can be improved (an affordable development purchase with its benefit), and what the player is hunting (one tracked piece, eligible location, and guarantee progress).
+
+Use familiar equipment slots, item icons, and tooltips in the collection book. Selecting a missing piece opens source details; Track pins that goal. Clearly distinguish real-character hunting locations from idle-party destinations. On the board, preview current/next benefit and exact cost; introduce the first useful purchase and one hunt progressively rather than exposing every branch at once.
+
+Return and session summaries separate idle earnings, Essence actually earned through real WoW activity, and new outdoor discoveries. Never imply that absence generated activity rewards. Apply rewards automatically; no claim action or duplicate-loot popups. The existing catch-up journal is a foundation, not evidence that this presentation is implemented.
 
 ### Compact view
 
 - Movable and resizable, with geometry saved separately.
 - Interactive by default, with minimal controls: expand, lock, retry, world-map access, and one equipped-boost activation control showing readiness/duration. Manual pause/rest is not current gameplay. Full rule/route editors open the expanded view.
-- Deep management opens the expanded view.
+- Show at most one optional tracked collection goal. Purchases, development allocation, source browsing, and deep management open the expanded view.
 - Optional lock prevents dragging and scene interaction; an accessible unlock control remains.
 - Switching views never interrupts combat. Hide rendering when the scene is hidden while retaining progression.
 
@@ -376,7 +398,7 @@ The source contains model actors, animation methods, map APIs, and activity even
 
 ## Implementation sequence before balance tuning
 
-The initial source slice for phases 1–6 below is implemented, including a representative outdoor set and the bounded rule/profile/route editors. This table retains the implementation order and acceptance criteria; it does not claim completed live-client validation or balanced progression. Phase 7 and the explicitly identified content/UI extensions remain work.
+The initial source slice for phases 1–6 below is implemented, including a representative simulated collection set and the bounded rule/profile/route editors. This table retains the implementation order and acceptance criteria; it does not claim completed live-client validation or balanced progression. Phase 7 and the explicitly identified content/UI extensions remain work.
 
 | Phase | Deliverable | Completion evidence before proceeding |
 | --- | --- | --- |
@@ -385,18 +407,29 @@ The initial source slice for phases 1–6 below is implemented, including a repr
 | 2 | On-cooldown automation | The same commands work without repeated clicks; enabled settings survive reset and reload. |
 | 3 | Conditional rules and profiles | Useful presets, deterministic conflict resolution, waiting reasons, manual override, and safe offline behavior. |
 | 4 | Route editor and online executor | Milestone transitions between encounters, eligible-target checks, override/resume, and permanent templates with fresh run cursors. |
-| 4a | Outdoor gear-set collection book and acquisition ledger | One representative set, partial/completion bonuses, registration before disposal, retained guarantee progress, and online/offline reward parity; dungeon sources remain future scope. |
+| 4a | Existing simulated collection prototype | Historical foundation only: ledger, partial bonuses, retained counters, and simulated online/offline parity. Replace acquisition and tier ranks under the accepted revision below. |
 | 5 | Enchanting, titanforging, then profession trees | Distinct useful choices, reliable progression, explicit cycle/permanent investment, and transaction safety. |
-| 6 | Tiered progress and Prestige+ | Level-60 entry, migrated tier-aware records, deeper reset with retained capabilities, collection rank upgrades, and faster-gain rewards working end to end. |
+| 6 | Tiered progress and Prestige+ | Level-60 entry, migrated tier-aware records, deeper reset with retained capabilities, legacy collection rank support, and faster-gain rewards working end to end. |
 | 7 | Balancing and playtest iteration | Reproducible combined-system scenarios, observed bottlenecks, and comparisons against the pacing hypotheses below. |
 
 Supported-client validation and visual quality continue throughout. Maintain the intended launch-class/outdoor-zone coverage, but use a representative route and party to verify each new system before extending its content. Use working placeholder coefficients for implementation; do not treat their initial values as balance conclusions.
+
+### Accepted progression revision — next implementation slice
+
+1. Remove paid hero training gates and retain natural idle growth to 60. Remove Essence from repeatable equipment production/modification, replacing costs with gold and idle materials.
+2. Add the three-branch permanent Essence development board with free rank redistribution, explicit benefit/cost previews, and reset retention.
+3. Audit and implement one verified outdoor collection with real-source attribution, individual-piece tracking, per-piece guarantees, modest discovery rewards, and one selectable completion effect saved in profiles.
+4. Update full/windowed/compact feedback and automatic return/session summaries before expanding the catalog.
+5. Compare idle-only, ordinary mixed-play, and focused-hunt profiles; tune only after migrations and source attribution work.
+
+Use a versioned, idempotent migration. Preserve hero XP/levels, Adventure XP/rank, unspent Essence, learned abilities, all earned discoveries, and recorded legacy collection ranks. Credit retired training purchases and removed historical Essence equipment spending where saved evidence supports an exact reconstruction; never invent a full purchase history from incomplete state. Define and test a conservative fallback credit for ambiguous saves before rollout. Preserve the value of previously earned collection benefits explicitly when moving to a selectable effect, without silently activating all completion effects or re-awarding discoveries. Migration credit is one-time, separate from ordinary prestige refunds and board redistribution.
 
 ## Verification
 
 - Deterministic combat, priority ordering, healing, threat, control, and defeat fallback.
 - Crafting costs, inventory transactions, salvage protection, and full inventory behavior.
-- Collection registration before salvage/full-inventory handling; missing-piece guarantees; higher-tier first discoveries; duplicate/replayed receipts; mixed-tier completion; and retention of bonuses/ranks/counters across both resets. Verify no class or equipment requirement blocks registration.
+- Verified client-specific collection source mappings; attributable real kills, including eligible trivial kills; per-piece counters; duplicate/replayed signals; discovery without equipment or bag requirements; free effect selection/profile restoration; bounded combined rewards; and retention across both resets. Confirm idle/offline victories never award outdoor discoveries or counter progress.
+- Natural hero growth to 60 without training or Essence; routine equipment progression with gold/materials alone; board purchase/redistribution conservation and retained learned abilities; one-time migration credits, legacy discoveries/ranks, and preserved collection value across reloads.
 - Same-class alt replacement and persistence across character switches.
 - Ordinary prestige and Prestige+ preview/retention matrices, including talents, Mastery, Essence, heirlooms, purchased abilities, automation modes, saved rules, route templates, and enabled preferences. Test a purchased always-eligible automation at level 1 immediately after each reset, without repurchasing or re-earning its original unlock milestone.
 - Manual/automatic ability equivalence; expiry and cooldown boundaries; same-effect stacking; loadout swaps; simultaneous requests; death/health preservation; and unchanged behavior while the UI is hidden.
@@ -422,7 +455,8 @@ Values in [BALANCE.md](BALANCE.md) and content files describe the current protot
 | Do resets feel rewarding? | Time and interactions to regain the previous frontier, reach new content, afford a meaningful permanent purchase, and rebuild cycle investments. Separate ordinary prestige from Prestige+. |
 | Is there a dominant farm/reset loop? | Reward per total elapsed adventure time, including rebuild time; compare short resets, deep pushes, frontier farming, difficulty switching, and boss loops. |
 | Do idle/offline modes remain worthwhile? | Progress per eligible simulated hour and resource use at matched starting states; account separately for active attention, real WoW activity, and elapsed offline time. |
-| Do collections reward exploration without blocking progression? | Median and long-tail eligible victories/time to first piece, partial milestones, completion, and each higher-tier upgrade; duplicate frequency, guarantee activations, route detours, and parties with incomplete sets. |
+| Do collections reward exploration without blocking progression? | Median and long-tail real eligible kills/time per piece and set; travel time, source availability, guarantee activations, aggregate discovery bonuses, selectable-effect choices, and progress with no collections. No repeat-rank target in this revision. |
+| Are the progression axes independent and rewarding? | Compare idle-only, ordinary mixed play, and focused outdoor hunts over short and long horizons. Check natural level/equipment growth without Essence, time to meaningful board purchases, diminishing rank value, and faster acquisition of the chosen piece through focused hunting. |
 | Does the economy remain understandable? | Source/sink totals per currency, savings toward unlocks, activation cost visibility, deterministic craft payback, and protection against profitable circular transactions. |
 
 Begin with fixed seeds and a small reproducible scenario set: new account, first reset, established automation, level-20 Mastery, level-40 equipment/professions, level-60 cap, and first Prestige+ rebuild. Include difficult bosses, healing/defense parties, low-resource runs, long absences, and bad-loot cases. Follow numerical comparisons with observation of real check-ins and interface friction.
