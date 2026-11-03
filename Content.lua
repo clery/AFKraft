@@ -158,6 +158,8 @@ C.zones = {
         biome = "fields",
         enemies = { "Defias cutpurse", "Harvest watcher", "Dust devil" },
         boss = "The Defias Overseer",
+        enemyFamilies = { "humanoid", "mechanical", "elemental" },
+        bossFamily = "humanoid",
     },
     {
         id = "barrens",

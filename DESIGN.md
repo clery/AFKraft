@@ -1,6 +1,6 @@
 # WoWIdle — Design Document
 
-Status: research-informed draft for review, with the implementation audit updated 2026-11-03 for commander boosts and their initial automation. The audit below distinguishes current source behavior from proposed work. New boost values are provisional; existing balance constants are unchanged. An implemented feature still requires supported-client validation and playtesting.
+Status: implementation audit updated 2026-11-03 for boosts, ordered automation, profiles, online routes, outdoor collections, professions, and Prestige+. The audit below distinguishes source behavior from future extensions. Prices, probabilities, capacities, and multipliers are prototype tuning. Implemented source and simulator coverage still require supported-client validation and playtesting.
 
 ## Vision
 
@@ -23,29 +23,29 @@ Target occasional meaningful check-ins every 15–30 minutes. Balance the first 
 
 ## Implementation audit
 
-Audit date: 2026-11-02; commander boosts updated 2026-11-03. **Implemented** means present in source; **partial** means a foundation exists but does not provide the full proposed feature; **proposed** means no implementation is being claimed. Code references identify the relevant entry points.
+Audit date: 2026-11-03. **Implemented** means present in source; **partial** means a foundation exists but does not provide the full proposed feature; **future** identifies an extension without claiming implementation. Code references identify the relevant entry points.
 
 | Feature | Current status | Boundary or next step |
 | --- | --- | --- |
 | Account party, companion discoveries, duplicate classes, same-class alt replacement | Implemented: [party rules](Domain/Party.lua) | One active party, up to five heroes; simultaneous parties and raids are future scope. |
-| Routine combat and hero priorities | Implemented: [combat](Simulation/Combat.lua), [configuration](Domain/Party.lua) | Attack/heal/special priorities with health and enemy-count thresholds; not a general player-authored rule engine. |
+| Routine combat and hero priorities | Implemented: [combat](Simulation/Combat.lua), [configuration](Domain/Party.lua) | Attack/heal/special priorities, health/enemy-count thresholds, and Balanced/Offensive/role-labeled support presets. Hero priorities remain separate from commander rules; arbitrary class scripting is future scope. |
 | Combat talents | Implemented: [base content](Content.lua), [traits](Content/TalentTraits.lua), [additional rows](Content/TalentExpansion.lua) | Nine classes, three 16-node trees each; shared foundations, class mechanics, free respecs, and persistent earned points. These are passive build choices, not commander boost buttons. |
-| Character levels and Mastery | Implemented: [party progression](Domain/Party.lua), [Mastery](Domain/Mastery.lua) | Character cap 60; permanent Mastery unlocks at 20 and awards extra talent points. Current rank costs start at 100 XP and increase by 50. Its encounter frontier has no difficulty-tier dimension. |
+| Character levels and Mastery | Implemented: [party progression](Domain/Party.lua), [Mastery](Domain/Mastery.lua) | Character cap 60; permanent Mastery unlocks at 20 and awards extra talent points. Rank costs start at 100 XP and increase by 50. Per-tier encounter frontiers migrate the existing record into tier zero. |
 | Adventure XP and Essence | Implemented: [Adventure XP](Domain/Adventure.lua), [activity adapters](Compatibility/Kills.lua) | Real WoW activities award account progress; idle combat does not manufacture Adventure XP. Supported-client reward signals still need live verification. |
 | Equipment and inventory | Implemented: [item content](Content/Items.lua), [transactions](Domain/Inventory.lua) | Ten wearable slots, comparisons, filters, protection, and a manual equip-best command. Equip-best is not an unattended purchasing or equipment automation feature. |
-| Targeted crafting, basic enhancement, heirlooms | Implemented: [inventory commands](Domain/Inventory.lua) | Craft previews, material/Essence costs, item enhancements, and Legacy-purchased heirloom recipes. Basic enhancement is not the proposed enchanting or titanforging system. |
-| Automatic salvage and manual disenchanting | Implemented: [loot rules and workbench commands](Domain/Inventory.lua) | Salvage uses broad rarity/upgrade/new-effect keep rules. Disenchanting handles stored stacks and returns gold/Relic dust. Detailed inventory filters are not equivalent to detailed automatic salvage rules. |
-| Gear-set collections | Proposed | No permanent set ledger, zone-specific collection rewards, duplicate protection, or Prestige+ collection ranks exist yet. Item-effect discoveries are not set collections. |
-| Enchanting and titanforging | Proposed | Separate item-modification decisions and upgrade tracks; no current command or progression ledger provides them. |
-| Profession talent trees | Proposed | Separate crafting/enchanting/titanforging specializations, not extra spending from the combat talent budget. |
-| Zone travel and encounter progression | Partial: [travel/retry](Domain/Party.lua), [world map](UI/Atlas.lua) | Manual destination changes, automatic encounters within a zone, and defeat fallback exist. No saved zone-change schedule or route executor exists. |
-| Player-triggered temporary party boosts | Initial implementation: [catalog](Content/Boosts.lua), [commands](Domain/Boosts.lua), [controls](UI/Panels.lua) | Battle Orders and Iron Resolve; permanent Essence purchases, one equipped/active boost, five-minute effects, ten-minute cooldowns, full/compact activation. Values remain provisional; additional boosts and alternative acquisition paths remain proposed. |
-| Boost automation | Initial implementation: [commands and conditions](Domain/Boosts.lua), [combat-step execution](Simulation/Combat.lua), [Commander controls](UI/Panels.lua) | Permanent on-cooldown and conditional unlocks; global pause, per-boost enable/mode, boss/lowest-living-health/farming/pushing triggers, inspectable reasons, and offline execution. One condition per equipped boost; saved profiles and a general priority-rule editor remain proposed. Hero priorities remain separate. |
-| Route planning | Proposed | No route editor, persistent templates, milestone interpreter, or per-run route cursor. |
-| Ordinary prestige and Legacy | Implemented: [prestige](Domain/Prestige.lua) | Level-8 milestone unlock, run reset, retained talents/Mastery, Legacy rewards, and the current +4 percentage points to health/damage/healing per rewarded chapter. |
-| Prestige+ and difficulty tiers | Proposed | No deeper reset, tiered zone progress, new tier currency, or tier reward multiplier exists yet. Ordinary prestige is not Prestige+. |
-| Offline play | Implemented safe farming: [catch-up](Simulation/Offline.lua) | Up to 24 hours, bounded deterministic catch-up, including Mastery and commander boosts/automation. Rules use the safe-farming snapshot, so pushing-only rules wait offline. No first-time destination progression, route execution, or automated resets offline. |
-| Fullscreen, windowed, compact views and onboarding | Implemented foundations: [shell](UI/Shell.lua), [tutorial](UI/Tutorial.lua) | Expanded management, Commander purchases/loadout/automation, and full/compact boost activation. Route/profile management remain proposed. |
+| Targeted crafting, basic enhancement, heirlooms | Implemented: [inventory commands](Domain/Inventory.lua) | Craft previews, material/Essence costs, enhancements, Legacy-purchased heirloom recipes, and profession modifiers. Basic enhancement, enchanting, and titanforging are distinct investments. |
+| Automatic salvage and manual disenchanting | Implemented: [loot rules and workbench commands](Domain/Inventory.lua) | Rarity/upgrade/new-effect/protection rules plus an optional class/slot/desired-stat keep policy. Policy fields combine to retain matching items in addition to existing protections. Manual stack disenchanting returns gold/Relic dust; it does not enchant equipment. |
+| Gear-set collections | Representative implementation: [catalog](Content/Collections.lua), [ledger](Domain/Collections.lua), [book](UI/CollectionPanel.lua) | Five-piece Westfall outdoor set, permanent partial/completion bonuses, per-tier missing-piece guarantees, receipt deduplication, and highest-piece ranks. Additional sets and dungeon sources are future scope. |
+| Enchanting and titanforging | Implemented: [profession commands](Domain/Professions.lua), [Workshop](UI/ProfessionPanel.lua) | Three targeted enchantments and five forge tiers, with shared quote/transaction validation and retained heirloom investment. No live WoW profession or bag-item modification. |
+| Profession talent trees | Initial implementation: [content](Content/Professions.lua), [progression](Domain/Professions.lua) | Three branches per profession, up to three ranks per branch; separate paid-work progression and saved allocation plans. Broader profession content is future scope. |
+| Zone travel and encounter progression | Implemented: [travel/retry](Domain/Party.lua), [world map](UI/Atlas.lua), [routes](Domain/Routes.lua) | Immediate manual travel, automatic local encounters, defeat fallback, and online milestone routes. Offline travel remains intentionally excluded. |
+| Player-triggered temporary party boosts | Implemented: [catalog](Content/Boosts.lua), [commands](Domain/Boosts.lua), [controls](UI/Panels.lua) | Battle Orders, Iron Resolve, Focused Assault, and Restorative Focus. Permanent Essence or alternative Legacy purchase resolves to one ownership flag; one equipped/active effect, five-minute duration, ten-minute cooldown, full/compact activation. |
+| Boost automation and profiles | Implemented: [commands](Domain/Boosts.lua), [ordered rules](Domain/BoostRules.lua), [profiles](Domain/Profiles.lua) | Permanent on-cooldown/conditional unlocks, global pause and per-boost enable, presets or up to four ordered typed rules, first-match priority, inspectable reasons, and offline execution. Up to eight named profiles retain boost/rule and route preferences. |
+| Route planning | Initial implementation: [executor](Domain/Routes.lua), [editor](UI/RoutePanel.lua) | Up to eight templates with 1–12 distinct destinations; named boss/current-hero-level/unlock milestones; stable step IDs, run cursor, safe waiting, manual override/resume. Collection/material triggers and offline execution are future scope. |
+| Ordinary prestige and Legacy | Implemented: [prestige](Domain/Prestige.lua) | Level-8 milestone unlock, run reset, retained talents/Mastery and Legacy rewards. Permanent health/damage/healing strength gains 2 percentage points per Legacy earned, separately from chapter count; old saves retain existing strength. |
+| Prestige+ and difficulty tiers | Initial implementation: [difficulty commands](Domain/Difficulty.lua), [preview](UI/DifficultyPanel.lua) | Level-60 hero plus online level-60 boss unlock; tiers 0–10, tier records/Mastery, explicit deeper-reset preview, one-time per-tier Inheritance and permanent rebuilding/supplies purchases. Affixes and new tier-exclusive recipes/resources are future scope. |
+| Offline play | Implemented safe farming: [catch-up](Simulation/Offline.lua) | Up to 24 hours, deterministic Mastery/boost/rule/collection/difficulty rewards and fractional material reconciliation. Saved return totals plus journal summary; no dedicated report panel. Pushing-only rules wait; no first-time destination progression, route execution, or automated resets offline. |
+| Fullscreen, windowed, compact views and onboarding | Implemented foundations: [shell](UI/Shell.lua), [tutorial](UI/Tutorial.lua) | Expanded Commander/rules, profiles, routes, collections, Workshop and Prestige+ management; compact activation stays minimal. Complete staged onboarding and supported-client visual validation remain work. |
 | Client coverage and final pacing | Partial | Retail is the current development/simulator target; Forever integration, asset behavior, activity signals, and the complete pacing model are not established by source coverage alone. |
 
 ## Party and identity
@@ -60,7 +60,7 @@ Audit date: 2026-11-02; commander boosts updated 2026-11-03. **Implemented** mea
 
 ## Core loop
 
-The complete loop below includes proposed layers; implementation status is defined by the audit.
+The loop below describes the implemented systems and their intended pacing; implementation boundaries are defined by the audit.
 
 1. Select an unlocked Azeroth zone and prepare the party.
 2. Automatically fight small enemy groups and boss encounters.
@@ -72,7 +72,7 @@ The complete loop below includes proposed layers; implementation status is defin
 
 ### Intended check-in experience
 
-These examples describe the proposed complete game, not additional implemented features:
+These examples describe intended check-ins; their pacing and onboarding are not validated balance promises:
 
 | Stage | A useful check-in |
 | --- | --- |
@@ -82,8 +82,8 @@ These examples describe the proposed complete game, not additional implemented f
 
 ## Combat and builds
 
-- Routine combat is automatic, with configurable per-hero priorities. Proposed commander abilities add occasional player decisions without replacing automatic hero actions.
-- Current priorities use ally-health and enemy-count thresholds. Richer resource/target conditions and selectable class presets are proposed extensions; supply useful defaults before requiring rule configuration.
+- Routine combat is automatic, with configurable per-hero priorities. Commander abilities add occasional player decisions without replacing automatic hero actions.
+- Current priorities use ally-health and enemy-count thresholds, with Balanced, Offensive, and Healing/Defensive presets. These presets set existing fields; richer class-specific resource/target rules remain future extensions.
 - Deep class-specific talent paths should alter behavior and interactions, including damage, healing, survival, control, and support. Permit mixing paths.
 - Talent selections and earned points survive ordinary prestige. Personal level records grant points without rewarding repeated levels. Respecs remain free.
 - Hero levels cap at 60. Permanent Mastery unlocks at hero level 20 and awards additional talent points from victories at or above each hero's recorded encounter frontier. Rank XP costs increase gently, independent of character levels.
@@ -94,13 +94,13 @@ These examples describe the proposed complete game, not additional implemented f
 
 ## Commander abilities — draft
 
-The first manual prototype implements Battle Orders and Iron Resolve. Each costs 30 Essence once, with one equipped boost and one concurrent effect. Both last 300 adventure seconds with a 600-second cooldown from activation. Battle Orders accelerates only basic-attack cooldown progress by 25%; quarter-second action resolution determines realized attack throughput. Iron Resolve multiplies incoming damage by 0.8 before shields, stopping additional mitigation at 90% total reduction without weakening builds whose existing defenses are stronger. These are provisional prototype values. Owned boosts, loadout, and cooldown deadlines survive ordinary prestige; active effects end. Eligible offline safe farming advances the same saved simulation clock; ineligible absence does not advance boost time. Boost automation is described below; further abilities and alternative purchase paths remain future work.
+The manual prototype implements all four abilities below. Battle Orders and Iron Resolve each cost 30 Essence; Focused Assault and Restorative Focus each cost 60 Essence. Each also offers an alternative 1-Legacy permanent purchase, without paying twice through another path. One boost is equipped and one effect can be active. All last 300 adventure seconds with a 600-second cooldown from activation. Battle Orders accelerates only basic-attack cooldown progress by 25%; quarter-second action resolution determines realized throughput. Iron Resolve reduces incoming damage by up to 20% before shields, stopping added mitigation at 90% total reduction without weakening stronger existing defenses. Focused Assault increases party damage by 20%, including ongoing effects; Restorative Focus increases healing-spell output by 25% without reviving defeated heroes. Values are provisional. Both reset types retain ownership/loadout/cooldown deadlines and end effects. Eligible offline farming advances the same simulation clock; ineligible absence does not advance boost time.
 
 ### Permanent ownership and acquisition
 
 Commander abilities are player-triggered temporary buffs for the simulated party. They are distinct from automatic class abilities and permanent combat talents. Initial effects should strengthen existing roles rather than give every class a replacement heal, resurrection, or control kit.
 
-Buy an ability once with Essence or Legacy, according to its catalog entry. A starter Essence purchase gives a first use before late progression; later Legacy purchases can broaden the catalog and automation options. Alternative purchase paths must resolve to the same ownership flag, preventing duplicate purchases. Prices, capacity, and unlock order are review/tuning decisions.
+Buy an ability once with Essence or Legacy, according to its catalog entry. A starter Essence purchase gives a first use before late progression; Legacy supplies an alternative. Both paths resolve to the same ownership flag, preventing duplicate purchases. Prices, capacity, and unlock order remain tuning decisions.
 
 Default proposal: learned abilities are reusable through cooldowns, without an Essence or Legacy activation fee. Spending the currency primarily earned from real WoW play every five minutes would discourage experimenting and make unattended use drain savings. Any later consumable-based ability must be a separate, clearly labeled option with explicit spending limits.
 
@@ -115,7 +115,7 @@ Working names describe intent, not final coefficients or asset IDs. A five-minut
 | Focused Assault | Increase damage output for a limited window | Choose burst timing versus saving readiness for the next milestone. |
 | Restorative Focus | Improve existing healing output for a limited window | Support healing builds without replacing a healer or reviving fallen heroes. |
 
-Start with the attack-speed and defense abilities. Add more after their shared lifecycle works. Prefer party-wide effects initially to avoid five copies of the same maintenance action. A small loadout/concurrent-effect capacity should create a choice; its exact size remains open.
+The attack-speed and defense lifecycle also supports the damage and healing abilities. All four effects are party-wide, with one equipped slot and one concurrent effect. Larger loadouts or capacities remain future tuning/design changes.
 
 ### Duration, cooldown, and stacking contract
 
@@ -124,13 +124,13 @@ Start with the attack-speed and defense abilities. Add more after their shared l
 - A copy of an already-active effect cannot stack with itself or be refreshed for extra uptime. Loadout swaps do not clear its cooldown; existing effects still count against active capacity until they expire.
 - Attack-speed boosts must specify whether they affect basic attacks only. Reusing a stat that also accelerates healing or offensive abilities requires an explicit design choice.
 - Applying or expiring a boost preserves attack/ability cooldown progress rather than granting free immediate actions. Defense combines with armor and talents through an explicit, capped damage calculation. Never permit zero incoming damage through accidental stacking. Health-related stat changes preserve the existing health proportion and death state.
-- Buff effects expire normally; ability ownership does not. Proposed reset behavior ends active effects while preserving cooldown progress, preventing reset/reload/loadout swapping from providing free extra uses.
+- Buff effects expire normally; ability ownership does not. Both resets end active effects while preserving cooldown progress, preventing reset/reload/loadout swapping from providing free extra uses.
 - Use one monotonic adventure-time model for effects and cooldowns, including eligible offline simulation. Login, hiding the window, and clock rollback cannot restart timers or duplicate activations. Time beyond the offline reward cap does not produce extra simulated uses.
 - Manual and automatic use have identical strength, duration, cooldown, and validation. Attention changes timing choices, not the numerical power of the same button.
 
 ## Automation — draft
 
-The initial implementation offers one saved mode per boost, executing only the equipped boost in living encounters. On-cooldown automation costs 1 Legacy once; conditional modes cost 2 Legacy once and require that first unlock. Purchases do not enable automation: a global running toggle, per-boost enable, and a non-manual mode are all required. Enabling a boost initially selects on-cooldown mode; subsequent toggles retain its chosen condition. Available conditions are a boss encounter, a living ally strictly below a configured health percentage, safe farming, or frontier pushing. The health threshold defaults to 50%; the interface offers 35%, 50%, 65%, and 80%. Manual activation remains available while automation is paused and uses identical validation and timers. Unmet conditions generate a readable reason rather than repeated notifications; routine automatic activations enter the bounded journal quietly. These unlock costs and presets are provisional. General priority lists and named profiles remain future work.
+Only the equipped boost executes automatically in living encounters. On-cooldown automation costs 1 Legacy once; conditional automation costs 2 Legacy once and requires that unlock. Purchases do not enable automation: the global running toggle and per-boost Auto-cast must be enabled. Each boost can use one preset or up to four ordered activation rules. A nonempty rule list takes precedence over the preset, including Manual; the first matching rule requests the shared activation command. Empty rules preserve the selected preset. Conditions are always-in-combat, boss, living-ally health strictly below 10–90%, farming, pushing, or current tier at least 0–10. The compact rule editor starts collapsed; draft changes require Save. Manual activation remains available while automation is paused and owns the shared cooldown if requests coincide. Waiting reasons are readable and routine automatic activations are logged quietly. Up to eight named profiles snapshot loadout, rules, enable preferences, and selected route; applying one validates references/entitlements atomically without activating effects or resetting timers. Profile and rule limits/prices remain provisional.
 
 ### Progression from action to planning
 
@@ -154,7 +154,7 @@ Unlocking another control mode adds flexibility, not a stronger version of the b
 
 ## Route planning — draft
 
-A route is a saved plan for zone changes during an adventure. It moves repeat-run effort toward choosing a farming or pushing strategy. It is not control of the real WoW character, and it does not require an automatic prestige feature.
+A route is a saved plan for online zone changes during an adventure. Route planning costs 1 Legacy permanently and starts disabled. Up to eight named templates hold 1–12 distinct destinations with boss, named current-hero-level, or destination-unlock milestones. Editing is a preview until saved. The executor processes at most one step per resolved encounter, preserving stable step IDs and run completion markers. Manual travel pauses the route until resumed; unavailable/locked destinations wait safely. Offline routes, material/collection milestones, and automatic resets remain future extensions. This is not control of the real WoW character.
 
 ### Route model
 
@@ -203,19 +203,21 @@ Ordinary questing and combat must support progression without mandatory dungeons
 
 ### Idle activity
 
-Automatic combat yields experience, gold, ordinary equipment, and materials. Biomes and monster families determine material profiles. Targeted crafting complements random drops and provides a reliable route toward a desired build.
+Automatic combat yields experience, gold, ordinary equipment, and materials. The current destination selects its material; enemy-family metadata also supports collection eligibility and matching-family defense. Richer family-specific resource profiles remain a content extension. Targeted crafting complements random drops and provides a reliable route toward a desired build.
 
 Natural combat experience is free. Allocating or changing talents never costs Essence. All currencies and crafting exist only inside the minigame.
 
 ### Loot handling
 
-Automatically salvage unwanted ordinary loot. Current keep rules cover rarity, potential upgrades, new effects, and explicit protection. Class/slot and desired-stat policies are proposed extensions; inventory display filters do not yet provide those salvage rules. Apply the same rules during offline catch-up and summarize results. Keep manual disenchanting distinct from automatic salvage and from the proposed enchanting profession.
+Automatically salvage unwanted ordinary loot. Keep rules cover rarity, potential upgrades, new effects, explicit protection, and an optional class/slot/desired-stat policy. All selected policy fields must match for that policy to retain an item; these matches add to the other keep rules rather than removing their protections. Class matching uses equipment proficiency, not the presence of a particular hero. The same rules execute offline. Inventory display filters remain separate. Keep manual disenchanting distinct from automatic salvage and the enchanting profession.
 
 Display shared inventory by effective item power, descending, with stable ordering for equal-power items and clear comparisons against the selected hero's equipment.
 
 ## Gear-set collections — draft
 
 Rare equipment from idle encounters can also fill a permanent, account-wide collection book. This gives a familiar zone a specific long-term goal and connects exploration, loot, route planning, and Prestige+ without requiring players to store obsolete gear. These are minigame drops, not a requirement to collect items in the real WoW character's bags.
+
+The representative implementation is Westfall Outriders: Stonemason Cloak plus four existing Inscribed Leather catalog pieces. Eligible idle Westfall victories containing a humanoid at idle level 3+ have a prototype 5% set-drop chance, followed by an equal piece roll. Thirty eligible victories without filling a missing piece at that tier guarantee a random missing piece. Two discovered pieces grant +2% basic-attack damage, four grant +3% materials, and completion grants 3% less humanoid damage. Completed higher ranks replace these bonuses using a bounded diminishing increase. Targeting changes planning preference only. The book shows piece tiers, sources, chance, counters, and next-rank reward; registration occurs before normal inventory/salvage handling. Additional sets, canonical source expansion, and collection-driven routes remain future work.
 
 ### Discovery and permanent bonuses
 
@@ -225,7 +227,7 @@ Rare equipment from idle encounters can also fill a permanent, account-wide coll
 - Give sets recognizable themes rather than making every collection another universal damage multiplier. Candidate themes include basic-attack effectiveness, survival against a particular enemy family, or material yield. Keep party-wide benefits modest and class-specific mechanics in class talents; no set should make a class's defining ability universally available.
 - Completion provides an enduring improvement, not a mandatory key to the next zone or difficulty. Balance progression for incomplete collections and reserve completionist goals for optional depth.
 
-A working example is a Defias-themed collection associated with Westfall encounters. A future Deadmines dungeon could add its own collection or additional acquisition sources. This is an idle-content proposal, not a claim about canonical item drop locations: verify exact item identities, artwork, and client-specific sources before implementation. Do not make an outdoor collection require a dungeon that does not exist yet.
+The Westfall collection uses curated outdoor minigame acquisition, not a claim that each item canonically drops from those creatures. Item identities and artwork reuse the existing verified catalog snapshots. A future dungeon could add its own collection or acquisition sources; no outdoor completion currently requires one.
 
 ### Higher-difficulty upgrades
 
@@ -249,9 +251,9 @@ Prestige becomes available at an initial boss milestone and remains available th
 
 ### Reset contract
 
-Ordinary prestige is implemented. The Prestige+ column is the proposed contract, not current behavior. New ability, automation, profession, and route entitlements are account-wide; hero-specific talents and Mastery stay with their hero. A run, recipe, or destination can be temporarily ineligible without removing an owned capability. A level or currency milestone used to acquire a capability is not rechecked as an ownership gate after a reset.
+Both reset types are implemented. Ability, automation, profession, and route entitlements are account-wide; hero-specific talents and Mastery stay with their hero. A run, recipe, or destination can be temporarily ineligible without removing an owned capability. An acquisition milestone is not rechecked as an ownership gate after a reset.
 
-| State | Ordinary prestige — current/proposed additions | Prestige+ — proposed |
+| State | Ordinary prestige | Prestige+ |
 | --- | --- | --- |
 | Hero identity, class, companions and discoveries | Keep | Keep |
 | Combat talents, earned/unspent talent points, and Mastery | Keep | Keep; never re-award points for repeating an already-paid milestone |
@@ -260,29 +262,32 @@ Ordinary prestige is implemented. The Prestige+ column is the proposed contract,
 | Legacy balance, earned/purchased permanent bonuses and heirloom recipes | Keep | Keep; a deeper reset does not revoke purchases advertised as permanent |
 | Ordinary equipment, gold and zone materials | Reset | Reset |
 | Owned heirlooms and existing permanent investment in them | Keep; stats scale back with hero level | Keep; future cycle-only modifications must be identified separately before purchase |
-| Collection discoveries, permanent bonuses, highest piece/set ranks, and guarantee counters | Proposed: keep | Keep; physical ordinary gear still resets |
-| Ability ownership, purchased automation modes, rule capacity, and route capability | Proposed: keep | Keep |
-| Rule/profile data, route templates, enabled preferences | Proposed: keep | Keep |
-| Active boost effects and cooldowns | Proposed: end active effects; keep cooldown progress | Same; no reset-based free activation |
+| Collection discoveries, permanent bonuses, highest piece/set ranks, and guarantee counters | Keep | Keep; physical ordinary gear still resets |
+| Ability ownership, purchased automation modes, rule capacity, and route capability | Keep | Keep |
+| Rule/profile data, route templates, enabled preferences | Keep | Keep |
+| Active boost effects and cooldowns | End active effects; keep cooldown progress | Same; no reset-based free activation |
 | Run zone progress and route cursor | Reset | Reset in the selected tier; keep templates and permanent tier records |
-| Future cycle profession ranks and cycle-only forging investments | Proposed: retain through ordinary prestige | Rebuild; keep the profession, specialization access, recipes, saved builds, and automation tools |
-| Prestige+ tier unlocks and its permanent purchases/currency | Not implemented | Keep after the deeper reset |
+| Profession work ranks/XP and saved allocations | Keep | Rebuild ranks/XP; keep ownership, specialization access and allocation plan, which reactivates as work requirements return |
+| Heirloom enchantments and forging | Keep, scaling with hero level | Keep; ordinary modified items reset with ordinary equipment |
+| Prestige+ tier unlocks, permanent records, Inheritance and its purchases | Keep | Keep after the deeper reset |
 
 Spent Essence remains spent; prestige does not refund upgrades. Real WoW effort held as unspent Essence carries across resets.
 
 Legacy rewards unlock heirloom recipes; materials and Essence craft them. Heirlooms scale with their owner's current idle level, returning to starting-level power after prestige. They provide a dependable baseline while ordinary drops can outperform them or enable specialized builds.
 
-## Progression layers roadmap — draft
+Ordinary prestige records rewarded chapter count separately from permanent party strength. Each earned Legacy adds 2 percentage points to the shared health/damage/healing multiplier; a level-8 reward of 2 Legacy adds 4 points, while a level-20 reward of 6 adds 12. Loading an older save preserves its previous chapter-based strength. Empty resets and Prestige+ do not add ordinary-prestige strength. These values remain prototype pacing choices.
+
+## Progression layers and remaining roadmap
 
 Existing character levels (1–60), permanent combat talents, Mastery at 20, Adventure ranks, and ordinary prestige remain distinct axes. New capability unlocks should use lifetime account milestones, such as the first hero reaching a level. After an unlock is earned, later runs and alts inherit access. Run resources and current recipe/item requirements still matter.
 
-These timings are a proposed introduction order, not fixed balance promises:
+Current unlocks follow the milestones below; their introduction and pacing remain playtest hypotheses:
 
 | Milestone or experience | Layer | New decision |
 | --- | --- | --- |
 | Early party development | First manual commander boost, purchased with Essence | When a temporary attack or defense window helps. |
 | First useful ordinary prestige and Legacy purchases | On-cooldown boost automation and basic route planning | Which familiar routine to delegate first. |
-| First hero reaches 20 | Existing per-hero Mastery; proposed conditional-rule access for the account | Which encounters deserve reserved boosts. Introduce the new editor separately from the Mastery explanation. |
+| First hero reaches 20 | Per-hero Mastery | How to expand the persistent combat build. Conditional automation is purchased separately with Legacy, without this level gate. |
 | First hero reaches 30 | Enchanting | Targeted offense, defense, or utility bonuses on equipment. |
 | First hero reaches 40 | Titanforging | Which durable item deserves a higher potential tier; respect existing armor-proficiency unlocks. |
 | First hero reaches 50 | Profession talent trees | Specialize crafting, enchanting, or titanforging without spending combat talent points. |
@@ -290,9 +295,9 @@ These timings are a proposed introduction order, not fixed balance promises:
 
 ### Profession layers
 
-Crafting already supplies targeted items and a repeatable resource sink. Enchanting should add targeted modifications; titanforging should improve an item's potential/tier through a separate investment. Neither should simply rename the current repeatable +10% enhancement button.
+Crafting supplies targeted items and a repeatable resource sink. Enchanting unlocks permanently from lifetime idle level 30 and offers offense, defense, or utility modifications. Titanforging unlocks at 40 and adds up to five potential tiers independently of repeatable enhancement. Both use shared previews and atomic resource validation. These are simulated equipment commands, independent of the actual character's professions.
 
-Profession trees use their own earned points or research, with readable branches for crafting outcomes, enchantment choices, and forging efficiency/potential. Unlocks, recipes, specialization access, and saved allocations/templates survive Prestige+. Cycle-earned ranks and explicitly labeled cycle investments can rebuild there. Reapply a saved allocation only as its current requirements become valid.
+Lifetime idle level 50 unlocks profession specialization. Paid successful work advances separate profession XP/ranks, capped at 30, and supplies specialization points. Each profession has three branches with up to three ranks each: crafting cost/quality/stat strength, enchanting offense/defense/utility strength, and forging efficiency/potential/heirloom efficiency. These points never consume combat talents. Unlocks, recipes, specialization access, and saved allocations survive Prestige+; work ranks/XP rebuild and the saved plan reactivates as its requirements return. Ordinary prestige retains profession work progress. Heirloom enchant/forge investments survive both resets and scale back with hero level.
 
 Keep reliable progress alongside optional random loot. Preview crafting/modification outcomes and losses before spending resources. Ensure craft–salvage–disenchant loops cannot produce unlimited money, Essence, or materials. Current crafts are instantaneous; a crafting-speed bonus has no value until a timed crafting process actually exists.
 
@@ -300,13 +305,13 @@ Keep reliable progress alongside optional random loot. Preview crafting/modifica
 
 Prestige+ is a separate, optional deeper reset, not a renaming of ordinary prestige or a level cap above 60. Unlock its interface permanently at the first qualifying level-60 milestone. Further deeper resets require an explicit current-cycle completion condition; an owned feature can be waiting for eligibility without being lost.
 
-Start with one difficulty tier for the run, shared by its zones, rather than independent per-zone difficulty axes. Higher tiers can add encounter modifiers and new resource/recipe opportunities as well as stronger enemies. Keep previously unlocked tiers selectable. Challenge affixes are a later extension, not another mandatory layer in the first slice.
+One difficulty tier applies to the run and its zones. Tiers 0–10 increase enemy health/damage, add basic-attack resistance, and separately modify hero XP, Mastery XP, gold, materials, and ordinary loot chance. Previously unlocked tiers remain selectable through an eligible deeper reset. Affixes and new tier-specific resources/recipes remain future extensions.
 
-A deeper reset rebuilds profession/cycle development and zone progress while retaining the tools that make rebuilding less laborious. Award a distinct permanent reward only if it has a clear role beyond Essence and Legacy. It can improve rebuilding speed and eligible idle gains; exact currency naming and multiplier values remain open. Show the reward and a complete loss/retention preview.
+A deeper reset requires a current level-60 hero and a qualifying online boss at encounter level 60+. It rebuilds hero levels/training, ordinary equipment, run resources/progress, and profession work ranks/XP. A completed tier pays Inheritance once, with no repeat payment from replaying that tier. Inheritance buys bounded permanent hero-XP or gold/material rebuilding bonuses. The preview shows target tier, reward, retention, and losses. Reset eligibility must be earned again in the current cycle; the interface and purchased tools remain owned.
 
 Separate hero-XP, Mastery-XP, gold/material, loot, and challenge modifiers. Idle difficulty must not quietly increase real WoW Adventure XP or mint Essence. Evaluate the combined effects of tier rewards, abilities, professions, and permanent bonuses before selecting multipliers.
 
-Before tiers ship, extend records and gates to include difficulty context. The current Mastery frontier is a single encounter level: directly reusing it would make a harder tier's low-numbered encounters look easier than a previous tier's frontier. A per-tier frontier/normalized challenge model needs an explicit migration from the existing base-tier record. Keep permanent talent entitlements intact and prevent replaying previously rewarded milestones for duplicate permanent points.
+Difficulty records retain per-tier destination/safe progress and completion receipts. Mastery migrates the existing encounter frontier into tier zero and tracks each harder tier separately, retaining permanent earned points. Ordinary and deeper resets restart the active run while retaining permanent records; switching difficulty does not re-award previously paid character-level talent milestones.
 
 Automatic prestige is outside the initial route-planning scope. A later version would need its own explicit opt-in, reward threshold, safe boundary, and transaction receipt; zone routes alone must never initiate either reset type.
 
@@ -318,9 +323,9 @@ Automatic prestige is outside the initial route-planning scope. A later version 
 - Use the same combat rules for online and offline outcomes, with bounded catch-up batches and no rendering.
 - Apply rewards once, advance the saved timestamp, and display a return summary. No manual claim is needed to resume.
 - Handle negative elapsed time, reloads, and character switches without duplicate rewards.
-- Proposed boosts and their automation use the same commands, effect/cooldown timeline, and rule ordering online and in offline safe farming. Do not estimate a full day at permanent boosted power or award manual activations the player never made.
+- Boosts, ordered rules, collections and their guarantee counters use the same commands and simulation timeline during eligible offline farming. Do not estimate a full day at permanent boosted power or award manual activations the player never made.
 - First route implementation targets online progression while WoW is running, including when the minigame is hidden. Retain the current offline safe-farming policy initially. Later offline routes may use only destinations/checkpoints already cleared in the current run and tier before departure, with separate opt-in and bounded transitions. First-time bosses, new tiers, and automated resets need a later explicit design decision.
-- Return summaries should distinguish ordinary earnings, Mastery progress, automatic boost uses, route transitions, and waits. Do not require claiming rewards or rebuilding saved settings.
+- The saved return summary records gold, victories, material deltas, salvaged items, Mastery XP/ranks, automatic boost uses, collection discoveries/upgrades, and route waits (zero offline transitions). Journal output reports key totals and processed time, including interrupted catch-up. A dedicated report panel remains future presentation work; rewards never require claiming.
 
 ## Presentation and controls
 
@@ -334,12 +339,12 @@ WoW character and creature models form a side-view miniature diorama. For now, u
 
 - Start fullscreen on first explicit entry into the minigame, not automatically on login.
 - Allow a resizable window and remember the preferred expanded geometry.
-- Include equipment, talents, priorities, crafting, world map, and prestige panels. Proposed ability ownership/loadouts, automation profiles, route editing, and reset previews belong in expanded management.
+- Expanded management includes equipment, talents/priorities, crafting, world map, Legacy, Commander ownership/rules, profiles, routes, collections, Workshop, and Prestige+ previews.
 
 ### Compact view
 
 - Movable and resizable, with geometry saved separately.
-- Interactive by default, with minimal controls: expand, lock, retry, and world-map access. Manual pause/rest is not current gameplay. Proposed compact boost icons show readiness and duration; full rule/route editors open the expanded view.
+- Interactive by default, with minimal controls: expand, lock, retry, world-map access, and one equipped-boost activation control showing readiness/duration. Manual pause/rest is not current gameplay. Full rule/route editors open the expanded view.
 - Deep management opens the expanded view.
 - Optional lock prevents dragging and scene interaction; an accessible unlock control remains.
 - Switching views never interrupts combat. Hide rendering when the scene is hidden while retaining progression.
@@ -355,7 +360,7 @@ Target World of Warcraft: Forever, with Retail used for initial development and 
 - Emit combat and reward events for the renderer; animation never determines simulation results.
 - Define classes, abilities, talents, items, recipes, zones, and encounters as validated content data.
 - Keep logs bounded and avoid saving transient model objects or frame references.
-- Proposed permanent entitlements/configuration, run state, and Prestige+ cycle state need explicit storage/reset ownership. Purchasing a capability, assigning a rule, and executing its temporary effect are separate operations.
+- Permanent entitlements/configuration, run state, and Prestige+ cycle state have explicit storage/reset ownership. Purchasing a capability, assigning a rule, and executing its temporary effect are separate operations.
 - Manual and automated commands share validation and side effects. Ability/route evaluators operate on pure minigame state, have bounded work, and emit inspectable action reasons. Automation never casts real WoW spells, controls the real character, or bypasses protected-action restrictions.
 - Resolve simultaneous simulation events in a documented order; for example, finish encounter rewards, apply pending route travel, then consider next-encounter boosts. Persist receipts/cursors and cooldown progress so interrupted catch-up or reloads cannot repeat rewards, purchases, transitions, or activations.
 
@@ -371,7 +376,7 @@ The source contains model actors, animation methods, map APIs, and activity even
 
 ## Implementation sequence before balance tuning
 
-This draft is the review stage. No new ability, automation, route, collection, profession, or Prestige+ system is implemented by this document.
+The initial source slice for phases 1–6 below is implemented, including a representative outdoor set and the bounded rule/profile/route editors. This table retains the implementation order and acceptance criteria; it does not claim completed live-client validation or balanced progression. Phase 7 and the explicitly identified content/UI extensions remain work.
 
 | Phase | Deliverable | Completion evidence before proceeding |
 | --- | --- | --- |
@@ -405,7 +410,7 @@ Supported-client validation and visual quality continue throughout. Maintain the
 
 ## Balancing plan — after the behavior is implemented
 
-Existing values in [BALANCE.md](BALANCE.md) and content files describe the current prototype, not validated targets for the combined game. Leave them unchanged during this documentation pass. Five-minute boosts, proposed unlock levels, capacities, multipliers, and prices remain hypotheses.
+Values in [BALANCE.md](BALANCE.md) and content files describe the current prototype, not validated targets for the combined game. Five-minute boosts, unlock levels, capacities, multipliers, and prices remain hypotheses to measure together.
 
 ### What to measure
 

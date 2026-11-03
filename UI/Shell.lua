@@ -11,6 +11,11 @@ local tabs = {
     { "legacy", "Legacy" },
     { "loot", "Loot rules" },
     { "boosts", "Commander" },
+    { "profiles", "Profiles" },
+    { "routes", "Routes" },
+    { "collections", "Collections" },
+    { "workshop", "Workshop" },
+    { "difficulty", "Prestige+" },
 }
 local tabIcons = {
     adventure = "INV_Misc_Map_01",
@@ -21,6 +26,11 @@ local tabIcons = {
     legacy = "INV_Misc_Book_09",
     loot = "INV_Misc_Bag_10",
     boosts = "INV_Misc_Book_09",
+    profiles = "INV_Misc_Book_09",
+    routes = "INV_Misc_Map_01",
+    collections = "INV_Misc_Bag_10",
+    workshop = "Trade_BlackSmithing",
+    difficulty = "INV_Misc_Map_01",
 }
 
 function UI:SelectHero(index)
@@ -45,6 +55,7 @@ function UI:SetTab(tab)
         self.map:Hide()
     end
     self.confirmPrestige = false
+    self.difficultyConfirm = false
     if W.state.ui.compact then
         W.state.ui.compact = false
         self:ApplyMode()
@@ -129,7 +140,16 @@ function UI:Layout()
     end
     local atlas = not compact and W.state.ui.tab == "atlas"
     local company = not compact
-        and (W.state.ui.tab == "legacy" or W.state.ui.tab == "loot" or W.state.ui.tab == "boosts")
+        and (
+            W.state.ui.tab == "legacy"
+            or W.state.ui.tab == "loot"
+            or W.state.ui.tab == "boosts"
+            or W.state.ui.tab == "profiles"
+            or W.state.ui.tab == "routes"
+            or W.state.ui.tab == "collections"
+            or W.state.ui.tab == "workshop"
+            or W.state.ui.tab == "difficulty"
+        )
     self.scene:Layout(compact, management)
     self.scene.frame:SetShown(not atlas and not company)
     for i, card in ipairs(self.cards) do
@@ -142,6 +162,16 @@ function UI:Layout()
     self.panel:SetSize(1296, (atlas or company) and 695 or management and 430 or 240)
     self.expanded:SetShown(not compact)
     self.compact:SetShown(compact)
+    for tab, frame in pairs({
+        routes = self.routeFrame,
+        profiles = self.profileFrame,
+        collections = self.collectionFrame,
+        workshop = self.professionFrame,
+    }) do
+        if frame then
+            frame:SetShown(not compact and W.state.ui.tab == tab and not W.catchup)
+        end
+    end
     self.adventureCompact.frame:EnableMouse(not W.state.ui.locked)
     self.grip:SetShown(not self.fullscreen or compact)
     self.scene.frame:EnableMouse(not W.state.ui.locked)
@@ -343,14 +373,57 @@ function UI:Refresh(redraw)
             or s.ui.tab == "legacy" and "Permanent rewards, heirlooms and chapter resets"
             or s.ui.tab == "loot" and "Choose what to keep from future drops"
             or s.ui.tab == "boosts" and "Permanent abilities for temporary party support"
+            or s.ui.tab == "profiles" and "Saved commander loadouts and automation"
+            or s.ui.tab == "routes" and "Plan your next destinations"
+            or s.ui.tab == "collections" and "Permanent discoveries and set bonuses"
+            or s.ui.tab == "workshop" and "Enchanting, titanforging and profession research"
+            or s.ui.tab == "difficulty" and "Deeper resets and permanent Inheritance"
             or "Explore destinations and their unlock requirements"
     )
     self.scene:Refresh(s)
+    local featureState
+    if s.ui.tab == "collections" then
+        local progress = W.Game.CollectionProgress(
+            s,
+            self.collectionSelected or s.collectionBook.target or C.collections[1].id
+        )
+        featureState = progress
+            and table.concat({
+                progress.found,
+                progress.completedRank or -1,
+                progress.tierFound,
+                progress.counter,
+                s.collectionBook.target or "",
+            }, ":")
+    elseif s.ui.tab == "difficulty" then
+        local d = s.difficulty
+        featureState = table.concat({
+            tostring(d.unlocked),
+            tostring(d.cycleComplete),
+            d.currency,
+            d.maxTier,
+            d.ascensions,
+            s.tier,
+        }, ":")
+    elseif s.ui.tab == "workshop" then
+        local p = s.professions
+        featureState = table.concat({
+            s.gold,
+            s.essence,
+            s.materials.ore,
+            s.materials.relic,
+            p.ranks.crafting,
+            p.ranks.enchanting,
+            p.ranks.titanforging,
+            p.bestLevel,
+        }, ":")
+    end
     local heroLevel = s.heroes[self.selected] and s.heroes[self.selected].level
     if
         not s.ui.compact
         and (
             redraw ~= false
+            or self.panelFeature ~= featureState
             or self.panelGuidance ~= guidance
             or self.panelLevel ~= heroLevel
             or self.panelItems ~= #s.inventory
@@ -367,11 +440,16 @@ function UI:Refresh(redraw)
         self.panelItems = #s.inventory
         self.panelBattle = s.battle ~= nil
         self.panelGold, self.panelEssence = s.gold, s.essence
+        self.panelFeature = featureState
     end
     local message = self.message and GetTime() < (self.messageUntil or 0) and self.message or nil
     self.footer:SetText(message or (W.catchup and "Resolving offline progress…" or ""))
     self.footer:SetShown(message ~= nil or W.catchup ~= nil)
     W.Panels.RefreshBoosts(self, s, message)
+    if self.routeStatus and s.ui.tab == "routes" and not W.catchup then
+        local _, reason = W.Game.RouteStatus(s)
+        self.routeStatus:SetText(reason)
+    end
     W.Tutorial.Refresh(self)
     self.compactHint:SetText(message or self.compactHint:GetText())
 end
@@ -471,7 +549,9 @@ function W.CreateUI()
     U.SingleLine(ui.battleState, 185, 18, "RIGHT")
     for i, entry in ipairs(tabs) do
         local id = entry[1]
-        local tab = U.Button(expanded, "", 1340, 151 + (i - 1) * 79, 78, 69, function()
+        local spacing = math.min(79, 690 / #tabs)
+        local height = spacing - 10
+        local tab = U.Button(expanded, "", 1340, 151 + (i - 1) * spacing, 78, height, function()
             ui:SetTab(id)
         end)
         tab.text:ClearAllPoints()
@@ -479,7 +559,8 @@ function W.CreateUI()
         tab.text:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
         U.SingleLine(tab.text, 74, 16, "CENTER")
         tab.text:SetText(entry[2])
-        U.Icon(tab, tabIcons[id], 27, 23, 24)
+        local iconSize = math.min(24, height - 30)
+        U.Icon(tab, tabIcons[id], (78 - iconSize) / 2, 6, iconSize)
         U.Tooltip(tab, entry[2], "Open " .. entry[2])
         tab.notice = U.SingleLine(U.Text(tab, "", 2, 4, 10, T.gold), 74, 16, "CENTER")
         ui.tabs[id] = tab
@@ -550,6 +631,11 @@ function W.CreateUI()
             ui:SetTab("boosts")
         end
     end)
+    ui.compactBoost.icon = U.Icon(ui.compactBoost, "INV_Misc_Book_09", 10, 4, 18)
+    ui.compactBoost.icon:SetParent(ui.compactBoost.content or ui.compactBoost)
+    ui.compactBoost.text:ClearAllPoints()
+    ui.compactBoost.text:SetPoint("LEFT", 38, 0)
+    U.SingleLine(ui.compactBoost.text, 500, 18)
     ui.adventureCompact = W.AdventureBar.Create(compact, 12, 305, 550)
     U.Text(compact, "Offline earnings: up to 24 hours", 12, 337, 11, T.muted)
     ui.scene = W.Scene.Create(canvas)

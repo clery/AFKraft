@@ -174,6 +174,26 @@ function P.party(ui, p, s)
     W.PartyPanel.Draw(ui, p, s)
 end
 
+function P.routes(ui, p, s)
+    W.RoutePanel.Draw(ui, p, s)
+end
+
+function P.profiles(ui, p, s)
+    W.ProfilePanel.Draw(ui, p, s)
+end
+
+function P.collections(ui, p, s)
+    W.CollectionPanel.Draw(ui, p, s)
+end
+
+function P.workshop(ui, p, s)
+    W.ProfessionPanel.Draw(ui, p, s)
+end
+
+function P.difficulty(ui, p, s)
+    W.DifficultyPanel.Draw(ui, p, s)
+end
+
 function P.boosts(ui, p, s)
     local automation = s.boosts.automation
     local selectedID = C.boostByID[ui.selectedBoost] and ui.selectedBoost
@@ -252,15 +272,25 @@ function P.boosts(ui, p, s)
     U.Icon(p, boost.icon or "INV_Misc_Book_09", 0, detailY, 56)
     text(p, boost.name, 76, detailY, 23, T.gold, 800)
     text(p, boost.description, 76, detailY + 34, 14, T.text, 1150)
-    local purchase = button(p, "", 0, detailY + 84, 300, function()
+    local purchase = button(p, "", 0, detailY + 84, 180, function()
         W.Action(G.BuyBoost, id)
     end)
+    local alternate = button(
+        p,
+        "Learn · " .. boost.legacyCost .. " Legacy",
+        190,
+        detailY + 84,
+        160,
+        function()
+            W.Action(G.BuyBoost, id, "legacy")
+        end
+    )
     U.Tooltip(
         purchase,
         "Permanent boost",
         "Learn once with Essence. Activating a learned boost is free. Ownership and cooldowns survive chapter resets; active effects end."
     )
-    local equip = button(p, "Equip", 320, detailY + 84, 220, function()
+    local equip = button(p, "Equip", 370, detailY + 84, 170, function()
         W.Action(G.EquipBoost, id)
     end)
     local activate = button(p, "Activate", 560, detailY + 84, 260, function()
@@ -334,6 +364,7 @@ function P.boosts(ui, p, s)
     local automaticStatus = text(p, "", 0, detailY + 198, 14, T.muted, 1240)
     ui.boostControls[id] = {
         purchase = purchase,
+        alternate = alternate,
         equip = equip,
         activate = activate,
         status = status,
@@ -342,6 +373,24 @@ function P.boosts(ui, p, s)
         threshold = threshold,
         automaticStatus = automaticStatus,
     }
+    ui.boostRulesToggle = button(
+        p,
+        (ui.boostRulesExpanded and "Hide" or "Edit") .. " ordered rules",
+        960,
+        detailY + 192,
+        284,
+        function()
+            ui.boostRulesExpanded = not ui.boostRulesExpanded
+            ui:Refresh()
+        end
+    )
+    U.Enabled(
+        ui.boostRulesToggle,
+        automation.owned.conditional == true and s.boosts.owned[id] == true
+    )
+    if ui.boostRulesExpanded and automation.owned.conditional and s.boosts.owned[id] then
+        W.BoostRulePanel.Draw(ui, p, s, id, 0, detailY + 242)
+    end
 end
 
 local function timer(seconds)
@@ -370,6 +419,9 @@ function P.RefreshBoosts(ui, s, message)
         end
     end
     ui.compactBoost:SetShown(not s.ui.locked and message == nil)
+    ui.compactBoost.icon:SetTexture(
+        "Interface\\Icons\\" .. (equipped and C.boostByID[equipped].icon or "INV_Misc_Book_09")
+    )
     ui.compactHint:SetShown(s.ui.locked or message ~= nil)
     if s.ui.tab == "boosts" and not W.catchup then
         local automation = s.boosts.automation
@@ -411,6 +463,8 @@ function P.RefreshBoosts(ui, s, message)
                 owned and "Learned" or "Learn · " .. C.boostByID[id].cost .. " Essence"
             )
             U.Enabled(controls.purchase, not owned and s.essence >= C.boostByID[id].cost)
+            controls.alternate:SetShown(not owned)
+            U.Enabled(controls.alternate, not owned and s.legacy >= C.boostByID[id].legacyCost)
             controls.equip.text:SetText(equipped == id and "Equipped" or "Equip")
             U.Enabled(controls.equip, owned and equipped ~= id)
             U.Enabled(controls.activate, G.CanActivateBoost(s, id))
@@ -428,18 +482,25 @@ function P.talents(ui, p, s)
     )
     local progress = G.TalentProgress(h)
     local nextLevel = G.NextTalentLevel(h)
-    local mastery = G.MasteryProgress(h)
     local hint = nextLevel and ("Next level point: " .. nextLevel .. ". ") or ""
     if progress.earned >= #G.TalentList(h) then
         hint = "All permanent talent points earned."
     elseif G.MasteryUnlocked(h) then
-        hint = hint .. "Mastery XP: encounter level " .. math.max(1, mastery.frontier) .. "+."
+        hint = hint
+            .. "Mastery XP: tier "
+            .. s.tier
+            .. ", encounter level "
+            .. math.max(1, G.MasteryFrontier(h, s.tier))
+            .. "+."
     else
         hint = hint .. "Mastery unlocks at hero level " .. C.mastery.unlockLevel .. "."
     end
     text(p, "Permanent talents. Free respecs. " .. hint, 0, 35, 13, T.muted)
     W.TalentPanel.Draw(ui, p, h, index)
-    text(p, "COMBAT PRIORITIES", 0, 372, 12, T.gold)
+    text(p, "COMBAT PRIORITIES", 0, 340, 12, T.gold)
+    U.Choice(p, "Class presets", 0, 362, 180, G.PriorityPresets(h), nil, function(id)
+        W.Action(G.ConfigurePreset, index, id)
+    end)
     local priorities, thresholds = {}, {}
     for _, id in ipairs(C.priorityModes) do
         priorities[#priorities + 1] = { id = id, name = C.priorityNames[id] }
@@ -507,7 +568,7 @@ function P.crafting(ui, p, s)
     local material = ui.craftMaterial or "timber"
     local heirloom = ui.craftHeirloom or false
     local cost = G.Cost(s, h, heirloom)
-    local preview, unavailable = G.CraftItem(h, slot, heirloom)
+    local preview, unavailable = G.CraftItem(h, slot, heirloom, s)
     ui.craftControls = { slots = {}, materials = {} }
     text(p, "Craft for " .. h.name, 0, 0, 23, T.gold)
     text(p, "Choose an equipment slot", 0, 39, 13, T.muted)
@@ -624,8 +685,8 @@ end
 
 function P.legacy(ui, p, s)
     local reward = G.PrestigeReward(s)
-    local currentBonus = s.prestiges * 4
-    local nextBonus = currentBonus + (reward > 0 and 4 or 0)
+    local currentBonus = (s.prestigeStrength or s.prestiges) * 4
+    local nextBonus = currentBonus + reward * 2
     text(
         p,
         ui.confirmPrestige and "REVIEW YOUR NEW CHAPTER" or "A LASTING INHERITANCE",
@@ -723,7 +784,7 @@ function P.legacy(ui, p, s)
     text(p, "Start fresh. Carry your legacy forward.", 0, 177, 22, T.text, 630)
     text(
         p,
-        "New chapters reset your run. Rewarded chapters add 4 percentage points to your permanent party bonus, and award Legacy for heirloom recipes.",
+        "New chapters reset your run. Each Legacy earned adds 2 percentage points to your permanent party bonus. Spend Legacy on permanent unlocks and heirloom recipes.",
         0,
         220,
         16,
@@ -869,11 +930,76 @@ function P.loot(ui, p, s)
         14,
         T.muted
     )
+    text(p, "ALSO KEEP MATCHING LOOT", 0, 204, 15, T.gold)
+    local classes, slots, stats =
+        { { id = "any", name = "Any class" } },
+        { { id = 0, name = "Any slot" } },
+        { { id = "any", name = "Any stat" } }
+    for _, class in ipairs(C.classes) do
+        classes[#classes + 1] = { id = class.id, name = class.name }
+    end
+    for _, slot in ipairs(C.equipmentSlots) do
+        slots[#slots + 1] = { id = slot, name = C.slots[slot] }
+    end
+    for _, stat in ipairs(C.itemStatOrder) do
+        stats[#stats + 1] = { id = stat, name = C.itemStatNames[stat] }
+    end
+    local policy = s.salvage.policy
+    local choices = {
+        {
+            key = "class",
+            options = classes,
+            label = policy.class == "any" and "Any class" or C.classByID[policy.class].name,
+        },
+        {
+            key = "slot",
+            options = slots,
+            label = policy.slot == 0 and "Any slot" or C.slots[policy.slot],
+        },
+        {
+            key = "stat",
+            options = stats,
+            label = policy.stat == "any" and "Any stat" or C.itemStatNames[policy.stat],
+        },
+    }
+    ui.lootPolicyControls = {}
+    for index, choice in ipairs(choices) do
+        local key = choice.key
+        local control = U.Choice(
+            p,
+            choice.label,
+            (index - 1) * 420,
+            244,
+            400,
+            choice.options,
+            policy[key],
+            function(value)
+                W.Action(G.SetLootPolicy, key, value)
+            end
+        )
+        U.Tooltip(
+            control,
+            "Keep matching loot",
+            "When at least one filter is set, keep future drops matching every selected class, slot and stat. Class eligibility uses its maximum idle proficiency. Existing quality, upgrade, effect and protection rules still apply.",
+            380
+        )
+        ui.lootPolicyControls[key] = control
+    end
 end
 
 function P.Draw(ui)
     local s = W.state
     local p = ui.panel
+    for tab, frame in pairs({
+        routes = ui.routeFrame,
+        profiles = ui.profileFrame,
+        collections = ui.collectionFrame,
+        workshop = ui.professionFrame,
+    }) do
+        if frame then
+            frame:SetShown(s.ui.tab == tab and not s.ui.compact and not W.catchup)
+        end
+    end
     if ui.atlas then
         ui.atlas.frame:SetShown(s.ui.tab == "atlas")
     end
@@ -882,6 +1008,7 @@ function P.Draw(ui)
     end
     ui.guideEquipTarget, ui.guideInventoryTarget, ui.guideCraftEquipTarget = nil, nil, nil
     ui.boostQuick, ui.boostControls, ui.boostTiles = nil, nil, nil
+    ui.boostRuleControls, ui.boostRulesToggle = nil, nil
     ui.boostAutomationPurchases, ui.boostAutomationEnabled = nil, nil
     U.Begin(p)
     if W.catchup then

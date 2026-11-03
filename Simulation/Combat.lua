@@ -134,6 +134,7 @@ function G.StartBattle(state)
         return
     end
     state.encounter = (state.encounter or 0) + 1
+    local difficulty = G.DifficultyModifiers(state)
     local zone = C.zoneByID[state.zone]
     local level = zone.level + floor((state.stage - 1) / 5)
     local boss = state.stage % 5 == 0
@@ -161,15 +162,24 @@ function G.StartBattle(state)
     local count = boss and 1 or min(3, #state.heroes)
     for i = 1, count do
         local hp = floor(
-            (60 + level * 24) * 1.16 ^ (level - 1) * (boss and min(4, #state.heroes + 1) or 1)
+            (60 + level * 24)
+                * 1.16 ^ min(level - 1, 7)
+                * 1.055 ^ max(0, level - 8)
+                * (boss and min(4, #state.heroes + 1) or 1)
+                * difficulty.enemyHealth
         )
         battle.enemies[i] = {
             id = i,
             name = boss and zone.boss or zone.enemies[(state.stage + i - 2) % #zone.enemies + 1],
+            family = boss and zone.bossFamily
+                or zone.enemyFamilies
+                    and zone.enemyFamilies[(state.stage + i - 2) % #zone.enemies + 1],
             hp = hp,
             maxHP = hp,
             damage = (6 + level * 3)
-                * 1.12 ^ (level - 1)
+                * 1.12 ^ min(level - 1, 7)
+                * 1.025 ^ max(0, level - 8)
+                * difficulty.enemyDamage
                 * (boss and (opening and 1.2 or 1.8) or 1),
             attackCD = 1 + i * 0.3,
         }
@@ -180,6 +190,9 @@ function G.StartBattle(state)
 end
 
 local function hurt(state, target, amount, enemy, source, passive)
+    if enemy and state.battle then
+        amount = amount * (state.battle.boostDamage or 1)
+    end
     amount = floor(max(1, amount))
     local wasAlive = target.hp > 0
     target.hp = max(0, target.hp - amount)
@@ -194,6 +207,9 @@ local function hurt(state, target, amount, enemy, source, passive)
 end
 
 local function heal(state, target, amount, source)
+    if state.battle then
+        amount = amount * (state.battle.boostHealing or 1)
+    end
     amount = floor(min(amount, target.maxHP - target.hp))
     target.hp = min(target.maxHP, target.hp + amount)
     G.Emit(state, "heal", { target = target.id, amount = amount, source = source })
@@ -202,8 +218,10 @@ end
 
 local function victory(state, battle)
     local z = C.zoneByID[state.zone]
-    local xp = 8 + battle.level * 3
-    local gold = 3 + battle.level * 2
+    local difficulty = G.DifficultyModifiers(state)
+    local xp = floor((8 + battle.level * 3) * difficulty.heroXP)
+    local masteryXP = floor((8 + battle.level * 3) * difficulty.masteryXP)
+    local gold = floor((3 + battle.level * 2) * difficulty.gold)
     local results = {}
     -- Recruitment may extend the party during combat. Only the encounter's
     -- original participants fought; newcomers join when the next battle starts.
@@ -241,7 +259,8 @@ local function victory(state, battle)
             )
             G.Emit(state, "unlock", { target = result.id, masteryUnlocked = true })
         end
-        local _, ranks = G.RewardMastery(result.hero, battle.level, xp, battle.boss)
+        local _, ranks =
+            G.RewardMastery(result.hero, battle.level, masteryXP, battle.boss, state.tier)
         if ranks > 0 then
             G.Log(
                 state,
@@ -273,10 +292,37 @@ local function victory(state, battle)
         end
     end
     state.gold = state.gold + gold
-    state.materials[z.material] = state.materials[z.material] + (battle.boss and 5 or 1)
+    local collection = G.CollectionBonuses(state)
+    local materialGain = (battle.boss and 5 or 1) * collection.materials * difficulty.materials
+        + (state.materialRemainders[z.material] or 0)
+    local materialWhole = floor(materialGain + 0.000000001)
+    state.materialRemainders[z.material] = max(0, materialGain - materialWhole)
+    state.materials[z.material] = state.materials[z.material] + materialWhole
     state.stats.victories = state.stats.victories + 1
     state.stats.kills = state.stats.kills + #battle.enemies
-    if G.Random(state, 100) <= 35 or battle.boss or state.stats.victories == 1 then
+    local family
+    for _, enemy in ipairs(battle.enemies) do
+        if enemy.family == "humanoid" then
+            family = "humanoid"
+            break
+        end
+    end
+    local collectionItem = G.CollectionVictory(state, {
+        receipt = "encounter:" .. state.encounter,
+        zone = state.zone,
+        level = battle.level,
+        family = family,
+        tier = state.tier or 0,
+        boss = battle.boss,
+    })
+    if collectionItem then
+        G.Loot(state, collectionItem)
+    end
+    if
+        G.Random(state, 100) <= math.min(80, 35 * difficulty.loot)
+        or battle.boss
+        or state.stats.victories == 1
+    then
         local item = G.ZoneLoot(state, battle.level)
         if item then
             G.Loot(state, item)
@@ -320,12 +366,15 @@ local function victory(state, battle)
             battle.stage <= previousSafe or state.runBest <= previousBest
         )
     end
+    G.ProfessionUnlocks(state)
+    G.DifficultyVictory(state, battle)
     if not state.farming then
         state.stage = state.stage + 1
     end
     G.Emit(state, "victory", { gold = gold, xp = xp, boss = battle.boss })
     state.battle = nil
     state.rest = 2
+    G.RouteBoundary(state)
 end
 
 function G.Step(state, seconds)
@@ -333,12 +382,8 @@ function G.Step(state, seconds)
         return
     end
     G.AutomateBoost(state)
-    local attackSpeed = 1
-        + (C.boostByID.battleOrders.attackSpeed - 1)
-            * G.BoostStepFraction(state, "battleOrders", seconds)
-    local damageTaken = 1
-        - (1 - C.boostByID.ironResolve.damageTaken)
-            * G.BoostStepFraction(state, "ironResolve", seconds)
+    local modifiers = G.BoostModifiers(state, seconds)
+    local attackSpeed, damageTaken = modifiers.attackSpeed, modifiers.damageTaken
     state.clock = state.clock + seconds
     if state.rest and state.rest > 0 then
         state.rest = max(0, state.rest - seconds)
@@ -349,9 +394,12 @@ function G.Step(state, seconds)
         return
     end
     local battle = state.battle
+    battle.boostDamage, battle.boostHealing = modifiers.damage, modifiers.healing
     battle.elapsed = battle.elapsed + seconds
     P.Step(state, battle, seconds)
     local traits = activeTraits(state)
+    local collection = G.CollectionBonuses(state)
+    local difficulty = G.DifficultyModifiers(state)
     for _, enemy in ipairs(battle.enemies) do
         for source, dot in pairs(enemy.dots or {}) do
             local owner = battle.heroes[source]
@@ -550,7 +598,10 @@ function G.Step(state, seconds)
                                 or talents.windfury and unit.swings % 3 == 0 and 2
                                 or 1
                             )
-                        amount = amount * traitMultiplier(traits[i], "basic", battle, unit, target)
+                        amount = amount
+                            * traitMultiplier(traits[i], "basic", battle, unit, target)
+                            * collection.basicAttack
+                            * difficulty.basicDamageTaken
                         if talents.atonement then
                             heal(state, lowest, min(target.hp, amount) * 0.15, i)
                         end
@@ -597,6 +648,7 @@ function G.Step(state, seconds)
                     if talent.soulLink and target.hp > target.maxHP * 0.5 then
                         amount = amount * 0.8
                     end
+                    amount = amount * G.CollectionBonuses(state, enemy.family).damageTaken
                     -- Cap boost mitigation at 90% without weakening stronger defenses.
                     if damageTaken < 1 then
                         amount = min(amount, max(enemy.damage * 0.1, amount * damageTaken))
@@ -635,6 +687,7 @@ function G.Step(state, seconds)
             .. "."
         G.Log(state, state.lastDefeat)
         G.Emit(state, "defeat")
+        G.RouteBoundary(state)
     end
 end
 

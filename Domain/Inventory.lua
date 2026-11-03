@@ -135,6 +135,22 @@ function G.SameItem(a, b)
     if a.itemID ~= b.itemID or a.name ~= b.name then
         return false
     end
+    if (a.forge or 0) ~= (b.forge or 0) or (a.forgePower or 0) ~= (b.forgePower or 0) then
+        return false
+    end
+    if
+        (a.enchant and a.enchant.id) ~= (b.enchant and b.enchant.id)
+        or (a.enchant and a.enchant.level) ~= (b.enchant and b.enchant.level)
+    then
+        return false
+    end
+    for _, key in ipairs(C.itemStatOrder) do
+        if
+            (a.enchant and a.enchant.stats[key] or 0) ~= (b.enchant and b.enchant.stats[key] or 0)
+        then
+            return false
+        end
+    end
     for _, key in ipairs(C.itemStatOrder) do
         if (a.stats or {})[key] ~= (b.stats or {})[key] then
             return false
@@ -282,6 +298,7 @@ function G.Loot(state, item)
     end
     local newEffect = item.effect and not state.discoveries["effect:" .. item.effect]
     local keep = item.heirloom
+        or G.KeepByLootPolicy(state, item)
         or item.protected
         or item.quality >= state.salvage.minQuality
         or (state.salvage.keepUpgrades and G.IsUpgrade(state, item))
@@ -312,6 +329,43 @@ function G.Loot(state, item)
     else
         G.Salvage(state, item)
     end
+end
+
+function G.SetLootPolicy(state, key, value)
+    if key == "class" then
+        if value ~= "any" and not C.classByID[value] then
+            return false, "Choose a class."
+        end
+    elseif key == "slot" then
+        if value ~= 0 and not C.slots[value] then
+            return false, "Choose an equipment slot."
+        end
+    elseif key == "stat" then
+        if value ~= "any" and not C.itemStatNames[value] then
+            return false, "Choose an item stat."
+        end
+    else
+        return false, "Unknown loot policy."
+    end
+    state.salvage.policy[key] = value
+    return true
+end
+
+function G.KeepByLootPolicy(state, item)
+    local policy = state.salvage.policy
+    if not policy or (policy.class == "any" and policy.slot == 0 and policy.stat == "any") then
+        return false
+    end
+    if policy.slot ~= 0 and policy.slot ~= item.slot then
+        return false
+    end
+    if policy.class ~= "any" then
+        local hero = { class = policy.class, level = C.heroLevelCap }
+        if not G.CanEquip(hero, item) then
+            return false
+        end
+    end
+    return policy.stat == "any" or (G.ItemStats(item)[policy.stat] or 0) > 0
 end
 
 function G.Equip(state, heroIndex, inventoryIndex)
@@ -377,17 +431,19 @@ function G.EquipBest(state, heroIndex)
             or (hero.name .. " already has the best available power equipment.")
 end
 
-function G.Cost(_, hero, heirloom)
+function G.Cost(state, hero, heirloom)
     local level = heirloom and 1 or hero.level
+    local discount = state.professions and G.ProfessionModifiers(state, "crafting").costMultiplier
+        or 1
     return {
-        essence = heirloom and 45 or 4 + level * 2,
-        gold = heirloom and 30 or level * 8,
-        material = heirloom and 12 or 4 + level,
+        essence = math.max(1, math.ceil((heirloom and 45 or 4 + level * 2) * discount)),
+        gold = math.max(1, math.ceil((heirloom and 30 or level * 8) * discount)),
+        material = math.max(1, math.ceil((heirloom and 12 or 4 + level) * discount)),
     }
 end
 
 -- Preview with a detached identity counter: inspecting recipes never changes the run.
-function G.CraftItem(hero, slot, heirloom)
+function G.CraftItem(hero, slot, heirloom, state)
     if not hero or not C.slots[slot] then
         return nil, "Choose a hero and equipment slot."
     end
@@ -413,6 +469,17 @@ function G.CraftItem(hero, slot, heirloom)
         return nil, "No usable equipment recipe is available for this hero and slot."
     end
     local item = G.Item({ nextItem = 0 }, slot, heirloom and 1 or hero.level, 3, heirloom, template)
+    if not item then
+        return nil, "This equipment recipe is unavailable."
+    end
+    if state then
+        local modifiers = G.ProfessionModifiers(state, "crafting")
+        for stat, value in pairs(item.stats) do
+            item.stats[stat] = value * modifiers.statMultiplier
+        end
+        item.quality = math.min(4, item.quality + modifiers.qualityBonus)
+    end
+    item.crafted = true
     return item
 end
 
@@ -448,7 +515,7 @@ function G.CraftingOpportunity(state, heroIndex)
             end
             for _, slot in ipairs(C.equipmentSlots) do
                 if not heirloom or state.recipes[slot] then
-                    local item = G.CraftItem(hero, slot, heirloom)
+                    local item = G.CraftItem(hero, slot, heirloom, state)
                     if item then
                         local power = G.ItemPower(item, hero)
                         if power > best[slot] then
@@ -482,7 +549,7 @@ function G.Craft(state, index, slot, material, heirloom)
     then
         return false, "You need more Essence, gold, or materials."
     end
-    local item, reason = G.CraftItem(hero, slot, heirloom)
+    local item, reason = G.CraftItem(hero, slot, heirloom, state)
     if not item then
         return false, reason
     end
@@ -492,6 +559,7 @@ function G.Craft(state, index, slot, material, heirloom)
     state.gold = state.gold - cost.gold
     state.materials[material] = state.materials[material] - cost.material
     state.inventory[#state.inventory + 1] = item
+    G.ProfessionWork(state, "crafting")
     if not state.guide.crafted then
         state.guide.crafted = true
         state.guide.craftItem, state.guide.craftHero = item.uid, index

@@ -44,7 +44,7 @@ function G.ValidateBoosts(state)
     return active <= 1 and G.ValidateBoostAutomation(state)
 end
 
-function G.BuyBoost(state, id)
+function G.BuyBoost(state, id, currency)
     local boost = C.boostByID[id]
     if not boost then
         return false, "Unknown commander boost."
@@ -52,10 +52,18 @@ function G.BuyBoost(state, id)
     if state.boosts.owned[id] then
         return false, "This boost is already learned."
     end
-    if state.essence < boost.cost then
-        return false, "Not enough Essence to learn this boost."
+    currency = currency or "essence"
+    local cost = currency == "essence" and boost.cost or currency == "legacy" and boost.legacyCost
+    if not cost then
+        return false, "Choose Essence or Legacy to learn this boost."
     end
-    state.essence = state.essence - boost.cost
+    if state[currency] < cost then
+        return false,
+            "Not enough "
+                .. (currency == "essence" and "Essence" or "Legacy")
+                .. " to learn this boost."
+    end
+    state[currency] = state[currency] - cost
     state.boosts.owned[id] = true
     state.boosts.equipped = state.boosts.equipped or id
     G.Log(state, boost.name .. " learned permanently. Equip it in Commander.")
@@ -118,6 +126,7 @@ function G.ActivateBoost(state, id, quiet)
     local boost = C.boostByID[id]
     state.boosts.activeUntil[id] = state.clock + boost.duration
     state.boosts.readyAt[id] = state.clock + boost.cooldown
+    state.stats.boostUses = (state.stats.boostUses or 0) + 1
     G.Log(state, boost.name .. " active for five adventure minutes.", quiet)
     return true
 end
@@ -126,6 +135,19 @@ end
 function G.BoostStepFraction(state, id, seconds)
     local untilTime = state.boosts.activeUntil[id] or 0
     return math.min(seconds, max(0, untilTime - state.clock)) / seconds
+end
+
+function G.BoostModifiers(state, seconds)
+    local modifiers = { attackSpeed = 1, damageTaken = 1, damage = 1, healing = 1 }
+    for _, boost in ipairs(C.boosts) do
+        local fraction = G.BoostStepFraction(state, boost.id, seconds)
+        if fraction > 0 then
+            for key, value in pairs(modifiers) do
+                modifiers[key] = value * (1 + ((boost[key] or 1) - 1) * fraction)
+            end
+        end
+    end
+    return modifiers
 end
 
 function G.ValidateBoostAutomation(state)
@@ -166,6 +188,12 @@ function G.ValidateBoostAutomation(state)
             or config.healthBelow < 10
             or config.healthBelow > 90
             or config.healthBelow ~= math.floor(config.healthBelow)
+            or not G.ValidateBoostRules(config.rules)
+            or (
+                config.rules
+                and #config.rules > 0
+                and (not automation.owned.conditional or not state.boosts.owned[boost.id])
+            )
         then
             return false
         end
@@ -256,7 +284,7 @@ function G.BoostAutomationStatus(state, id)
     if not config.enabled then
         return false, "Disabled for this boost."
     end
-    if config.mode == "manual" then
+    if config.mode == "manual" and (not config.rules or #config.rules == 0) then
         return false, "Manual mode."
     end
     local ready, reason = G.CanActivateBoost(state, id)
@@ -272,6 +300,9 @@ function G.BoostAutomationStatus(state, id)
     end
     if not livingEnemy or (state.rest or 0) > 0 then
         return false, "Waiting for combat."
+    end
+    if config.rules and #config.rules > 0 then
+        return G.EvaluateBoostRules(state, id)
     end
     if config.mode == "boss" and not battle.boss then
         return false, "Waiting for a boss encounter."

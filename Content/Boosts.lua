@@ -22,9 +22,30 @@ W.Content.boosts = {
         cooldown = 600,
         damageTaken = 0.8,
     },
+    {
+        id = "focusedAssault",
+        name = "Focused Assault",
+        icon = "Ability_Warrior_SavageBlow",
+        description = "+20% party damage, including strikes and ongoing effects.",
+        cost = 60,
+        duration = 300,
+        cooldown = 600,
+        damage = 1.2,
+    },
+    {
+        id = "restorativeFocus",
+        name = "Restorative Focus",
+        icon = "Spell_Holy_FlashHeal",
+        description = "+25% healing-spell output. Does not revive fallen allies.",
+        cost = 60,
+        duration = 300,
+        cooldown = 600,
+        healing = 1.25,
+    },
 }
 W.Content.boostByID = {}
 for _, boost in ipairs(W.Content.boosts) do
+    boost.legacyCost = 1
     W.Content.boostByID[boost.id] = boost
 end
 

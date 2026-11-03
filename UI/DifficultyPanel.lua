@@ -1,0 +1,189 @@
+local _, W = ...
+local G, U, T = W.Game, W.Widgets, W.Theme
+local D = {}
+W.DifficultyPanel = D
+
+local function button(parent, label, x, y, width, action)
+    return U.Button(parent, label, x, y, width, 34, action)
+end
+
+function D.Draw(ui, parent, state)
+    local difficulty = state.difficulty
+    if ui.difficultyTier == nil or ui.difficultyTier > difficulty.maxTier then
+        ui.difficultyTier = state.tier
+    end
+    U.Text(parent, "PRESTIGE+", 0, 0, 22, T.gold, 1296)
+    U.Text(
+        parent,
+        "A deeper reset rebuilds your adventure in one selected difficulty.",
+        0,
+        42,
+        16,
+        T.text,
+        1296
+    )
+    U.Text(
+        parent,
+        "Current tier "
+            .. state.tier
+            .. " · "
+            .. difficulty.ascensions
+            .. " ascensions · "
+            .. difficulty.currency
+            .. " Inheritance",
+        0,
+        80,
+        16,
+        T.gold,
+        1296
+    )
+    ui.difficultyTiers = {}
+    for tier = 0, difficulty.maxTier do
+        local value = tier
+        local x = tier * 108
+        ui.difficultyTiers[tier] = button(
+            parent,
+            tier == 0 and "Base" or "Tier " .. tier,
+            x,
+            130,
+            98,
+            function()
+                ui.difficultyTier, ui.difficultyConfirm = value, false
+                ui:Refresh()
+            end
+        )
+        U.Icon(parent, "INV_Misc_Map_01", x + 32, 178, 32)
+    end
+    local selected = ui.difficultyTier
+    local preview = G.PrestigePlusPreview(state, selected)
+    if ui.difficultyConfirm then
+        ui.difficultyReview, ui.inheritancePurchases = nil, {}
+        U.Text(
+            parent,
+            "REVIEW PRESTIGE+ " .. selected .. " · +" .. preview.inheritance .. " Inheritance",
+            20,
+            236,
+            20,
+            T.gold,
+            1240
+        )
+        U.Text(parent, "KEEP", 20, 282, 16, T.green, 610)
+        U.Text(parent, table.concat(preview.retained, "\n"), 20, 320, 15, T.text, 610)
+        U.Text(parent, "REBUILD", 670, 282, 16, T.gold, 590)
+        U.Text(parent, table.concat(preview.rebuilt, "\n"), 670, 320, 15, T.text, 590)
+        ui.difficultyExecute = button(
+            parent,
+            "Begin Prestige+ " .. selected,
+            670,
+            576,
+            380,
+            function()
+                local ok = W.Action(G.PrestigePlus, selected)
+                if ok then
+                    ui.difficultyConfirm = false
+                end
+                ui:Refresh()
+            end
+        )
+        U.Enabled(ui.difficultyExecute, preview.eligible)
+        ui.difficultyCancel = button(parent, "Keep this adventure", 20, 576, 380, function()
+            ui.difficultyConfirm = false
+            ui:Refresh()
+        end)
+        return
+    end
+    ui.difficultyExecute, ui.difficultyCancel = nil, nil
+    local modifiers = G.DifficultyModifiers({ tier = selected, difficulty = difficulty })
+    U.Text(
+        parent,
+        "Selected: " .. (selected == 0 and "Base adventure" or "Prestige+ " .. selected),
+        0,
+        236,
+        20,
+        T.gold,
+        1296
+    )
+    U.Text(
+        parent,
+        string.format(
+            "Enemies: %.2f× health / %.2f× damage · Hero XP %.2f× · Mastery %.2f×",
+            modifiers.enemyHealth,
+            modifiers.enemyDamage,
+            modifiers.heroXP,
+            modifiers.masteryXP
+        ),
+        0,
+        276,
+        15,
+        T.text,
+        1296
+    )
+    U.Text(
+        parent,
+        string.format(
+            "Gold / materials %.2f× · Loot %.2f× · Essence and Adventure XP unchanged",
+            modifiers.gold,
+            modifiers.loot
+        ),
+        0,
+        306,
+        15,
+        T.muted,
+        1296
+    )
+    U.Text(
+        parent,
+        string.format(
+            "Guarded formations: enemies take %.1f%% less basic-attack damage. Spells retain full damage.",
+            (1 - modifiers.basicDamageTaken) * 100
+        ),
+        0,
+        336,
+        14,
+        T.muted,
+        1296
+    )
+    U.Text(parent, "PERMANENT REBUILDING", 0, 368, 16, T.gold, 1296)
+    ui.inheritancePurchases = {}
+    for index, id in ipairs({ "rebuilding", "supplies" }) do
+        local purchase = G.InheritancePurchases[id]
+        local rank, x = difficulty.purchases[id] or 0, (index - 1) * 650
+        U.Text(
+            parent,
+            purchase.name .. " · " .. rank .. "/" .. purchase.max,
+            x,
+            410,
+            17,
+            T.text,
+            610
+        )
+        U.Text(parent, purchase.description, x, 446, 14, T.muted, 610)
+        ui.inheritancePurchases[id] = button(
+            parent,
+            rank == purchase.max and "Complete" or "Improve · " .. rank + 1 .. " Inheritance",
+            x,
+            484,
+            360,
+            function()
+                W.Action(G.BuyInheritance, id)
+            end
+        )
+        U.Enabled(
+            ui.inheritancePurchases[id],
+            difficulty.unlocked and rank < purchase.max and difficulty.currency >= rank + 1
+        )
+    end
+    ui.difficultyReview = button(
+        parent,
+        "Review reset · +" .. preview.inheritance .. " Inheritance",
+        0,
+        560,
+        430,
+        function()
+            ui.difficultyConfirm = true
+            ui:Refresh()
+        end
+    )
+    U.Enabled(ui.difficultyReview, preview.eligible)
+    U.Text(parent, preview.reason, 0, 612, 15, T.muted, 1296)
+end

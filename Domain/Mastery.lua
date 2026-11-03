@@ -25,7 +25,25 @@ function G.MasteryProgress(hero)
         return nil, "The saved Mastery progression is invalid. Your adventure has not been reset."
     end
     hero.mastery = mastery
+    if mastery.frontiers == nil then
+        mastery.frontiers = { [0] = mastery.frontier }
+    elseif type(mastery.frontiers) ~= "table" then
+        return nil,
+            "The saved tier Mastery frontiers are invalid. Your adventure has not been reset."
+    end
+    for tier, frontier in pairs(mastery.frontiers) do
+        if not whole(tier) or tier > 10 or not whole(frontier) then
+            return nil,
+                "The saved tier Mastery frontiers are invalid. Your adventure has not been reset."
+        end
+    end
+    mastery.frontiers[0] = max(mastery.frontiers[0] or 0, mastery.frontier)
     return mastery
+end
+
+function G.MasteryFrontier(hero, tier)
+    local mastery = G.MasteryProgress(hero)
+    return mastery and (mastery.frontiers[tier or 0] or 0) or 0
 end
 
 function G.MasteryUnlocked(hero)
@@ -35,8 +53,15 @@ end
 
 -- Victory XP feeds a separate, persistent track even at the character level cap.
 -- Its encounter frontier survives prestige so easier runs cannot farm Mastery.
-function G.RewardMastery(hero, encounterLevel, experience, boss)
-    if not whole(encounterLevel) or encounterLevel < 1 or not whole(experience) then
+function G.RewardMastery(hero, encounterLevel, experience, boss, tier)
+    tier = tier or 0
+    if
+        not whole(encounterLevel)
+        or encounterLevel < 1
+        or not whole(experience)
+        or not whole(tier)
+        or tier > 10
+    then
         return 0, 0
     end
     local mastery = G.MasteryProgress(hero)
@@ -44,8 +69,12 @@ function G.RewardMastery(hero, encounterLevel, experience, boss)
     if not mastery or not progress then
         return 0, 0
     end
-    local eligible = encounterLevel >= mastery.frontier
-    mastery.frontier = max(mastery.frontier, encounterLevel)
+    local frontier = mastery.frontiers[tier] or 0
+    local eligible = encounterLevel >= frontier
+    mastery.frontiers[tier] = max(frontier, encounterLevel)
+    if tier == 0 then
+        mastery.frontier = mastery.frontiers[0]
+    end
     if not eligible or not G.MasteryUnlocked(hero) or progress.earned >= #G.TalentList(hero) then
         return 0, 0
     end

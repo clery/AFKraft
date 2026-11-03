@@ -5,9 +5,11 @@ for _, file in ipairs({
     "Content.lua",
     "Content/Items.lua",
     "Content/Boosts.lua",
+    "Content/Professions.lua",
     "Domain/State.lua",
     "Domain/Party.lua",
     "Domain/Inventory.lua",
+    "Domain/Professions.lua",
     "Domain/Adventure.lua",
 }) do
     assert(loadfile(file))("WoWIdle", W)

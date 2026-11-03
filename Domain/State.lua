@@ -56,7 +56,41 @@ function G.New(now)
         gold = 0,
         legacy = 0,
         prestiges = 0,
+        prestigeStrength = 0,
         materials = { timber = 0, hide = 0, ore = 0, relic = 0 },
+        materialRemainders = {},
+        routes = {
+            owned = false,
+            enabled = false,
+            templates = {},
+            nextID = 1,
+            run = { cursor = 1, completed = {}, paused = false },
+        },
+        boostProfiles = { nextID = 1, entries = {} },
+        tier = 0,
+        difficulty = {
+            unlocked = false,
+            maxTier = 0,
+            records = {},
+            cycleComplete = false,
+            ascensions = 0,
+            currency = 0,
+            purchases = {},
+        },
+        professions = {
+            owned = {},
+            ranks = { crafting = 0, enchanting = 0, titanforging = 0 },
+            xp = { crafting = 0, enchanting = 0, titanforging = 0 },
+            allocations = { crafting = {}, enchanting = {}, titanforging = {} },
+            bestLevel = 1,
+        },
+        collectionBook = {
+            pieces = {},
+            counters = {},
+            receipts = {},
+            receiptOrder = {},
+            lastEncounter = 0,
+        },
         discoveries = {},
         recipes = {},
         best = 1,
@@ -75,7 +109,12 @@ function G.New(now)
         encounter = 0,
         paused = false,
         lastTime = now,
-        salvage = { minQuality = 2, keepUpgrades = true, keepEffects = true },
+        salvage = {
+            minQuality = 2,
+            keepUpgrades = true,
+            keepEffects = true,
+            policy = { class = "any", slot = 0, stat = "any" },
+        },
         ui = { compact = false, locked = false, tab = "adventure" },
         settings = {
             chatAnnouncements = true,
@@ -89,7 +128,7 @@ function G.New(now)
             soundEquipment = true,
             soundTravel = true,
         },
-        stats = { kills = 0, victories = 0, salvaged = 0, essence = 0 },
+        stats = { kills = 0, victories = 0, salvaged = 0, essence = 0, boostUses = 0 },
         identities = {},
         seenRewards = {},
         rewardOrder = {},
@@ -122,6 +161,10 @@ function G.Load(db, now)
     end
     local existingGuide = type(db.guide) == "table"
     local needsItemMigration = db.itemStatsVersion ~= 1
+    if db.prestigeStrength == nil then
+        -- Existing rewarded chapters retain their full advertised party bonus.
+        db.prestigeStrength = db.prestiges or 0
+    end
     local defaults = G.New(now)
     for k, v in pairs(defaults) do
         if db[k] == nil then
@@ -130,6 +173,22 @@ function G.Load(db, now)
             return nil,
                 "The saved adventure has an invalid " .. k .. " field. It has not been reset."
         end
+    end
+    if db.salvage.policy == nil then
+        db.salvage.policy = copy(defaults.salvage.policy)
+    end
+    local strength = db.prestigeStrength
+    if strength < 0 or strength * 2 >= math.huge or strength * 2 ~= floor(strength * 2) then
+        return nil, "The saved prestige strength is invalid. Your adventure has not been reset."
+    end
+    local policy = db.salvage.policy
+    if
+        type(policy) ~= "table"
+        or (policy.class ~= "any" and not C.classByID[policy.class])
+        or (policy.slot ~= 0 and not C.slots[policy.slot])
+        or (policy.stat ~= "any" and not C.itemStatNames[policy.stat])
+    then
+        return nil, "The saved loot policy is invalid. Your adventure has not been reset."
     end
     for key, value in pairs(defaults.guide) do
         if type(db.guide[key]) ~= "boolean" then
@@ -193,6 +252,43 @@ function G.Load(db, now)
     end
     if not G.ValidateBoosts(db) then
         return nil, "The saved commander boosts are invalid. Your adventure has not been reset."
+    end
+    for material, remainder in pairs(db.materialRemainders) do
+        if
+            not C.materials[material]
+            or type(remainder) ~= "number"
+            or remainder < 0
+            or remainder >= 1
+            or remainder ~= remainder
+        then
+            return nil, "The saved material progress is invalid. Your adventure has not been reset."
+        end
+    end
+    if not G.ValidateRoutes(db) then
+        return nil, "The saved routes are invalid. Your adventure has not been reset."
+    end
+    if not G.ValidateProfiles(db) then
+        return nil, "The saved commander profiles are invalid. Your adventure has not been reset."
+    end
+    if not G.ValidateCollections(db) then
+        return nil, "The saved collections are invalid. Your adventure has not been reset."
+    end
+    if not whole(db.encounter) or (db.collectionBook.lastEncounter or 0) > db.encounter then
+        return nil, "The saved encounter receipts are invalid. Your adventure has not been reset."
+    end
+    if not G.ValidateDifficulty(db) then
+        return nil, "The saved difficulty progress is invalid. Your adventure has not been reset."
+    end
+    if db.tier == 0 and not db.difficulty.records[0] then
+        db.difficulty.records[0] = { best = math.max(0, db.runBest - 1), safe = copy(db.safe) }
+    end
+    if not G.ValidateProfessions(db) then
+        return nil, "The saved professions are invalid. Your adventure has not been reset."
+    end
+    if db.stats.boostUses == nil then
+        db.stats.boostUses = 0
+    elseif not whole(db.stats.boostUses) then
+        return nil, "The saved boost usage count is invalid. Your adventure has not been reset."
     end
     if migrated then
         G.Log(db, "Adventure XP unlocked. Existing Essence and hero progression retained.")
@@ -265,7 +361,62 @@ function G.Load(db, now)
             or { weaponDPS = power * 0.65 }
         item.power = nil
     end
+    local function validModifications(item)
+        if type(item) ~= "table" then
+            return false
+        end
+        local forge = item.forge or 0
+        if not whole(forge) or forge > C.forgeCap then
+            return false
+        end
+        if
+            item.forgePower ~= nil
+            and (
+                type(item.forgePower) ~= "number"
+                or item.forgePower ~= item.forgePower
+                or item.forgePower < 0
+                or item.forgePower > 0.27500001
+                or forge == 0
+            )
+        then
+            return false
+        end
+        if item.enchant ~= nil then
+            local enchant = item.enchant
+            if
+                type(enchant) ~= "table"
+                or not C.enchantByID[enchant.id]
+                or type(enchant.stats) ~= "table"
+                or (
+                    enchant.level ~= nil
+                    and (
+                        not whole(enchant.level)
+                        or enchant.level < 1
+                        or enchant.level > C.heroLevelCap
+                    )
+                )
+            then
+                return false
+            end
+            for key, value in pairs(enchant.stats) do
+                if
+                    not C.enchantByID[enchant.id].stats[key]
+                    or type(value) ~= "number"
+                    or value ~= value
+                    or value < 0
+                    or value > 1000000
+                then
+                    return false
+                end
+            end
+        end
+        return true
+    end
     for _, item in ipairs(db.inventory) do
+        if not validModifications(item) then
+            return nil,
+                "The saved item modifications are invalid. Your adventure has not been reset."
+        end
         migrateItem(item)
     end
     for _, hero in ipairs(db.heroes) do
@@ -300,6 +451,10 @@ function G.Load(db, now)
         end
         G.AppearanceSeed(hero)
         for _, item in pairs(hero.gear or {}) do
+            if not validModifications(item) then
+                return nil,
+                    "The saved item modifications are invalid. Your adventure has not been reset."
+            end
             migrateItem(item)
         end
     end
@@ -313,6 +468,7 @@ function G.Load(db, now)
         db.rest = 0
         db.itemStatsVersion = 1
     end
+    G.ProfessionUnlocks(db)
     db.paused, db.pauseAfter = false, nil
     db.events = nil
     return db

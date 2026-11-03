@@ -103,7 +103,7 @@ function G.ItemStats(item, hero, extraUpgrade)
     if not item then
         return stats
     end
-    local scale = 1 + ((item.upgrade or 0) + (extraUpgrade or 0)) * 0.1
+    local scale = (1 + ((item.upgrade or 0) + (extraUpgrade or 0)) * 0.1) * G.ForgeMultiplier(item)
     if item.heirloom then
         local template = C.itemByID[item.itemID]
         scale = scale * (hero and hero.level or 1) / (template and template.level or 1)
@@ -113,6 +113,9 @@ function G.ItemStats(item, hero, extraUpgrade)
         if type(value) == "number" and value >= 0 and value < math.huge then
             stats[key] = value * scale
         end
+    end
+    for key, value in pairs(G.ProfessionStatBonus(item, hero)) do
+        stats[key] = (stats[key] or 0) + value
     end
     return stats
 end
@@ -197,6 +200,17 @@ function G.ItemDescription(item, hero, compare)
     if (item.upgrade or 0) > 0 then
         lines[#lines + 1] = "Idle enhancement: +" .. item.upgrade * 10 .. "% stats."
     end
+    if item.enchant then
+        local enchant = C.enchantByID[item.enchant.id]
+        lines[#lines + 1] = "Enchantment: " .. (enchant and enchant.name or "Unknown") .. "."
+    end
+    if (item.forge or 0) > 0 then
+        lines[#lines + 1] = "Titanforge "
+            .. item.forge
+            .. ": +"
+            .. math.floor((G.ForgeMultiplier(item) - 1) * 100 + 0.5)
+            .. "% base potential."
+    end
     if item.itemID == 13074 then
         lines[#lines + 1] = "Source bonus: +6 Defense (not simulated)."
     end
@@ -267,7 +281,7 @@ function G.Stats(state, hero)
     end
     local primary = total[C.primaryStats[hero.class]] or 0
     local offense = primary * 0.65 + (total.weaponDPS or 0) + (total.attackPower or 0) * 0.325
-    local mult = 1 + state.prestiges * 0.04
+    local mult = 1 + (state.prestigeStrength or state.prestiges) * 0.04
     return G.ApplyTalentStats(hero, {
         attributes = total,
         hp = math.floor((105 + hero.level * 19 + (total.stamina or 0) * 10) * mult),
@@ -387,6 +401,42 @@ function G.Train(state, index)
     return true
 end
 
+function G.PriorityPresets(hero)
+    local role = C.classByID[hero.class].role
+    return {
+        { id = "balanced", name = "Balanced", priority = "heal", healBelow = 65, specialCount = 2 },
+        {
+            id = "offense",
+            name = "Offensive",
+            priority = "attack",
+            healBelow = 35,
+            specialCount = 1,
+        },
+        {
+            id = "support",
+            name = role == "healer" and "Healing" or "Defensive",
+            priority = "heal",
+            healBelow = 85,
+            specialCount = 3,
+        },
+    }
+end
+
+function G.ConfigurePreset(state, index, presetID)
+    local hero = state.heroes[index]
+    if not hero then
+        return false, "Choose a hero."
+    end
+    for _, preset in ipairs(G.PriorityPresets(hero)) do
+        if preset.id == presetID then
+            hero.priority, hero.healBelow, hero.specialCount =
+                preset.priority, preset.healBelow, preset.specialCount
+            return true
+        end
+    end
+    return false, "Choose a class priority preset."
+end
+
 function G.Configure(state, index, key, value)
     local hero = state.heroes[index]
     if not hero then
@@ -487,10 +537,13 @@ function G.IsUnlocked(state, z)
     return z.level <= state.runBest
 end
 
-function G.Travel(state, zone)
+function G.Travel(state, zone, automatic)
     local z = C.zoneByID[zone]
     if not z or not G.IsUnlocked(state, z) then
         return false, "Defeat harder encounters to unlock this destination."
+    end
+    if not automatic and state.routes.enabled and state.routes.selected then
+        state.routes.run.paused = true
     end
     if state.zone == zone then
         return true

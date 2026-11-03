@@ -6,30 +6,21 @@ function G.PrestigeReward(state)
     return max(0, floor((state.runBest - 1) / 3))
 end
 
-function G.Prestige(state)
-    if not state.prestigeUnlocked then
-        return false, "Defeat a level 8 milestone boss to unlock prestige."
-    end
+function G.ResetAdventure(state, deep)
     -- Capture every hero's record before any reset mutates their current level.
     for _, hero in ipairs(state.heroes) do
-        local progress, errorMessage = G.TalentProgress(hero)
+        local prepared = G.Copy(hero)
+        local progress, errorMessage = G.TalentProgress(prepared)
         if not progress then
             return false, errorMessage
         end
-        local mastery, masteryError = G.MasteryProgress(hero)
+        local mastery, masteryError = G.MasteryProgress(prepared)
         if not mastery then
             return false, masteryError
         end
     end
     state.battle, state.rest = nil, 0
     state.boosts.activeUntil = {}
-    local reward = G.PrestigeReward(state)
-    state.legacy = state.legacy + reward
-    state.prestiges = state.prestiges + 1
-    -- Strength bonuses are earned only by rewarded resets, never empty resets.
-    if reward == 0 then
-        state.prestiges = state.prestiges - 1
-    end
     local retained = {}
     for _, item in ipairs(state.inventory) do
         if item.heirloom then
@@ -37,6 +28,8 @@ function G.Prestige(state)
         end
     end
     for _, hero in ipairs(state.heroes) do
+        G.TalentProgress(hero)
+        G.MasteryProgress(hero)
         hero.level, hero.xp, hero.rank, hero.health = 1, 0, 0, 1
         for slot, item in pairs(hero.gear) do
             if not item.heirloom then
@@ -50,7 +43,35 @@ function G.Prestige(state)
     end
     state.gold = 0
     state.materials = { timber = 0, hide = 0, ore = 0, relic = 0 }
+    state.materialRemainders = {}
     state.runBest, state.stage, state.zone, state.safe, state.farming = 1, 1, "elwynn", {}, false
+    G.ResetRouteRun(state)
+    if state.difficulty then
+        state.difficulty.cycleComplete = false
+    end
+    if deep and state.professions then
+        for _, id in ipairs({ "crafting", "enchanting", "titanforging" }) do
+            state.professions.ranks[id], state.professions.xp[id] = 0, 0
+        end
+    end
+    return true
+end
+
+function G.Prestige(state)
+    if not state.prestigeUnlocked then
+        return false, "Defeat a level 8 milestone boss to unlock prestige."
+    end
+    local reward = G.PrestigeReward(state)
+    local strength = state.prestigeStrength or state.prestiges
+    local ok, reason = G.ResetAdventure(state, false)
+    if not ok then
+        return false, reason
+    end
+    state.legacy = state.legacy + reward
+    if reward > 0 then
+        state.prestiges = state.prestiges + 1
+        state.prestigeStrength = strength + reward / 2
+    end
     G.Log(state, "A new chapter begins. Earned " .. reward .. " Legacy. Unspent Essence retained.")
     G.Emit(state, "prestige")
     return true
