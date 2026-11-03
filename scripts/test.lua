@@ -36,6 +36,7 @@ for _, file in ipairs({
     "tests/activities.lua",
     "tests/adventure.lua",
     "tests/boosts.lua",
+    "tests/boost_automation.lua",
 }) do
     for _, spec in ipairs(assert(loadfile(file))("WoWIdle", W)) do
         cases[#cases + 1] = spec

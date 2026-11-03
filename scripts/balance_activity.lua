@@ -4,6 +4,7 @@ local W = {}
 for _, file in ipairs({
     "Content.lua",
     "Content/Items.lua",
+    "Content/Boosts.lua",
     "Domain/State.lua",
     "Domain/Party.lua",
     "Domain/Inventory.lua",

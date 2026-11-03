@@ -1,6 +1,6 @@
 # WoWIdle — Design Document
 
-Status: research-informed draft for review, with the implementation audit updated 2026-11-03 for the first manual commander boosts. The audit below distinguishes current source behavior from proposed work. New boost values are provisional; existing balance constants are unchanged. An implemented feature still requires supported-client validation and playtesting.
+Status: research-informed draft for review, with the implementation audit updated 2026-11-03 for commander boosts and their initial automation. The audit below distinguishes current source behavior from proposed work. New boost values are provisional; existing balance constants are unchanged. An implemented feature still requires supported-client validation and playtesting.
 
 ## Vision
 
@@ -40,12 +40,12 @@ Audit date: 2026-11-02; commander boosts updated 2026-11-03. **Implemented** mea
 | Profession talent trees | Proposed | Separate crafting/enchanting/titanforging specializations, not extra spending from the combat talent budget. |
 | Zone travel and encounter progression | Partial: [travel/retry](Domain/Party.lua), [world map](UI/Atlas.lua) | Manual destination changes, automatic encounters within a zone, and defeat fallback exist. No saved zone-change schedule or route executor exists. |
 | Player-triggered temporary party boosts | Initial implementation: [catalog](Content/Boosts.lua), [commands](Domain/Boosts.lua), [controls](UI/Panels.lua) | Battle Orders and Iron Resolve; permanent Essence purchases, one equipped/active boost, five-minute effects, ten-minute cooldowns, full/compact activation. Values remain provisional; additional boosts and alternative acquisition paths remain proposed. |
-| Boost automation | Proposed | No automatic cooldown activation, conditional boost rules, or saved boost profiles. Existing hero priorities remain separate. |
+| Boost automation | Initial implementation: [commands and conditions](Domain/Boosts.lua), [combat-step execution](Simulation/Combat.lua), [Commander controls](UI/Panels.lua) | Permanent on-cooldown and conditional unlocks; global pause, per-boost enable/mode, boss/lowest-living-health/farming/pushing triggers, inspectable reasons, and offline execution. One condition per equipped boost; saved profiles and a general priority-rule editor remain proposed. Hero priorities remain separate. |
 | Route planning | Proposed | No route editor, persistent templates, milestone interpreter, or per-run route cursor. |
 | Ordinary prestige and Legacy | Implemented: [prestige](Domain/Prestige.lua) | Level-8 milestone unlock, run reset, retained talents/Mastery, Legacy rewards, and the current +4 percentage points to health/damage/healing per rewarded chapter. |
 | Prestige+ and difficulty tiers | Proposed | No deeper reset, tiered zone progress, new tier currency, or tier reward multiplier exists yet. Ordinary prestige is not Prestige+. |
-| Offline play | Implemented safe farming: [catch-up](Simulation/Offline.lua) | Up to 24 hours, bounded deterministic catch-up, including Mastery and already-active commander boosts/cooldowns. No first-time destination progression, route execution, automatic boost activation, or automated resets offline. |
-| Fullscreen, windowed, compact views and onboarding | Implemented foundations: [shell](UI/Shell.lua), [tutorial](UI/Tutorial.lua) | Expanded management, Commander purchases/loadout, and full/compact boost activation. Automation/route management remain proposed. |
+| Offline play | Implemented safe farming: [catch-up](Simulation/Offline.lua) | Up to 24 hours, bounded deterministic catch-up, including Mastery and commander boosts/automation. Rules use the safe-farming snapshot, so pushing-only rules wait offline. No first-time destination progression, route execution, or automated resets offline. |
+| Fullscreen, windowed, compact views and onboarding | Implemented foundations: [shell](UI/Shell.lua), [tutorial](UI/Tutorial.lua) | Expanded management, Commander purchases/loadout/automation, and full/compact boost activation. Route/profile management remain proposed. |
 | Client coverage and final pacing | Partial | Retail is the current development/simulator target; Forever integration, asset behavior, activity signals, and the complete pacing model are not established by source coverage alone. |
 
 ## Party and identity
@@ -94,7 +94,7 @@ These examples describe the proposed complete game, not additional implemented f
 
 ## Commander abilities — draft
 
-The first manual prototype implements Battle Orders and Iron Resolve. Each costs 30 Essence once, with one equipped boost and one concurrent effect. Both last 300 adventure seconds with a 600-second cooldown from activation. Battle Orders accelerates only basic-attack cooldown progress by 25%; quarter-second action resolution determines realized attack throughput. Iron Resolve multiplies incoming damage by 0.8 before shields, stopping additional mitigation at 90% total reduction without weakening builds whose existing defenses are stronger. These are provisional prototype values. Owned boosts, loadout, and cooldown deadlines survive ordinary prestige; active effects end. Eligible offline safe farming advances the same saved simulation clock; ineligible absence does not advance boost time. Automatic activation, further abilities, and alternative purchase paths remain future work.
+The first manual prototype implements Battle Orders and Iron Resolve. Each costs 30 Essence once, with one equipped boost and one concurrent effect. Both last 300 adventure seconds with a 600-second cooldown from activation. Battle Orders accelerates only basic-attack cooldown progress by 25%; quarter-second action resolution determines realized attack throughput. Iron Resolve multiplies incoming damage by 0.8 before shields, stopping additional mitigation at 90% total reduction without weakening builds whose existing defenses are stronger. These are provisional prototype values. Owned boosts, loadout, and cooldown deadlines survive ordinary prestige; active effects end. Eligible offline safe farming advances the same saved simulation clock; ineligible absence does not advance boost time. Boost automation is described below; further abilities and alternative purchase paths remain future work.
 
 ### Permanent ownership and acquisition
 
@@ -129,6 +129,8 @@ Start with the attack-speed and defense abilities. Add more after their shared l
 - Manual and automatic use have identical strength, duration, cooldown, and validation. Attention changes timing choices, not the numerical power of the same button.
 
 ## Automation — draft
+
+The initial implementation offers one saved mode per boost, executing only the equipped boost in living encounters. On-cooldown automation costs 1 Legacy once; conditional modes cost 2 Legacy once and require that first unlock. Purchases do not enable automation: a global running toggle, per-boost enable, and a non-manual mode are all required. Enabling a boost initially selects on-cooldown mode; subsequent toggles retain its chosen condition. Available conditions are a boss encounter, a living ally strictly below a configured health percentage, safe farming, or frontier pushing. The health threshold defaults to 50%; the interface offers 35%, 50%, 65%, and 80%. Manual activation remains available while automation is paused and uses identical validation and timers. Unmet conditions generate a readable reason rather than repeated notifications; routine automatic activations enter the bounded journal quietly. These unlock costs and presets are provisional. General priority lists and named profiles remain future work.
 
 ### Progression from action to planning
 

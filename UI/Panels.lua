@@ -175,61 +175,173 @@ function P.party(ui, p, s)
 end
 
 function P.boosts(ui, p, s)
-    text(p, "COMMANDER BOOSTS", 0, 0, 24, T.gold)
-    text(
+    local automation = s.boosts.automation
+    local selectedID = C.boostByID[ui.selectedBoost] and ui.selectedBoost
+        or s.boosts.equipped
+        or C.boosts[1].id
+    ui.selectedBoost = selectedID
+    ui.boostAutomationPurchases = {}
+    for index, capability in ipairs({ "onCooldown", "conditional" }) do
+        local spec = C.boostAutomation[capability]
+        local control = button(p, "", (index - 1) * 310, 0, 292, function()
+            W.Action(G.BuyBoostAutomation, capability)
+        end)
+        control.text:ClearAllPoints()
+        control.text:SetPoint("LEFT", control, "LEFT", 42, 0)
+        U.SingleLine(control.text, 240, 24)
+        U.Begin(control)
+        U.Icon(control, "INV_Misc_Book_09", 7, 5, 22):SetParent(control.content or control)
+        U.EndBuild(control)
+        U.Tooltip(
+            control,
+            spec.name .. " automation",
+            capability == "onCooldown"
+                    and "Permanent unlock: automatically activate an equipped boost when ready in combat. Learn once for 1 Legacy."
+                or "Permanent unlock: boss, ally health, safe farming and frontier triggers. Requires On cooldown. Learn once for 2 Legacy."
+        )
+        ui.boostAutomationPurchases[capability] = control
+    end
+    ui.boostAutomationEnabled = U.Checkbox(
         p,
-        "Learn once. Equip one boost. Activate without spending more currency.",
+        "Automation",
+        650,
         0,
-        46,
-        16,
-        T.text,
-        1296
+        330,
+        automation.enabled,
+        function(checked)
+            W.Action(G.SetBoostAutomationEnabled, checked)
+        end
     )
-    text(
-        p,
-        "Five adventure minutes active / ten-minute cooldown from activation. One active effect at a time.",
-        0,
-        80,
-        14,
-        T.muted,
-        1296
+    U.Tooltip(
+        ui.boostAutomationEnabled,
+        "Run / pause automation",
+        "Pause automatic activations without changing saved rules. Manual activation remains available."
     )
-    ui.boostControls = {}
+    ui.boostTiles, ui.boostControls = {}, {}
     for index, boost in ipairs(C.boosts) do
         local id = boost.id
-        local x = (index - 1) * 660
-        text(p, boost.name, x, 146, 22, T.gold, 620)
-        text(p, boost.description, x, 188, 16, T.text, 610)
-        text(p, "Permanent unlock: " .. boost.cost .. " Essence", x, 252, 15, T.gold, 620)
-        local purchase = button(
-            p,
-            s.boosts.owned[id] and "Learned permanently" or "Learn · " .. boost.cost .. " Essence",
-            x,
-            298,
-            296,
-            function()
-                W.Action(G.BuyBoost, id)
-            end
+        local x, y = ((index - 1) % 5) * 260, 62 + math.floor((index - 1) / 5) * 88
+        local tile = U.Button(p, "", x, y, 248, 76, function()
+            ui.selectedBoost = id
+            ui:Refresh()
+        end, selectedID == id)
+        U.Begin(tile)
+        local icon = U.Icon(tile, boost.icon or "INV_Misc_Book_09", 12, 12, 48)
+        icon:SetParent(tile.content or tile)
+        U.SingleLine(text(tile, boost.name, 72, 12, 15, T.gold, 164), 164, 24)
+        local state = U.SingleLine(text(tile, "", 72, 40, 12, T.muted, 164), 164, 20)
+        U.EndBuild(tile)
+        U.Tooltip(
+            tile,
+            boost.name,
+            boost.description
+                .. "\n\nPermanent unlock: "
+                .. boost.cost
+                .. " Essence. "
+                .. math.floor(boost.duration / 60)
+                .. " minutes active; "
+                .. math.floor(boost.cooldown / 60)
+                .. " minutes cooldown. Equip one boost at a time.",
+            320
         )
-        local equip = button(p, "Equip", x + 316, 298, 296, function()
-            W.Action(G.EquipBoost, id)
-        end)
-        local activate = button(p, "Activate", x, 350, 296, function()
-            W.Action(G.ActivateBoost, id)
-        end, false, "primary")
-        local status = text(p, "", x, 400, 14, T.muted, 610)
-        ui.boostControls[id] =
-            { purchase = purchase, equip = equip, activate = activate, status = status }
+        ui.boostTiles[id] = { button = tile, state = state, icon = icon }
     end
-    text(
-        p,
-        "Ownership and cooldowns survive chapter resets. Active effects end. Offline timers advance only during eligible safe farming (up to 24 hours).",
-        0,
-        478,
-        14,
-        T.muted,
-        1260
+    local detailY = 62 + math.max(1, math.ceil(#C.boosts / 5)) * 88 + 32
+    local boost = C.boostByID[selectedID]
+    local id, rule = boost.id, automation.abilities[boost.id]
+    U.Icon(p, boost.icon or "INV_Misc_Book_09", 0, detailY, 56)
+    text(p, boost.name, 76, detailY, 23, T.gold, 800)
+    text(p, boost.description, 76, detailY + 34, 14, T.text, 1150)
+    local purchase = button(p, "", 0, detailY + 84, 300, function()
+        W.Action(G.BuyBoost, id)
+    end)
+    U.Tooltip(
+        purchase,
+        "Permanent boost",
+        "Learn once with Essence. Activating a learned boost is free. Ownership and cooldowns survive chapter resets; active effects end."
     )
+    local equip = button(p, "Equip", 320, detailY + 84, 220, function()
+        W.Action(G.EquipBoost, id)
+    end)
+    local activate = button(p, "Activate", 560, detailY + 84, 260, function()
+        W.Action(G.ActivateBoost, id)
+    end, false, "primary")
+    U.Tooltip(
+        activate,
+        "Activate boost",
+        math.floor(boost.duration / 60)
+            .. " adventure minutes active; "
+            .. math.floor(boost.cooldown / 60)
+            .. " minutes cooldown from activation. One active effect at a time. Offline timers advance during eligible safe farming, up to 24 hours."
+    )
+    local status = text(p, "", 850, detailY + 92, 14, T.muted, 420)
+    local enabled = U.Checkbox(
+        p,
+        "Auto-cast",
+        0,
+        detailY + 146,
+        200,
+        rule.enabled,
+        function(checked)
+            W.Action(G.ConfigureBoostAutomation, id, "enabled", checked)
+        end
+    )
+    local modes, modeName = {}, "Manual"
+    for _, mode in ipairs(C.boostAutomationModes) do
+        if mode.id == rule.mode then
+            modeName = mode.name
+        end
+        if
+            mode.id == "manual"
+            or (mode.id == "onCooldown" and automation.owned.onCooldown)
+            or (mode.id ~= "onCooldown" and automation.owned.conditional)
+        then
+            modes[#modes + 1] = mode
+        end
+    end
+    local mode = U.Choice(p, modeName, 220, detailY + 146, 500, modes, rule.mode, function(value)
+        W.Action(G.ConfigureBoostAutomation, id, "mode", value)
+    end)
+    mode:SetEnabled(true)
+    U.Tooltip(
+        mode,
+        "Automatic trigger",
+        "Only the equipped boost can auto-cast during a living encounter. Unlock additional triggers with permanent automation capabilities."
+    )
+    local thresholds = {}
+    for _, value in ipairs({ 35, 50, 65, 80 }) do
+        thresholds[#thresholds + 1] = { id = value, name = "Ally below " .. value .. "% health" }
+    end
+    local threshold = U.Choice(
+        p,
+        "Ally below " .. rule.healthBelow .. "% health",
+        740,
+        detailY + 146,
+        400,
+        thresholds,
+        rule.healthBelow,
+        function(value)
+            W.Action(G.ConfigureBoostAutomation, id, "healthBelow", value)
+        end
+    )
+    threshold:SetEnabled(rule.mode == "lowHealth" and automation.owned.conditional == true)
+    threshold:SetShown(rule.mode == "lowHealth")
+    U.Tooltip(
+        threshold,
+        "Low health trigger",
+        "Activate when any living companion falls below this percentage of their own maximum health. Defeated companions do not trigger it."
+    )
+    local automaticStatus = text(p, "", 0, detailY + 198, 14, T.muted, 1240)
+    ui.boostControls[id] = {
+        purchase = purchase,
+        equip = equip,
+        activate = activate,
+        status = status,
+        automationEnabled = enabled,
+        mode = mode,
+        threshold = threshold,
+        automaticStatus = automaticStatus,
+    }
 end
 
 local function timer(seconds)
@@ -260,18 +372,49 @@ function P.RefreshBoosts(ui, s, message)
     ui.compactBoost:SetShown(not s.ui.locked and message == nil)
     ui.compactHint:SetShown(s.ui.locked or message ~= nil)
     if s.ui.tab == "boosts" and not W.catchup then
+        local automation = s.boosts.automation
+        for capability, control in pairs(ui.boostAutomationPurchases or {}) do
+            local spec = C.boostAutomation[capability]
+            local owned = automation.owned[capability]
+            control.text:SetText(
+                owned and (spec.name .. " · Learned")
+                    or ("Learn " .. spec.name .. " · " .. spec.cost .. " Legacy")
+            )
+            U.Enabled(
+                control,
+                not owned
+                    and s.legacy >= spec.cost
+                    and (capability ~= "conditional" or automation.owned.onCooldown == true)
+            )
+        end
+        if ui.boostAutomationEnabled then
+            ui.boostAutomationEnabled:SetChecked(automation.enabled)
+        end
+        for id, tile in pairs(ui.boostTiles or {}) do
+            local active, cooldown = G.BoostRemaining(s, id)
+            local owned = s.boosts.owned[id]
+            local label = not owned and (C.boostByID[id].cost .. " Essence")
+                or active > 0 and ("Active " .. timer(active))
+                or cooldown > 0 and ("Cooldown " .. timer(cooldown))
+                or equipped == id and "Equipped · Ready"
+                or "Learned"
+            tile.state:SetText(label)
+            tile.icon:SetDesaturated(not owned)
+            tile.icon:SetAlpha(owned and 1 or 0.45)
+        end
         for id, controls in pairs(ui.boostControls or {}) do
+            local _, reason = G.BoostAutomationStatus(s, id)
+            controls.automaticStatus:SetText(reason)
+            controls.automationEnabled:SetChecked(automation.abilities[id].enabled)
             local owned = s.boosts.owned[id]
             controls.purchase.text:SetText(
-                owned and "Learned permanently" or "Learn · " .. C.boostByID[id].cost .. " Essence"
+                owned and "Learned" or "Learn · " .. C.boostByID[id].cost .. " Essence"
             )
             U.Enabled(controls.purchase, not owned and s.essence >= C.boostByID[id].cost)
             controls.equip.text:SetText(equipped == id and "Equipped" or "Equip")
             U.Enabled(controls.equip, owned and equipped ~= id)
             U.Enabled(controls.activate, G.CanActivateBoost(s, id))
-            controls.status:SetText(
-                owned and status(id) or "Not learned. Purchase once; future activations are free."
-            )
+            controls.status:SetText(owned and status(id) or "Not learned")
         end
     end
 end
@@ -738,7 +881,8 @@ function P.Draw(ui)
         ui.talentTrees:SetShown(s.ui.tab == "talents" and not W.catchup)
     end
     ui.guideEquipTarget, ui.guideInventoryTarget, ui.guideCraftEquipTarget = nil, nil, nil
-    ui.boostQuick, ui.boostControls = nil, nil
+    ui.boostQuick, ui.boostControls, ui.boostTiles = nil, nil, nil
+    ui.boostAutomationPurchases, ui.boostAutomationEnabled = nil, nil
     U.Begin(p)
     if W.catchup then
         text(p, "YOUR PARTY IS RETURNING", 0, 0, 22, T.gold)

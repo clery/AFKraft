@@ -332,6 +332,7 @@ function G.Step(state, seconds)
     if #state.heroes == 0 or seconds <= 0 then
         return
     end
+    G.AutomateBoost(state)
     local attackSpeed = 1
         + (C.boostByID.battleOrders.attackSpeed - 1)
             * G.BoostStepFraction(state, "battleOrders", seconds)

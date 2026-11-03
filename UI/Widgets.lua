@@ -264,6 +264,8 @@ function U.Choice(parent, label, x, y, w, options, value, choose)
     end)
     dropdown:SetPoint("TOPLEFT", x, -y)
     dropdown:SetSize(w, 32)
+    -- Choice frames retain disabled state when released by another panel.
+    dropdown:SetEnabled(true)
     if dropdown.SetupMenu then
         dropdown:SetDefaultText(label)
         dropdown:SetupMenu(function(_, root)

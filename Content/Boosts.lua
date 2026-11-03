@@ -5,6 +5,7 @@ W.Content.boosts = {
     {
         id = "battleOrders",
         name = "Battle Orders",
+        icon = "Ability_Warrior_BattleShout",
         description = "+25% basic-attack speed. Does not accelerate spells or healing.",
         cost = 30,
         duration = 300,
@@ -14,6 +15,7 @@ W.Content.boosts = {
     {
         id = "ironResolve",
         name = "Iron Resolve",
+        icon = "Ability_Warrior_ShieldWall",
         description = "Up to 20% less incoming damage. Existing defenses still apply.",
         cost = 30,
         duration = 300,
@@ -24,4 +26,30 @@ W.Content.boosts = {
 W.Content.boostByID = {}
 for _, boost in ipairs(W.Content.boosts) do
     W.Content.boostByID[boost.id] = boost
+end
+
+-- Automation unlocks are permanent capabilities, never activation fees.
+W.Content.boostAutomation = {
+    onCooldown = { name = "On cooldown", currency = "legacy", cost = 1 },
+    conditional = { name = "Conditional", currency = "legacy", cost = 2 },
+}
+W.Content.boostAutomationModes = {
+    { id = "manual", name = "Manual" },
+    { id = "onCooldown", name = "On cooldown", capability = "onCooldown" },
+    { id = "boss", name = "Bosses", capability = "conditional" },
+    { id = "lowHealth", name = "Low health", capability = "conditional" },
+    { id = "farming", name = "Farming", capability = "conditional" },
+    { id = "pushing", name = "Pushing", capability = "conditional" },
+}
+W.Content.boostAutomationModeByID = {}
+W.Content.boostAutomationDefaults = { owned = {}, enabled = false, abilities = {} }
+for _, mode in ipairs(W.Content.boostAutomationModes) do
+    W.Content.boostAutomationModeByID[mode.id] = mode
+end
+for _, boost in ipairs(W.Content.boosts) do
+    W.Content.boostAutomationDefaults.abilities[boost.id] = {
+        enabled = false,
+        mode = "manual",
+        healthBelow = 50,
+    }
 end

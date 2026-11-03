@@ -66,7 +66,12 @@ function G.New(now)
         safe = {},
         battle = nil,
         clock = 0,
-        boosts = { owned = {}, readyAt = {}, activeUntil = {} },
+        boosts = {
+            owned = {},
+            readyAt = {},
+            activeUntil = {},
+            automation = copy(C.boostAutomationDefaults),
+        },
         encounter = 0,
         paused = false,
         lastTime = now,
@@ -173,6 +178,18 @@ function G.Load(db, now)
         or type(progress.sources) ~= "table"
     then
         return nil, "The saved Adventure XP is invalid. Your adventure has not been reset."
+    end
+    if db.boosts.automation == nil then
+        db.boosts.automation = copy(C.boostAutomationDefaults)
+    end
+    local automation = db.boosts.automation
+    if type(automation) == "table" and type(automation.abilities) == "table" then
+        -- A newly added catalog ability starts disabled without rewriting existing rules.
+        for id, config in pairs(C.boostAutomationDefaults.abilities) do
+            if automation.abilities[id] == nil then
+                automation.abilities[id] = copy(config)
+            end
+        end
     end
     if not G.ValidateBoosts(db) then
         return nil, "The saved commander boosts are invalid. Your adventure has not been reset."
