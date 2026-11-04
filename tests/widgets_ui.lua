@@ -43,6 +43,42 @@ test("Commands, selections, tabs and passive cards keep distinct behaviors", fun
     parent:Hide()
 end)
 
+test("Selection hover survives refreshes and clears on leave, hide and reuse", function()
+    local parent, U = parentFrame()
+    U.Begin(parent)
+    local button = U.SelectButton(parent, "Choice", 0, 0, 160, 32, function() end)
+    U.EndBuild(parent)
+    local color
+    hooksecurefunc(button.fill, "SetColorTexture", function(_, r, g, b)
+        color = { r, g, b }
+    end)
+    local function assertColor(expected)
+        for i = 1, 3 do
+            assertEquals(expected[i], color[i])
+        end
+    end
+    button:GetScript("OnEnter")(button)
+    U.Selected(button, false)
+    assertColor(WoWIdle.Theme.hover)
+    U.Selected(button, true)
+    assertColor(WoWIdle.Theme.hover)
+    button:GetScript("OnLeave")(button)
+    assertColor(WoWIdle.Theme.selected)
+    button:GetScript("OnEnter")(button)
+    parent:Hide()
+    assertFalse(button.hovered)
+    assertColor(WoWIdle.Theme.selected)
+    parent:Show()
+    button:GetScript("OnEnter")(button)
+    U.Begin(parent)
+    local reused = U.SelectButton(parent, "Other choice", 0, 0, 160, 32, function() end)
+    U.EndBuild(parent)
+    assertTrue(reused == button)
+    assertFalse(reused.hovered)
+    assertColor(WoWIdle.Theme.panel)
+    parent:Hide()
+end)
+
 test("Repeated tooltips replace their handlers and pooled toggles reset safely", function()
     local parent, U = parentFrame()
     U.Begin(parent)

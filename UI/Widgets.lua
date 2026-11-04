@@ -4,6 +4,7 @@ local T = {
     panel = { 0.055, 0.060, 0.078 },
     header = { 0.085, 0.067, 0.044 },
     selected = { 0.16, 0.13, 0.075 },
+    hover = { 0.105, 0.125, 0.17 },
     line = { 0.35, 0.23, 0.10 },
     gold = { 0.95, 0.77, 0.33 },
     text = { 0.90, 0.86, 0.74 },
@@ -153,7 +154,9 @@ function U.Selected(button, selected)
     else
         button.selected = selected == true
         if button.fill then
-            button.fill:SetColorTexture(unpack(button.selected and T.selected or T.panel))
+            button.fill:SetColorTexture(
+                unpack(button.hovered and T.hover or button.selected and T.selected or T.panel)
+            )
         end
         if button.selection then
             button.selection:SetShown(button.selected)
@@ -191,6 +194,10 @@ function U.Button(parent, text, x, y, w, h, fn, active, variant)
             end
         end
         local button = surface(parent, "Button")
+        button:HookScript("OnHide", function(self)
+            self.hovered = false
+            U.Selected(self, self.selected)
+        end)
         button.text = U.Text(button, "", 0, 0, 13)
         if selection then
             button.selection = U.Rect(button.content, 4, 6, 3, 1, T.gold, 1, "OVERLAY")
@@ -217,11 +224,13 @@ function U.Button(parent, text, x, y, w, h, fn, active, variant)
     b.text:Show()
     U.Selected(b, active)
     b:SetScript("OnEnter", function(self)
+        self.hovered = true
         if self.fill then
-            self.fill:SetColorTexture(0.105, 0.125, 0.17)
+            self.fill:SetColorTexture(unpack(T.hover))
         end
     end)
     b:SetScript("OnLeave", function(self)
+        self.hovered = false
         if self.fill then
             self.fill:SetColorTexture(unpack(self.selected and T.selected or T.panel))
         end
