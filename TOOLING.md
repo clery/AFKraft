@@ -76,3 +76,33 @@ python3 tests/map_masks.py
 Keep extracted textures, exported native queries, and review images outside the repository. Inspect the ownership overview, visible-mask sheets, and clickable-region sheets for both continents; color-only previews do not reveal oversized invisible hit areas. Restart the actual client after updating textures.
 
 See [the map maintenance and porting guide](MAPS.md) for schemas, coordinate conventions, native exports, boundary corrections, rendering constraints, tests, and complete Forever/new-continent checklists. That guide identifies the remaining two-continent integration points; generation alone does not register a new continent in the runtime or UI.
+
+## Packaging
+
+Python 3.9+ builds a Forever ZIP using only the standard library:
+
+```sh
+python3 tests/packaging.py
+python3 scripts/package.py --version 0.2.0
+```
+
+The result is `artifacts/WoWIdle-0.2.0-forever.zip`, containing a single
+`WoWIdle/` folder. Extract it into the client's `Interface/AddOns` directory.
+The version defaults to the source TOC version; `--output` selects another output
+directory. The packaged TOC declares Forever interface `16001` and retains the
+source load order and SavedVariables. The source TOC keeps both client versions
+for development. Shared code, compatibility profiles and current artwork remain
+available for a possible Retail release; there is no Retail packaging target yet.
+
+The builder follows TOC/XML includes, includes all artwork and required library
+notices, and excludes development tools, tests and editor configuration. Bundled
+libraries are used as checked in; packaging downloads nothing. CI runs the Lua
+suite and packaging checks and uploads a Forever build artifact. It does not tag,
+publish a GitHub release, or upload to addon services.
+
+Before any release, update `CHANGELOG.md` and the source TOC version, review the
+archive, and complete Forever integration. In the actual Forever client, test a
+fresh install and an existing save, login/reload, both saved-variable stores,
+map selection, character models, activity rewards, and all window sizes. Retail
+simulator checks do not replace these checks. A future Retail distribution needs
+its own validated interface version, package target and client checks.

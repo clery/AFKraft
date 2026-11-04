@@ -6,6 +6,12 @@ An account-wide idle party RPG inside World of Warcraft. Build a company of five
 
 **Early playable prototype.** Retail is the current development and simulator client. Forever is the intended content target; its maps, visuals and live activity signals still need integration and testing.
 
+## Distribution
+
+Forever is the only planned release target. Retail remains a development client;
+no Retail distribution is published. Packaging does not establish Forever readiness.
+See [packaging and release checks](TOOLING.md#packaging) before preparing a release.
+
 ## Getting started
 
 1. Put the `WoWIdle` folder in your client's `Interface/AddOns` directory, with `WoWIdle.toc` directly inside it.
