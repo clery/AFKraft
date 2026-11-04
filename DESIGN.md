@@ -1,4 +1,4 @@
-# WoWIdle — Design Document
+# AFKraft : WoW Idle Game — Design Document
 
 Status: source audit reconciled 2026-11-04. The accepted gameplay systems are implemented; live Forever validation and playtesting remain pending. Retail is the current simulator target. Forever collection sources are database-verified, not live-client verified; Retail acquisition remains disabled. Current tuning and recorded simulations live in [BALANCE.md](BALANCE.md), and outstanding work in [HANDOFF.md](HANDOFF.md).
 
@@ -348,7 +348,7 @@ Automatic prestige is outside the initial route-planning scope. A later version 
 
 ## Presentation and controls
 
-Keep WoWIdle's own adventure layout and identity. Prefer native modern WoW controls and frame treatments appropriate to the supported client.
+Keep AFKcraft's own adventure layout and identity. Prefer native modern WoW controls and frame treatments appropriate to the supported client.
 
 ### Adventure scene
 
@@ -485,7 +485,7 @@ Begin with fixed seeds and a small reproducible scenario set: new account, first
 
 ## Research basis and limits
 
-The draft combines the project's progression/persistence requirements, the implementation audit, descriptive idle-game research, motivation research, and developer-authored mechanics material. The consequences below are design recommendations, not claims that a source proves a particular feature, cooldown, price, or retention outcome for WoWIdle. Game-specific examples are not part of the product specification.
+The draft combines the project's progression/persistence requirements, the implementation audit, descriptive idle-game research, motivation research, and developer-authored mechanics material. The consequences below are design recommendations, not claims that a source proves a particular feature, cooldown, price, or retention outcome for AFKcraft. Game-specific examples are not part of the product specification.
 
 | Research | Finding and application to this draft |
 | --- | --- |

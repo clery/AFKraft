@@ -579,7 +579,7 @@ function W.CreateUI()
     ui.expanded = expanded
     U.Rect(expanded, 2, 2, 1596, 90, T.header)
     U.Icon(expanded, "INV_Misc_Map_01", 28, 27, 44)
-    U.Text(expanded, "WoWIdle", 91, 23, 30, T.gold)
+    U.Text(expanded, "AFKcraft", 91, 23, 30, T.gold)
     ui.adventureBar = W.AdventureBar.Create(expanded, 92, 61, 490)
     ui.currencies = {}
     for i, currency in ipairs({
@@ -633,7 +633,7 @@ function W.CreateUI()
     U.Tooltip(
         close,
         "Close",
-        "Your company continues adventuring when this window is closed. Open it again with /wowidle."
+        "Your company continues adventuring when this window is closed. Open it again with /afkcraft."
     )
     local workspace = CreateFrame("Frame", nil, expanded)
     workspace:SetPoint("TOPLEFT", 276, 0)
@@ -747,7 +747,7 @@ function W.CreateUI()
     local compact = CreateFrame("Frame", nil, canvas)
     compact:SetAllPoints()
     ui.compact = compact
-    U.Text(compact, "WoWIdle", 14, 17, 21, T.gold)
+    U.Text(compact, "AFKcraft", 14, 17, 21, T.gold)
     ui.compactInfo = U.Text(compact, "", 200, 21, 12, T.gold, 330)
     ui.compactZone = U.Text(compact, "", 12, 50, 13, T.text, 550)
     U.SingleLine(ui.compactZone, 550, 20)

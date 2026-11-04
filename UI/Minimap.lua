@@ -81,7 +81,7 @@ function M.Create()
 
     M.launcher = LibStub("LibDataBroker-1.1"):NewDataObject("WoWIdle", {
         type = "launcher",
-        label = "WoWIdle",
+        label = "AFKcraft",
         icon = "Interface\\Icons\\INV_Misc_Map_01",
         OnClick = function(_, mouseButton)
             if mouseButton == "LeftButton" then
@@ -89,7 +89,7 @@ function M.Create()
             end
         end,
         OnTooltipShow = function(tooltip)
-            tooltip:AddLine("WoWIdle", 1, 0.82, 0)
+            tooltip:AddLine("AFKraft : WoW Idle Game", 1, 0.82, 0)
             tooltip:AddLine("Click to open the expanded adventure.", 1, 1, 1)
             if not W.state.ui.minimap or not W.state.ui.minimap.lock then
                 tooltip:AddLine("Drag to move the minimap button.", 0.7, 0.7, 0.7)

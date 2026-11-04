@@ -565,7 +565,7 @@ test("Ace lifecycle re-enables without duplicate timers, commands or reward deli
     for command in LibStub("AceConsole-3.0"):IterateChatCommands() do
         commands[command] = true
     end
-    assertTrue(commands.wowidle and commands.wi)
+    assertTrue(commands.afkcraft and commands.wowidle and commands.wi)
     local state = W.state
     local timers = LibStub("AceTimer-3.0").activeTimers
     local function timerCount()

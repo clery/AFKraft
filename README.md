@@ -1,4 +1,4 @@
-# WoWIdle
+# AFKraft : WoW Idle Game
 
 **Your adventures. Their growing legend.**
 
@@ -16,7 +16,7 @@ See [packaging and release checks](TOOLING.md#packaging) before preparing a rele
 
 1. Put the `WoWIdle` folder in your client's `Interface/AddOns` directory, with `WoWIdle.toc` directly inside it.
 2. Enable the addon and log in. Restart WoW if you installed it while the game was running.
-3. Enter `/wowidle` or `/wi` to open the adventure. Follow the dismissible starter guide.
+3. Enter `/afkcraft` (or `/wowidle` or `/wi`) to open the adventure. Follow the dismissible starter guide.
 
 Libraries are bundled. Your characters share one saved adventure; idle hero levels, equipment and currencies are separate from your real WoW character.
 
@@ -91,7 +91,7 @@ The adventure continues while its window is closed. On the next login, up to **2
 
 Switch between fullscreen, windowed and compact views using the top-right controls. Drag the top edge to move a window and the bottom-right grip to resize it. Compact mode has a lock and an accessible unlock control; management opens a larger view. Menus reveal their names and icons as features are discovered.
 
-**Settings → AddOns → WoWIdle** controls display, locking, chat and sound. Audio uses WoW sound-effects volume and plays only while the adventure is visible. **Reset all adventure progress** permanently erases the shared account adventure, including Heritage and heirlooms; display and audio preferences are kept.
+**Settings → AddOns → AFKraft : WoW Idle Game** controls display, locking, chat and sound. Audio uses WoW sound-effects volume and plays only while the adventure is visible. **Reset all adventure progress** permanently erases the shared account adventure, including Heritage and heirlooms; display and audio preferences are kept.
 
 ## Development status
 
@@ -101,6 +101,6 @@ See [design](DESIGN.md), [balance evidence](BALANCE.md), [architecture](ARCHITEC
 
 ## License and credits
 
-WoWIdle uses an **All Rights Reserved** notice. See [LICENSE](LICENSE).
+AFKcraft uses an **All Rights Reserved** notice. See [LICENSE](LICENSE).
 
 Bundled third-party libraries retain their own licenses and notices; see [embedded libraries](Libs/README.md). Landscape artwork sources and credits are listed in [backdrop credits](Assets/Backdrops/SOURCES.md). The project notice does not replace those third-party terms.

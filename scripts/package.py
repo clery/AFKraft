@@ -50,7 +50,7 @@ def build(output, version=None, root=ROOT):
                  if path.is_file() and any(word in path.name.lower()
                                           for word in ("license", "copying", "notice", "readme")))
     output.mkdir(parents=True, exist_ok=True)
-    archive = output / f"WoWIdle-{version}-forever.zip"
+    archive = output / f"AFKcraft-{version}-forever.zip"
     with ZipFile(archive, "w", compression=ZIP_DEFLATED) as package:
         package.writestr("WoWIdle/WoWIdle.toc", manifest)
         for path in sorted(files):

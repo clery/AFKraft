@@ -7,7 +7,7 @@ function W.RegisterSettings()
     local uiKeys = { fullscreen = true, compact = true, locked = true }
     local options = {
         type = "group",
-        name = "WoWIdle",
+        name = "AFKraft : WoW Idle Game",
         args = {},
         get = function(info)
             local key = info[#info]
@@ -94,7 +94,7 @@ function W.RegisterSettings()
                 order = 2,
                 width = "full",
                 confirm = true,
-                confirmText = "Erase ALL account-wide WoWIdle progress? Heroes, equipment, gold, materials, Essence, Adventure XP, Heritage, heirlooms, recipes and discoveries will be lost. This cannot be undone. Display and audio preferences are kept.",
+                confirmText = "Erase ALL account-wide AFKcraft progress? Heroes, equipment, gold, materials, Essence, Adventure XP, Heritage, heirlooms, recipes and discoveries will be lost. This cannot be undone. Display and audio preferences are kept.",
                 func = function()
                     W.ResetAdventure()
                 end,
@@ -104,5 +104,5 @@ function W.RegisterSettings()
     W.settingsOptions = options
     LibStub("AceConfig-3.0"):RegisterOptionsTable("WoWIdle", options)
     W.settingsFrame, W.settingsCategory =
-        LibStub("AceConfigDialog-3.0"):AddToBlizOptions("WoWIdle", "WoWIdle")
+        LibStub("AceConfigDialog-3.0"):AddToBlizOptions("WoWIdle", "AFKraft : WoW Idle Game")
 end

@@ -1,4 +1,4 @@
-# WoWIdle — development status
+# AFKraft : WoW Idle Game — development status
 
 Updated 2026-11-04. Accepted gameplay systems are implemented in source. Retail is the development/simulator target; Forever remains the product target. Neither source coverage nor simulator results establish live Forever behavior.
 

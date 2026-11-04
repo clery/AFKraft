@@ -13,7 +13,7 @@ function W.OnLog(state, message, noticeType)
     end
     W.Minimap.Record(message, noticeType)
     if state.settings.chatAnnouncements then
-        print("|cffdfbc79WoWIdle:|r " .. message)
+        print("|cffdfbc79AFKcraft:|r " .. message)
     end
 end
 
@@ -72,13 +72,13 @@ function W.Initialize()
     end
     local state, errorMessage = G.Load(WoWIdleDB, A.Now())
     if not state then
-        print("|cffffcc66WoWIdle:|r " .. errorMessage)
+        print("|cffffcc66AFKcraft:|r " .. errorMessage)
         return
     end
     local bound
     bound, errorMessage = W.BindPreferences(state)
     if not bound then
-        print("|cffffcc66WoWIdle:|r " .. errorMessage)
+        print("|cffffcc66AFKcraft:|r " .. errorMessage)
         return
     end
     W.state = state
@@ -89,7 +89,7 @@ function W.Initialize()
     W.CreateUI()
     W.Minimap.Create()
     W.RegisterSettings()
-    print("|cffdfbc79WoWIdle|r · /wowidle to enter your adventure.")
+    print("|cffdfbc79AFKcraft|r · /afkcraft to enter your adventure.")
 end
 
 -- Called by the confirmed Settings action. Replace the saved gameplay state
@@ -145,6 +145,7 @@ function W.ResetAdventure()
 end
 
 function root:OnInitialize()
+    self:RegisterChatCommand("afkcraft", W.Toggle, false)
     self:RegisterChatCommand("wowidle", W.Toggle, false)
     self:RegisterChatCommand("wi", W.Toggle, false)
 end

@@ -2,7 +2,7 @@
 
 ## Design intent
 
-WoWIdle is a companion idle RPG: short management visits should produce useful decisions, while battles and safe offline farming supply the resources between visits. Real WoW play accelerates permanent development without buying permission to level, equip, or prestige. A new feature should create another useful investment, not make the older investments irrelevant.
+AFKcraft is a companion idle RPG: short management visits should produce useful decisions, while battles and safe offline farming supply the resources between visits. Real WoW play accelerates permanent development without buying permission to level, equip, or prestige. A new feature should create another useful investment, not make the older investments irrelevant.
 
 This pass follows the production/cost comparison and reset-loop modeling described in Anthony Pecorella’s [The Math of Idle Games, Part I](https://www.kongregate.com/en/pages/the-math-of-idle-games-part-i) and [Part III](https://www.kongregate.com/en/pages/the-math-of-idle-games-part-iii). These sources explain modeling methods, not universal timings. The targets below are this project's design choices. All reported results are simulations or analytical models, not observed player behavior or in-client validation.
 

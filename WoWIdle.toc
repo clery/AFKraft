@@ -1,7 +1,7 @@
 ## Interface: 120105, 16001
-## Title: WoWIdle
+## Title: AFKraft : WoW Idle Game
 ## Notes: Your adventures. Their growing legend.
-## Author: WoWIdle
+## Author: AFKcraft
 ## Version: 0.2.0
 ## SavedVariables: WoWIdleDB, WoWIdlePreferencesDB
 ## IconTexture: Interface\Icons\INV_Misc_Map_01
