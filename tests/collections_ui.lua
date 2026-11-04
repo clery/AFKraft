@@ -88,3 +88,42 @@ test("Outdoor collections track individual pieces and select one completed effec
     assertFalse(state.ui.compact)
     assertEquals("collections", state.ui.tab)
 end)
+
+test("Collection selector reaches every set and uses each set's milestone counts", function()
+    local W = WoWIdle
+    W.Initialize()
+    local ui, G, C, U = W.UI, W.Game, W.Content, W.Widgets
+    local state = G.New(W.Client.Now())
+    G.AddHero(state, "WARRIOR")
+    state.guide.dismissed = true
+    W.state = state
+    ui.frame:Show()
+    local originalChoice, originalText = U.Choice, U.Text
+    local selectCollection, milestoneText
+    local ok, message = pcall(function()
+        U.Choice = function(parent, label, x, y, width, options, value, choose)
+            if options == C.collections then
+                assertEquals(#C.collections, #options)
+                assertTrue(x + width <= 1280)
+                selectCollection = choose
+            end
+            return originalChoice(parent, label, x, y, width, options, value, choose)
+        end
+        U.Text = function(parent, text, ...)
+            if text:find("Complete: selectable", 1, true) then
+                milestoneText = text
+            end
+            return originalText(parent, text, ...)
+        end
+        ui:SetTab("collections")
+        for _, collection in ipairs(C.collections) do
+            selectCollection(collection.id)
+            assertEquals(collection.id, ui.collectionSelected)
+            assertTrue(ui.collectionCards[collection.pieces[1]] ~= nil)
+        end
+        selectCollection("blessingOfKalimdor")
+        assertTrue(milestoneText:find("3 pieces: +0.5% materials", 1, true) ~= nil)
+    end)
+    U.Choice, U.Text = originalChoice, originalText
+    assertTrue(ok, message)
+end)

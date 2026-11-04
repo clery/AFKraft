@@ -15,7 +15,8 @@ test(
         ui.frame:Show()
         ui.collectionSelected, ui.collectionPiece = nil, nil
         ui:SetTab("collections")
-        ui.collectionChoices.defiasLeather:GetScript("OnClick")()
+        ui.collectionSelected, ui.collectionPiece = "defiasLeather", nil
+        ui:Refresh()
         assertEquals("defiasLeather", ui.collectionSelected)
         local collection = C.collectionByID.defiasLeather
         local itemID = collection.pieces[1]
@@ -98,7 +99,8 @@ test(
             ui.collectionProgress:GetText():find("Previous dungeon hunt: Unrecorded", 1, true)
                 ~= nil
         )
-        ui.collectionChoices.redridgeOutriders:GetScript("OnClick")()
+        ui.collectionSelected, ui.collectionPiece = "redridgeOutriders", nil
+        ui:Refresh()
         assertTrue(
             ui.collectionProgress:GetText():find("Previous hunt: 20 kills | Finds: 0", 1, true)
                 ~= nil

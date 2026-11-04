@@ -76,22 +76,19 @@ function P.Draw(ui, parent, state)
         T.text,
         1280
     )
-    ui.collectionChoices = {}
-    for index, entry in ipairs(C.collections) do
-        ui.collectionChoices[entry.id] = U.Button(
-            parent,
-            entry.name,
-            700 + (index - 1) * 290,
-            0,
-            280,
-            34,
-            function()
-                ui.collectionSelected, ui.collectionPiece = entry.id, nil
-                ui:Refresh()
-            end,
-            collection.id == entry.id
-        )
-    end
+    ui.collectionChoice = U.Choice(
+        parent,
+        collection.name,
+        700,
+        0,
+        580,
+        C.collections,
+        collection.id,
+        function(id)
+            ui.collectionSelected, ui.collectionPiece = id, nil
+            ui:Refresh()
+        end
+    )
     U.Text(parent, collection.name, 0, 94, 22, T.gold, 1280)
     U.Text(parent, collection.description, 0, 130, 14, T.text, 1280)
     ui.collectionSourceStatus = U.Text(
@@ -255,8 +252,14 @@ function P.Draw(ui, parent, state)
     )
     U.Text(
         parent,
-        "2 pieces: +0.5% basic attacks · 4 pieces: +0.5% materials · Complete: selectable "
-            .. effectText,
+        string.format(
+            "%d pieces: +%.1f%% basic attacks · %d pieces: +%.1f%% materials · Complete: selectable %s",
+            collection.milestones.basicAttack.pieces,
+            collection.milestones.basicAttack.bonus * 100,
+            collection.milestones.materials.pieces,
+            collection.milestones.materials.bonus * 100,
+            effectText
+        ),
         0,
         512,
         14,

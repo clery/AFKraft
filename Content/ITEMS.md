@@ -197,3 +197,81 @@ The enabled profile is restricted to Forever interface 16001. Its 5% collection 
 The Forever item pages and rendered Dropped by tables were inspected on 2026-11-03. The Deadmines profile uses one confirmed creature per piece: [Blackened Defias Armor 10399](https://www.wowhead.com/forever/item=10399/blackened-defias-armor) from Edwin VanCleef (639); [Leggings 10400](https://www.wowhead.com/forever/item=10400/blackened-defias-leggings) and [Gloves 10401](https://www.wowhead.com/forever/item=10401/blackened-defias-gloves) from Defias Overseer (634); [Boots 10402](https://www.wowhead.com/forever/item=10402/blackened-defias-boots) from Defias Strip Miner (4416); and [Belt 10403](https://www.wowhead.com/forever/item=10403/blackened-defias-belt) from Captain Greenskin (647). Display groups these as monster families within The Deadmines; exact creature identities remain in source metadata.
 
 Only Forever interface 16001 party-instance kills qualify. Retail has no enabled dungeon profile. A 20% discovery chance and ten eligible kill guarantee per piece are provisional addon rules, not the real items' loot rates. Offline, outdoor, raid and unattributed kills do not qualify. Database inspection does not establish actual client validation.
+
+
+## Low-level Forever collection expansion
+
+The following item identities, icons, required levels, and selected creature links were checked in Wowhead’s rendered Forever item and creature drop tables on 2026-11-04. The eight named outdoor field kits and the two dungeon relic collections are authored collections, not claims of native equipment set bonuses. One verified source is selected per piece; other real drop sources are not automatically eligible. Tribal spans required levels 4–8; the other outdoor kits span 13–20, and the dungeon collections span 13–24.
+
+Outdoor sources use the existing Forever 16001 profile (5% discovery, guaranteed at 30 eligible kills); dungeon sources use its party-instance profile (20%, guaranteed at ten). These are addon discovery rules, not real-item drop chances. Two pieces grant 0.5% basic attacks and four grant 0.5% materials; Blessing of Kalimdor grants its material milestone at three pieces. Existing shared 5% milestone caps and one selected completed-set effect still apply. This expansion adds no items to ordinary loot or crafting pools; existing equipment identities are reused where available. Retail remains disabled and live-client validation remains outstanding.
+
+| Collection | Item | Selected drop mob | Location |
+| --- | --- | --- | --- |
+| Tribal Trail | [Tribal Vest (3288)](https://www.wowhead.com/forever/item=3288) | [Burning Blade Crusher (12320)](https://www.wowhead.com/forever/npc=12320) | The Barrens |
+| Tribal Trail | [Tribal Pants (3287)](https://www.wowhead.com/forever/item=3287) | [Ursal the Mauler (2039)](https://www.wowhead.com/forever/npc=2039) | Teldrassil |
+| Tribal Trail | [Tribal Boots (3284)](https://www.wowhead.com/forever/item=3284) | [Gnarlpine Totemic (2014)](https://www.wowhead.com/forever/npc=2014) | Teldrassil |
+| Tribal Trail | [Tribal Gloves (3286)](https://www.wowhead.com/forever/item=3286) | [Snagglespear (5786)](https://www.wowhead.com/forever/npc=5786) | Mulgore |
+| Tribal Trail | [Tribal Cloak (4674)](https://www.wowhead.com/forever/item=4674) | [Burning Blade Fanatic (3197)](https://www.wowhead.com/forever/npc=3197) | Durotar |
+| Buccaneer's Field Kit | [Buccaneer's Cape (14167)](https://www.wowhead.com/forever/item=14167) | [Riverpaw Overseer (125)](https://www.wowhead.com/forever/npc=125) | Westfall |
+| Buccaneer's Field Kit | [Buccaneer's Cord (14173)](https://www.wowhead.com/forever/item=14173) | [Mo'grosh Brute (1180)](https://www.wowhead.com/forever/npc=1180) | Loch Modan |
+| Buccaneer's Field Kit | [Buccaneer's Boots (14174)](https://www.wowhead.com/forever/item=14174) | [Mo'grosh Brute (1180)](https://www.wowhead.com/forever/npc=1180) | Loch Modan |
+| Buccaneer's Field Kit | [Buccaneer's Bracers (14166)](https://www.wowhead.com/forever/item=14166) | [Mo'grosh Enforcer (1179)](https://www.wowhead.com/forever/npc=1179) | Loch Modan |
+| Buccaneer's Field Kit | [Buccaneer's Gloves (14168)](https://www.wowhead.com/forever/item=14168) | [Blackrock Scout (4064)](https://www.wowhead.com/forever/npc=4064) | Redridge Mountains |
+| Bandit Field Kit | [Bandit Cinch (9775)](https://www.wowhead.com/forever/item=9775) | [Mo'grosh Mystic (1183)](https://www.wowhead.com/forever/npc=1183) | Loch Modan |
+| Bandit Field Kit | [Bandit Bracers (9777)](https://www.wowhead.com/forever/item=9777) | [Mo'grosh Mystic (1183)](https://www.wowhead.com/forever/npc=1183) | Loch Modan |
+| Bandit Field Kit | [Bandit Gloves (9780)](https://www.wowhead.com/forever/item=9780) | [Mo'grosh Mystic (1183)](https://www.wowhead.com/forever/npc=1183) | Loch Modan |
+| Bandit Field Kit | [Bandit Boots (9776)](https://www.wowhead.com/forever/item=9776) | [Mo'grosh Mystic (1183)](https://www.wowhead.com/forever/npc=1183) | Loch Modan |
+| Bandit Field Kit | [Bandit Pants (9781)](https://www.wowhead.com/forever/item=9781) | [Taskmaster Whipfang (5932)](https://www.wowhead.com/forever/npc=5932) | Stonetalon Mountains |
+| Burnished Field Kit | [Burnished Bracers (3211)](https://www.wowhead.com/forever/item=3211) | [Apothecary Berard (2106)](https://www.wowhead.com/forever/npc=2106) | Silverpine Forest |
+| Burnished Field Kit | [Burnished Gloves (2992)](https://www.wowhead.com/forever/item=2992) | [Greater Tarantula (271898)](https://www.wowhead.com/forever/npc=271898) | Redridge Mountains |
+| Burnished Field Kit | [Burnished Boots (2991)](https://www.wowhead.com/forever/item=2991) | [Blackrock Sentry (4065)](https://www.wowhead.com/forever/npc=4065) | Redridge Mountains |
+| Burnished Field Kit | [Burnished Girdle (4697)](https://www.wowhead.com/forever/item=4697) | [Blackrock Scout (4064)](https://www.wowhead.com/forever/npc=4064) | Redridge Mountains |
+| Burnished Field Kit | [Burnished Tunic (2989)](https://www.wowhead.com/forever/item=2989) | [Blackrock Sentry (4065)](https://www.wowhead.com/forever/npc=4065) | Redridge Mountains |
+| Raider's Field Kit | [Raider's Boots (9784)](https://www.wowhead.com/forever/item=9784) | [Mo'grosh Mystic (1183)](https://www.wowhead.com/forever/npc=1183) | Loch Modan |
+| Raider's Field Kit | [Raider's Gauntlets (9787)](https://www.wowhead.com/forever/item=9787) | [Foreman Grills (5835)](https://www.wowhead.com/forever/npc=5835) | The Barrens |
+| Raider's Field Kit | [Raider's Legguards (9789)](https://www.wowhead.com/forever/item=9789) | [Sister Rathtalon (5830)](https://www.wowhead.com/forever/npc=5830) | The Barrens |
+| Raider's Field Kit | [Raider's Chestpiece (9783)](https://www.wowhead.com/forever/item=9783) | [Mo'grosh Mystic (1183)](https://www.wowhead.com/forever/npc=1183) | Loch Modan |
+| Raider's Field Kit | [Raider's Belt (9788)](https://www.wowhead.com/forever/item=9788) | [Carnivous the Breaker (2186)](https://www.wowhead.com/forever/npc=2186) | Darkshore |
+| Seer's Field Kit | [Seer's Pants (2982)](https://www.wowhead.com/forever/item=2982) | [Mo'grosh Brute (1180)](https://www.wowhead.com/forever/npc=1180) | Loch Modan |
+| Seer's Field Kit | [Seer's Gloves (2984)](https://www.wowhead.com/forever/item=2984) | [Mo'grosh Shaman (1181)](https://www.wowhead.com/forever/npc=1181) | Loch Modan |
+| Seer's Field Kit | [Seer's Belt (4699)](https://www.wowhead.com/forever/item=4699) | [Mo'grosh Enforcer (1179)](https://www.wowhead.com/forever/npc=1179) | Loch Modan |
+| Seer's Field Kit | [Seer's Robe (2981)](https://www.wowhead.com/forever/item=2981) | [Blackrock Scout (4064)](https://www.wowhead.com/forever/npc=4064) | Redridge Mountains |
+| Seer's Field Kit | [Seer's Mantle (4698)](https://www.wowhead.com/forever/item=4698) | [Fen Dweller (1039)](https://www.wowhead.com/forever/npc=1039) | Wetlands |
+| Shimmering Field Kit | [Shimmering Bracers (6563)](https://www.wowhead.com/forever/item=6563) | [Seeker Aqualon (14269)](https://www.wowhead.com/forever/npc=14269) | Redridge Mountains |
+| Shimmering Field Kit | [Shimmering Sash (6570)](https://www.wowhead.com/forever/item=6570) | [Taskmaster Whipfang (5932)](https://www.wowhead.com/forever/npc=5932) | Stonetalon Mountains |
+| Shimmering Field Kit | [Shimmering Gloves (6565)](https://www.wowhead.com/forever/item=6565) | [Taskmaster Whipfang (5932)](https://www.wowhead.com/forever/npc=5932) | Stonetalon Mountains |
+| Shimmering Field Kit | [Shimmering Boots (6562)](https://www.wowhead.com/forever/item=6562) | [Mo'grosh Mystic (1183)](https://www.wowhead.com/forever/npc=1183) | Loch Modan |
+| Shimmering Field Kit | [Shimmering Cloak (6564)](https://www.wowhead.com/forever/item=6564) | [Swiftmane (5831)](https://www.wowhead.com/forever/npc=5831) | The Barrens |
+| Defender Field Kit | [Defender Cloak (6575)](https://www.wowhead.com/forever/item=6575) | [Seeker Aqualon (14269)](https://www.wowhead.com/forever/npc=14269) | Redridge Mountains |
+| Defender Field Kit | [Defender Bracers (6574)](https://www.wowhead.com/forever/item=6574) | [Apothecary Falthis (3735)](https://www.wowhead.com/forever/npc=3735) | Ashenvale |
+| Defender Field Kit | [Defender Girdle (6576)](https://www.wowhead.com/forever/item=6576) | [Apothecary Falthis (3735)](https://www.wowhead.com/forever/npc=3735) | Ashenvale |
+| Defender Field Kit | [Defender Leggings (6578)](https://www.wowhead.com/forever/item=6578) | [Mo'grosh Mystic (1183)](https://www.wowhead.com/forever/npc=1183) | Loch Modan |
+| Defender Field Kit | [Defender Boots (6573)](https://www.wowhead.com/forever/item=6573) | [Gnawbone (14425)](https://www.wowhead.com/forever/npc=14425) | Wetlands |
+| Blessing of Kalimdor | [Mark of the Pack Leader (285331)](https://www.wowhead.com/forever/item=285331) | [Humar the Pridelord (5828)](https://www.wowhead.com/forever/npc=5828) | The Barrens |
+| Blessing of Kalimdor | [Signet of the Zhevra (285330)](https://www.wowhead.com/forever/item=285330) | [Swiftmane (5831)](https://www.wowhead.com/forever/npc=5831) | The Barrens |
+| Blessing of Kalimdor | [Raptor Hide Cloak (285329)](https://www.wowhead.com/forever/item=285329) | [Takk the Leaper (5842)](https://www.wowhead.com/forever/npc=5842) | The Barrens |
+| Heirlooms of the Thanes | [Spiritwraith Drape (271097)](https://www.wowhead.com/forever/item=271097) | [Faldrim Anvilmar (261306)](https://www.wowhead.com/forever/npc=261306) | The Hall of Thanes |
+| Heirlooms of the Thanes | [Aetherwisp Bracers (271096)](https://www.wowhead.com/forever/item=271096) | [Faldrim Anvilmar (261306)](https://www.wowhead.com/forever/npc=261306) | The Hall of Thanes |
+| Heirlooms of the Thanes | [Kindlegem Girdle (270230)](https://www.wowhead.com/forever/item=270230) | [Magmatus (261316)](https://www.wowhead.com/forever/npc=261316) | The Hall of Thanes |
+| Heirlooms of the Thanes | [Flamefist Grips (270231)](https://www.wowhead.com/forever/item=270231) | [Magmatus (261316)](https://www.wowhead.com/forever/npc=261316) | The Hall of Thanes |
+| Heirlooms of the Thanes | [Golemguard Chest (271098)](https://www.wowhead.com/forever/item=271098) | [Plunder (261311)](https://www.wowhead.com/forever/npc=261311) | The Hall of Thanes |
+| Embrace of the Viper | [Belt of the Fang (10412)](https://www.wowhead.com/forever/item=10412) | [Lady Anacondra (3671)](https://www.wowhead.com/forever/npc=3671) | Wailing Caverns |
+| Embrace of the Viper | [Footpads of the Fang (10411)](https://www.wowhead.com/forever/item=10411) | [Lord Serpentis (3673)](https://www.wowhead.com/forever/npc=3673) | Wailing Caverns |
+| Embrace of the Viper | [Gloves of the Fang (10413)](https://www.wowhead.com/forever/item=10413) | [Druid of the Fang (3840)](https://www.wowhead.com/forever/npc=3840) | Wailing Caverns |
+| Embrace of the Viper | [Leggings of the Fang (10410)](https://www.wowhead.com/forever/item=10410) | [Lord Cobrahn (3669)](https://www.wowhead.com/forever/npc=3669) | Wailing Caverns |
+| Embrace of the Viper | [Armor of the Fang (6473)](https://www.wowhead.com/forever/item=6473) | [Lord Pythas (3670)](https://www.wowhead.com/forever/npc=3670) | Wailing Caverns |
+| Rotmender's Raiment | [Rotmender's Garb (286978)](https://www.wowhead.com/forever/item=286978) | [Flesh Golem (255109)](https://www.wowhead.com/forever/npc=255109) | Ruins of Lordaeron |
+| Rotmender's Raiment | [Rotmender's Sash (286980)](https://www.wowhead.com/forever/item=286980) | [Shrieking Banshee (250620)](https://www.wowhead.com/forever/npc=250620) | Ruins of Lordaeron |
+| Rotmender's Raiment | [Rotmender's Leggings (271207)](https://www.wowhead.com/forever/item=271207) | [The Abandoned (250631)](https://www.wowhead.com/forever/npc=250631) | Ruins of Lordaeron |
+| Rotmender's Raiment | [Rotmender's Treads (271214)](https://www.wowhead.com/forever/item=271214) | [Rath'mael (250657)](https://www.wowhead.com/forever/npc=250657) | Ruins of Lordaeron |
+| Rotmender's Raiment | [Rotmender's Gloves (286979)](https://www.wowhead.com/forever/item=286979) | [Stone Watcher (250629)](https://www.wowhead.com/forever/npc=250629) | Ruins of Lordaeron |
+| Shadowfang Relics | [Rugged Spaulders (5254)](https://www.wowhead.com/forever/item=5254) | [Rethilgore (3914)](https://www.wowhead.com/forever/npc=3914) | Shadowfang Keep |
+| Shadowfang Relics | [Girdle of the Blindwatcher (6319)](https://www.wowhead.com/forever/item=6319) | [Odo the Blindwatcher (4279)](https://www.wowhead.com/forever/npc=4279) | Shadowfang Keep |
+| Shadowfang Relics | [Fenrus' Hide (6340)](https://www.wowhead.com/forever/item=6340) | [Fenrus the Devourer (4274)](https://www.wowhead.com/forever/npc=4274) | Shadowfang Keep |
+| Shadowfang Relics | [Black Wolf Bracers (3230)](https://www.wowhead.com/forever/item=3230) | [Fenrus the Devourer (4274)](https://www.wowhead.com/forever/npc=4274) | Shadowfang Keep |
+| Shadowfang Relics | [Robes of Arugal (6324)](https://www.wowhead.com/forever/item=6324) | [Archmage Arugal (4275)](https://www.wowhead.com/forever/npc=4275) | Shadowfang Keep |
+| Blackfathom Relics | [Tortoise Armor (6907)](https://www.wowhead.com/forever/item=6907) | [Ghamoo-ra (4887)](https://www.wowhead.com/forever/npc=4887) | Blackfathom Deeps |
+| Blackfathom Relics | [Ghamoo-ra's Bind (6908)](https://www.wowhead.com/forever/item=6908) | [Ghamoo-ra (4887)](https://www.wowhead.com/forever/npc=4887) | Blackfathom Deeps |
+| Blackfathom Relics | [Naga Battle Gloves (888)](https://www.wowhead.com/forever/item=888) | [Lady Sarevess (4831)](https://www.wowhead.com/forever/npc=4831) | Blackfathom Deeps |
+| Blackfathom Relics | [Glowing Thresher Cape (6901)](https://www.wowhead.com/forever/item=6901) | [Old Serra'kis (4830)](https://www.wowhead.com/forever/npc=4830) | Blackfathom Deeps |
+| Blackfathom Relics | [Bands of Serra'kis (6902)](https://www.wowhead.com/forever/item=6902) | [Old Serra'kis (4830)](https://www.wowhead.com/forever/npc=4830) | Blackfathom Deeps |
