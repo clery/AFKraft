@@ -3,6 +3,61 @@ local G, C = W.Game, W.Content
 local Tutorial = {}
 W.Tutorial = Tutorial
 
+-- Menu discoveries persist with the existing guide record across chapters.
+function Tutorial.MenuHint(state, id)
+    local owned = next(state.boosts.owned) ~= nil
+    local automation = next(state.boosts.automation.owned) ~= nil
+    local professions = G.ProfessionUnlocks(state)
+    local best = state.professions.bestLevel
+    local conditions = {
+        routes = {
+            state.routes.owned or state.prestigeUnlocked or state.prestiges > 0,
+            "you unlock your first chapter reset",
+        },
+        boosts = {
+            owned or state.essence > 0 or (state.stats.essence or 0) > 0 or state.legacy > 0,
+            "you earn Essence",
+        },
+        profiles = {
+            automation or next(state.boostProfiles.entries) ~= nil,
+            "you learn automation",
+        },
+        development = {
+            state.essence > 0 or (state.stats.essence or 0) > 0 or state.development.invested > 0,
+            "you earn Essence",
+        },
+        collections = {
+            state.adventure.rank >= 2 or next(state.outdoorCollections.pieces) ~= nil or next(
+                state.dungeonCollections.pieces
+            ) ~= nil or next(state.collectionBook.pieces) ~= nil,
+            "you reach Adventure rank 2 or find a collection piece",
+        },
+        legacy = {
+            state.prestigeUnlocked or state.prestiges > 0 or state.legacy > 0,
+            "you unlock your first chapter reset",
+        },
+        difficulty = {
+            state.difficulty.unlocked,
+            "a level 60 hero defeats a level 60 milestone boss",
+        },
+        enchanting = { professions.enchanting, "a hero reaches idle level 30" },
+        titanforging = { professions.titanforging, "a hero reaches idle level 40" },
+        research = { professions.research, "a hero reaches idle level 50" },
+        crafting = { best >= 1, "you recruit your first hero" },
+    }
+    local condition = conditions[id]
+    if not condition then
+        return nil
+    end
+    local key = "menu_" .. id
+    if condition[1] then
+        state.guide[key] = true
+    end
+    if state.guide[key] ~= true then
+        return "Discover this when " .. condition[2] .. "."
+    end
+end
+
 local function lesson(state, key, tab, message, eligible)
     if eligible and not state.guide[key] then
         return { key = key, tab = tab, message = message }

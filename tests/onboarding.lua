@@ -201,7 +201,7 @@ test("Starter guide can be dismissed and reopened without losing completed lesso
     ui:SetTab("adventure")
     assertTrue(W.Panels.GuideStep(s) == nil)
     assertTrue(find(ui, "Dismiss guide") == nil)
-    assertNotNil(find(ui, "Explore Heritage"))
+    assertNotNil(find(ui, "|TInterface\\Icons\\INV_Misc_QuestionMark:18|t ???"))
     assertTrue(s.guide.equipped and s.guide.talent and s.guide.traveled)
 end)
 

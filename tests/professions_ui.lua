@@ -58,11 +58,13 @@ test("Workshop locks unavailable professions and caps titanforge transactions", 
     local W, s = workshop(29)
     local ui = W.UI
     assertFalse(ui.professionControls.commit:IsEnabled())
-    click(ui.professionControls.tabs.titanforging)
+    ui.professionControls.tabs.titanforging:GetScript("OnClick")()
+    assertEquals("enchanting", ui.professionTab)
     assertFalse(ui.professionControls.commit:IsEnabled())
     s.heroes[1].level = 50
     W.Game.TalentProgress(s.heroes[1])
     ui:Refresh()
+    click(ui.professionControls.tabs.titanforging)
     assertTrue(ui.professionControls.commit:IsEnabled())
     for _ = 1, 5 do
         click(ui.professionControls.commit)

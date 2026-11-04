@@ -18,6 +18,10 @@ end
 
 test("Navigation keeps every feature reachable and gives management the workspace", function()
     local _, state, ui = setup()
+    for id in pairs(ui.tabs) do
+        state.guide["menu_" .. id] = true
+    end
+    ui:Refresh()
     local heroPages = { party = true, talents = true }
     for id, tab in pairs(ui.tabs) do
         tab:GetScript("OnClick")()
@@ -50,7 +54,11 @@ test("Navigation keeps every feature reachable and gives management the workspac
 end)
 
 test("Every navigation destination has a distinct icon", function()
-    local _, _, ui = setup()
+    local _, state, ui = setup()
+    for id in pairs(ui.tabs) do
+        state.guide["menu_" .. id] = true
+    end
+    ui:Refresh()
     local seen = {}
     for id, tab in pairs(ui.tabs) do
         local icon
@@ -116,6 +124,7 @@ test("Forge keeps crafting and profession actions under one navigation entry", f
     local W, state, ui = setup()
     W.Game.AddHero(state, "PRIEST")
     ui.selected = 2
+    state.heroes[1].level = 30
     ui:SetTab("crafting")
     assertEquals("Forge", ui.section:GetText())
     assertNotNil(ui.craftControls.hero)
@@ -174,3 +183,36 @@ test("Help is readable, separates paragraphs and reuses pooled controls", functi
     assertTrue(reused == help)
     parent:Hide()
 end)
+
+test(
+    "Unknown menus mask names and icons until discovery, then survive reload and chapters",
+    function()
+        local W, state, ui = setup()
+        local tab = ui.tabs.development
+        assertEquals("???", tab.text:GetText())
+        assertTrue(tab.icon:GetTexture() == ui.tabs.legacy.icon:GetTexture())
+        assertFalse(tab.notice:IsShown())
+        assertTrue(
+            W.Tutorial.MenuHint(state, "development"):find("Discover this when", 1, true) == 1
+        )
+        tab:GetScript("OnClick")()
+        assertEquals("adventure", state.ui.tab)
+        state.essence = 1
+        ui:Refresh(false)
+        assertEquals("Growth", tab.text:GetText())
+        state.essence = 0
+        W.state = assert(W.Game.Load(W.Game.Copy(state), W.Client.Now()))
+        ui:Refresh()
+        assertEquals("Growth", tab.text:GetText())
+        assertTrue(W.Game.ResetAdventure(W.state, true))
+        ui:Refresh()
+        assertEquals("Growth", tab.text:GetText())
+        ui:SetTab("crafting")
+        assertTrue(ui.forgeTabs.enchanting.text:GetText():find("???", 1, true) ~= nil)
+        ui.forgeTabs.enchanting:GetScript("OnClick")()
+        assertEquals("crafting", W.state.ui.tab)
+        W.state.heroes[1].level = 30
+        ui:Refresh()
+        assertEquals("Enchant", ui.forgeTabs.enchanting.text:GetText())
+    end
+)

@@ -164,9 +164,12 @@ function P.adventure(ui, p, s)
     text(p, title, 0, 27, 23, T.text, 640)
     if s.farming then
         detail = (s.lastDefeat or "Your party is farming a safe encounter.")
-            .. (s.prestigeUnlocked and G.PrestigeReward(s) > 0
-                and " Improve your heroes and Retry, or prestige now for permanent party power. Level 60 is not required."
-                or " Improve your heroes, then use Retry.")
+            .. (
+                s.prestigeUnlocked
+                    and G.PrestigeReward(s) > 0
+                    and " Improve your heroes and Retry, or prestige now for permanent party power. Level 60 is not required."
+                or " Improve your heroes, then use Retry."
+            )
     end
     U.Help(p, title, 652, 0, detail)
     ui.adventureNext = button(p, label, 0, 128, 240, function()
@@ -177,6 +180,9 @@ function P.adventure(ui, p, s)
         ui:SetTab(tab)
     end, false, "primary")
     ui.boostQuick = button(p, "Commander boosts", 260, 128, 400, function()
+        if W.Tutorial.MenuHint(s, "boosts") then
+            return
+        end
         local id = s.boosts.equipped
         if id then
             W.Action(G.ActivateBoost, id)
@@ -209,27 +215,41 @@ function P.adventure(ui, p, s)
             (quote.next[field] - 1) * 100
         )
     end
+    local developmentHint = W.Tutorial.MenuHint(s, "development")
     ui.adventureDevelopment = opportunityCard(
         p,
         0,
-        branch and branch.icon or "Ability_Warrior_BattleShout",
-        upgradeTitle,
-        upgradeDetail,
-        (branch and branch.description or "Your permanent development board is complete.")
-            .. "\nOpen Growth to compare every benefit before buying. Rank redistribution is free; learned abilities stay owned.",
+        developmentHint and "INV_Misc_QuestionMark"
+            or (branch and branch.icon or "Ability_Warrior_BattleShout"),
+        developmentHint and "???" or upgradeTitle,
+        developmentHint and "" or upgradeDetail,
+        developmentHint
+            or (branch and branch.description or "Your permanent development board is complete.")
+                .. "\nOpen Growth to compare every benefit before buying. Rank redistribution is free; learned abilities stay owned.",
         function()
-            ui:SetTab("development")
+            if not developmentHint then
+                ui:SetTab("development")
+            end
         end
     )
-    button(
+    local legacyHint = W.Tutorial.MenuHint(s, "legacy")
+    local legacyLink = button(
         p,
-        s.prestigeUnlocked and "Heritage +" .. G.PrestigeReward(s) or "Explore Heritage",
+        legacyHint and "|TInterface\\Icons\\INV_Misc_QuestionMark:18|t ???"
+            or (s.prestigeUnlocked and "Heritage +" .. G.PrestigeReward(s) or "Explore Heritage"),
         710,
         173,
         160,
         function()
-            ui:SetTab("legacy")
+            if not legacyHint then
+                ui:SetTab("legacy")
+            end
         end
+    )
+    U.Tooltip(
+        legacyLink,
+        legacyHint and "???" or "Heritage",
+        legacyHint or "Review chapter rewards."
     )
     if P.GuideStep(s, ui.selected) or (W.Tutorial and W.Tutorial.NextLesson(s)) then
         button(p, s.guide.dismissed and "Show guide" or "Hide guide", 888, 173, 154, function()
@@ -520,7 +540,16 @@ function P.RefreshBoosts(ui, s, message)
     end
     for _, control in pairs({ ui.boostQuick, ui.compactBoost }) do
         if control then
-            local name = equipped and C.boostByID[equipped].name or "Commander boosts"
+            local hint = W.Tutorial.MenuHint(s, "boosts")
+            local name = hint and "|TInterface\\Icons\\INV_Misc_QuestionMark:18|t ???"
+                or (equipped and C.boostByID[equipped].name or "Commander boosts")
+            if control == ui.boostQuick then
+                U.Tooltip(
+                    control,
+                    hint and "???" or "Commander boosts",
+                    hint or "Activate your equipped boost or open Commander."
+                )
+            end
             control.text:SetText(name .. (equipped and " · " .. status(equipped) or ""))
             local ready = not equipped or G.CanActivateBoost(s, equipped)
             U.Enabled(control, not W.catchup and ready)
@@ -531,6 +560,19 @@ function P.RefreshBoosts(ui, s, message)
         "Interface\\Icons\\" .. (equipped and C.boostByID[equipped].icon or "INV_Misc_Book_09")
     )
     ui.compactHint:SetShown(s.ui.locked or message ~= nil)
+    local hint = W.Tutorial.MenuHint(s, "boosts")
+    if hint then
+        ui.compactBoost.text:SetText("???")
+        ui.compactBoost.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    end
+    if ui.compactBoost.menuHint ~= hint then
+        U.Tooltip(
+            ui.compactBoost,
+            hint and "???" or "Commander boosts",
+            hint or "Activate your equipped boost or open Commander."
+        )
+        ui.compactBoost.menuHint = hint
+    end
     if s.ui.tab == "boosts" and not W.catchup then
         local automation = s.boosts.automation
         for capability, control in pairs(ui.boostAutomationPurchases or {}) do

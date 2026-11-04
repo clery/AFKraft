@@ -357,6 +357,20 @@ function UI:Refresh(redraw)
     for id, button in pairs(self.tabs) do
         local active = s.ui.tab == id or (id == "crafting" and s.ui.tab == "workshop")
         U.Selected(button, active)
+        local hint = W.Tutorial.MenuHint(s, id)
+        button.text:SetText(hint and "???" or button.menuLabel)
+        button.icon:SetTexture(
+            "Interface\\Icons\\" .. (hint and "INV_Misc_QuestionMark" or tabIcons[id])
+        )
+        button.notice:SetShown(not hint)
+        if button.menuHint ~= hint then
+            U.Tooltip(
+                button,
+                hint and "???" or button.menuLabel,
+                hint or ("Open " .. button.menuLabel)
+            )
+            button.menuHint = hint
+        end
     end
     for _, entry in ipairs(tabs) do
         if entry[1] == s.ui.tab then
@@ -367,6 +381,18 @@ function UI:Refresh(redraw)
         local active = id == "crafting" and s.ui.tab == "crafting"
             or s.ui.tab == "workshop" and id == (self.professionTab or "enchanting")
         U.Selected(control, active)
+        local hint = W.Tutorial.MenuHint(s, id)
+        control.text:SetText(
+            hint and "|TInterface\\Icons\\INV_Misc_QuestionMark:18|t ???" or control.menuLabel
+        )
+        if control.menuHint ~= hint then
+            U.Tooltip(
+                control,
+                hint and "???" or control.menuLabel,
+                hint or ("Open " .. control.menuLabel)
+            )
+            control.menuHint = hint
+        end
     end
     if s.ui.tab == "workshop" then
         self.section:SetText("Forge")
@@ -623,14 +649,17 @@ function W.CreateUI()
             y = y + 26
         end
         local tab = U.SelectButton(expanded, "", 24, y, 220, 38, function()
-            ui:SetTab(id)
+            if not W.Tutorial.MenuHint(W.state, id) then
+                ui:SetTab(id)
+            end
         end)
         tab.text:ClearAllPoints()
         tab.text:SetPoint("TOPLEFT", 42, -2)
         tab.text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
         U.SingleLine(tab.text, 172, 26)
         tab.text:SetText(entry[2])
-        U.Icon(tab.content or tab, tabIcons[id], 12, 10, 20)
+        tab.menuLabel = entry[2]
+        tab.icon = U.Icon(tab.content or tab, tabIcons[id], 12, 10, 20)
         tab.notice = U.SingleLine(U.Text(tab, "", 42, 25, 10, T.gold), 170, 12)
         U.Tooltip(tab, entry[2], "Open " .. entry[2])
         ui.tabs[id] = tab
@@ -656,6 +685,9 @@ function W.CreateUI()
             228,
             34,
             function()
+                if W.Tutorial.MenuHint(W.state, id) then
+                    return
+                end
                 if id == "crafting" then
                     ui.selected = ui.professionHero or ui.selected
                     ui:SetTab("crafting")
@@ -668,6 +700,7 @@ function W.CreateUI()
                 end
             end
         )
+        ui.forgeTabs[id].menuLabel = entry[2]
         ui.forgeTabs[id]:SetFrameLevel(forgeBorder:GetFrameLevel() - 1)
     end
     ui.settingsLink = U.Button(expanded, "Settings", 24, 850, 220, 34, function()
@@ -735,6 +768,9 @@ function W.CreateUI()
     ui.compactHint:SetHeight(24)
     ui.compactHint:Hide()
     ui.compactBoost = U.Button(compact, "Commander boosts", 12, 273, 550, 26, function()
+        if W.Tutorial.MenuHint(W.state, "boosts") then
+            return
+        end
         local id = W.state.boosts.equipped
         if id then
             W.Action(W.Game.ActivateBoost, id)
