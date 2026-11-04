@@ -92,16 +92,13 @@ function Tutorial.NextLesson(state)
         state,
         "lessonHunt",
         "collections",
-        "Choose one missing outdoor collection piece, inspect its verified creatures and location, then Track it. Your real WoW character earns discoveries from eligible kills; idle battles and offline routes do not advance the hunt. Tracking never changes the odds.",
-        huntAvailable
-            and state.adventure.rank >= 2
-            and not state.outdoorCollections.target
-            and next(state.outdoorCollections.pieces) == nil
+        "Browse outdoor collections and hover over a missing piece to see its creatures and location. Your real WoW character earns discoveries from eligible kills; idle battles and offline routes do not count.",
+        huntAvailable and state.adventure.rank >= 2 and next(state.outdoorCollections.pieces) == nil
     ) or lesson(
         state,
         "lessonCollections",
         "collections",
-        "Inspect outdoor or dungeon piece sources, track a piece, and select one completed-set effect. Discoveries persist through resets. Previous idle collection records remain protected legacy history; unverified sources stay disabled.",
+        "Browse outdoor or dungeon sets, hover over pieces for their sources, and select one completed-set effect. Discoveries persist through resets. Earlier collection records remain in legacy history.",
         collection
     ) or lesson(
         state,

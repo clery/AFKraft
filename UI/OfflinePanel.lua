@@ -111,23 +111,11 @@ function P.Draw(ui, parent, state)
             table.concat(materials, "\n"),
             "Whole materials gained, including salvage returns. Runic fragments come only from eligible tier bosses after a recipe is learned. Fractional combat bonuses are retained for later encounters."
         )
-        cards.collections = card(
-            parent,
-            "Collections",
-            "INV_Misc_Bag_10",
-            440,
-            314,
-            report.collectionMode == "outdoor" and "Outdoor hunting stays online"
-                or count(report.discoveries, "new discovery", "new discoveries"),
-            report.collectionMode == "outdoor" and "No offline discoveries or hunt progress"
-                or count(report.upgrades, "higher-tier piece", "higher-tier pieces"),
-            "Outdoor discoveries require attributed real-world kills. Offline battles award ordinary equipment and materials. Historical reports may include retired simulated collection rewards."
-        )
         cards.automation = card(
             parent,
             "Automation",
             "INV_Misc_Book_09",
-            880,
+            440,
             314,
             count(report.boostUses, "boost use", "boost uses"),
             number(report.routeTransitions)

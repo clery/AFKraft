@@ -22,19 +22,10 @@ test(
         state.outdoorCollections.stats.kills = 8
         ui:Refresh()
         assertTrue(ui.collectionProgress:GetText():find("Session hunt: 8 kills", 1, true) ~= nil)
-        local hovered = false
-        for card in ui.panel._pool.selection:EnumerateActive() do
-            if math.abs(card:GetWidth() - 244) < 0.1 then
-                local enter, leave = card:GetScript("OnEnter"), card:GetScript("OnLeave")
-                enter(card)
-                assertTrue(GameTooltip:IsShown())
-                leave(card)
-                hovered = true
-                break
-            end
-        end
-        assertTrue(hovered)
-        assertTrue(ui.collectionSourceStatus:GetText():find("disabled", 1, true) ~= nil)
+        local card = ui.collectionCards[set.pieces[1]]
+        card:GetScript("OnEnter")(card)
+        assertTrue(GameTooltip:IsShown())
+        card:GetScript("OnLeave")(card)
         assertFalse(ui.collectionEffect:IsEnabled())
         state.collectionBook.pieces[C.legacyCollections[1].pieces[1]] = 0
         ui:Refresh()
@@ -44,20 +35,18 @@ test(
     end
 )
 
-test("Outdoor collections track individual pieces and select one completed effect", function()
+test("Outdoor collections browse individual pieces and select one completed effect", function()
     local W = WoWIdle
     local G, C, ui = W.Game, W.Content, W.UI
     local state = G.New(W.Client.Now())
     G.AddHero(state, "WARRIOR")
     state.guide.dismissed = true
     W.state = state
-    ui.collectionSelected, ui.collectionPiece = nil, nil
+    ui.collectionSelected = nil
     ui:SetTab("collections")
     local set = C.collections[1]
     local selected = set.pieces[2]
-    ui.collectionCards[selected]:GetScript("OnClick")()
-    ui.collectionTarget:GetScript("OnClick")()
-    assertEquals(selected, state.outdoorCollections.target)
+    assertNotNil(ui.collectionCards[selected])
     assertEquals(0, G.CollectionProgress(state, set.id).found)
     for _, itemID in ipairs(set.pieces) do
         state.outdoorCollections.pieces[itemID] = true
@@ -69,61 +58,35 @@ test("Outdoor collections track individual pieces and select one completed effec
     assertTrue(ui.collectionEffectStatus:GetText():find(set.name, 1, true) ~= nil)
     ui.collectionEffect:GetScript("OnClick")()
     assertEquals(nil, state.outdoorCollections.effect)
-    ui.collectionTarget:GetScript("OnClick")()
-    assertEquals(nil, state.outdoorCollections.target)
     assertTrue(G.CollectionBonuses(state).basicAttack > 1)
-    assertTrue(G.SetCollectionTarget(state, selected))
-    state.ui.compact, state.ui.locked = true, false
-    ui:ApplyMode()
-    assertTrue(ui.compactCollectionGoal:IsShown())
-    assertTrue(
-        ui.compactCollectionGoal.text:GetText():find(C.itemByID[selected].name, 1, true) ~= nil
-    )
-    state.ui.locked = true
-    ui:Refresh(false)
-    assertFalse(ui.compactCollectionGoal:IsShown())
-    state.ui.locked = false
-    ui:Refresh(false)
-    ui.compactCollectionGoal:GetScript("OnClick")()
-    assertFalse(state.ui.compact)
-    assertEquals("collections", state.ui.tab)
+    assertEquals("Complete", ui.collectionRows[set.id].statusText:GetText())
 end)
 
 test("Collection selector reaches every set and uses each set's milestone counts", function()
     local W = WoWIdle
     W.Initialize()
-    local ui, G, C, U = W.UI, W.Game, W.Content, W.Widgets
+    local ui, G, C = W.UI, W.Game, W.Content
     local state = G.New(W.Client.Now())
     G.AddHero(state, "WARRIOR")
     state.guide.dismissed = true
     W.state = state
     ui.frame:Show()
-    local originalChoice, originalText = U.Choice, U.Text
-    local selectCollection, milestoneText
-    local ok, message = pcall(function()
-        U.Choice = function(parent, label, x, y, width, options, value, choose)
-            if options == C.collections then
-                assertEquals(#C.collections, #options)
-                assertTrue(x + width <= 1280)
-                selectCollection = choose
-            end
-            return originalChoice(parent, label, x, y, width, options, value, choose)
-        end
-        U.Text = function(parent, text, ...)
-            if text:find("Complete: selectable", 1, true) then
-                milestoneText = text
-            end
-            return originalText(parent, text, ...)
-        end
-        ui:SetTab("collections")
-        for _, collection in ipairs(C.collections) do
-            selectCollection(collection.id)
-            assertEquals(collection.id, ui.collectionSelected)
-            assertTrue(ui.collectionCards[collection.pieces[1]] ~= nil)
-        end
-        selectCollection("blessingOfKalimdor")
-        assertTrue(milestoneText:find("3 pieces: +0.5% materials", 1, true) ~= nil)
-    end)
-    U.Choice, U.Text = originalChoice, originalText
-    assertTrue(ok, message)
+    ui:SetTab("collections")
+    for _, collection in ipairs(C.collections) do
+        ui.collectionRows[collection.id]:GetScript("OnClick")()
+        assertEquals(collection.id, ui.collectionSelected)
+        assertTrue(ui.collectionCards[collection.pieces[1]] ~= nil)
+    end
+    ui.collectionRows.blessingOfKalimdor:GetScript("OnClick")()
+    assertTrue(ui.collectionMilestones:GetText():find("3 pieces: +0.5% materials", 1, true) ~= nil)
+    local browser = ui.collectionFrame
+    browser.scroll:GetScript("OnMouseWheel")(browser.scroll, -100)
+    local maximum = browser.catalog:GetHeight() - browser.scroll:GetHeight()
+    assertTrue(math.abs(maximum - browser.scroll:GetVerticalScroll()) < 0.1)
+    ui:Refresh()
+    assertTrue(math.abs(maximum - browser.scroll:GetVerticalScroll()) < 0.1)
+    browser.scroll:GetScript("OnMouseWheel")(browser.scroll, 100)
+    assertEquals(0, browser.scroll:GetVerticalScroll())
+    ui:SetTab("party")
+    assertFalse(browser:IsShown())
 end)

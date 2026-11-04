@@ -87,10 +87,8 @@ case("Dungeon kills use independent rolls and reject repeats and wrong contexts"
         assert(s.dungeonCollections.stats.discoveries == 1 and G.ValidateCollections(s))
     end)
 end)
-case("Tracking and selected effects are shared across collection books", function()
+case("Selected effects are shared across collection books", function()
     local s = state()
-    assert(G.SetCollectionTarget(s, 4701) and G.CollectionTarget(s) == 4701)
-    assert(G.SetCollectionTarget(s, 10399) and G.CollectionTarget(s) == 10399)
     assert(s.outdoorCollections.target == nil)
     assert(not G.SetCollectionEffect(s, "defiasLeather"))
     complete(s, "redridgeOutriders")
@@ -109,8 +107,8 @@ case("Collection save validation rejects cross-ledger pieces and dual selections
     assert(not G.ValidateCollections(s))
     s.dungeonCollections.pieces[4701] = nil
     s.outdoorCollections.target, s.dungeonCollections.target = 4701, 10399
-    assert(not G.ValidateCollections(s))
-    s.outdoorCollections.target, s.dungeonCollections.target = nil, nil
+    assert(G.ValidateCollections(s))
+    assert(s.outdoorCollections.target == nil and s.dungeonCollections.target == nil)
     complete(s, "redridgeOutriders")
     complete(s, "defiasLeather")
     s.outdoorCollections.effect, s.dungeonCollections.effect = "redridgeOutriders", "defiasLeather"
@@ -173,42 +171,34 @@ case("Dungeon kills cannot advance outdoor discovery milestones or drop chances"
         assert(G.CollectionProgress(s, "redridgeOutriders").found == 1)
     end)
 end)
-case(
-    "Dungeon discoveries, pending receipts, target and effect survive reload and both resets",
-    function()
-        fixture(function(profiles)
-            local s = state()
-            G.AddHero(s, "WARRIOR")
-            assert(G.CollectionKill(s, kill(1)))
-            assert(G.SetCollectionTarget(s, 10399))
-            s = assert(G.Load(G.Copy(s), 10))
-            assert(not G.CollectionKill(s, kill(1)))
-            s.prestigeUnlocked, s.runBest = true, 8
-            assert(G.Prestige(s))
-            assert(next(s.dungeonCollections.counters) == nil)
-            assert(s.dungeonCollections.receipts.dungeonFixture[10399][kill(1).receipt])
-            assert(G.CollectionTarget(s) == 10399)
-            profiles.dungeonFixture.chance = 100
-            assert(G.CollectionKill(s, kill(2)))
-            complete(s, "defiasLeather")
-            assert(G.SetCollectionEffect(s, "defiasLeather"))
-            local hero = s.heroes[1]
-            hero.level = 60
-            assert(G.TalentProgress(hero))
-            s.encounter = s.encounter + 1
-            assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
-            assert(G.PrestigePlus(s, 1))
-            assert(
-                G.CollectionTarget(s) == 10399 and G.ActiveCollectionEffect(s) == "defiasLeather"
-            )
-            assert(G.CollectionProgress(s, "defiasLeather").complete)
-            assert(
-                s.dungeonCollections.stats.kills == 2
-                    and s.dungeonCollections.stats.discoveries == 1
-            )
-            assert(next(s.dungeonCollections.counters) == nil)
-            assert(G.Load(G.Copy(s), 20))
-        end)
-    end
-)
+case("Dungeon discoveries, pending receipts and effect survive reload and both resets", function()
+    fixture(function(profiles)
+        local s = state()
+        G.AddHero(s, "WARRIOR")
+        assert(G.CollectionKill(s, kill(1)))
+        s = assert(G.Load(G.Copy(s), 10))
+        assert(not G.CollectionKill(s, kill(1)))
+        s.prestigeUnlocked, s.runBest = true, 8
+        assert(G.Prestige(s))
+        assert(next(s.dungeonCollections.counters) == nil)
+        assert(s.dungeonCollections.receipts.dungeonFixture[10399][kill(1).receipt])
+        profiles.dungeonFixture.chance = 100
+        assert(G.CollectionKill(s, kill(2)))
+        complete(s, "defiasLeather")
+        assert(G.SetCollectionEffect(s, "defiasLeather"))
+        local hero = s.heroes[1]
+        hero.level = 60
+        assert(G.TalentProgress(hero))
+        s.encounter = s.encounter + 1
+        assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
+        assert(G.PrestigePlus(s, 1))
+        assert(G.ActiveCollectionEffect(s) == "defiasLeather")
+        assert(G.CollectionProgress(s, "defiasLeather").complete)
+        assert(
+            s.dungeonCollections.stats.kills == 2 and s.dungeonCollections.stats.discoveries == 1
+        )
+        assert(next(s.dungeonCollections.counters) == nil)
+        assert(G.Load(G.Copy(s), 20))
+    end)
+end)
 return cases

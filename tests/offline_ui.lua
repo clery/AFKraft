@@ -44,6 +44,7 @@ test("Return report opens without claiming rewards and stays out of compact cont
     assertEquals("Return report", ui.section:GetText())
     assertFalse(ui.scene.frame:IsShown())
     assertNotNil(ui.offlineCards.automation)
+    assertEquals(nil, ui.offlineCards.collections)
     assertEquals(456, state.gold)
     local summary = state.lastOfflineSummary
     ui.offlineBack:GetScript("OnClick")()

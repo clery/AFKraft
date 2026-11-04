@@ -13,7 +13,7 @@ Implemented systems include:
 - Gold/material equipment economy, inventory protection/salvage, crafting, enchanting, titanforging, profession branches and saved allocation plans.
 - Permanent Essence Development board with exact free refunds and conservative one-time economy migration.
 - Manual ordinary prestige and Prestige+, retained capabilities, tier records/affixes, Inheritance and Runic recipes.
-- Outdoor and dungeon collections: separate ledgers, exact-source eligibility, durable piece guarantees/receipts, shared tracked goal and selected effect, profiles/reset retention and separate session totals.
+- Outdoor and dungeon collections: separate ledgers, exact-source eligibility, independent piece rolls and durable receipts, scrollable set catalog and shared selected effect, profiles/reset retention and separate session totals.
 - Full/windowed/compact controls, functional onboarding, tracked-goal/Development cards and automatic return/session reports.
 
 ## Remaining work, in order

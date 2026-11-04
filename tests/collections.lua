@@ -272,23 +272,12 @@ case("One attributed kill independently discovers multiple eligible pieces", fun
     end)
 end)
 
-case("Collection tracking never changes deterministic discovery outcomes", function()
-    fixture(function(sources)
-        sources.profiles.syntheticA.chance = 5
-        local a, b = state(), state()
-        assert(G.SetCollectionTarget(a, pieces[1]))
-        assert(not G.SetCollectionTarget(a, setID))
-        for serial = 1, 40 do
-            local x = G.CollectionKill(a, context(serial, 101))
-            local y = G.CollectionKill(b, context(serial, 101))
-            assert(x == y)
-        end
-        assert(a.seed == b.seed)
-        for _, itemID in ipairs(pieces) do
-            assert(a.outdoorCollections.pieces[itemID] == b.outdoorCollections.pieces[itemID])
-        end
-        assert(G.SetCollectionTarget(a, nil))
-    end)
+case("Removed collection targets are cleared without losing discoveries", function()
+    local s = state()
+    s.outdoorCollections.target = pieces[1]
+    s.outdoorCollections.pieces[pieces[2]] = true
+    assert(G.ValidateCollections(s))
+    assert(s.outdoorCollections.target == nil and s.outdoorCollections.pieces[pieces[2]])
 end)
 
 case(
@@ -400,9 +389,6 @@ case(
                     s.outdoorCollections.version = 2
                 end,
                 function(s)
-                    s.outdoorCollections.target = setID
-                end,
-                function(s)
                     s.outdoorCollections.effect = setID
                 end,
                 function(s)
@@ -436,21 +422,17 @@ case(
 )
 
 case(
-    "Outdoor discoveries, pending receipts, target and effect persist across reload and both resets",
+    "Outdoor discoveries, pending receipts and effect persist across reload and both resets",
     function()
         fixture(function(sources)
             local s = state()
             G.AddHero(s, "WARRIOR")
             assert(G.CollectionKill(s, context(1)))
-            assert(G.SetCollectionTarget(s, pieces[1]))
             s = assert(G.Load(G.Copy(s), 10))
             assert(not G.CollectionKill(s, context(1)))
             s.prestigeUnlocked, s.runBest = true, 8
             assert(G.Prestige(s))
-            assert(
-                next(s.outdoorCollections.counters) == nil
-                    and s.outdoorCollections.target == pieces[1]
-            )
+            assert(next(s.outdoorCollections.counters) == nil)
             sources.profiles.syntheticA.chance = 100
             for serial, npc in ipairs({ 101, 103, 104 }) do
                 assert(G.CollectionKill(s, context(serial + 1, npc)))
@@ -477,11 +459,10 @@ case(
             s.safe.elwynn, s.stage, s.farming = 1, 1, true
             local job = assert(G.BeginCatchup(s, 20))
             assert(G.CollectionKill(s, context(1)))
-            assert(G.SetCollectionTarget(s, pieces[1]))
             local live = s.outdoorCollections
             assert(G.CatchupBatch(job, 10000))
             assert(G.FinishCatchup(s, job))
-            assert(s.outdoorCollections == live and s.outdoorCollections.target == pieces[1])
+            assert(s.outdoorCollections == live)
             assert(next(s.outdoorCollections.counters) == nil)
             assert(s.outdoorCollections.receipts.syntheticA[pieces[1]][context(1).receipt])
             assert(not G.CollectionKill(s, context(1)))
@@ -492,11 +473,8 @@ case(
                 assert(G.CollectionKill(s, context(serial + 2, npc)))
             end
             assert(G.SetCollectionEffect(s, setID))
-            assert(G.SetCollectionTarget(s, pieces[5]))
             assert(G.CatchupBatch(second, 10000) and G.FinishCatchup(s, second))
-            assert(
-                s.outdoorCollections.effect == setID and s.outdoorCollections.target == pieces[5]
-            )
+            assert(s.outdoorCollections.effect == setID)
             assert(G.CollectionProgress(s, setID).complete and G.ValidateCollections(s))
         end)
     end

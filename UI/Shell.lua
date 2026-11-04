@@ -141,6 +141,7 @@ function UI:Layout()
     end
     local heroPage = W.state.ui.tab == "party" or W.state.ui.tab == "talents"
     local forge = W.state.ui.tab == "crafting" or W.state.ui.tab == "workshop"
+    self.forgeContainer:SetShown(not compact and forge)
     for _, control in pairs(self.forgeTabs) do
         control:SetShown(not compact and forge)
     end
@@ -264,25 +265,6 @@ function UI:Refresh(redraw)
         U.Number(s.essence) .. " Essence   /   " .. U.Number(s.gold) .. " Gold"
     )
     self.compactZone:SetText(C.zoneByID[s.zone].name .. "  /  Encounter " .. s.stage)
-    local huntInfo = W.CollectionPanel.TrackedPiece(s)
-    local trackedItem = huntInfo and huntInfo.item
-    self.compactCollectionGoal:SetShown(trackedItem ~= nil and not s.ui.locked)
-    if trackedItem then
-        local available = huntInfo and huntInfo.available
-        local progress = huntInfo and huntInfo.found and "Found"
-            or available and string.format("%.1f%% per kill", huntInfo.chance)
-            or "Unverified"
-        self.compactCollectionGoal.text:SetText(trackedItem.name .. " · " .. progress)
-        self.compactCollectionGoal.icon:SetTexture("Interface\\Icons\\" .. trackedItem.icon)
-        U.Tooltip(
-            self.compactCollectionGoal,
-            "Tracked " .. huntInfo.kind .. " piece",
-            trackedItem.name
-                .. "\n"
-                .. (available and huntInfo.kind .. " kill progress: " .. progress or "Source verification pending. Acquisition is disabled.")
-                .. "\nOpen Collections to change or clear this target."
-        )
-    end
     self.battleState:SetText(
         (
             s.farming and "Farming"
@@ -438,11 +420,8 @@ function UI:Refresh(redraw)
             d.choices.might or "",
             d.choices.resolve or "",
             d.choices.provisioning or "",
-            W.Game.CollectionTarget(s) or "",
             s.dungeonCollections.stats.kills,
             s.dungeonCollections.stats.discoveries,
-            tostring(huntInfo and huntInfo.found),
-            huntInfo and huntInfo.count or 0,
             tostring(s.lastOfflineSummary),
             tostring(s.farming),
             s.lastDefeat or "",
@@ -468,12 +447,10 @@ function UI:Refresh(redraw)
                 tostring(progress.complete),
                 s.outdoorCollections.stats.kills,
                 s.outdoorCollections.stats.discoveries,
-                W.Game.CollectionTarget(s) or "",
                 s.dungeonCollections.stats.kills,
                 s.dungeonCollections.stats.discoveries,
                 W.Game.ActiveCollectionEffect(s) or "",
                 self.collectionSelected or "",
-                self.collectionPiece or "",
             }, ":")
     elseif s.ui.tab == "difficulty" then
         local d = s.difficulty
@@ -660,6 +637,10 @@ function W.CreateUI()
         ui.tabs[id] = tab
         y = y + 40
     end
+    ui.forgeContainer = CreateFrame("Frame", nil, workspace)
+    ui.forgeContainer:SetPoint("TOPLEFT", -12, -185)
+    ui.forgeContainer:SetSize(1320, 674)
+    local forgeBorder = U.FrameTreatment(ui.forgeContainer)
     ui.forgeTabs = {}
     for index, entry in ipairs({
         { "crafting", "Craft equipment" },
@@ -668,18 +649,27 @@ function W.CreateUI()
         { "research", "Specializations" },
     }) do
         local id = entry[1]
-        ui.forgeTabs[id] = U.Tab(workspace, entry[2], (index - 1) * 244, 155, 228, 34, function()
-            if id == "crafting" then
-                ui.selected = ui.professionHero or ui.selected
-                ui:SetTab("crafting")
-            else
-                if W.state.ui.tab == "crafting" then
-                    ui.professionHero = ui.selected
+        ui.forgeTabs[id] = U.Tab(
+            ui.forgeContainer,
+            entry[2],
+            12 + (index - 1) * 244,
+            -30,
+            228,
+            34,
+            function()
+                if id == "crafting" then
+                    ui.selected = ui.professionHero or ui.selected
+                    ui:SetTab("crafting")
+                else
+                    if W.state.ui.tab == "crafting" then
+                        ui.professionHero = ui.selected
+                    end
+                    ui.professionTab = id
+                    ui:SetTab("workshop")
                 end
-                ui.professionTab = id
-                ui:SetTab("workshop")
             end
-        end)
+        )
+        ui.forgeTabs[id]:SetFrameLevel(forgeBorder:GetFrameLevel() + 1)
     end
     ui.settingsLink = U.Button(expanded, "Settings", 24, 850, 220, 34, function()
         LibStub("AceConfigDialog-3.0"):Open("WoWIdle")
@@ -760,20 +750,6 @@ function W.CreateUI()
     U.SingleLine(ui.compactBoost.text, 500, 18)
     ui.adventureCompact = W.AdventureBar.Create(compact, 12, 305, 550)
     U.Text(compact, "Offline earnings: up to 24 hours", 12, 337, 11, T.muted)
-    ui.compactCollectionGoal = U.Button(compact, "", 230, 331, 332, 24, function()
-        ui.collectionPiece = W.Game.CollectionTarget(W.state)
-        ui.collectionSelected = C.collectionByItem[ui.collectionPiece]
-        ui:SetTab("collections")
-    end)
-    ui.compactCollectionGoal.icon =
-        U.Icon(ui.compactCollectionGoal, "INV_Misc_QuestionMark", 5, 3, 18)
-    ui.compactCollectionGoal.icon:SetParent(
-        ui.compactCollectionGoal.content or ui.compactCollectionGoal
-    )
-    ui.compactCollectionGoal.text:ClearAllPoints()
-    ui.compactCollectionGoal.text:SetPoint("LEFT", 28, 0)
-    U.SingleLine(ui.compactCollectionGoal.text, 294, 18)
-    ui.compactCollectionGoal:Hide()
     ui.scene = W.Scene.Create(canvas)
     local drag = CreateFrame("Frame", nil, f)
     ui.drag = drag

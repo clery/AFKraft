@@ -191,7 +191,6 @@ local function validBook(book, kind)
         or book.stats.kills > 1000000000
         or not integer(book.stats.discoveries)
         or book.stats.discoveries > 1000000000
-        or (book.target ~= nil and not belongs(book.target, kind))
         or (
             book.effect ~= nil
             and (
@@ -238,6 +237,7 @@ local function validBook(book, kind)
             end
         end
     end
+    book.target = nil
     book.counters = {}
     if book.effect then
         for _, itemID in ipairs(C.collectionByID[book.effect].pieces) do
@@ -267,7 +267,6 @@ function G.ValidateCollections(state)
     end
     return validBook(state.outdoorCollections, "outdoor")
         and validBook(state.dungeonCollections, "dungeon")
-        and not (state.outdoorCollections.target and state.dungeonCollections.target)
         and not (state.outdoorCollections.effect and state.dungeonCollections.effect)
 end
 
@@ -279,10 +278,6 @@ end
 
 function G.CollectionItem(itemID)
     return C.itemByID[itemID] or C.collectionItemByID[itemID]
-end
-
-function G.CollectionTarget(state)
-    return state.outdoorCollections.target or state.dungeonCollections.target
 end
 
 function G.ActiveCollectionEffect(state)
@@ -309,17 +304,6 @@ function G.CollectionProgress(state, setID)
         complete = found == #collection.pieces,
         missing = missing,
     }
-end
-
-function G.SetCollectionTarget(state, itemID)
-    if itemID ~= nil and not C.collectionByItem[itemID] then
-        return false, "Choose a collection piece to track."
-    end
-    state.outdoorCollections.target, state.dungeonCollections.target = nil, nil
-    if itemID then
-        G.CollectionBook(state, C.collectionByItem[itemID]).target = itemID
-    end
-    return true
 end
 
 function G.CollectionEffectStatus(state, setID)

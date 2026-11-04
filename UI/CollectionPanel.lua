@@ -6,7 +6,7 @@ W.CollectionPanel = P
 function P.SourceLabel(source)
     return source
             and ((source.familyName or "Eligible creatures") .. " · " .. (source.zone or "Unknown location"))
-        or "Sources unverified"
+        or ""
 end
 
 function P.SourceProfile(kind)
@@ -29,140 +29,132 @@ function P.SourceProfile(kind)
     return ids[1] and sources.profiles[ids[1]] or nil
 end
 
-function P.TrackedPiece(state)
-    local id = G.CollectionTarget(state)
-    local item = id and G.CollectionItem(id)
-    if not item then
-        return nil
+local function createBrowser(parent)
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetAllPoints(parent)
+    frame.scroll = CreateFrame("ScrollFrame", nil, frame)
+    frame.scroll:SetPoint("TOPLEFT", 0, -48)
+    frame.scroll:SetSize(316, 520)
+    frame.scroll:SetClipsChildren(true)
+    frame.catalog = CreateFrame("Frame", nil, frame.scroll)
+    frame.catalog:SetSize(316, math.max(520, #C.collections * 70))
+    frame.scroll:SetScrollChild(frame.catalog)
+    frame.scrollBar = CreateFrame("EventFrame", nil, frame, "MinimalScrollBar")
+    frame.scrollBar:SetPoint("TOPLEFT", 330, -48)
+    frame.scrollBar:SetPoint("BOTTOMLEFT", frame.scroll, "BOTTOMRIGHT", 14, 0)
+    frame.scrollBar:RegisterCallback("OnScroll", function(_, percentage)
+        frame.scroll:SetVerticalScroll(
+            percentage * math.max(0, frame.catalog:GetHeight() - frame.scroll:GetHeight())
+        )
+        GameTooltip:Hide()
+    end, frame)
+    frame.scroll:EnableMouseWheel(true)
+    frame.scroll:SetScript("OnMouseWheel", function(_, delta)
+        local maximum = math.max(0, frame.catalog:GetHeight() - frame.scroll:GetHeight())
+        if maximum > 0 then
+            frame.scrollBar:SetScrollPercentage(
+                math.max(0, math.min(1, (frame.scroll:GetVerticalScroll() - delta * 70) / maximum))
+            )
+        end
+    end)
+    frame.detail = CreateFrame("Frame", nil, frame)
+    frame.detail:SetPoint("TOPLEFT", 366, -48)
+    frame.detail:SetSize(930, 540)
+    return frame
+end
+
+function P.DropChanceLabel(state, profile)
+    local chance, bonus = G.CollectionDropChance(state, profile)
+    local details =
+        string.format("%.2f%% chance per eligible kill (base %.2f%%).", chance, profile.chance)
+    for _, talent in ipairs(C.collectionTalents) do
+        local rank = state.collectionTalents[talent.id] or 0
+        if rank > 0 then
+            local active = talent.kind == (profile.kind or "outdoor")
+            details = details
+                .. "\n"
+                .. talent.name
+                .. ": "
+                .. (
+                    active and string.format("Active (+%.0f%% of base)", bonus * 100)
+                    or "Inactive (" .. talent.condition .. " only)"
+                )
+        end
     end
-    local collection = C.collectionByID[C.collectionByItem[id]]
-    local book = G.CollectionBook(state, collection.id)
-    local profile = P.SourceProfile(collection.kind)
-    local source = profile and profile.sources[id]
-    return {
-        item = item,
-        source = source,
-        found = book.pieces[id] == true,
-        kind = collection.kind,
-        chance = profile and profile.chance,
-        available = profile and profile.enabled and profile.verified and source and source.verified
-            or false,
-    }
+    return details .. "\nEach kill rolls independently; no guaranteed drop."
 end
 
 function P.Draw(ui, parent, state)
     local collection = C.collectionByID[ui.collectionSelected] or C.collections[1]
     local progress = G.CollectionProgress(state, collection.id)
     local book = G.CollectionBook(state, collection.id)
-    local selected = C.collectionByItem[ui.collectionPiece] == collection.id and ui.collectionPiece
-        or C.collectionByItem[book.target] == collection.id and book.target
-        or progress.missing[1]
-        or collection.pieces[1]
-    ui.collectionSelected, ui.collectionPiece = collection.id, selected
+    ui.collectionSelected = collection.id
     local kind = collection.kind or "outdoor"
     local profile = P.SourceProfile(kind)
-    local enabled = profile and profile.enabled and profile.verified
-    U.Text(parent, "SET CATALOG", 0, 0, 24, T.gold, 1000)
+    ui.collectionFrame = ui.collectionFrame or createBrowser(parent)
+    local frame = ui.collectionFrame
+    frame:Show()
+    U.Begin(frame)
+    U.Text(frame, "SET CATALOG", 0, 0, 24, T.gold, 800)
     U.Help(
-        parent,
+        frame,
         "Collections",
-        600,
+        1258,
         0,
-        "Select a set, then a piece to inspect its source and drop chance. Tracking never changes drop chances.\n\nDiscoveries require eligible real WoW kills in the correct location; idle battles and crafting do not count. Discoveries and partial-set bonuses survive resets.\n\nComplete a set to choose its effect. Only one completed-set effect can be active."
+        "Browse sets on the left. Colored piece icons show your discoveries; gray icons show missing pieces. Hover over a piece for its source.\n\nEligible real WoW kills can discover pieces. Idle battles and crafting do not count. Discoveries and partial-set bonuses survive resets.\n\nComplete a set to choose its effect. Only one completed-set effect can be active."
     )
-    ui.collectionChoice = U.Choice(
-        parent,
-        collection.name,
-        700,
-        0,
-        580,
-        C.collections,
-        collection.id,
-        function(id)
-            ui.collectionSelected, ui.collectionPiece = id, nil
+    U.EndBuild(frame)
+    U.Begin(frame.catalog)
+    ui.collectionRows = {}
+    for index, entry in ipairs(C.collections) do
+        local status = G.CollectionProgress(state, entry.id)
+        local row = U.SelectButton(frame.catalog, "", 0, (index - 1) * 70, 310, 64, function()
+            ui.collectionSelected = entry.id
             ui:Refresh()
-        end
-    )
-    U.Text(parent, collection.name, 0, 70, 22, T.gold, 1200)
-    U.Help(parent, collection.name, 1258, 70, collection.description)
-    ui.collectionSourceStatus = U.Text(
-        parent,
-        enabled and profile and "Verified " .. kind .. " sources"
-            or kind .. " sources unverified · acquisition disabled",
-        0,
-        110,
-        14,
-        enabled and T.green or T.muted,
-        1280
-    )
+        end, collection.id == entry.id)
+        ui.collectionRows[entry.id] = row
+        U.Begin(row)
+        local icon = U.Icon(row, G.CollectionItem(entry.pieces[1]).icon, 10, 12, 38)
+        icon:SetParent(row.content or row)
+        icon:SetDesaturated(not status.complete)
+        U.SingleLine(U.Text(row, entry.name, 58, 9, 14, T.gold), 240, 22)
+        row.statusText = U.Text(
+            row,
+            status.complete and "Complete" or status.found .. "/" .. status.count,
+            58,
+            35,
+            13,
+            status.complete and T.green or T.muted,
+            240
+        )
+        U.EndBuild(row)
+    end
+    U.EndBuild(frame.catalog)
+    parent = frame.detail
+    U.Begin(parent)
+    U.Text(parent, collection.name, 0, 0, 22, T.gold, 880)
+    U.Help(parent, collection.name, 900, 0, collection.description)
     ui.collectionCards = {}
     for index, itemID in ipairs(collection.pieces) do
         local item = G.CollectionItem(itemID)
         local found = book.pieces[itemID] == true
         local source = profile and profile.sources[itemID]
-        local verified = enabled and source and source.verified
-        local card = U.SelectButton(parent, "", (index - 1) * 258, 150, 244, 190, function()
-            ui.collectionPiece = itemID
-            ui:Refresh()
-        end, selected == itemID)
+        local card =
+            U.Card(parent, ((index - 1) % 3) * 312, 54 + math.floor((index - 1) / 3) * 104, 296, 92)
         ui.collectionCards[itemID] = card
         U.Begin(card)
-        local icon = U.Icon(card, item.icon, 12, 14, 48)
-        icon:SetParent(card.content or card)
-        icon:SetDesaturated(not found)
-        icon:SetAlpha(found and 1 or 0.45)
-        U.Text(card, item.name, 72, 15, 14, found and T.gold or T.muted, 162)
-        U.Text(
-            card,
-            (found and "Discovered" or "Undiscovered")
-                .. (book.target == itemID and " · Targeted" or ""),
-            12,
-            82,
-            13,
-            found and T.green or T.muted,
-            220
-        )
-        U.Text(
-            card,
-            found and "Complete"
-                or profile and string.format("%.1f%% per eligible kill", profile.chance)
-                or "No acquisition profile",
-            12,
-            108,
-            12,
-            T.text,
-            220
-        )
-        U.Text(
-            card,
-            verified and P.SourceLabel(source) or "Source unverified",
-            12,
-            136,
-            12,
-            T.muted,
-            220
-        )
+        card.icon = U.Icon(card, item.icon, 12, 22, 48)
+        card.icon:SetParent(card.content or card)
+        card.icon:SetDesaturated(not found)
+        card.icon:SetAlpha(found and 1 or 0.45)
+        U.Text(card, item.name, 74, 25, 15, found and T.gold or T.muted, 210)
         U.EndBuild(card)
-        local evidence = source and P.SourceLabel(source) or "No source evidence for this client."
-        local tuning = profile
-                and string.format(
-                    "Prototype: %.1f%% per eligible kill for this piece. Each kill is an independent roll.",
-                    profile.chance
-                )
-            or "No acquisition profile available."
-        U.Tooltip(
-            card,
-            item.name,
-            table.concat({
-                evidence,
-                verified and "Verified " .. kind .. " source."
-                    or "Candidate source only. Acquisition remains disabled until verified for this client.",
-                tuning,
-                "Kills do not build progress toward a discovery.",
-                "Tracking changes the selected target only; it never changes drop chances. Only attributed real kills in the correct location discover pieces; idle combat and crafted items do not.",
-            }, "\n"),
-            400
-        )
+        local details = P.SourceLabel(source)
+        if profile and profile.enabled and profile.verified and source and source.verified then
+            details = details
+                .. string.format("\n\n%.1f%% chance per eligible kill.", profile.chance)
+        end
+        U.Tooltip(card, item.name, details, 400)
     end
     local session = G.HuntSessionSummary(state, W.Client.Now())
     local current = kind == "dungeon" and session and session.dungeon
@@ -187,37 +179,25 @@ function P.Draw(ui, parent, state)
         progress.found
             .. "/"
             .. progress.count
-            .. " pieces discovered · "
+            .. " pieces · "
             .. book.stats.kills
             .. " eligible "
             .. kind
             .. " kills"
             .. sessionText,
         0,
-        366,
-        18,
+        330,
+        14,
         T.gold,
-        1296
-    )
-    ui.collectionTarget = U.Button(
-        parent,
-        book.target == selected and "Clear piece target" or "Track selected piece",
-        0,
-        406,
-        380,
-        34,
-        function()
-            local target = book.target ~= selected and selected or nil
-            W.Action(G.SetCollectionTarget, target)
-        end
+        930
     )
     local effectID = G.ActiveCollectionEffect(state)
     local active = effectID == collection.id
     ui.collectionEffect = U.Button(
         parent,
         active and "Clear active collection effect" or "Select completed-set effect",
-        420,
-        406,
+        0,
+        272,
         440,
         34,
         function()
@@ -240,7 +220,8 @@ function P.Draw(ui, parent, state)
             .. effectText
             .. " effect. Selecting it replaces the previously selected collection effect. Partial-set bonuses remain permanent."
     )
-    U.Text(
+    U.Text(parent, "SET BONUSES", 0, 378, 16, T.gold, 930)
+    ui.collectionMilestones = U.Text(
         parent,
         string.format(
             "%d pieces: +%.1f%% basic attacks · %d pieces: +%.1f%% materials · Complete: selectable %s",
@@ -251,20 +232,20 @@ function P.Draw(ui, parent, state)
             effectText
         ),
         0,
-        458,
+        410,
         14,
         T.text,
-        1280
+        930
     )
     ui.collectionEffectStatus = U.Text(
         parent,
         active and "Active effect: " .. collection.name
             or "Active effect: " .. (effectID and C.collectionByID[effectID].name or "none"),
         0,
-        490,
+        456,
         14,
         active and T.green or T.muted,
-        1280
+        930
     )
     local legacy = {}
     for _, old in ipairs(C.legacyCollections) do
@@ -287,17 +268,17 @@ function P.Draw(ui, parent, state)
         parent,
         #legacy > 0 and "LEGACY COLLECTIONS · " .. table.concat(legacy, " | ") or "",
         0,
-        538,
+        500,
         13,
         T.gold,
-        1280
+        930
     )
     if #legacy > 0 then
         U.Help(
             parent,
             "Legacy collection bonuses",
-            1258,
-            538,
+            900,
+            500,
             string.format(
                 "Retained discoveries from earlier adventures. No new legacy pieces drop.\n\nBasic attacks: +%.2f%%\nMaterials: +%.2f%%\nHumanoid defense: %.2f%%",
                 (bonus.basicAttack - 1) * 100,
@@ -306,4 +287,5 @@ function P.Draw(ui, parent, state)
             )
         )
     end
+    U.EndBuild(parent)
 end

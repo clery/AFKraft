@@ -104,6 +104,8 @@ test("Forge keeps crafting and profession actions under one navigation entry", f
     assertEquals("Forge", ui.section:GetText())
     assertNotNil(ui.craftControls.hero)
     assertTrue(ui.forgeTabs.enchanting:IsVisible())
+    assertTrue(ui.forgeContainer:IsShown())
+    assertTrue(ui.forgeTabs.enchanting:GetParent() == ui.forgeContainer)
     ui.forgeTabs.enchanting:GetScript("OnClick")()
     assertEquals("workshop", state.ui.tab)
     assertEquals("enchanting", ui.professionTab)
@@ -116,6 +118,7 @@ test("Forge keeps crafting and profession actions under one navigation entry", f
     assertEquals(1, ui.selected)
     ui:SetTab("party")
     assertFalse(ui.forgeTabs.enchanting:IsShown())
+    assertFalse(ui.forgeContainer:IsShown())
 end)
 
 test("Help is readable, separates paragraphs and reuses pooled controls", function()

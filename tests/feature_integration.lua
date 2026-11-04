@@ -303,7 +303,6 @@ case("Live dungeon discoveries survive catch-up without manufacturing outdoor pr
     local s = party()
     s.safe.elwynn = 1
     local job = assert(G.BeginCatchup(s, 60))
-    assert(G.SetCollectionTarget(s, 10399))
     for serial = 1, 10 do
         G.CollectionKill(s, {
             profile = "foreverDungeon16001",
@@ -319,7 +318,7 @@ case("Live dungeon discoveries survive catch-up without manufacturing outdoor pr
     while not G.CatchupBatch(job, 31) do
     end
     assert(G.FinishCatchup(s, job))
-    assert(s.dungeonCollections.pieces[10399] and G.CollectionTarget(s) == 10399)
+    assert(s.dungeonCollections.pieces[10399])
     assert(s.dungeonCollections.stats.kills == kills)
     assert(s.outdoorCollections.stats.kills == 0 and s.outdoorCollections.stats.discoveries == 0)
     assert(G.ValidateCollections(s))

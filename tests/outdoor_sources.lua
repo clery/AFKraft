@@ -215,7 +215,6 @@ case(
                         assert(not (C.itemByID[itemID] and C.collectionItemByID[itemID]), itemID)
                         assert(not S.profiles.retail120105.sources[itemID])
                     end
-                    assert(G.SetCollectionTarget(state, itemID))
                     if not G.CollectionBook(state, collection.id).pieces[itemID] then
                         local context = {
                             profile = profile.id,

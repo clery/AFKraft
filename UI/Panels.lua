@@ -216,53 +216,6 @@ function P.adventure(ui, p, s)
             ui:SetTab("development")
         end
     )
-    local hunt = W.CollectionPanel.TrackedPiece(s)
-    local huntTitle, huntDetail, huntTooltip =
-        "Choose a collection hunt",
-        "Track one piece in Collections",
-        "Choose a missing piece and inspect its real outdoor or dungeon sources. Unverified source mappings remain disabled. Idle routes do not perform hunts."
-    if hunt then
-        huntTitle = hunt.item.name
-        local progress = hunt.chance and string.format("%.1f%% per eligible kill", hunt.chance)
-            or "No source profile"
-        huntDetail = hunt.found and "Discovered | Review completed-set effects"
-            or (
-                progress
-                .. " | "
-                .. (
-                    hunt.available and W.CollectionPanel.SourceLabel(hunt.source)
-                    or "Sources unverified"
-                )
-            )
-        huntTooltip = (
-            hunt.source
-                and (hunt.available and "Eligible family: " or "Unverified family: ") .. W.CollectionPanel.SourceLabel(
-                    hunt.source
-                )
-            or "No verified source is available for this client."
-        )
-            .. "\n"
-            .. progress
-            .. ". Only attributed eligible real "
-            .. hunt.kind
-            .. " kills advance this piece."
-            .. "\nClick to inspect the tracked piece or change your target."
-    end
-    ui.adventureHunt = opportunityCard(
-        p,
-        82,
-        hunt and hunt.item.icon or "INV_Misc_Bag_10",
-        huntTitle,
-        huntDetail,
-        huntTooltip,
-        function()
-            if G.CollectionTarget(s) then
-                ui.collectionPiece = G.CollectionTarget(s)
-                ui.collectionSelected = C.collectionByItem[ui.collectionPiece]
-            end
-            ui:SetTab("collections")
-        end
-    )
     button(
         p,
         s.prestigeUnlocked and "Legacy +" .. G.PrestigeReward(s) or "Explore Legacy",
@@ -291,8 +244,7 @@ function P.adventure(ui, p, s)
                     .. (report.adventureXP ~= nil and tostring(report.adventureXP) or "Unrecorded")
                     .. " Adventure XP | "
                     .. (report.essence ~= nil and tostring(report.essence) or "Unrecorded")
-                    .. " Essence | Finds: "
-                    .. report.discoveries,
+                    .. " Essence",
                 0,
                 169,
                 11,
@@ -1158,7 +1110,7 @@ function P.Draw(ui)
     end
     ui.guideEquipTarget, ui.guideInventoryTarget, ui.guideCraftEquipTarget = nil, nil, nil
     ui.boostQuick, ui.boostControls, ui.boostTiles = nil, nil, nil
-    ui.adventureDevelopment, ui.adventureHunt, ui.adventureSession = nil, nil, nil
+    ui.adventureDevelopment, ui.adventureSession = nil, nil
     ui.boostRuleControls, ui.boostRulesToggle = nil, nil
     ui.boostAutomationPurchases, ui.boostAutomationEnabled = nil, nil
     U.Begin(p)

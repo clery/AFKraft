@@ -81,7 +81,7 @@ test("Development controls cap ranks and reuse the management frame pools", func
     assertEquals("adventure", s.ui.tab)
 end)
 
-test("Adventure cards preview affordable development and tracked hunts without spending", function()
+test("Adventure cards preview affordable development without spending", function()
     local W = WoWIdle
     W.Initialize()
     local G, ui = W.Game, W.UI
@@ -103,15 +103,6 @@ test("Adventure cards preview affordable development and tracked hunts without s
     assertTrue(G.BuyDevelopment(s, "might"))
     branch = W.Panels.DevelopmentOpportunity(s)
     assertEquals("resolve", branch.id)
-    assertTrue(G.SetCollectionTarget(s, 4701))
-    ui:SetTab("adventure")
-    local hunt = W.CollectionPanel.TrackedPiece(s)
-    assertEquals(4701, hunt.item.itemID)
-    assertFalse(hunt.available)
-    ui.adventureHunt:GetScript("OnClick")()
-    assertEquals("collections", s.ui.tab)
-    assertEquals(4701, ui.collectionPiece)
-    assertEquals(0, s.outdoorCollections.stats.kills)
     s.essence = 0
     ui:SetTab("adventure")
     ui:Refresh(false)

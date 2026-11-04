@@ -196,11 +196,7 @@ function G.FinishCatchup(state, job)
             .. summary.masteryXP
             .. " XP) · "
             .. summary.salvaged
-            .. " salvaged · "
-            .. summary.discoveries
-            .. " collection discoveries, "
-            .. summary.upgrades
-            .. " upgrades."
+            .. " salvaged."
             .. " "
             .. summary.routeTransitions
             .. " offline route transitions."
