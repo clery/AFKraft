@@ -56,6 +56,7 @@ for _, file in ipairs({
     "tests/boosts.lua",
     "tests/boost_automation.lua",
     "tests/collections.lua",
+    "tests/collection_talents.lua",
     "tests/dungeon_collections.lua",
     "tests/dungeon_sources.lua",
     "tests/hunt_session.lua",

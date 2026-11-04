@@ -125,7 +125,20 @@ Run `lua scripts/balance_profiles.lua` from the repository root. Seeds 17, 91 an
 
 Mixed play earns 1,536 real-activity XP over six hours; focused hunting earns 900. Idle-only earns zero Adventure XP and makes substantial natural hero/equipment progress. Under this policy the first Development rank is bought after 30 minutes of mixed activity or 45 minutes of focused hunting. No activity is required to unlock ordinary prestige. The observed 46–47-minute unlock contradicts the provisional 4–6-hour first-prestige target; the model measures access, not a player's decision to reset. Do not claim that target is met or delay the unlock without checking the intended early-game experience.
 
-Collection comparisons are explicitly synthetic: one hypothetical source per piece, 5% addon chance, a 30-kill guarantee, sequential targeting of the next missing piece, and eligible hunt kills as a subset of the profile's activity kills. No Retail or Forever source is enabled by this script. Mixed play assumes 12 eligible hunt kills per hour; focused hunting assumes 120. Focused runs complete the five-piece set in 0.43–0.85 hours; one mixed run finishes at 2.75 hours and two remain incomplete at six hours. This small seed sample demonstrates model behavior, not medians, tail estimates, verified travel times, current-client loot availability or real playtest outcomes. Source verification, broader distributions, representative builds, commander/profession policies and observed check-ins remain required before coefficient tuning.
+Collection comparisons are explicitly synthetic: one hypothetical source per piece, 5% addon chance, sequential hunting of the next missing piece, and eligible hunt kills as a subset of the profile's activity kills. No Retail or Forever source is enabled by this script. Mixed play assumes 12 eligible hunt kills per hour; focused hunting assumes 120. Earlier completion-time measurements used a retired 30-kill guarantee and no longer establish current acquisition pacing. Independent rolls have an unbounded long tail; rerun these profiles and measure broader distributions before claiming balanced completion times. Source verification, representative builds, commander/profession policies and observed check-ins remain required before coefficient tuning.
+
+### Legacy collection talents — balancing pending
+
+Hypothesis: optional Legacy investment should modestly shorten collection hunts without changing source eligibility, equipment loot, or the independence of each kill. Fieldcraft applies to eligible outdoor collection kills; Relic Hunter applies to eligible dungeon collection kills. Each has three permanent ranks, provisionally priced at 1/2/3 Legacy (6 total per talent). Each rank adds 10% of the base collection chance; these two conditions never overlap. Learned ranks survive ordinary prestige and Prestige+. These values are implementation placeholders, not a balanced progression target.
+
+| Current source profile | Base chance | Rank 1 | Rank 2 | Rank 3 | Expected eligible kills per piece, base → rank 3 |
+| --- | --- | --- | --- | --- | --- |
+| Outdoor | 5% | 5.5% | 6% | 6.5% | 20 → 15.38 |
+| Dungeon | 20% | 22% | 24% | 26% | 5 → 3.85 |
+
+Expectations use `1 / p` for independent geometric rolls, excluding travel, source availability, overlapping piece sources and duplicate signals. They are analytical means, not completion guarantees or live measurements. Rank three reduces expected eligible kills by about 23%, while arbitrarily long dry streaks remain possible. Tooltips and rolls use the same chance, rounded to a basis point. The combined-profile script models the untrained baseline and does not purchase these talents.
+
+Before tuning, compare untrained and ranked median/p90/p99 eligible kills and elapsed hunt time, total-set completion distributions, outdoor versus dungeon access and travel, Legacy earning/spending opportunity costs against recipes and other unlocks, and actual talent uptake. Validate attribution and persistence in supported clients. Tune costs, rank count and relative bonus together; never restore saved failure progress or a guaranteed discovery threshold as a balancing shortcut.
 
 ### Secondary family spoils
 

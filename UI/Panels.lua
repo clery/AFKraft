@@ -869,7 +869,7 @@ function P.legacy(ui, p, s)
         text(p, "KEEP", 0, 254, 14, T.gold)
         text(
             p,
-            "Hero identities and classes; talents, permanent talent points and Mastery; learned boosts, loadout and cooldowns; heirlooms; recipes and discoveries; Legacy; Adventure rank and partial XP; unspent Essence.",
+            "Hero identities and classes; talents, permanent talent points and Mastery; learned boosts, loadout and cooldowns; heirlooms; recipes, discoveries and collection talents; Legacy; Adventure rank and partial XP; unspent Essence.",
             0,
             287,
             17,
@@ -984,6 +984,55 @@ function P.legacy(ui, p, s)
             name .. " heirloom recipe",
             known and "Open Crafting to make this heirloom for the selected hero."
                 or "Spend 1 Legacy to permanently unlock this recipe, then open Crafting."
+        )
+    end
+    text(p, "COLLECTION TALENTS", 0, 350, 14, T.gold)
+    text(p, "Permanent ranks · survive both resets", 0, 378, 13, T.muted, 640)
+    ui.collectionTalentButtons = {}
+    for index, talent in ipairs(C.collectionTalents) do
+        local rank = s.collectionTalents[talent.id] or 0
+        local cost = C.collectionTalentCosts[rank + 1]
+        local y = 414 + (index - 1) * 76
+        text(
+            p,
+            talent.name .. " · " .. rank .. "/" .. C.collectionTalentRankCap,
+            0,
+            y,
+            16,
+            T.gold,
+            400
+        )
+        text(
+            p,
+            talent.condition
+                .. " · +"
+                .. math.floor(C.collectionTalentBonus * 100 + 0.5)
+                .. "% of base chance per rank",
+            0,
+            y + 26,
+            13,
+            T.text,
+            400
+        )
+        local learn = button(
+            p,
+            cost and "Learn · " .. cost .. " Legacy" or "Fully learned",
+            420,
+            y,
+            220,
+            function()
+                W.Action(G.BuyCollectionTalent, talent.id)
+            end
+        )
+        ui.collectionTalentButtons[talent.id] = learn
+        U.Enabled(learn, cost ~= nil and s.legacy >= (cost or 0))
+        U.Tooltip(
+            learn,
+            talent.name,
+            talent.condition
+                .. " only. Each rank increases collection-piece drop chances by "
+                .. math.floor(C.collectionTalentBonus * 100 + 0.5)
+                .. "% of their base chance. Does not affect equipment loot.\n\nLearned ranks survive both resets. Purchases spend Legacy immediately. Every kill rolls independently; failures never increase future odds."
         )
     end
 end

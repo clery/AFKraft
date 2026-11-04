@@ -249,8 +249,53 @@ local function validBook(book, kind)
     return true
 end
 
+function G.ValidateCollectionTalents(state)
+    if type(state.collectionTalents) ~= "table" then
+        return false
+    end
+    for id, rank in pairs(state.collectionTalents) do
+        if
+            not C.collectionTalentByID[id]
+            or not integer(rank)
+            or rank > C.collectionTalentRankCap
+        then
+            return false
+        end
+    end
+    return true
+end
+
+function G.BuyCollectionTalent(state, id)
+    local talent = C.collectionTalentByID[id]
+    if not talent or not G.ValidateCollectionTalents(state) or not integer(state.legacy) then
+        return false, "Choose a valid collection talent."
+    end
+    local rank = state.collectionTalents[id] or 0
+    local cost = C.collectionTalentCosts[rank + 1]
+    if not cost then
+        return false, "This collection talent is fully learned."
+    end
+    if state.legacy < cost then
+        return false, "Not enough Legacy."
+    end
+    state.legacy = state.legacy - cost
+    state.collectionTalents[id] = rank + 1
+    G.Log(state, talent.name .. " learned: rank " .. (rank + 1) .. ".", true)
+    return true
+end
+
+function G.CollectionDropChance(state, profile)
+    local bonus = 0
+    for _, talent in ipairs(C.collectionTalents) do
+        if talent.kind == (profile.kind or "outdoor") then
+            bonus = bonus + (state.collectionTalents[talent.id] or 0) * C.collectionTalentBonus
+        end
+    end
+    return math.min(100, math.floor(profile.chance * (1 + bonus) * 100 + 0.5) / 100), bonus
+end
+
 function G.ValidateCollections(state)
-    if not validLegacy(state) then
+    if not G.ValidateCollectionTalents(state) or not validLegacy(state) then
         return false
     end
     if state.outdoorCollections == nil then
@@ -430,9 +475,10 @@ function G.CollectionKill(state, context)
     end
     book.receipts[context.profile] = receipts
     local discoveries = {}
+    local chance = G.CollectionDropChance(state, profile)
     for _, itemID in ipairs(pending) do
         receipts[itemID] = receipts[itemID] or {}
-        local discovered = G.Random(state, 100) <= profile.chance
+        local discovered = G.Random(state, 10000) <= math.floor(chance * 100 + 0.5)
         if discovered then
             book.pieces[itemID] = true
             for _, ledger in pairs(book.receipts) do

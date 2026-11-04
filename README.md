@@ -68,6 +68,8 @@ Crafting turns gold and idle materials into targeted equipment. Enhancement, enc
 
 Talent selections and earned points survive prestige, and respecs stay free. Hero levels stop at 60. Personal level records award a point every two levels, starting at level 1; repeating those levels never awards points twice. At level 20, permanent **Mastery** unlocks: victories at or above that hero's hardest completed encounter level grant Mastery XP, with double XP for bosses. Every Mastery rank grants another permanent talent point, up to the tree's 48-point total. The first rank costs 100 XP, and each later rank costs 50 more. Mastery continues when character levels are capped. The Talents view shows both tracks.
 
+In **Legacy**, learn permanent collection talents: **Fieldcraft** improves collection-piece chances from eligible outdoor kills, and **Relic Hunter** improves them inside eligible dungeons. Each has three ranks, provisionally costing 1, 2, then 3 Legacy. Each rank adds 10% of the base chance (5% becomes 6.5% at rank three), rather than ten percentage points. They affect collection pieces only, survive both resets, and never accumulate failed-roll progress or guarantee a discovery. Verified piece tooltips show the effective chance and active/inactive talent conditions. Costs and bonuses still need balancing.
+
 ## Prestige and heirlooms
 
 Defeat a **level 8 milestone boss** to unlock prestige. Open **Legacy** to preview the rewards and reset consequences before confirming.

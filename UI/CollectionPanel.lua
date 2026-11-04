@@ -151,8 +151,7 @@ function P.Draw(ui, parent, state)
         U.EndBuild(card)
         local details = P.SourceLabel(source)
         if profile and profile.enabled and profile.verified and source and source.verified then
-            details = details
-                .. string.format("\n\n%.1f%% chance per eligible kill.", profile.chance)
+            details = details .. "\n\n" .. P.DropChanceLabel(state, profile)
         end
         U.Tooltip(card, item.name, details, 400)
     end

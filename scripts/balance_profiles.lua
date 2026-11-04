@@ -49,7 +49,6 @@ local model = {
     enabled = true,
     verified = true,
     chance = 5,
-    guarantee = 30,
     sources = {},
 }
 for position, itemID in ipairs(collection.pieces) do
@@ -170,7 +169,7 @@ print(
     "Hypotheses only: six online idle hours, 15-minute check-ins, fixed class/talent policy, no resets."
 )
 print(
-    "Hunts use synthetic one-piece sources: 5% addon chance, 30-kill guarantee; never verified client availability."
+    "Hunts use synthetic one-piece sources: 5% independent rolls, no collection talents; never verified client availability."
 )
 print(
     "Mixed: 8 quests/80 kills/4 gathers and 12 eligible hunt kills per hour; focused: 150 kills, 120 eligible."

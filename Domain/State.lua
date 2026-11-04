@@ -74,6 +74,7 @@ function G.New(now)
         adventure = { rank = 1, xp = 0, totalXP = 0, sources = {} },
         gold = 0,
         legacy = 0,
+        collectionTalents = {},
         prestiges = 0,
         prestigeStrength = 0,
         materials = { timber = 0, hide = 0, ore = 0, relic = 0 },

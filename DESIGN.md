@@ -256,6 +256,8 @@ The book lists all sets in a scrollable catalog with piece counts and a completi
 
 Each confirmed eligible creature kill rolls independently for every missing piece that creature can supply. Failed rolls do not accumulate saved progress or increase future odds, and there is no guaranteed discovery threshold. Duplicate kill signals are rejected using bounded receipts.
 
+Legacy collection talents provide optional, permanent support for real collection hunts. Fieldcraft applies only to eligible outdoor collection kills; Relic Hunter applies only to eligible dungeon collection kills. Each has three ranks at provisional Legacy costs of 1/2/3. A rank adds 10% of the source profile's base chance, yielding `base * (1 + 0.1 * rank)`; conditions are mutually exclusive and never stack across acquisition kinds. At rank three, current outdoor/dungeon profiles move from 5%/20% to 6.5%/26%. These bonuses affect collection pieces only, never ordinary equipment, Adventure XP, source eligibility or attribution. Learned ranks survive both reset types and older saves start with no ranks. The Legacy purchase controls and verified-piece tooltips explain costs, effective chances and active/inactive conditions. All costs, ranks and coefficients remain provisional pending balancing; no failed-roll progress or guaranteed threshold is introduced.
+
 Offline and simulated kills never roll collection discoveries. Distinguish the player's real hunting destination from the idle party's farming destination. Idle route automation never moves the real character or completes outdoor hunts.
 
 ## Prestige and heirlooms
@@ -277,7 +279,7 @@ Both reset types are implemented; the matrix below specifies target retention, i
 | Ordinary equipment, gold, zone materials and Runic fragments | Reset | Reset |
 | Learned Runic enchantment recipes | Keep | Keep; applications still require gold, materials and fragments |
 | Owned heirlooms and existing permanent investment in them | Keep; stats scale back with hero level | Keep; future cycle-only modifications must be identified separately before purchase |
-| Collection discoveries, bounded permanent rewards, unlocked/selected effects | Keep | Keep; preserve legacy rank records during migration; physical ordinary gear still resets |
+| Collection discoveries, Legacy collection talents, bounded permanent rewards, unlocked/selected effects | Keep | Keep; preserve legacy rank records during migration; physical ordinary gear still resets |
 | Ability ownership, purchased automation modes, rule capacity, and route capability | Keep | Keep |
 | Rule/profile data, route templates, enabled preferences | Keep | Keep |
 | Active boost effects and cooldowns | End active effects; keep cooldown progress | Same; no reset-based free activation |
