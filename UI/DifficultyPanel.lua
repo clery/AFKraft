@@ -12,15 +12,13 @@ function D.Draw(ui, parent, state)
     if ui.difficultyTier == nil or ui.difficultyTier > difficulty.maxTier then
         ui.difficultyTier = state.tier
     end
-    U.Text(parent, "PRESTIGE+", 0, 0, 22, T.gold, 1296)
-    U.Text(
+    U.Text(parent, "DIFFICULTY", 0, 0, 22, T.gold, 1296)
+    U.Help(
         parent,
-        "A deeper reset rebuilds your adventure in one selected difficulty.",
+        "Prestige+",
+        1258,
         0,
-        42,
-        16,
-        T.text,
-        1296
+        "Choose a difficulty and inspect its modifiers, affixes and Inheritance reward.\n\nA deeper reset rebuilds your run. Review what is kept and rebuilt before confirming.\n\nEssence and real-activity Adventure XP are unchanged by difficulty."
     )
     U.Text(
         parent,
@@ -149,28 +147,22 @@ function D.Draw(ui, parent, state)
     )
     U.Text(
         parent,
-        string.format(
-            "Gold / materials %.2f× · Loot %.2f× · Essence and Adventure XP unchanged",
-            modifiers.gold,
-            modifiers.loot
-        ),
+        string.format("Gold / materials %.2f× · Loot %.2f×", modifiers.gold, modifiers.loot),
         0,
         306,
         15,
         T.muted,
         1296
     )
-    U.Text(
+    U.Help(
         parent,
+        "Guarded formations",
+        1258,
+        330,
         string.format(
-            "Guarded formations: enemies take %.1f%% less basic-attack damage. Spells retain full damage.",
+            "Enemies take %.1f%% less basic-attack damage.\n\nSpells retain full damage.",
             (1 - modifiers.basicDamageTaken) * 100
-        ),
-        0,
-        336,
-        14,
-        T.muted,
-        1296
+        )
     )
     ui.difficultyAffixes = {}
     if #affixes == 0 then

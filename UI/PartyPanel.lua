@@ -84,8 +84,7 @@ local function recruit(ui, p, s)
         local milestone = G.NextCompanionMilestone(s)
         U.Text(
             p,
-            milestone
-                    and ("Defeat a level " .. milestone .. " milestone boss to discover another companion. Your current hero keeps adventuring automatically.")
+            milestone and ("Defeat a level " .. milestone .. " milestone boss.")
                 or "All five companions have joined your company.",
             0,
             54,
@@ -101,9 +100,7 @@ local function recruit(ui, p, s)
     end
     U.Text(
         p,
-        "Choose a class for companion "
-            .. (#s.heroes + 1)
-            .. " of 5. Names and appearances are generated.",
+        "Choose a class for companion " .. (#s.heroes + 1) .. " of 5.",
         0,
         39,
         14,
@@ -139,14 +136,12 @@ local function recruit(ui, p, s)
                 .. ". Repeated classes are allowed. A recruit joins the next encounter if your company is fighting."
         )
     end
-    U.Text(
+    U.Help(
         p,
-        "Your company shares an inventory. Select a hero above to manage their equipment at any time.",
+        "Recruitment",
+        1030,
         0,
-        392,
-        13,
-        T.muted,
-        1296
+        "Choose a class for the new companion. Names and appearances are generated; repeated classes are allowed.\n\nA recruit joins the next encounter if your party is fighting. Every hero uses the shared inventory. Select a hero to manage their equipment."
     )
 end
 
@@ -192,16 +187,7 @@ local function equipment(ui, p, s, hero, index)
         13,
         T.muted
     )
-    line(
-        p,
-        hero.level >= C.heroLevelCap and "Level 60 · continue growing through Mastery"
-            or "Select a slot to compare and upgrade",
-        0,
-        59,
-        572,
-        12,
-        hero.level >= G.LevelCap(hero) and T.gold or T.muted
-    )
+
     local attributeLines = {}
     for _, key in ipairs(C.itemStatOrder) do
         attributeLines[#attributeLines + 1] =
@@ -210,7 +196,7 @@ local function equipment(ui, p, s, hero, index)
     local development = U.Button(p, "Party development", 332, 0, 240, 34, function()
         ui:SetTab("development")
     end)
-    line(p, "Natural growth to 60 · Mastery at 20", 332, 37, 240, 11)
+
     U.Tooltip(
         development,
         "Permanent party development · Equipment stats",
@@ -294,7 +280,6 @@ local function equipment(ui, p, s, hero, index)
             16,
             T.gold
         )
-        line(p, "Equip a matching item or craft one for this hero.", 0, 381, 572, 12, T.muted)
         U.Button(p, "Craft equipment", 332, 346, 240, 34, function()
             ui.craftSlot = selectedSlot
             ui:SetTab("crafting")
@@ -464,7 +449,9 @@ local function inventory(ui, p, s, hero, index)
             .. ". Uses the shared inventory, keeps current items on equal power, and returns replaced gear to the inventory."
     )
 
-    local pageSize = ui.bagFiltersOpen and 4 or 5
+    local bottom = p:GetHeight() - 34
+    local top = ui.bagFiltersOpen and 160 or 104
+    local pageSize = math.max(1, math.floor((bottom - top) / 50))
     local pages = math.max(1, math.ceil(#entries / pageSize))
     local page = math.max(0, math.min(ui.bagPage or 0, pages - 1))
     ui.bagPage = page
@@ -472,7 +459,7 @@ local function inventory(ui, p, s, hero, index)
         local entry = entries[page * pageSize + row]
         if entry then
             local n, item = entry.index, entry.item
-            local y = (ui.bagFiltersOpen and 160 or 104) + (row - 1) * 50
+            local y = top + (row - 1) * 50
             local power = G.ItemPower(item, hero)
             local previous = hero.gear[item.slot]
             local delta = power - G.ItemPower(previous, hero)
@@ -594,11 +581,11 @@ local function inventory(ui, p, s, hero, index)
             end
         )
     end
-    local previous = U.Button(p, "Previous", 608, 389, 116, 32, function()
+    local previous = U.Button(p, "Previous", 608, bottom, 116, 32, function()
         ui.bagPage = page - 1
         ui:Refresh()
     end)
-    local nextPage = U.Button(p, "Next", 1180, 389, 116, 32, function()
+    local nextPage = U.Button(p, "Next", 1180, bottom, 116, 32, function()
         ui.bagPage = page + 1
         ui:Refresh()
     end)
@@ -614,7 +601,7 @@ local function inventory(ui, p, s, hero, index)
         p,
         "Page " .. (page + 1) .. " of " .. pages .. "  ·  Power compared with " .. hero.name,
         742,
-        394,
+        bottom + 5,
         420,
         12,
         T.muted
@@ -856,7 +843,6 @@ function Party.Draw(ui, p, s)
         return
     end
     local hero, index = s.heroes[ui.selected], ui.selected
-    U.Rect(p, 592, 0, 1, 421, T.line)
     equipment(ui, p, s, hero, index)
     inventory(ui, p, s, hero, index)
 end

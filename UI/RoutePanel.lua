@@ -51,15 +51,13 @@ function R.Draw(ui, parent, state)
     end
     frame:Show()
     U.Begin(frame)
-    U.Text(frame, "ROUTES", 0, 0, 22, T.gold, 1296)
-    U.Text(
+    U.Text(frame, "ROUTE PLANNER", 0, 0, 22, T.gold, 1296)
+    U.Help(
         frame,
-        "Saved plans travel between encounters. Editing is a preview until saved.",
+        "Routes",
+        1258,
         0,
-        40,
-        15,
-        T.muted,
-        1296
+        "Create a route and add destination steps with travel conditions.\n\nEdits are a preview until you save. Use a saved route and enable it to travel between encounters. Manual travel pauses the route.\n\nOffline travel requires its separate option and visits only previously cleared checkpoints."
     )
     ui.routeBuy = button(
         frame,

@@ -38,7 +38,8 @@ test("Return report opens without claiming rewards and stays out of compact cont
     state.gold = 456
     ui:Refresh()
     assertNotNil(ui.offlineReport)
-    ui.offlineReport:GetScript("OnClick")()
+    assertTrue(ui.reportLink:IsShown())
+    ui.reportLink:GetScript("OnClick")()
     assertEquals("offline", state.ui.tab)
     assertEquals("Return report", ui.section:GetText())
     assertFalse(ui.scene.frame:IsShown())

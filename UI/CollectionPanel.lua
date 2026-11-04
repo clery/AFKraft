@@ -66,15 +66,13 @@ function P.Draw(ui, parent, state)
     local enabled = profile and profile.enabled and profile.verified
     local counters = profile and book.counters[profile.id] or {}
     counters = counters or {}
-    U.Text(parent, "COLLECTIONS", 0, 0, 24, T.gold, 1000)
-    U.Text(
+    U.Text(parent, "SET CATALOG", 0, 0, 24, T.gold, 1000)
+    U.Help(
         parent,
-        "Track pieces from attributed creature kills. Discoveries survive resets.",
+        "Collections",
+        600,
         0,
-        44,
-        15,
-        T.text,
-        1280
+        "Select a set, then a piece to inspect its source and kill progress. Tracking never changes drop chances.\n\nDiscoveries require eligible real WoW kills in the correct location; idle battles and crafting do not count. Discoveries and partial-set bonuses survive resets.\n\nComplete a set to choose its effect. Only one completed-set effect can be active."
     )
     ui.collectionChoice = U.Choice(
         parent,
@@ -89,14 +87,14 @@ function P.Draw(ui, parent, state)
             ui:Refresh()
         end
     )
-    U.Text(parent, collection.name, 0, 94, 22, T.gold, 1280)
-    U.Text(parent, collection.description, 0, 130, 14, T.text, 1280)
+    U.Text(parent, collection.name, 0, 70, 22, T.gold, 1200)
+    U.Help(parent, collection.name, 1258, 70, collection.description)
     ui.collectionSourceStatus = U.Text(
         parent,
         enabled and profile and "Verified " .. kind .. " sources"
-            or kind .. " acquisition disabled: this client's sources are unverified.",
+            or kind .. " sources unverified · acquisition disabled",
         0,
-        166,
+        110,
         14,
         enabled and T.green or T.muted,
         1280
@@ -108,7 +106,7 @@ function P.Draw(ui, parent, state)
         local source = profile and profile.sources[itemID]
         local verified = enabled and source and source.verified
         local count, guarantee = counters[itemID] or 0, profile and profile.guarantee or 0
-        local card = U.Button(parent, "", (index - 1) * 258, 204, 244, 190, function()
+        local card = U.Button(parent, "", (index - 1) * 258, 150, 244, 190, function()
             ui.collectionPiece = itemID
             ui:Refresh()
         end, selected == itemID)
@@ -131,7 +129,7 @@ function P.Draw(ui, parent, state)
         )
         U.Text(
             card,
-            found and "Recorded permanently"
+            found and "Complete"
                 or profile and "Saved progress " .. count .. "/" .. guarantee
                 or "No acquisition profile",
             12,
@@ -204,7 +202,7 @@ function P.Draw(ui, parent, state)
             .. " kills"
             .. sessionText,
         0,
-        420,
+        366,
         18,
         T.gold,
         1296
@@ -213,7 +211,7 @@ function P.Draw(ui, parent, state)
         parent,
         book.target == selected and "Clear piece target" or "Track selected piece",
         0,
-        460,
+        406,
         380,
         34,
         function()
@@ -227,7 +225,7 @@ function P.Draw(ui, parent, state)
         parent,
         active and "Clear active collection effect" or "Select completed-set effect",
         420,
-        460,
+        406,
         440,
         34,
         function()
@@ -261,7 +259,7 @@ function P.Draw(ui, parent, state)
             effectText
         ),
         0,
-        512,
+        458,
         14,
         T.text,
         1280
@@ -271,7 +269,7 @@ function P.Draw(ui, parent, state)
         active and "Active effect: " .. collection.name
             or "Active effect: " .. (effectID and C.collectionByID[effectID].name or "none"),
         0,
-        544,
+        490,
         14,
         active and T.green or T.muted,
         1280
@@ -295,26 +293,25 @@ function P.Draw(ui, parent, state)
     local bonus = G.LegacyCollectionBonuses(state, "humanoid")
     ui.collectionLegacyStatus = U.Text(
         parent,
-        #legacy > 0 and "PROTECTED LEGACY HISTORY · " .. table.concat(legacy, " | ")
-            or "LEGACY HISTORY · Previous idle discoveries are retained separately.",
+        #legacy > 0 and "LEGACY COLLECTIONS · " .. table.concat(legacy, " | ") or "",
         0,
-        592,
+        538,
         13,
         T.gold,
         1280
     )
-    U.Text(
-        parent,
-        string.format(
-            "Protected legacy value: +%.2f%% basic attacks · +%.2f%% materials · %.2f%% humanoid defense. No new legacy drops.",
-            (bonus.basicAttack - 1) * 100,
-            (bonus.materials - 1) * 100,
-            (1 - bonus.damageTaken) * 100
-        ),
-        0,
-        624,
-        13,
-        T.muted,
-        1280
-    )
+    if #legacy > 0 then
+        U.Help(
+            parent,
+            "Legacy collection bonuses",
+            1258,
+            538,
+            string.format(
+                "Retained discoveries from earlier adventures. No new legacy pieces drop.\n\nBasic attacks: +%.2f%%\nMaterials: +%.2f%%\nHumanoid defense: %.2f%%",
+                (bonus.basicAttack - 1) * 100,
+                (bonus.materials - 1) * 100,
+                (1 - bonus.damageTaken) * 100
+            )
+        )
+    end
 end

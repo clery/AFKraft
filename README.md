@@ -84,6 +84,8 @@ No addon code runs while WoW is closed; catch-up rewards are calculated when the
 
 ## Window controls and options
 
+The labeled navigation groups features into **Journey**, **Company**, **Strategy**, and **Progression**. Adventure suggests a next step from your party’s current needs. Management pages give equipment, builds, and planning their own workspace; talent trees scroll independently and inventory fills the available height. **Forge** groups crafting, enchanting, titanforging, and profession specializations. Help icons and control tooltips explain each system without filling the panels with instructions; the dismissible guide introduces new features. Settings and the latest return report are accessible from the navigation.
+
 Use the top-right controls to switch between **compact**, **windowed**, and **fullscreen** views. Drag a window's top edge to move it and its bottom-right grip to resize it. Compact mode has an optional lock; management opens a larger view for equipment and builds.
 
 Open **Settings → AddOns → WoWIdle** to adjust display preferences, window locking, the minimap button, chat announcements, floating combat text, and audio. Preferences are saved account-wide and apply immediately. Loot rules remain in the minigame.

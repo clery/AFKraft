@@ -80,14 +80,7 @@ local function research(ui, frame, state)
     )
     local unlocked = G.ProfessionUnlocks(state).research
     if not unlocked then
-        text(
-            frame,
-            "Reach lifetime idle level 50 to specialize. Paid work already earns profession ranks.",
-            0,
-            116,
-            1260,
-            T.gold
-        )
+        text(frame, "Specializations unlock at lifetime level 50.", 0, 116, 1260, T.gold)
     end
     local active = G.ProfessionActiveAllocations(state, kind)
     local desired = 0
@@ -98,8 +91,15 @@ local function research(ui, frame, state)
     for index, branch in ipairs(profession.branches) do
         local x, chosen = (index - 1) * 428, p.allocations[kind][branch.id] or 0
         U.Icon(frame, profession.icon, x, 166, 38)
-        text(frame, branch.name, x + 50, 172, 354, T.gold, 20)
-        text(frame, branch.description, x, 224, 400, T.muted)
+        text(frame, branch.name, x + 50, 172, 310, T.gold, 20)
+        U.Help(
+            frame,
+            branch.name,
+            x + 372,
+            166,
+            branch.description
+                .. "\n\nPaid work earns profession ranks and points. Allocations are free to reset and remain saved across deeper resets."
+        )
         ui.professionControls.branches[branch.id] = {}
         for rank = 1, 3 do
             local requirement = 1 + (rank - 1) * 3
@@ -110,21 +110,21 @@ local function research(ui, frame, state)
                 frame,
                 "Rank " .. rank .. " · " .. label,
                 x,
-                292 + (rank - 1) * 80,
+                232 + (rank - 1) * 52,
                 400,
                 function()
                     W.Action(G.AllocateProfession, kind, branch.id)
                 end,
                 rank <= (active[branch.id] or 0)
             )
-            text(
-                frame,
-                "Requires work rank " .. requirement,
-                x + 12,
-                332 + (rank - 1) * 80,
-                380,
-                T.muted,
-                12
+            U.Tooltip(
+                control,
+                branch.name .. " rank " .. rank,
+                branch.description
+                    .. "\n\nRequires work rank "
+                    .. requirement
+                    .. ". Costs one profession point.",
+                380
             )
             U.Enabled(
                 control,
@@ -137,7 +137,7 @@ local function research(ui, frame, state)
             ui.professionControls.branches[branch.id][rank] = control
         end
     end
-    ui.professionControls.respec = button(frame, "Reset allocation", 0, 580, 240, function()
+    ui.professionControls.respec = button(frame, "Reset allocation", 0, 420, 240, function()
         W.Action(G.ResetProfessionAllocations, kind)
     end)
     U.Tooltip(
@@ -150,32 +150,15 @@ end
 function P.Draw(ui, parent, state)
     if not ui.professionFrame then
         ui.professionFrame = CreateFrame("Frame", nil, parent)
-        ui.professionFrame:SetAllPoints(parent)
+        ui.professionFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 66)
+        ui.professionFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT")
     end
     local frame = ui.professionFrame
     frame:Show()
     U.Begin(frame)
     G.ProfessionUnlocks(state)
     local tab = ui.professionTab or "enchanting"
-    ui.professionControls = { tabs = {} }
-    for index, entry in ipairs({
-        { "enchanting", "Enchant" },
-        { "titanforging", "Titanforge" },
-        { "research", "Specializations" },
-    }) do
-        ui.professionControls.tabs[entry[1]] = button(
-            frame,
-            entry[2],
-            (index - 1) * 220,
-            0,
-            200,
-            function()
-                ui.professionTab = entry[1]
-                ui:Refresh()
-            end,
-            tab == entry[1]
-        )
-    end
+    ui.professionControls = { tabs = ui.forgeTabs }
     if tab == "research" then
         research(ui, frame, state)
         U.EndBuild(frame)
@@ -207,7 +190,7 @@ function P.Draw(ui, parent, state)
         heroes,
         heroIndex,
         function(value)
-            ui.professionHero = value
+            ui.professionHero, ui.selected = value, value
             ui:Refresh()
         end
     )
@@ -292,15 +275,7 @@ function P.Draw(ui, parent, state)
         end
     else
         U.Icon(frame, C.professionByID.titanforging.icon, 0, 132, 56)
-        text(
-            frame,
-            "Raise this item's potential · Five permanent item tiers",
-            80,
-            146,
-            1100,
-            T.gold,
-            21
-        )
+        text(frame, "ITEM POTENTIAL", 80, 146, 1100, T.gold, 21)
     end
     local item = hero.gear[slot]
     local preview, cost, reason
@@ -336,15 +311,9 @@ function P.Draw(ui, parent, state)
             end
             text(frame, table.concat(lines, " · "), 0, 392, 1250, T.green, 19)
             local previous = item.enchant and C.enchantByID[item.enchant.id]
-            text(
-                frame,
-                previous and ("Replaces " .. previous.name .. ". The old enchantment is lost.")
-                    or "Adds one targeted enchantment. Basic enhancement and forging are unchanged.",
-                0,
-                430,
-                1250,
-                T.muted
-            )
+            if previous then
+                text(frame, "Replaces " .. previous.name, 0, 430, 1250, T.gold)
+            end
         else
             text(
                 frame,
@@ -361,14 +330,12 @@ function P.Draw(ui, parent, state)
                 T.green,
                 20
             )
-            text(
+            U.Help(
                 frame,
-                item.heirloom and "Heirloom forging survives ordinary and deeper resets."
-                    or "This ordinary item is lost on reset. Heirloom investments are retained.",
-                0,
-                430,
-                1250,
-                T.muted
+                "Titanforging",
+                1258,
+                252,
+                "Raise an item through five potential tiers, separately from enhancement and enchantment.\n\nHeirloom forging survives both resets. Ordinary equipment and its investments are lost on reset."
             )
         end
         text(frame, costText(cost), 0, 488, 1250, T.gold, 17)

@@ -3,20 +3,19 @@ local U, T, C = W.Widgets, W.Theme, W.Content
 local UI = {}
 UI.__index = UI
 local tabs = {
-    { "adventure", "Adventure" },
-    { "party", "Party" },
-    { "talents", "Talents" },
-    { "crafting", "Crafting" },
+    { "adventure", "Adventure", "JOURNEY" },
     { "atlas", "World map" },
-    { "legacy", "Legacy" },
-    { "loot", "Loot rules" },
-    { "boosts", "Commander" },
-    { "profiles", "Profiles" },
     { "routes", "Routes" },
+    { "party", "Party & equipment", "COMPANY" },
+    { "talents", "Talents & priorities" },
+    { "crafting", "Forge" },
+    { "boosts", "Commander", "STRATEGY" },
+    { "profiles", "Profiles" },
+    { "loot", "Loot rules" },
+    { "development", "Development", "PROGRESSION" },
     { "collections", "Collections" },
-    { "workshop", "Workshop" },
+    { "legacy", "Legacy" },
     { "difficulty", "Prestige+" },
-    { "development", "Development" },
 }
 local tabIcons = {
     adventure = "INV_Misc_Map_01",
@@ -81,7 +80,7 @@ function UI:ApplyMode()
     local f, s = self.frame, W.state
     local compact = s.ui.compact
     local screenW, screenH = UIParent:GetWidth(), UIParent:GetHeight()
-    local minW, minH = math.min(1152, screenW), math.min(720, screenH)
+    local minW, minH = math.min(1280, screenW), math.min(720, screenH)
     f:ClearAllPoints()
     if compact then
         self.confirmPrestige = false
@@ -106,7 +105,7 @@ function UI:ApplyMode()
     else
         local geo = s.ui.expandedGeometry
             or {
-                w = math.min(1152, screenW),
+                w = math.min(1280, screenW),
                 h = math.min(720, screenH),
             }
         f:SetSize(
@@ -132,7 +131,7 @@ end
 
 function UI:Layout()
     local compact = W.state.ui.compact
-    local width, height = compact and 580 or 1440, compact and 370 or 900
+    local width, height = compact and 580 or 1600, compact and 370 or 900
     local scale = math.min(self.frame:GetWidth() / width, self.frame:GetHeight() / height)
     self.canvas:SetScale(scale)
     self.canvas:SetSize(width, height)
@@ -140,30 +139,29 @@ function UI:Layout()
     if management then
         W.Audio.Stop()
     end
-    local atlas = not compact and W.state.ui.tab == "atlas"
-    local company = not compact
-        and (
-            W.state.ui.tab == "legacy"
-            or W.state.ui.tab == "loot"
-            or W.state.ui.tab == "boosts"
-            or W.state.ui.tab == "profiles"
-            or W.state.ui.tab == "routes"
-            or W.state.ui.tab == "collections"
-            or W.state.ui.tab == "workshop"
-            or W.state.ui.tab == "difficulty"
-            or W.state.ui.tab == "offline"
-            or W.state.ui.tab == "development"
-        )
+    local heroPage = W.state.ui.tab == "party" or W.state.ui.tab == "talents"
+    local forge = W.state.ui.tab == "crafting" or W.state.ui.tab == "workshop"
+    for _, control in pairs(self.forgeTabs) do
+        control:SetShown(not compact and forge)
+    end
     self.scene:Layout(compact, management)
-    self.scene.frame:SetShown(not atlas and not company)
+    self.scene.frame:SetShown(compact or not management)
+    if not compact then
+        self.scene.frame:ClearAllPoints()
+        self.scene.frame:SetPoint("TOPLEFT", self.workspace, "TOPLEFT", 0, -151)
+    end
     for i, card in ipairs(self.cards) do
-        card:SetShown(not atlas and not company)
+        card:SetShown(not management or heroPage)
         card:ClearAllPoints()
-        card:SetPoint("TOPLEFT", 28 + (i - 1) * 261.6, management and -320 or -528)
+        card:SetPoint("TOPLEFT", (i - 1) * 261.6, management and -155 or -528)
     end
     self.panel:ClearAllPoints()
-    self.panel:SetPoint("TOPLEFT", 28, (atlas or company) and -155 or management and -422 or -620)
-    self.panel:SetSize(1296, (atlas or company) and 695 or management and 430 or 240)
+    self.panel:SetPoint(
+        "TOPLEFT",
+        0,
+        forge and -211 or management and (heroPage and -251 or -155) or -620
+    )
+    self.panel:SetSize(1296, forge and 639 or management and (heroPage and 599 or 695) or 240)
     self.expanded:SetShown(not compact)
     self.compact:SetShown(compact)
     for tab, frame in pairs({
@@ -358,7 +356,7 @@ function UI:Refresh(redraw)
         points > 0 and (points .. (points == 1 and " point" or " points")) or ""
     )
     self.tabs.party.notice:SetText(#s.heroes < W.Game.CompanionSlots(s) and "Recruit" or "")
-    self.tabs.atlas.notice:SetText(routes > 0 and (routes .. " routes") or "")
+    self.tabs.atlas.notice:SetText(routes > 0 and (routes .. " destinations") or "")
     self.tabs.legacy.notice:SetText(
         s.prestigeUnlocked and ("+" .. W.Game.PrestigeReward(s) .. " Legacy") or ""
     )
@@ -377,9 +375,12 @@ function UI:Refresh(redraw)
         nextLesson and nextLesson.key or "",
     }, ":")
     for id, button in pairs(self.tabs) do
-        button.text:SetTextColor(unpack(s.ui.tab == id and T.gold or T.muted))
+        local active = s.ui.tab == id or (id == "crafting" and s.ui.tab == "workshop")
+        button.text:SetTextColor(unpack(active and T.gold or T.text))
+        button.selection:SetShown(active)
+        button.fill:SetColorTexture(unpack(active and T.selected or T.panel))
         if button.SetBackdropBorderColor then
-            button:SetBackdropBorderColor(unpack(s.ui.tab == id and T.gold or T.line))
+            button:SetBackdropBorderColor(unpack(active and T.gold or T.line))
         end
     end
     for _, entry in ipairs(tabs) do
@@ -387,21 +388,43 @@ function UI:Refresh(redraw)
             self.section:SetText(entry[2])
         end
     end
+    for id, control in pairs(self.forgeTabs) do
+        local active = id == "crafting" and s.ui.tab == "crafting"
+            or s.ui.tab == "workshop" and id == (self.professionTab or "enchanting")
+        control.text:SetTextColor(unpack(active and T.gold or T.text))
+        control:SetBackdropBorderColor(unpack(active and T.gold or T.line))
+    end
+    if s.ui.tab == "workshop" then
+        self.section:SetText("Forge")
+    end
     if s.ui.tab == "offline" then
         self.section:SetText("Return report")
     end
+    self.sectionDetail:Hide()
+    self.sectionHelp:SetShown(
+        s.ui.tab == "profiles" or s.ui.tab == "crafting" or s.ui.tab == "workshop"
+    )
+    self.sectionHelp:ClearAllPoints()
+    self.sectionHelp:SetPoint(
+        "TOPLEFT",
+        self.workspace,
+        "TOPLEFT",
+        math.min(600, self.section:GetStringWidth() + 12),
+        -105
+    )
+    self.reportLink:SetShown(s.lastOfflineSummary ~= nil)
     self.sectionDetail:SetText(
         s.ui.tab == "adventure" and "Your company’s journey through Azeroth"
             or s.ui.tab == "party" and "Select a companion to manage equipment and growth"
             or s.ui.tab == "talents" and "Shape a companion’s talents and combat priorities"
-            or s.ui.tab == "crafting" and "Create ordinary equipment or lasting heirlooms"
+            or s.ui.tab == "crafting" and "Choose a hero, equipment slot and material, then craft the item for the cost shown.\n\nCrafted items enter your shared inventory. Equip them in Party.\n\nHeirlooms scale with hero level and survive resets. Unlock their recipes in Legacy first."
             or s.ui.tab == "legacy" and "Permanent rewards, heirlooms and chapter resets"
             or s.ui.tab == "loot" and "Choose what to keep from future drops"
             or s.ui.tab == "boosts" and "Permanent abilities for temporary party support"
-            or s.ui.tab == "profiles" and "Saved commander loadouts and automation"
+            or s.ui.tab == "profiles" and "Save your equipped boost, automation rules, route preferences and collection effect as a named profile.\n\nSelect a saved profile to apply, rename or delete it. Saving updates the selected snapshot.\n\nProfiles never restore currencies, timers or active boost effects."
             or s.ui.tab == "routes" and "Plan your next destinations"
             or s.ui.tab == "collections" and "Permanent discoveries and set bonuses"
-            or s.ui.tab == "workshop" and "Enchanting, titanforging and profession research"
+            or s.ui.tab == "workshop" and "Select a Forge tab, hero and equipped item. Compare the preview and cost before applying an upgrade.\n\nEnchantments replace the current enchantment. Titanforging raises item potential separately from enhancement. Ordinary items are lost on reset; heirloom investments survive.\n\nPaid work earns profession points. Spend them in Specializations; allocation resets are free."
             or s.ui.tab == "difficulty" and "Deeper resets and permanent Inheritance"
             or s.ui.tab == "offline" and "Your latest offline adventure"
             or s.ui.tab == "development" and "Permanent Essence investment for the whole party"
@@ -559,7 +582,7 @@ function W.CreateUI()
     local expanded = CreateFrame("Frame", nil, canvas)
     expanded:SetAllPoints()
     ui.expanded = expanded
-    U.Rect(expanded, 2, 2, 1436, 90, { 0.085, 0.067, 0.044 })
+    U.Rect(expanded, 2, 2, 1596, 90, T.header)
     U.Icon(expanded, "INV_Misc_Map_01", 28, 27, 44)
     U.Text(expanded, "WoWIdle", 91, 23, 30, T.gold)
     ui.adventureBar = W.AdventureBar.Create(expanded, 92, 61, 490)
@@ -569,8 +592,8 @@ function W.CreateUI()
         { "gold", "GOLD" },
         { "legacy", "LEGACY" },
     }) do
-        local x = 650 + (i - 1) * 198
-        U.Text(expanded, currency[2], x + 12, 23, 10, T.muted, 160)
+        local x = 810 + (i - 1) * 198
+        U.Text(expanded, currency[2], x + 12, 23, 12, T.muted, 160)
         ui.currencies[currency[1]] = U.Text(expanded, "0", x + 12, 38, 19, T.gold, 160)
         local help = CreateFrame("Frame", nil, expanded)
         help:SetPoint("TOPLEFT", x, -18)
@@ -583,19 +606,19 @@ function W.CreateUI()
         }
         U.Tooltip(help, currency[2], descriptions[currency[1]])
     end
-    ui.materials = U.Text(expanded, "", 650, 72, 11, T.muted, 610)
-    local minimize = U.Button(expanded, "-", 1280, 28, 38, 32, function()
+    ui.materials = U.Text(expanded, "", 810, 72, 12, T.muted, 610)
+    local minimize = U.Button(expanded, "-", 1440, 28, 38, 32, function()
         ui:SaveGeometry()
         W.state.ui.compact = true
         ui:ApplyMode()
     end)
-    local resize = U.Button(expanded, "+", 1325, 28, 38, 32, function()
+    local resize = U.Button(expanded, "+", 1485, 28, 38, 32, function()
         ui:SaveGeometry()
         ui.fullscreen = not ui.fullscreen
         W.state.ui.fullscreen = ui.fullscreen
         ui:ApplyMode()
     end)
-    local close = U.Button(expanded, "x", 1370, 28, 38, 32, function()
+    local close = U.Button(expanded, "x", 1530, 28, 38, 32, function()
         ui:SaveGeometry()
         f:Hide()
     end)
@@ -613,33 +636,70 @@ function W.CreateUI()
         "Close",
         "Your company continues adventuring when this window is closed. Open it again with /wowidle."
     )
-    U.Rect(expanded, 28, 94, 1384, 1, T.line)
-    ui.section = U.Text(expanded, "Adventure", 28, 111, 22, T.gold)
-    ui.sectionDetail = U.Text(expanded, "", 220, 116, 12, T.muted, 620)
-    ui.battleState = U.Text(expanded, "", 860, 116, 12, T.muted, 185)
-    U.SingleLine(ui.battleState, 185, 18, "RIGHT")
-    for i, entry in ipairs(tabs) do
+    local workspace = CreateFrame("Frame", nil, expanded)
+    workspace:SetPoint("TOPLEFT", 276, 0)
+    workspace:SetSize(1296, 900)
+    ui.workspace = workspace
+    U.Rect(expanded, 16, 104, 236, 752, T.panel)
+    ui.section = U.SingleLine(U.Text(workspace, "Adventure", 0, 105, 24, T.gold), 600, 30)
+    ui.sectionDetail = U.SingleLine(U.Text(workspace, "", 0, 137, 14, T.muted), 780, 20)
+    ui.sectionHelp = U.Help(workspace, "About this panel", 624, 105, function()
+        return ui.sectionDetail:GetText()
+    end)
+    ui.battleState = U.SingleLine(U.Text(workspace, "", 790, 113, 14, T.muted), 220, 22, "RIGHT")
+    local y = 118
+    for _, entry in ipairs(tabs) do
         local id = entry[1]
-        local spacing = math.min(79, 690 / #tabs)
-        local height = spacing - 10
-        local tab = U.Button(expanded, "", 1340, 151 + (i - 1) * spacing, 78, height, function()
+        if entry[3] then
+            U.Text(expanded, entry[3], 32, y, 12, T.muted, 204)
+            y = y + 26
+        end
+        local tab = U.Button(expanded, "", 24, y, 220, 38, function()
             ui:SetTab(id)
         end)
         tab.text:ClearAllPoints()
-        tab.text:SetPoint("BOTTOM", 0, 5)
-        tab.text:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-        U.SingleLine(tab.text, 74, 16, "CENTER")
+        tab.text:SetPoint("TOPLEFT", 42, -2)
+        tab.text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+        U.SingleLine(tab.text, 172, 26)
         tab.text:SetText(entry[2])
-        local iconSize = math.min(24, height - 30)
-        U.Icon(tab, tabIcons[id], (78 - iconSize) / 2, 6, iconSize)
+        U.Icon(tab.content or tab, tabIcons[id], 12, 10, 20)
+        tab.selection = U.Rect(tab.content or tab, 3, 8, 3, 24, T.gold, 1, "OVERLAY")
+        tab.notice = U.SingleLine(U.Text(tab, "", 42, 25, 10, T.gold), 170, 12)
         U.Tooltip(tab, entry[2], "Open " .. entry[2])
-        tab.notice = U.SingleLine(U.Text(tab, "", 2, 4, 10, T.gold), 74, 16, "CENTER")
         ui.tabs[id] = tab
+        y = y + 40
     end
-    ui.destination = U.Button(expanded, "World map", 1068, 105, 148, 34, function()
+    ui.forgeTabs = {}
+    for index, entry in ipairs({
+        { "crafting", "Craft equipment" },
+        { "enchanting", "Enchant" },
+        { "titanforging", "Titanforge" },
+        { "research", "Specializations" },
+    }) do
+        local id = entry[1]
+        ui.forgeTabs[id] = U.Button(workspace, entry[2], (index - 1) * 244, 155, 228, 34, function()
+            if id == "crafting" then
+                ui.selected = ui.professionHero or ui.selected
+                ui:SetTab("crafting")
+            else
+                if W.state.ui.tab == "crafting" then
+                    ui.professionHero = ui.selected
+                end
+                ui.professionTab = id
+                ui:SetTab("workshop")
+            end
+        end)
+    end
+    ui.settingsLink = U.Button(expanded, "Settings", 24, 850, 220, 34, function()
+        LibStub("AceConfigDialog-3.0"):Open("WoWIdle")
+    end)
+    ui.reportLink = U.Button(expanded, "Return report", 24, 808, 220, 34, function()
+        ui:SetTab("offline")
+    end)
+    ui.destination = U.Button(workspace, "World map", 1028, 105, 148, 34, function()
         ui:SetTab(W.state.ui.tab == "atlas" and "adventure" or "atlas")
     end, false, "primary")
-    ui.retry = U.Button(expanded, "Retry frontier", 1228, 105, 96, 34, function()
+    ui.retry = U.Button(workspace, "Retry frontier", 1188, 105, 108, 34, function()
         W.Action(W.Game.Retry)
         ui:Refresh()
     end)
@@ -652,11 +712,11 @@ function W.CreateUI()
     )
     for i = 1, 5 do
         local index = i
-        local card = U.Button(expanded, "", 0, 0, 249.6, 72, function()
+        local card = U.Button(workspace, "", 0, 0, 249.6, 72, function()
             ui:SelectHero(index)
         end)
         card.text:Hide()
-        card.icon = U.Icon(card, "INV_Misc_QuestionMark", 12, 12, 40)
+        card.icon = U.Icon(card.content or card, "INV_Misc_QuestionMark", 12, 12, 40)
         card.label = U.Text(card, "", 64, 10, 16, T.text, 173)
         U.SingleLine(card.label, 173, 24)
         card.detail = U.Text(card, "", 64, 38, 11, T.muted, 173)
@@ -664,9 +724,9 @@ function W.CreateUI()
         card.xp = U.Bar(card, 64, 58, 173, 6, T.gold)
         ui.cards[i] = card
     end
-    ui.panel = CreateFrame("Frame", nil, expanded)
+    ui.panel = CreateFrame("Frame", nil, workspace)
     ui.panel:SetSize(1296, 240)
-    ui.footer = U.Text(expanded, "", 28, 873, 11, T.muted, 1384)
+    ui.footer = U.SingleLine(U.Text(workspace, "", 0, 873, 14, T.text), 1296, 22)
     local compact = CreateFrame("Frame", nil, canvas)
     compact:SetAllPoints()
     ui.compact = compact

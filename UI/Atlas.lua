@@ -29,13 +29,11 @@ local function describe(self, zone)
     self.title:SetText(zone.name)
     local spoils = familySpoils(zone)
     self.detail:SetText(
-        zone.subtitle
-            .. "\n"
-            .. C.materials[zone.material]
+        C.materials[zone.material]
             .. "  ·  Frontier "
             .. zone.level
             .. "  ·  "
-            .. (G.IsUnlocked(W.state, zone) and "Click the region to travel." or unlockText(zone))
+            .. (G.IsUnlocked(W.state, zone) and "Available" or unlockText(zone))
             .. (spoils and ("\nSecondary spoils: " .. spoils .. " (up to 25%).") or "")
     )
 end
@@ -155,7 +153,7 @@ local function createMap(self, parent, id, name, x)
     map.highlight:SetBlendMode("ADD")
     map.highlight:Hide()
     map.message = U.Text(map, "", 20, 160, 15, T.muted, 576)
-    U.Text(content, "Hover a region · Click to travel", 18, 471, 12, T.muted)
+
     map:SetScript("OnUpdate", function(frame, dt)
         frame.elapsed = (frame.elapsed or 0) + dt
         if frame.elapsed < 0.04 or not frame:IsMouseOver() then
@@ -296,15 +294,13 @@ function Atlas.Draw(ui)
         self = { frame = CreateFrame("Frame", nil, ui.panel) }
         ui.atlas = self
         self.frame:SetAllPoints()
-        U.Text(self.frame, "Choose your next horizon", 0, 0, 24, T.gold)
-        U.Text(
+        U.Text(self.frame, "DESTINATIONS", 0, 0, 24, T.gold)
+        U.Help(
             self.frame,
-            "Gray regions are locked. Hover to inspect a destination; click an unlocked region to travel.",
+            "World map",
+            1258,
             0,
-            39,
-            13,
-            T.muted,
-            1296
+            "Hover a region to inspect its rewards and requirements. Click an unlocked region to travel. Gray regions are locked.\n\nTravel abandons the current encounter without rewards and preserves current health. Your idle destination is independent of your WoW character."
         )
         self.maps = {
             createMap(self, self.frame, "kalimdor", "Kalimdor", 0),

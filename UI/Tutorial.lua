@@ -113,13 +113,13 @@ function Tutorial.NextLesson(state)
         state,
         "lessonEnchanting",
         "workshop",
-        "Enchanting is unlocked. In Workshop, choose a hero, equipped item and enchantment. Compare the preview and cost before replacing its current enchantment. Heirloom investments survive resets.",
+        "Enchanting is unlocked. In Forge, choose a hero, equipped item and enchantment. Compare the preview and cost before replacing its current enchantment. Heirloom investments survive resets.",
         professions.enchanting and not enchanted
     ) or lesson(
         state,
         "lessonTitanforging",
         "workshop",
-        "Titanforging is unlocked. The Workshop Titanforge tab raises an equipped item's base potential separately from enhancement and enchantment. Each investment has a guaranteed preview and cost.",
+        "Titanforging is unlocked. The Forge Titanforge tab raises an equipped item's base potential separately from enhancement and enchantment. Each investment has a guaranteed preview and cost.",
         professions.titanforging and not forged
     ) or lesson(
         state,
@@ -208,7 +208,14 @@ function Tutorial.Refresh(ui)
     if not step then
         local nextLesson = Tutorial.NextLesson(s)
         if nextLesson then
-            show(ui, ui.tabs[nextLesson.tab], nextLesson.message, nil, true, nextLesson.key)
+            show(
+                ui,
+                ui.tabs[nextLesson.tab] or (nextLesson.tab == "workshop" and ui.tabs.crafting),
+                nextLesson.message,
+                nil,
+                true,
+                nextLesson.key
+            )
         else
             Tutorial.Hide(ui)
         end
@@ -225,7 +232,7 @@ function Tutorial.Refresh(ui)
             [4] = "A harder destination is unlocked. Click World map to choose your next frontier.",
             [5] = "You can afford to craft an equipment upgrade for "
                 .. s.heroes[hero or ui.selected].name
-                .. ". Click Crafting to make it.",
+                .. ". Click Forge to make it.",
             [6] = "Your crafted upgrade is ready. Click Party to equip it from your shared inventory.",
         }
         show(ui, ui.tabs[tab], messages[step], nil, true)
@@ -234,8 +241,8 @@ function Tutorial.Refresh(ui)
     if hero and (ui.selected ~= hero or ui.recruiting) then
         show(
             ui,
-            ui.cards[hero],
-            "Click "
+            step == 5 and ui.craftControls and ui.craftControls.hero or ui.cards[hero],
+            (step == 5 and "Choose " or "Click ")
                 .. s.heroes[hero].name
                 .. " to use their available "
                 .. (

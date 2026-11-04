@@ -162,33 +162,21 @@ function P.Draw(ui, parent, state)
             )
             controls.choices[choice.id] = control
         end
-        U.Text(
-            parent,
-            quote.rank < 3
-                    and (quote.choice and "Saved milestone returns at rank 3." or "Reach rank 3 to choose a free milestone.")
-                or "Switch milestones freely.",
-            x + 16,
-            600,
-            12,
-            T.muted,
-            378
-        )
+
         ui.developmentControls.branches[branch.id] = controls
     end
     local migration = state.economyMigration
     if migration then
-        U.Text(
+        U.Help(
             parent,
-            "Migration credit: "
-                .. (migration.trainingEssence + migration.equipmentEssence)
-                .. " Essence · "
-                .. migration.trainingGold
-                .. " gold. Unrecorded spending was not estimated.",
-            0,
+            "Previous investments",
+            1258,
             660,
-            12,
-            T.muted,
-            1280
+            "Previously recorded investments were credited on migration.\n\nEssence: "
+                .. (migration.trainingEssence + migration.equipmentEssence)
+                .. "\nGold: "
+                .. migration.trainingGold
+                .. "\n\nUnrecorded spending was not estimated."
         )
     end
 end

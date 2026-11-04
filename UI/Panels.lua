@@ -116,6 +116,8 @@ end
 
 function P.adventure(ui, p, s)
     local title, detail, label, tab
+    local step, heroIndex = P.GuideStep(s, ui.selected)
+    local points, talentHero, _, destinations = P.Opportunities(s)
     if #s.heroes < G.CompanionSlots(s) then
         title, detail, label, tab =
             "You found a companion!",
@@ -129,15 +131,44 @@ function P.adventure(ui, p, s)
             "Manage party",
             "party"
     end
-    text(p, "YOUR ADVENTURE", 0, 0, 12, T.gold)
+    if label ~= "Recruit companions" then
+        if step == 2 or step == 6 then
+            title, detail, label =
+                "Equipment ready to use",
+                "Your shared inventory has equipment for a companion. Compare it with their current gear in Party.",
+                "Review equipment"
+        elseif points > 0 then
+            title, detail, label, tab =
+                "Shape your next victory",
+                points
+                    .. " unspent talent points across your company. Earned points survive chapter resets; changing your build is free.",
+                "Spend talent points",
+                "talents"
+            heroIndex = talentHero
+        elseif destinations > 0 and not s.farming then
+            title, detail, label, tab =
+                "Your next destination awaits",
+                destinations
+                    .. " higher-level destinations are available. Inspect their rewards and choose where to adventure.",
+                "Explore destinations",
+                "atlas"
+        end
+    end
+    if s.farming and label ~= "Recruit companions" then
+        title = "Build strength, then push forward"
+    end
+    text(p, "NEXT STEP", 0, 0, 12, T.gold)
     text(p, title, 0, 27, 23, T.text, 640)
     if s.farming then
         detail = (s.lastDefeat or "Your party is farming a safe encounter.")
             .. " Improve your heroes, then use Retry."
     end
-    text(p, detail, 0, 65, 14, T.muted, 630)
-    button(p, label, 0, 128, 240, function()
+    U.Help(p, title, 652, 0, detail)
+    ui.adventureNext = button(p, label, 0, 128, 240, function()
         ui.recruiting = label == "Recruit companions"
+        if heroIndex and not ui.recruiting then
+            ui.selected = heroIndex
+        end
         ui:SetTab(tab)
     end, false, "primary")
     ui.boostQuick = button(p, "Commander boosts", 260, 128, 400, function()
@@ -391,7 +422,7 @@ function P.boosts(ui, p, s)
     local id, rule = boost.id, automation.abilities[boost.id]
     U.Icon(p, boost.icon or "INV_Misc_Book_09", 0, detailY, 56)
     text(p, boost.name, 76, detailY, 23, T.gold, 800)
-    text(p, boost.description, 76, detailY + 34, 14, T.text, 1150)
+    U.Help(p, boost.name, 1240, detailY, boost.description)
     local purchase = button(p, "", 0, detailY + 84, 180, function()
         W.Action(G.BuyBoost, id)
     end)
@@ -615,10 +646,17 @@ function P.talents(ui, p, s)
     else
         hint = hint .. "Mastery unlocks at hero level " .. C.mastery.unlockLevel .. "."
     end
-    text(p, "Permanent talents. Free respecs. " .. hint, 0, 35, 13, T.muted)
+    U.Help(
+        p,
+        "Talents",
+        688,
+        0,
+        "Earn permanent points from hero level records and Mastery.\n\nClick a talent to learn or refund it. Respecs are free; points and choices survive chapter resets.\n\n"
+            .. hint
+    )
     W.TalentPanel.Draw(ui, p, h, index)
-    text(p, "COMBAT PRIORITIES", 0, 340, 12, T.gold)
-    U.Choice(p, "Class presets", 0, 354, 180, G.PriorityPresets(h), nil, function(id)
+    text(p, "COMBAT PRIORITIES", 0, 490, 12, T.gold)
+    U.Choice(p, "Class presets", 0, 510, 180, G.PriorityPresets(h), nil, function(id)
         W.Action(G.ConfigurePreset, index, id)
     end)
     local priorities, thresholds = {}, {}
@@ -632,7 +670,7 @@ function P.talents(ui, p, s)
         p,
         C.priorityNames[h.priority],
         208,
-        354,
+        510,
         280,
         priorities,
         h.priority,
@@ -644,7 +682,7 @@ function P.talents(ui, p, s)
         p,
         "Recover below " .. h.healBelow .. "%",
         508,
-        354,
+        510,
         300,
         thresholds,
         h.healBelow,
@@ -656,7 +694,7 @@ function P.talents(ui, p, s)
         p,
         "Special at " .. h.specialCount .. "+ enemies",
         828,
-        354,
+        510,
         300,
         {
             { id = 1, name = "Special at 1+ enemies" },
@@ -671,13 +709,13 @@ function P.talents(ui, p, s)
     for _, dropdown in ipairs({ priority, threshold, special }) do
         dropdown:SetEnabled(true)
     end
-    text(p, "ENEMY TARGET", 0, 402, 12, T.gold)
+    text(p, "ENEMY TARGET", 0, 564, 12, T.gold)
     local targetMode = h.targetMode or "front"
     ui.heroTargetChoice = U.Choice(
         p,
         "Target: " .. C.targetModeByID[targetMode].name,
         208,
-        394,
+        556,
         440,
         C.targetModes,
         targetMode,
@@ -704,7 +742,7 @@ function P.talents(ui, p, s)
             p,
             profile.name .. " abilities >= " .. percent .. "%",
             668,
-            394,
+            556,
             460,
             choices,
             percent,
@@ -735,8 +773,15 @@ function P.crafting(ui, p, s)
     local cost = G.Cost(s, h, heirloom)
     local preview, unavailable = G.CraftItem(h, slot, heirloom, s)
     ui.craftControls = { slots = {}, materials = {} }
-    text(p, "Craft for " .. h.name, 0, 0, 23, T.gold)
-    text(p, "Choose an equipment slot", 0, 39, 13, T.muted)
+    local heroes = {}
+    for heroIndex, hero in ipairs(s.heroes) do
+        heroes[#heroes + 1] = { id = heroIndex, name = hero.name }
+    end
+    ui.craftControls.hero = U.Choice(p, h.name, 0, 0, 425, heroes, index, function(value)
+        ui.selected, ui.professionHero = value, value
+        ui:Refresh()
+    end)
+    text(p, "EQUIPMENT SLOT", 0, 39, 13, T.gold)
     for position, i in ipairs(C.equipmentSlots) do
         local name, id = C.slots[i], i
         ui.craftControls.slots[i] = U.Button(
@@ -803,16 +848,9 @@ function P.crafting(ui, p, s)
         (preview and G.ItemDescription(preview, h) .. "\n\n" or "")
             .. "Gold and idle materials pay the full cost shown above. Heirloom recipes must first be unlocked in Legacy."
     )
-    text(
-        p,
-        heirloom and not s.recipes[slot] and "Unlock this recipe in Legacy first."
-            or "Created in your shared inventory.",
-        850,
-        285,
-        13,
-        T.muted,
-        446
-    )
+    if heirloom and not s.recipes[slot] then
+        text(p, "Recipe locked", 850, 285, 13, T.gold, 446)
+    end
     ui.craftControls.ordinary = button(p, "Ordinary", 0, 309, 205, function()
         ui.craftHeirloom = false
         ui:Refresh()
@@ -827,15 +865,6 @@ function P.crafting(ui, p, s)
             ui:SetTab("legacy")
         end)
     end
-    text(
-        p,
-        "Crafted items go to the shared inventory. Equip them in Party.",
-        480,
-        392,
-        12,
-        T.muted,
-        830
-    )
 end
 
 function P.atlas(ui)
@@ -846,14 +875,7 @@ function P.legacy(ui, p, s)
     local reward = G.PrestigeReward(s)
     local currentBonus = (s.prestigeStrength or s.prestiges) * 4
     local nextBonus = currentBonus + reward * 2
-    text(
-        p,
-        ui.confirmPrestige and "REVIEW YOUR NEW CHAPTER" or "A LASTING INHERITANCE",
-        0,
-        0,
-        24,
-        T.gold
-    )
+    text(p, ui.confirmPrestige and "REVIEW YOUR NEW CHAPTER" or "CHAPTER REWARDS", 0, 0, 24, T.gold)
     text(
         p,
         s.legacy .. " Legacy available  ·  " .. s.prestiges .. " rewarded chapters",
@@ -940,23 +962,21 @@ function P.legacy(ui, p, s)
         return
     end
     text(p, "NEW CHAPTER", 0, 142, 14, T.gold)
-    text(p, "Start fresh. Carry your legacy forward.", 0, 177, 22, T.text, 630)
-    text(
+    U.Help(
         p,
-        "New chapters reset your run. Each Legacy earned adds 2 percentage points to your permanent party bonus. Spend Legacy on permanent unlocks and heirloom recipes.",
-        0,
-        220,
-        16,
-        T.text,
-        620
+        "New chapter",
+        624,
+        138,
+        "Start a new run to earn Legacy and increase your permanent party bonus by 2 percentage points per Legacy earned.\n\nReview the rewards, retained progress and losses before confirming. The review button does not reset anything."
     )
+
     text(
         p,
         s.prestigeUnlocked
                 and ("Available now: +" .. reward .. " Legacy  ·  Party bonus +" .. currentBonus .. "% to +" .. nextBonus .. "%")
             or "Unlock: defeat a level 8 milestone boss.",
         0,
-        310,
+        190,
         16,
         T.gold,
         620
@@ -966,39 +986,29 @@ function P.legacy(ui, p, s)
             p,
             "No Legacy or bonus increase this run. Defeat harder milestone bosses to earn a reward.",
             0,
-            358,
+            235,
             15,
             T.muted,
             620
         )
     end
-    local review = button(p, "Review new chapter…", 0, 420, 360, function()
+    local review = button(p, "Review new chapter…", 0, 270, 360, function()
         if s.prestigeUnlocked then
             ui.confirmPrestige = true
             ui:Refresh()
         end
     end, false, "primary")
     U.Enabled(review, s.prestigeUnlocked == true)
-    text(
+
+    text(p, "HEIRLOOM RECIPES", 710, 142, 14, T.gold)
+    U.Help(
         p,
-        "Review the full gains, kept progress and reset details before confirming.",
-        0,
-        478,
-        14,
-        T.muted,
-        620
+        "Heirlooms",
+        1258,
+        138,
+        "Heirlooms scale with hero level and survive chapter resets.\n\nUnlocking a recipe immediately spends 1 Legacy, then opens Crafting. Crafting uses gold and idle materials. Unlocking a recipe does not reset your run."
     )
-    text(p, "HEIRLOOMS THAT GROW WITH YOU", 710, 142, 14, T.gold)
-    text(p, "Earn Legacy / Unlock recipes / Craft lasting equipment", 710, 180, 16, T.text, 580)
-    text(
-        p,
-        "Heirlooms scale with hero level and survive chapter resets. Each recipe costs 1 Legacy; crafting also costs Essence, gold and materials.",
-        710,
-        223,
-        15,
-        T.muted,
-        580
-    )
+
     for position, i in ipairs(C.equipmentSlots) do
         local name, slot = C.slots[i], i
         local known = s.recipes[i]
@@ -1006,7 +1016,7 @@ function P.legacy(ui, p, s)
             p,
             (known and "Craft · " or "Unlock · ") .. name .. (known and "" or " · 1 Legacy"),
             710 + (position - 1) % 2 * 302,
-            292 + math.floor((position - 1) / 2) * 40,
+            190 + math.floor((position - 1) / 2) * 40,
             285,
             function()
                 if s.recipes[slot] or W.Action(G.UnlockRecipe, slot) then
@@ -1023,27 +1033,16 @@ function P.legacy(ui, p, s)
                 or "Spend 1 Legacy to permanently unlock this recipe, then open Crafting."
         )
     end
-    text(
-        p,
-        "Unlocking a recipe spends Legacy immediately. It does not reset your adventure.",
-        710,
-        510,
-        14,
-        T.muted,
-        580
-    )
 end
 
 function P.loot(ui, p, s)
-    text(p, "KEEP THE TREASURES. SALVAGE THE REST.", 0, 0, 19, T.gold)
-    text(
+    text(p, "KEEP RULES", 0, 0, 19, T.gold)
+    U.Help(
         p,
-        "Automatically salvage future drops below the chosen quality. Manage stored equipment in Party.",
+        "Loot rules",
+        1258,
         0,
-        33,
-        14,
-        T.muted,
-        1290
+        "Automatically salvage future drops below the selected quality, with exceptions for your keep rules.\n\nHeirlooms and protected items are always safe. Existing inventory is unchanged; manage stored equipment in Party.\n\nMatching-loot filters keep drops that match every selected class, slot and stat."
     )
     local qualities = {}
     for quality = 1, 4 do
@@ -1079,16 +1078,7 @@ function P.loot(ui, p, s)
             ui:Refresh()
         end
     )
-    text(
-        p,
-        "Salvaged "
-            .. s.stats.salvaged
-            .. " items. Heirlooms are always protected. Rules apply to future drops.",
-        0,
-        132,
-        14,
-        T.muted
-    )
+    text(p, "Salvaged " .. s.stats.salvaged .. " items", 0, 132, 14, T.muted)
     text(p, "ALSO KEEP MATCHING LOOT", 0, 204, 15, T.gold)
     local classes, slots, stats =
         { { id = "any", name = "Any class" } },

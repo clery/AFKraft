@@ -22,7 +22,7 @@ function P.Draw(ui, parent, state, id, x, y)
     local editable = state.boosts.owned[id] and state.boosts.automation.owned.conditional == true
     local controls = { rows = {} }
     ui.boostRuleControls = controls
-    U.Text(parent, "Ordered rules · first matching rule activates", x, y + 5, 14, T.gold, 860)
+    U.Text(parent, "ORDERED RULES", x, y + 5, 14, T.gold, 860)
     controls.add = U.Button(parent, "Add rule", x + 946, y, 140, 28, function()
         if #draft.rules < 4 then
             draft.rules[#draft.rules + 1] = { condition = "boss", action = "activate" }

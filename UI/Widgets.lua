@@ -2,10 +2,12 @@ local _, W = ...
 local T = {
     bg = { 0.065, 0.052, 0.038 },
     panel = { 0.055, 0.060, 0.078 },
+    header = { 0.085, 0.067, 0.044 },
+    selected = { 0.16, 0.13, 0.075 },
     line = { 0.35, 0.23, 0.10 },
     gold = { 0.95, 0.77, 0.33 },
     text = { 0.90, 0.86, 0.74 },
-    muted = { 0.64, 0.61, 0.52 },
+    muted = { 0.74, 0.72, 0.66 },
     green = { 0.48, 0.78, 0.58 },
 }
 W.Theme = T
@@ -202,6 +204,9 @@ local tooltipWidth, tooltipWidthForce
 local tooltipWidthHooked = false
 
 function U.Tooltip(frame, title, text, width)
+    if frame.SetMotionScriptsWhileDisabled then
+        frame:SetMotionScriptsWhileDisabled(true)
+    end
     local enter, leave = frame:GetScript("OnEnter"), frame:GetScript("OnLeave")
     frame:SetScript("OnEnter", function(self)
         if enter then
@@ -222,8 +227,9 @@ function U.Tooltip(frame, title, text, width)
             GameTooltip:SetMinimumWidth(width)
         end
         GameTooltip:SetText(title, unpack(T.gold))
+        local description = type(text) == "function" and text() or text
         if width then
-            for value in (text .. "\n"):gmatch("([^\n]*)\n") do
+            for value in (description .. "\n"):gmatch("([^\n]*)\n") do
                 local red, green, blue = value:match("^|c%x%x(%x%x)(%x%x)(%x%x)")
                 if red then
                     GameTooltip:AddLine(
@@ -238,7 +244,7 @@ function U.Tooltip(frame, title, text, width)
                 end
             end
         else
-            GameTooltip:AddLine(text, 0.8, 0.85, 0.85, true)
+            GameTooltip:AddLine(description, 0.8, 0.85, 0.85, true)
         end
         GameTooltip:Show()
     end)
@@ -248,6 +254,16 @@ function U.Tooltip(frame, title, text, width)
         end
         GameTooltip:Hide()
     end)
+end
+
+function U.Help(parent, title, x, y, description)
+    local help = U.Button(parent, "?", x, y, 28, 28, function(self)
+        self:GetScript("OnEnter")(self)
+    end)
+    help.text:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
+    U.SingleLine(help.text, 22, 22, "CENTER")
+    U.Tooltip(help, title, description, 380)
+    return help
 end
 
 function U.Choice(parent, label, x, y, w, options, value, choose)

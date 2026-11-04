@@ -41,7 +41,7 @@ local function finishEffectLoad(effect)
     local ok, message = pcall(actor.onModelLoaded)
     actor.IsLoaded = isLoaded
     effect.model.GetModelFileID = getter
-    assertTrue(ok, message)
+    assert(ok, message)
     if not effect.loaded then
         error(effect.model.spellError or "Effect did not finish loading")
     end
@@ -1131,8 +1131,9 @@ test(
         local frameEffect = W.Client.FrameSpellEffect
         local framed = 0
         W.Client.FrameSpellEffect = function(model, spec, direction, padding)
-            assertEquals(spec.width * 3, model:GetWidth())
-            assertEquals(spec.height * 3, model:GetHeight())
+            -- Frame sizes use floating-point coordinates after window scaling.
+            assertTrue(math.abs(spec.width * 3 - model:GetWidth()) < 0.001)
+            assertTrue(math.abs(spec.height * 3 - model:GetHeight()) < 0.001)
             assertEquals(3, padding)
             framed = framed + 1
             return frameEffect(model, spec, direction, padding)
@@ -1150,7 +1151,7 @@ test(
         end)
         W.Client.FrameSpellEffect = frameEffect
         effects:Clear()
-        assertTrue(ok, message)
+        assert(ok, message)
     end
 )
 

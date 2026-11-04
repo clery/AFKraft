@@ -38,32 +38,31 @@ local function card(parent, title, icon, x, y, headline, detail, tooltip)
 end
 
 function P.Draw(ui, parent, state)
-    U.Text(parent, "RETURN REPORT", 0, 0, 24, T.gold, 1250)
+    U.Text(parent, "EARNINGS SUMMARY", 0, 0, 24, T.gold, 1250)
     ui.offlineCards = {}
     local report = state.lastOfflineSummary
     if type(report) ~= "table" then
         U.Text(parent, "No offline adventure to report yet.", 0, 56, 17, T.text, 1250)
     else
-        U.Text(
-            parent,
-            "Safe farming · " .. duration(report.seconds) .. " · Rewards already applied",
-            0,
-            44,
-            16,
-            T.text,
-            1250
-        )
-        local status = report.interrupted
-                and (duration(report.remainingSeconds) .. " remains to resolve on your next load.")
-            or "The latest resolved absence. Your adventure continues."
-        U.Text(parent, status, 0, 78, 14, T.muted, 1250)
+        U.Text(parent, "Safe farming · " .. duration(report.seconds), 0, 44, 16, T.text, 1250)
+        if report.interrupted then
+            U.Text(
+                parent,
+                duration(report.remainingSeconds) .. " left to resolve",
+                0,
+                78,
+                14,
+                T.gold,
+                1250
+            )
+        end
         local cards = ui.offlineCards
         cards.earnings = card(
             parent,
             "Earnings",
             "INV_Misc_Map_01",
             0,
-            132,
+            100,
             number(report.gold) .. " gold",
             count(report.victories, "victory", "victories"),
             "Gold and victories from resolved offline encounters. Offline combat never awards real-activity Adventure XP or Essence."
@@ -73,7 +72,7 @@ function P.Draw(ui, parent, state)
             "Hero progress",
             "INV_Misc_Book_09",
             440,
-            132,
+            100,
             number(report.heroXP) .. " hero XP",
             count(report.heroLevels, "level gained", "levels gained")
                 .. "\n"
@@ -87,7 +86,7 @@ function P.Draw(ui, parent, state)
             "Equipment",
             "INV_Misc_Bag_10",
             880,
-            132,
+            100,
             count(report.itemsKept, "item kept", "items kept"),
             number(report.salvaged) .. " automatically salvaged",
             "Kept items include stacked units added to your shared inventory. Your loot rules and inventory capacity decide what is retained or salvaged."
@@ -104,7 +103,7 @@ function P.Draw(ui, parent, state)
             "Materials",
             "Trade_BlackSmithing",
             0,
-            346,
+            314,
             report.fragments
                     and report.fragments > 0
                     and ("Runic fragments +" .. number(report.fragments))
@@ -117,7 +116,7 @@ function P.Draw(ui, parent, state)
             "Collections",
             "INV_Misc_Bag_10",
             440,
-            346,
+            314,
             report.collectionMode == "outdoor" and "Outdoor hunting stays online"
                 or count(report.discoveries, "new discovery", "new discoveries"),
             report.collectionMode == "outdoor" and "No offline discoveries or hunt progress"
@@ -129,7 +128,7 @@ function P.Draw(ui, parent, state)
             "Automation",
             "INV_Misc_Book_09",
             880,
-            346,
+            314,
             count(report.boostUses, "boost use", "boost uses"),
             number(report.routeTransitions)
                 .. " route transitions\n"
@@ -142,16 +141,14 @@ function P.Draw(ui, parent, state)
             "Owned, enabled boost rules use the same clock and cooldowns as online combat. Offline routes require a separate opt-in and visit only checkpoints cleared before departure, at most 12 transitions. New destinations, tiers and resets wait for online play."
         )
     end
-    U.Text(
+    U.Help(
         parent,
-        "— means an older report did not record that total.",
+        "Offline progress",
+        1258,
         0,
-        574,
-        13,
-        T.muted,
-        1250
+        "Rewards in this report are already applied; nothing needs claiming.\n\nOffline farming is capped at 24 hours. New progression and resets wait for you.\n\nA dash means an older report did not record that total."
     )
-    ui.offlineBack = U.Button(parent, "Back to adventure", 0, 622, 280, 34, function()
+    ui.offlineBack = U.Button(parent, "Back to adventure", 0, 552, 280, 34, function()
         ui:SetTab("adventure")
     end)
 end
