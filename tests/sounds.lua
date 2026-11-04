@@ -4,7 +4,7 @@ if not W then
 end
 local function fixture()
     local now, visible, played = 0, true, {}
-    local namespace = { state = W.Game.New(1000) }
+    local namespace = { L = W.L, state = W.Game.New(1000), L = W.L }
     local frame = {
         IsShown = function()
             return visible
@@ -45,6 +45,84 @@ local function fixture()
         env
 end
 return {
+    {
+        "Every rendered creature and boss has native attack, wound, entrance and death audio",
+        function()
+            local assets = { Content = W.Content }
+            assert(loadfile("Compatibility/Models.lua"))("WoWIdle", assets)
+            local creatures = {}
+            for _, zone in pairs(assets.ModelAssets.zones) do
+                creatures[zone.boss] = true
+                for _, creatureID in ipairs(zone.enemies) do
+                    creatures[creatureID] = true
+                end
+            end
+            for _, creatureID in pairs(assets.ModelAssets.creatures) do
+                creatures[creatureID] = true
+            end
+            for creatureID in pairs(creatures) do
+                local n, emit, played, advance, env = fixture()
+                env.SOUNDKIT = {} -- Generic cues cannot satisfy creature coverage.
+                n.Client = {
+                    ModelSpec = function()
+                        return { creatureID = creatureID }
+                    end,
+                }
+                n.state.battle = { enemies = { { name = "Creature", hp = 50 } } }
+                emit("encounter")
+                n.Audio.Flush()
+                assert(#played == 1, "Missing entrance: " .. creatureID)
+                advance(5)
+                emit("hit", { enemy = false, source = 1 })
+                n.Audio.Flush()
+                assert(#played == 2, "Missing attack: " .. creatureID)
+                advance(7)
+                emit("hit", { enemy = true, target = 1 })
+                n.Audio.Flush()
+                assert(#played == 3, "Missing wound: " .. creatureID)
+                advance(9)
+                emit("death", { enemy = true, target = 1 })
+                n.Audio.Flush()
+                assert(#played == 4, "Missing death: " .. creatureID)
+            end
+        end,
+    },
+    {
+        "New creature voices match their rendered families",
+        function()
+            for creatureID, kits in pairs({
+                [30] = { 423, 426, 422, 424 }, -- Spider
+                [3107] = { 1225, 1228, 1230, 1226 }, -- Crab
+                [5850] = { 1283, 1286, 1288, 1284 }, -- Fire elemental
+                [1802] = { 3419, 3422, 3424, 3420 }, -- Shade
+                [7040] = { 367, 369, 367, 370 }, -- Dragonspawn
+                [687] = { 704, 707, 708, 705 }, -- Jungle Stalker is a raptor.
+                [5251] = { 306, 308, 1015, 309 }, -- Woodpaw Trapper uses a gnoll.
+                [23919] = { 736, 738, 739, 737 }, -- Ice elemental uses the earth model.
+            }) do
+                local n, emit, played, advance = fixture()
+                n.Client = {
+                    ModelSpec = function()
+                        return { creatureID = creatureID }
+                    end,
+                }
+                n.state.battle = { enemies = { { name = "Creature", hp = 50 } } }
+                emit("encounter")
+                n.Audio.Flush()
+                advance(5)
+                emit("hit", { enemy = false, source = 1 })
+                n.Audio.Flush()
+                advance(7)
+                emit("hit", { enemy = true, target = 1 })
+                n.Audio.Flush()
+                advance(9)
+                emit("death", { enemy = true, target = 1 })
+                n.Audio.Flush()
+                assert(played[1] == kits[3] and played[2] == kits[1])
+                assert(played[4] == kits[4] and played[5] == kits[2])
+            end
+        end,
+    },
     {
         "Audio prioritizes milestones and bounds repeated combat",
         function()
