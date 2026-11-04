@@ -27,7 +27,7 @@ Starter appearance item references (shirt items cover the torso until chest armo
 - Zone tables are curated minigame pools, not complete live mob loot tables or authentic drop percentages. Riverpaw Leather Vest belongs to Elwynn’s gnolls, Stonemason Cloak to Westfall’s Defias, Blackrock Champion’s Axe to Redridge’s Blackrock enemies, and Rathorian’s Cape to the Barrens. Other entries are level-appropriate world finds. Starter weapons are included to supply basic equipment.
 - Source stats stay fixed. WoW required level maps to idle level as `max(1, ceil(requiredLevel / 4))`; items become available as encounter levels reach that requirement. An item’s source WoW requirement is also shown in its tooltip.
 - From Party’s equipment inventory, open Disenchant to select a stack in a dedicated workbench and protect it or disenchant copies for gold (idle level × rarity per copy) and Relic dust (rarity − 1 per copy, minimum 1). Choose 1, 10, or 100 beside the list; smaller stacks consume only their remaining copies. The selected stack’s exact reward is shown before destruction. Disenchant all consumes all unprotected stored equipment across pages and filters, including upgrades, regardless of the quantity selector. Equipped gear, heirlooms and protected items are kept. Disenchanting grants no Essence and does not refund upgrades. Loot rules affect future drops only, awarding gold and ore.
-- Crafting chooses the strongest usable source item for the selected hero and slot, including effective heirloom scaling. It retains the source rarity, rather than recoloring it. Low-level slots with no available source item cannot be crafted yet. Armor proficiencies follow the original class rules: all classes can wear cloth; rogues and druids can also wear leather; hunters and shamans unlock mail at idle level 40; warriors and paladins can wear mail immediately and unlock plate at idle level 40. Lighter armor remains usable. Cloaks have no armor proficiency restriction. Heirlooms bypass item-level requirements, but never class or armor-unlock requirements. Weapons follow Classic class proficiencies, distinguishing one-handed and two-handed types. Training and talent requirements are automatic in the idle game; unique-equipped restrictions and hand occupancy remain simplified by its single weapon slot. Both starting zones offer level-1 swords, axes, maces, and staves, providing at least two usable weapon choices for every class. Crafting, automatic equipment, upgrade retention, and inventory filters respect these proficiencies. Loading a save returns incompatible equipped weapons to inventory with their enhancements intact.
+- Crafting chooses the strongest usable source item for the selected hero and slot, including effective heirloom scaling. It retains the source rarity, rather than recoloring it. Low-level slots with no available source item cannot be crafted yet. Armor proficiencies follow the original class rules: all classes can wear cloth; rogues and druids can also wear leather; hunters and shamans unlock mail at idle level 40; warriors and paladins can wear mail immediately and unlock plate at idle level 40. Lighter armor remains usable. Cloaks have no armor proficiency restriction. Heirlooms bypass item-level requirements, but never class or armor-unlock requirements. Weapons follow Classic class proficiencies, distinguishing one-handed and two-handed types. Training and talent requirements are automatic in the idle game; unique-equipped restrictions and hand occupancy remain simplified by its single weapon slot. Both starting zones offer level-1 swords, axes, maces, staves, daggers, bows, and guns, providing at least two usable weapon choices for every class. Crafting, automatic equipment, upgrade retention, and inventory filters respect these proficiencies. Loading a save returns incompatible equipped weapons to inventory with their enhancements intact.
 - New loot and crafting use ten wearable slots: weapon, armor, head, back, shoulders, hands, waist, legs, feet, and wrists. Rings, necklaces, and trinkets are removed from the catalog. Loading an older save removes these items from inventory and equipped gear, including protected stacks and heirlooms, and removes their recipe unlocks. Other equipment and progression are preserved. Encounters with removed equipped gear restart without rewards.
 - An enhancement adds 10% of base stats, additively. Heirloom stats additionally scale by `hero idle level / source idle requirement`. Both are minigame enhancements, not claims about the original WoW item.
 - Existing synthetic saved equipment keeps its identity, stacks, protections, effects, and purchased enhancements. Its old power is converted once into attributes; an active encounter from that older stat model restarts without rewards. New drops and crafts use catalog items.
@@ -42,6 +42,14 @@ The current primary attributes are strength for warriors and paladins, agility f
 Power is a comparison estimate rounded to one decimal, computed from effective item attributes. It is not stored as an item stat. Weights are: primary attribute 1; stamina 0.6; spirit 0.4; haste 0.8; armor 0.04; weapon DPS 1.5; attack power 0.5; spell power 0.8; healing power 0.5; health restored per five seconds 1. Off-primary attributes and resistances score zero. These are idle balance weights, not Blizzard formulas.
 
 Combat aggregates effective attributes directly. Stamina adds 10 health per point. Armor reduces incoming damage by `armor / (500 + 50 × hero level + armor)`, capped at 60%. Primary attributes, weapon DPS, and attack/spell power add damage; intellect, spirit, and healing/spell power add healing. Haste multiplies attack and ability cooldown recovery by `1 + haste / 100`. Passive health regeneration is applied each simulation step. Existing hero-level baselines and prestige bonuses remain. No haste is invented for Classic items without that stat; the stat path is available for later catalog expansion.
+
+## Class equipment expansion
+
+The 2026-11-04 expansion adds 54 fixed Classic tooltip snapshots to ordinary loot and crafting. Daggers, guns, wands, two-handed maces, and polearms now use explicit class proficiencies. Starter ranged weapons and daggers, intermediate staves and swords, and late caster weapons fill progression gaps. Each original progression pool offers at least two usable weapons per class at its upper item-level band; expanded destinations inherit those pools.
+
+Cloth robes and shoulders, spirit and healing leather, intellect mail, attack-power leather and mail, and strength/stamina equipment add offensive, healing, and defensive choices under the existing stat model. Armor unlocks still use idle level 40. Weapon training and talents remain automatic; the single weapon slot also represents ranged weapons and wands. This does not add off-hand slots or specialization-specific stat weights.
+
+Source set bonuses, critical strike, and Julie’s Dagger’s healing proc are not simulated; affected tooltips say so. Resistance stats remain informational. Item stats use the Classic endpoint, independently of live-client scaling and the separate Forever collection catalog.
 
 ## Sources
 
@@ -177,6 +185,60 @@ Combat aggregates effective attributes directly. Stamina adds 10 health per poin
 | 2568 | [Brown Linen Vest](https://www.wowhead.com/classic/item=2568) |
 | 10045 | [Simple Linen Pants](https://www.wowhead.com/classic/item=10045) |
 | 10046 | [Simple Linen Boots](https://www.wowhead.com/classic/item=10046) |
+| 2092 | [Worn Dagger](https://www.wowhead.com/classic/item=2092) |
+| 3848 | [Big Bronze Knife](https://www.wowhead.com/classic/item=3848) |
+| 1935 | [Assassin's Blade](https://www.wowhead.com/classic/item=1935) |
+| 776 | [Vendetta](https://www.wowhead.com/classic/item=776) |
+| 2236 | [Blackfang](https://www.wowhead.com/classic/item=2236) |
+| 6660 | [Julie's Dagger](https://www.wowhead.com/classic/item=6660) |
+| 2504 | [Worn Shortbow](https://www.wowhead.com/classic/item=2504) |
+| 13020 | [Skystriker Bow](https://www.wowhead.com/classic/item=13020) |
+| 13021 | [Needle Threader](https://www.wowhead.com/classic/item=13021) |
+| 2509 | [Ornate Blunderbuss](https://www.wowhead.com/classic/item=2509) |
+| 4577 | [Compact Shotgun](https://www.wowhead.com/classic/item=4577) |
+| 13137 | [Ironweaver](https://www.wowhead.com/classic/item=13137) |
+| 13138 | [The Silencer](https://www.wowhead.com/classic/item=13138) |
+| 13139 | [Guttbuster](https://www.wowhead.com/classic/item=13139) |
+| 11287 | [Lesser Magic Wand](https://www.wowhead.com/classic/item=11287) |
+| 13062 | [Thunderwood](https://www.wowhead.com/classic/item=13062) |
+| 13064 | [Jaina's Firestarter](https://www.wowhead.com/classic/item=13064) |
+| 13065 | [Wand of Allistarj](https://www.wowhead.com/classic/item=13065) |
+| 13004 | [Torch of Austen](https://www.wowhead.com/classic/item=13004) |
+| 890 | [Twisted Chanter's Staff](https://www.wowhead.com/classic/item=890) |
+| 791 | [Gnarled Ash Staff](https://www.wowhead.com/classic/item=791) |
+| 1607 | [Soulkeeper](https://www.wowhead.com/classic/item=1607) |
+| 13000 | [Staff of Hale Magefire](https://www.wowhead.com/classic/item=13000) |
+| 13033 | [Zealot Blade](https://www.wowhead.com/classic/item=13033) |
+| 13034 | [Speedsteel Rapier](https://www.wowhead.com/classic/item=13034) |
+| 13038 | [Swiftwind](https://www.wowhead.com/classic/item=13038) |
+| 13039 | [Skull Splitting Crossbow](https://www.wowhead.com/classic/item=13039) |
+| 13045 | [Viscous Hammer](https://www.wowhead.com/classic/item=13045) |
+| 13046 | [Blanchard's Stout](https://www.wowhead.com/classic/item=13046) |
+| 13047 | [Twig of the World Tree](https://www.wowhead.com/classic/item=13047) |
+| 12989 | [Gargoyle's Bite](https://www.wowhead.com/classic/item=12989) |
+| 13055 | [Bonechewer](https://www.wowhead.com/classic/item=13055) |
+| 13059 | [Stoneraven](https://www.wowhead.com/classic/item=13059) |
+| 12998 | [Magician's Mantle](https://www.wowhead.com/classic/item=12998) |
+| 13008 | [Dalewind Trousers](https://www.wowhead.com/classic/item=13008) |
+| 13013 | [Elder Wizard's Mantle](https://www.wowhead.com/classic/item=13013) |
+| 12994 | [Thorbia's Gauntlets](https://www.wowhead.com/classic/item=12994) |
+| 15048 | [Blue Dragonscale Breastplate](https://www.wowhead.com/classic/item=15048) |
+| 15049 | [Blue Dragonscale Shoulders](https://www.wowhead.com/classic/item=15049) |
+| 15050 | [Black Dragonscale Breastplate](https://www.wowhead.com/classic/item=15050) |
+| 15052 | [Black Dragonscale Leggings](https://www.wowhead.com/classic/item=15052) |
+| 15059 | [Living Breastplate](https://www.wowhead.com/classic/item=15059) |
+| 15060 | [Living Leggings](https://www.wowhead.com/classic/item=15060) |
+| 15061 | [Living Shoulders](https://www.wowhead.com/classic/item=15061) |
+| 15062 | [Devilsaur Leggings](https://www.wowhead.com/classic/item=15062) |
+| 15063 | [Devilsaur Gauntlets](https://www.wowhead.com/classic/item=15063) |
+| 15066 | [Ironfeather Breastplate](https://www.wowhead.com/classic/item=15066) |
+| 15067 | [Ironfeather Shoulders](https://www.wowhead.com/classic/item=15067) |
+| 1483 | [Face Smasher](https://www.wowhead.com/classic/item=1483) |
+| 1716 | [Robe of the Magi](https://www.wowhead.com/classic/item=1716) |
+| 7728 | [Beguiler Robes](https://www.wowhead.com/classic/item=7728) |
+| 17050 | [Chan's Imperial Robes](https://www.wowhead.com/classic/item=17050) |
+| 12999 | [Drakewing Bands](https://www.wowhead.com/classic/item=12999) |
+| 13135 | [Lordly Armguards](https://www.wowhead.com/classic/item=13135) |
 
 Armor proficiency reference: [Blizzard’s original game manual](https://bnetcmsus-a.akamaihd.net/cms/template_resource/263A8NGR8HLZ1556919642368.pdf). The unlock uses the minigame hero’s idle level, independently of the source item requirement mapping.
 

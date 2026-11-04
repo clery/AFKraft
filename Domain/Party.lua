@@ -213,6 +213,10 @@ function G.ItemDescription(item, hero, compare)
             .. math.floor((G.ForgeMultiplier(item) - 1) * 100 + 0.5)
             .. "% base potential."
     end
+    local template = C.itemByID[item.itemID]
+    if template and template.note then
+        lines[#lines + 1] = template.note
+    end
     if item.itemID == 13074 then
         lines[#lines + 1] = "Source bonus: +6 Defense (not simulated)."
     end

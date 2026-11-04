@@ -244,15 +244,15 @@ case("Every class has two usable starter weapons in both starting zones and a re
 end)
 case("Weapon proficiencies distinguish classes and one-handed from two-handed weapons", function()
     local allowed = {
-        WARRIOR = { 25, 35, 36, 37, 1455, 13043, 13022, 13040 },
-        PALADIN = { 25, 36, 37, 1455, 13043 },
-        HUNTER = { 25, 35, 37, 1455, 13043, 13022, 13040 },
-        ROGUE = { 25, 36, 13022, 13040 },
-        PRIEST = { 35, 36 },
-        SHAMAN = { 35, 36, 37, 1455 },
-        MAGE = { 25, 35 },
-        WARLOCK = { 25, 35 },
-        DRUID = { 35, 36 },
+        WARRIOR = { 2092, 2509, 13045, 12989, 25, 35, 36, 37, 1455, 13043, 13022, 13040 },
+        PALADIN = { 13045, 12989, 25, 36, 37, 1455, 13043 },
+        HUNTER = { 2092, 2509, 12989, 25, 35, 37, 1455, 13043, 13022, 13040 },
+        ROGUE = { 2092, 2509, 25, 36, 13022, 13040 },
+        PRIEST = { 2092, 11287, 35, 36 },
+        SHAMAN = { 2092, 13045, 35, 36, 37, 1455 },
+        MAGE = { 2092, 11287, 25, 35 },
+        WARLOCK = { 2092, 11287, 25, 35 },
+        DRUID = { 2092, 13045, 35, 36 },
     }
     for class, ids in pairs(allowed) do
         local expected = {}
@@ -297,6 +297,67 @@ case("Weapon restrictions drive equip, filters, upgrades and saved gear recovery
     assert(not mage.gear[1] and s.inventory[1] == axe and not s.battle)
     assert(axe.upgrade == 5 and axe.protected and axe.count == 3 and axe.heirloom)
     assert(G.Load(s, 1000) and #s.inventory == 1)
+end)
+case("Every progression band offers multiple usable weapons for every class", function()
+    local bands = {
+        elwynn = 1,
+        durotar = 1,
+        westfall = 5,
+        barrens = 5,
+        redridge = 7,
+        ashenvale = 7,
+        duskwood = 9,
+        wetlands = 9,
+        stranglethorn = 11,
+        desolace = 11,
+        tanaris = 13,
+        winterspring = 15,
+    }
+    for zone, level in pairs(bands) do
+        for _, class in ipairs(C.classes) do
+            local hero, count = { class = class.id, level = level }, 0
+            for _, id in ipairs(C.zoneItems[zone]) do
+                local item = C.itemByID[id]
+                if item.slot == 1 and G.CanEquip(hero, item) then
+                    count = count + 1
+                end
+            end
+            assert(count >= 2, zone .. " lacks weapon choices for " .. class.id)
+            assert(G.CanEquip(hero, assert(G.CraftItem(hero, 1, false))))
+        end
+    end
+end)
+case("Role equipment retains source stats and reaches loot, crafting and tooltips", function()
+    assert(C.itemByID[13000].stats.intellect == 25)
+    assert(C.itemByID[13045].stats.attackPower == 34)
+    assert(C.itemByID[15048].stats.intellect == 28)
+    assert(C.itemByID[15059].stats.healingPower == 26)
+    assert(C.itemByID[15062].stats.attackPower == 46)
+    local found = {}
+    for _, pool in pairs(C.zoneItems) do
+        local seen = {}
+        for _, id in ipairs(pool) do
+            assert(not seen[id], "Duplicate loot weight for " .. id)
+            seen[id], found[id] = true, true
+        end
+    end
+    for _, item in ipairs(C.items) do
+        assert(found[item.itemID], item.name .. " is unavailable as loot")
+        if item.note then
+            local saved = G.Copy(item)
+            saved.note = nil -- Canonical notes also cover previously saved copies.
+            assert(G.ItemDescription(saved):find(item.note, 1, true))
+        end
+    end
+    for _, class in ipairs(C.classes) do
+        local hero = { class = class.id, level = 60 }
+        for _, slot in ipairs(C.equipmentSlots) do
+            for _, heirloom in ipairs({ false, true }) do
+                local crafted = assert(G.CraftItem(hero, slot, heirloom))
+                assert(G.CanEquip(hero, crafted), class.id .. slot)
+            end
+        end
+    end
 end)
 case("Zone drops retain catalog stats, requirements and deterministic identity", function()
     local s = state()

@@ -53,7 +53,7 @@ C.primaryStats = {
 
 -- Fixed Classic-era tooltip snapshots; see Content/ITEMS.md. No client cache required.
 C.items, C.itemByID = {}, {}
-local function item(id, name, icon, slot, quality, requiredLevel, stats)
+local function item(id, name, icon, slot, quality, requiredLevel, stats, note)
     local entry = {
         itemID = id,
         name = name,
@@ -63,6 +63,7 @@ local function item(id, name, icon, slot, quality, requiredLevel, stats)
         requiredLevel = requiredLevel,
         level = math.max(1, math.ceil(requiredLevel / 4)),
         stats = stats,
+        note = note,
     }
     C.items[#C.items + 1], C.itemByID[id] = entry, entry
 end
@@ -809,6 +810,408 @@ item(10046, "Simple Linen Boots", "inv_boots_05", 11, 1, 4, { armor = 11 })
 item(10045, "Simple Linen Pants", "inv_pants_11", 10, 1, 2, { armor = 12 })
 item(2568, "Brown Linen Vest", "inv_shirt_05", 2, 1, 3, { armor = 15 })
 
+-- Additional class and role choices use the same fixed source-stat model.
+item(2092, "Worn Dagger", "inv_weapon_shortblade_05", 1, 1, 1, { weaponDPS = 0.94 })
+item(
+    3848,
+    "Big Bronze Knife",
+    "inv_weapon_shortblade_04",
+    1,
+    2,
+    15,
+    { stamina = 3, weaponDPS = 10.0 }
+)
+item(
+    1935,
+    "Assassin's Blade",
+    "inv_weapon_shortblade_24",
+    1,
+    3,
+    19,
+    { strength = 3, agility = 4, weaponDPS = 15.53 }
+)
+item(776, "Vendetta", "inv_weapon_shortblade_02", 1, 3, 26, { agility = 6, weaponDPS = 19.23 })
+item(
+    2236,
+    "Blackfang",
+    "inv_weapon_shortblade_02",
+    1,
+    3,
+    20,
+    { spirit = 2, shadowResistance = 5, weaponDPS = 16.33 }
+)
+item(
+    6660,
+    "Julie's Dagger",
+    "inv_weapon_shortblade_07",
+    1,
+    3,
+    50,
+    { weaponDPS = 36.54 },
+    "Source healing proc is not simulated."
+)
+item(2504, "Worn Shortbow", "inv_weapon_bow_05", 1, 1, 1, { weaponDPS = 1.52 })
+item(13020, "Skystriker Bow", "inv_weapon_bow_11", 1, 3, 34, { weaponDPS = 20.71 })
+item(
+    13021,
+    "Needle Threader",
+    "inv_weapon_bow_08",
+    1,
+    3,
+    42,
+    { stamina = 6, spirit = 4, weaponDPS = 24.5 }
+)
+item(2509, "Ornate Blunderbuss", "inv_weapon_rifle_02", 1, 1, 4, { weaponDPS = 2.95 })
+item(4577, "Compact Shotgun", "inv_weapon_rifle_03", 1, 2, 8, { weaponDPS = 5.25 })
+item(13137, "Ironweaver", "inv_weapon_rifle_08", 1, 3, 29, { weaponDPS = 17.31 })
+item(
+    13138,
+    "The Silencer",
+    "inv_weapon_rifle_08",
+    1,
+    3,
+    37,
+    { weaponDPS = 22.32, attackPower = 14 }
+)
+item(
+    13139,
+    "Guttbuster",
+    "inv_weapon_rifle_08",
+    1,
+    3,
+    45,
+    { strength = 3, agility = 8, weaponDPS = 26.11 }
+)
+item(11287, "Lesser Magic Wand", "inv_staff_02", 1, 2, 5, { weaponDPS = 11.33 })
+item(13062, "Thunderwood", "inv_staff_02", 1, 3, 22, { weaponDPS = 27.11 })
+item(
+    13064,
+    "Jaina's Firestarter",
+    "inv_wand_09",
+    1,
+    3,
+    37,
+    { intellect = 6, spirit = 3, weaponDPS = 39.38 }
+)
+item(
+    13065,
+    "Wand of Allistarj",
+    "inv_wand_09",
+    1,
+    3,
+    45,
+    { arcaneResistance = 9, weaponDPS = 48.42 }
+)
+item(13004, "Torch of Austen", "inv_wand_11", 1, 3, 53, { fireResistance = 10, weaponDPS = 56.79 })
+item(
+    890,
+    "Twisted Chanter's Staff",
+    "inv_staff_04",
+    1,
+    3,
+    19,
+    { intellect = 10, stamina = 6, weaponDPS = 20.44 }
+)
+item(
+    791,
+    "Gnarled Ash Staff",
+    "inv_staff_02",
+    1,
+    3,
+    26,
+    { stamina = 6, spirit = 15, weaponDPS = 25.63 }
+)
+item(
+    1607,
+    "Soulkeeper",
+    "spell_shadow_haunting",
+    1,
+    3,
+    49,
+    { intellect = 11, spirit = 26, weaponDPS = 46.58 }
+)
+item(
+    13000,
+    "Staff of Hale Magefire",
+    "inv_staff_23",
+    1,
+    3,
+    57,
+    { intellect = 25, spirit = 22, weaponDPS = 53.03 }
+)
+item(
+    13033,
+    "Zealot Blade",
+    "inv_sword_15",
+    1,
+    3,
+    29,
+    { intellect = 5, spirit = 6, weaponDPS = 22.14 }
+)
+item(
+    13034,
+    "Speedsteel Rapier",
+    "inv_sword_30",
+    1,
+    3,
+    36,
+    { agility = 8, stamina = 3, weaponDPS = 28.06 }
+)
+item(13038, "Swiftwind", "inv_weapon_crossbow_04", 1, 3, 35, { agility = 7, weaponDPS = 21.25 })
+item(
+    13039,
+    "Skull Splitting Crossbow",
+    "inv_weapon_crossbow_04",
+    1,
+    3,
+    43,
+    { strength = 3, weaponDPS = 25.19, attackPower = 14 }
+)
+item(
+    13045,
+    "Viscous Hammer",
+    "inv_mace_13",
+    1,
+    3,
+    30,
+    { strength = 3, stamina = 6, weaponDPS = 30.17, attackPower = 34 }
+)
+item(
+    13046,
+    "Blanchard's Stout",
+    "inv_hammer_04",
+    1,
+    3,
+    45,
+    { strength = 20, stamina = 15, fireResistance = 5, weaponDPS = 43.39 }
+)
+item(
+    13047,
+    "Twig of the World Tree",
+    "inv_mace_13",
+    1,
+    3,
+    53,
+    { strength = 14, stamina = 21, spirit = 12, weaponDPS = 49.73 }
+)
+item(
+    12989,
+    "Gargoyle's Bite",
+    "inv_spear_05",
+    1,
+    3,
+    20,
+    { strength = 10, armor = 60, weaponDPS = 18.97 }
+)
+item(
+    13055,
+    "Bonechewer",
+    "inv_spear_06",
+    1,
+    3,
+    43,
+    { strength = 23, stamina = 10, weaponDPS = 41.96 }
+)
+item(
+    13059,
+    "Stoneraven",
+    "inv_spear_07",
+    1,
+    3,
+    47,
+    { strength = 13, agility = 13, stamina = 15, spirit = 9, weaponDPS = 44.85 }
+)
+item(
+    12998,
+    "Magician's Mantle",
+    "inv_shoulder_13",
+    7,
+    3,
+    20,
+    { intellect = 9, armor = 32, spellPower = 5 }
+)
+item(
+    13008,
+    "Dalewind Trousers",
+    "inv_pants_06",
+    10,
+    3,
+    47,
+    { intellect = 9, stamina = 5, spirit = 25, armor = 65 }
+)
+item(
+    13013,
+    "Elder Wizard's Mantle",
+    "inv_shoulder_14",
+    7,
+    3,
+    51,
+    { intellect = 20, armor = 60, spellPower = 11 }
+)
+item(
+    12994,
+    "Thorbia's Gauntlets",
+    "inv_gauntlets_11",
+    8,
+    3,
+    18,
+    { strength = 8, stamina = 3, armor = 122 }
+)
+item(
+    15048,
+    "Blue Dragonscale Breastplate",
+    "inv_chest_chain_04",
+    2,
+    3,
+    52,
+    { intellect = 28, spirit = 8, armor = 338, arcaneResistance = 8 },
+    "Source set bonuses are not simulated."
+)
+item(
+    15049,
+    "Blue Dragonscale Shoulders",
+    "inv_shoulder_18",
+    7,
+    3,
+    54,
+    { intellect = 21, spirit = 6, armor = 262, arcaneResistance = 6 },
+    "Source set bonuses are not simulated."
+)
+item(
+    15050,
+    "Black Dragonscale Breastplate",
+    "inv_chest_plate06",
+    2,
+    3,
+    53,
+    { stamina = 8, armor = 344, fireResistance = 12, attackPower = 50 },
+    "Source set bonuses are not simulated."
+)
+item(
+    15052,
+    "Black Dragonscale Leggings",
+    "inv_pants_03",
+    10,
+    3,
+    57,
+    { stamina = 8, armor = 320, fireResistance = 13, attackPower = 54 },
+    "Source set bonuses are not simulated."
+)
+item(
+    15059,
+    "Living Breastplate",
+    "inv_chest_plate07",
+    2,
+    3,
+    55,
+    { stamina = 10, spirit = 25, armor = 169, natureResistance = 5, healingPower = 26 }
+)
+item(
+    15060,
+    "Living Leggings",
+    "inv_pants_05",
+    10,
+    3,
+    52,
+    { stamina = 8, spirit = 25, armor = 142, natureResistance = 5, healingPower = 26 }
+)
+item(
+    15061,
+    "Living Shoulders",
+    "inv_shoulder_18",
+    7,
+    3,
+    49,
+    { stamina = 8, spirit = 13, armor = 117, natureResistance = 3, healingPower = 31 }
+)
+item(
+    15062,
+    "Devilsaur Leggings",
+    "inv_pants_wolf",
+    10,
+    3,
+    55,
+    { stamina = 12, armor = 148, attackPower = 46 },
+    "Source critical strike and set bonuses are not simulated."
+)
+item(
+    15063,
+    "Devilsaur Gauntlets",
+    "inv_gauntlets_26",
+    8,
+    3,
+    53,
+    { stamina = 9, armor = 103, attackPower = 28 },
+    "Source critical strike and set bonuses are not simulated."
+)
+item(
+    15066,
+    "Ironfeather Breastplate",
+    "inv_chest_leather_06",
+    2,
+    3,
+    53,
+    { intellect = 12, spirit = 28, armor = 165 },
+    "Source set bonuses are not simulated."
+)
+item(
+    15067,
+    "Ironfeather Shoulders",
+    "inv_shoulder_06",
+    7,
+    3,
+    49,
+    { intellect = 20, spirit = 8, armor = 117 },
+    "Source set bonuses are not simulated."
+)
+
+item(
+    1483,
+    "Face Smasher",
+    "inv_hammer_08",
+    1,
+    3,
+    16,
+    { strength = 3, stamina = 3, weaponDPS = 14.04 }
+)
+item(
+    1716,
+    "Robe of the Magi",
+    "inv_chest_cloth_17",
+    2,
+    3,
+    35,
+    { intellect = 6, spirit = 5, armor = 58, spellPower = 22 }
+)
+item(
+    7728,
+    "Beguiler Robes",
+    "inv_chest_cloth_25",
+    2,
+    3,
+    29,
+    { stamina = 7, intellect = 12, spirit = 8, armor = 50 }
+)
+item(
+    17050,
+    "Chan's Imperial Robes",
+    "inv_chest_cloth_04",
+    2,
+    3,
+    47,
+    { stamina = 20, intellect = 10, spirit = 10, armor = 75, natureResistance = 5 }
+)
+item(12999, "Drakewing Bands", "inv_bracer_09", 12, 3, 20, { stamina = 3, spirit = 6, armor = 41 })
+item(
+    13135,
+    "Lordly Armguards",
+    "inv_bracer_17",
+    12,
+    3,
+    54,
+    { strength = 7, agility = 7, stamina = 8, intellect = 7, spirit = 8, armor = 153 }
+)
+
 -- Classic weapon proficiencies are idle class rules, independent of the live client.
 -- Training and talent requirements are simplified; each hero has one weapon slot.
 C.weaponNames = {
@@ -820,9 +1223,18 @@ C.weaponNames = {
     twoHandAxe = "Two-Handed Axes",
     bow = "Bows",
     crossbow = "Crossbows",
+    dagger = "Daggers",
+    gun = "Guns",
+    wand = "Wands",
+    twoHandMace = "Two-Handed Maces",
+    polearm = "Polearms",
 }
 C.classWeapons = {
     WARRIOR = {
+        dagger = true,
+        gun = true,
+        twoHandMace = true,
+        polearm = true,
         sword = true,
         axe = true,
         mace = true,
@@ -832,8 +1244,19 @@ C.classWeapons = {
         bow = true,
         crossbow = true,
     },
-    PALADIN = { sword = true, axe = true, mace = true, twoHandSword = true, twoHandAxe = true },
+    PALADIN = {
+        twoHandMace = true,
+        polearm = true,
+        sword = true,
+        axe = true,
+        mace = true,
+        twoHandSword = true,
+        twoHandAxe = true,
+    },
     HUNTER = {
+        dagger = true,
+        gun = true,
+        polearm = true,
         sword = true,
         axe = true,
         staff = true,
@@ -842,22 +1265,34 @@ C.classWeapons = {
         bow = true,
         crossbow = true,
     },
-    ROGUE = { sword = true, mace = true, bow = true, crossbow = true },
-    PRIEST = { mace = true, staff = true },
-    SHAMAN = { axe = true, mace = true, staff = true, twoHandAxe = true },
-    MAGE = { sword = true, staff = true },
-    WARLOCK = { sword = true, staff = true },
-    DRUID = { mace = true, staff = true },
+    ROGUE = { dagger = true, gun = true, sword = true, mace = true, bow = true, crossbow = true },
+    PRIEST = { dagger = true, wand = true, mace = true, staff = true },
+    SHAMAN = {
+        dagger = true,
+        twoHandMace = true,
+        axe = true,
+        mace = true,
+        staff = true,
+        twoHandAxe = true,
+    },
+    MAGE = { dagger = true, wand = true, sword = true, staff = true },
+    WARLOCK = { dagger = true, wand = true, sword = true, staff = true },
+    DRUID = { dagger = true, twoHandMace = true, mace = true, staff = true },
 }
 local weaponItems = {
-    sword = { 25, 935 },
+    polearm = { 12989, 13055, 13059 },
+    twoHandMace = { 13045, 13046, 13047 },
+    wand = { 11287, 13062, 13064, 13065, 13004 },
+    gun = { 2509, 4577, 13137, 13138, 13139 },
+    dagger = { 2092, 3848, 1935, 776, 2236, 6660 },
+    sword = { 13033, 13034, 25, 935 },
     axe = { 37, 13014, 13015 },
-    mace = { 36, 13024, 13027, 13028 },
-    staff = { 35, 1539 },
+    mace = { 1483, 36, 13024, 13027, 13028 },
+    staff = { 890, 791, 1607, 13000, 35, 1539 },
     twoHandSword = { 13043 },
     twoHandAxe = { 1455 },
-    bow = { 13022, 13023 },
-    crossbow = { 13040 },
+    bow = { 2504, 13020, 13021, 13022, 13023 },
+    crossbow = { 13038, 13039, 13040 },
 }
 for weaponType, items in pairs(weaponItems) do
     for _, id in ipairs(items) do
@@ -881,6 +1316,12 @@ C.classArmor = {
 -- Source armor subclasses, independent of client-scaled item data.
 local armorItems = {
     cloth = {
+        17050,
+        7728,
+        1716,
+        12998,
+        13008,
+        13013,
         10046,
         10045,
         2568,
@@ -922,6 +1363,14 @@ local armorItems = {
         12977,
     },
     leather = {
+        12999,
+        15059,
+        15060,
+        15061,
+        15062,
+        15063,
+        15066,
+        15067,
         821,
         2961,
         2973,
@@ -957,6 +1406,12 @@ local armorItems = {
         1280,
     },
     mail = {
+        13135,
+        12994,
+        15048,
+        15049,
+        15050,
+        15052,
         4074,
         13123,
         2965,
@@ -995,6 +1450,10 @@ end
 -- Curated zone encounters, not a claim to reproduce live drop rates.
 C.zoneItems = {
     elwynn = {
+        2092,
+        2504,
+        2509,
+        11287,
         10046,
         10045,
         2568,
@@ -1016,6 +1475,10 @@ C.zoneItems = {
         3213,
     },
     durotar = {
+        2092,
+        2504,
+        2509,
+        11287,
         10046,
         10045,
         2568,
@@ -1037,6 +1500,15 @@ C.zoneItems = {
         3213,
     },
     westfall = {
+        1483,
+        12999,
+        4577,
+        3848,
+        1935,
+        890,
+        12998,
+        12994,
+        12989,
         2973,
         2981,
         2985,
@@ -1064,6 +1536,15 @@ C.zoneItems = {
         12977,
     },
     barrens = {
+        1483,
+        12999,
+        4577,
+        3848,
+        1935,
+        890,
+        12998,
+        12994,
+        12989,
         2973,
         2981,
         2985,
@@ -1092,6 +1573,11 @@ C.zoneItems = {
         12977,
     },
     redridge = {
+        1483,
+        2236,
+        13062,
+        776,
+        791,
         1455,
         3055,
         3069,
@@ -1109,6 +1595,12 @@ C.zoneItems = {
         13131,
     },
     ashenvale = {
+        935,
+        1483,
+        2236,
+        13062,
+        776,
+        791,
         1539,
         3055,
         3069,
@@ -1126,6 +1618,16 @@ C.zoneItems = {
         13131,
     },
     duskwood = {
+        791,
+        1483,
+        7728,
+        1716,
+        13137,
+        13033,
+        13045,
+        13020,
+        13034,
+        13038,
         935,
         4038,
         4057,
@@ -1147,6 +1649,16 @@ C.zoneItems = {
         13127,
     },
     wetlands = {
+        791,
+        1483,
+        7728,
+        1716,
+        13137,
+        13033,
+        13045,
+        13020,
+        13034,
+        13038,
         935,
         4038,
         4057,
@@ -1168,6 +1680,13 @@ C.zoneItems = {
         13127,
     },
     stranglethorn = {
+        791,
+        13045,
+        13138,
+        13064,
+        13021,
+        13039,
+        13055,
         13110,
         4038,
         4074,
@@ -1189,6 +1708,13 @@ C.zoneItems = {
         13132,
     },
     desolace = {
+        791,
+        13045,
+        13138,
+        13064,
+        13021,
+        13039,
+        13055,
         13110,
         4057,
         4074,
@@ -1210,6 +1736,15 @@ C.zoneItems = {
         13132,
     },
     tanaris = {
+        17050,
+        13139,
+        13046,
+        13059,
+        13065,
+        1607,
+        13008,
+        15061,
+        15067,
         13066,
         13067,
         13068,
@@ -1233,6 +1768,22 @@ C.zoneItems = {
         13128,
     },
     winterspring = {
+        17050,
+        13135,
+        6660,
+        13000,
+        13047,
+        13004,
+        13013,
+        15048,
+        15049,
+        15050,
+        15052,
+        15059,
+        15060,
+        15062,
+        15063,
+        15066,
         13066,
         13067,
         13068,
