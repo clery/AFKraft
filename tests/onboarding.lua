@@ -27,7 +27,7 @@ local function opening()
 end
 
 local function find(ui, label)
-    for _, kind in ipairs({ "button", "primary" }) do
+    for _, kind in ipairs({ "button", "primary", "selection" }) do
         local pool = ui.panel._pool[kind]
         if pool then
             for button in pool:EnumerateActive() do

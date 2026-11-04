@@ -57,7 +57,7 @@ test("Inventory fills the management workspace and filters retain valid paginati
     ui:SetTab("party")
     local function rows()
         local count = 0
-        for control in ui.panel._pool.button:EnumerateActive() do
+        for control in ui.panel._pool.selection:EnumerateActive() do
             if control:GetWidth() == 688 and control:GetHeight() == 46 then
                 count = count + 1
             end
@@ -129,7 +129,8 @@ test("Help is readable, separates paragraphs and reuses pooled controls", functi
         return description
     end)
     U.EndBuild(parent)
-    assertTrue(help.text:GetWidth() >= 20)
+    assertEquals(28, help:GetWidth())
+    assertNotNil(help.icon:GetTexture())
     local addLine, lines = GameTooltip.AddLine, {}
     GameTooltip.AddLine = function(self, value, ...)
         lines[#lines + 1] = value

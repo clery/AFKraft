@@ -115,7 +115,7 @@ local function recruit(ui, p, s)
     for i, class in ipairs(C.classes) do
         local id = class.id
         local x, y = (i - 1) % 3 * 440, 90 + math.floor((i - 1) / 3) * 94
-        local b = U.Button(p, "", x, y, 416, 76, function()
+        local b = U.SelectButton(p, "", x, y, 416, 76, function()
             if W.Action(G.Recruit, id) then
                 ui.selected = #s.heroes
                 ui.recruiting = false
@@ -149,35 +149,7 @@ local function equipment(ui, p, s, hero, index)
     local class, stats = C.classByID[hero.class], G.Stats(s, hero)
     local outfit = W.ModelAssets.starterOutfits[hero.class] or W.ModelAssets.starterOutfits.MAGE
     line(p, hero.name .. "’s equipment", 0, 0, 280, 20, class.color)
-    local help = U.Button(p, "", 288, 0, 32, 28, function() end)
-    help.text:Hide()
-    help.fill:SetAlpha(0)
-    help:SetBackdropBorderColor(0, 0, 0, 0)
-    U.Begin(help)
-    local icon = U.Rect(help, 2, 0, 28, 28, T.text, 1, "ARTWORK")
-    icon:SetParent(help.content or help)
-    icon:SetTexture("Interface\\common\\help-i")
-    if not icon.helpHover then
-        local animation = icon:CreateAnimationGroup()
-        animation:SetLooping("BOUNCE")
-        local pulse = animation:CreateAnimation("Scale")
-        pulse:SetScaleFrom(1, 1)
-        pulse:SetScaleTo(1.15, 1.15)
-        pulse:SetDuration(0.45)
-        pulse:SetSmoothing("IN_OUT")
-        icon.helpHover = animation
-    end
-    help:SetScript("OnEnter", function()
-        icon.helpHover:Play()
-    end)
-    help:SetScript("OnLeave", function()
-        icon.helpHover:Stop()
-    end)
-    help:SetScript("OnHide", function()
-        icon.helpHover:Stop()
-    end)
-    U.EndBuild(help)
-    U.Tooltip(help, "Equipment stat guide", statGuide(hero), 380)
+    U.Help(p, "Equipment stat guide", 288, 0, statGuide(hero))
     line(
         p,
         "Level " .. hero.level .. " " .. class.name .. "  ·  " .. U.Number(stats.hp) .. " health",
@@ -210,7 +182,7 @@ local function equipment(ui, p, s, hero, index)
         local name = C.slots[slot]
         local id, item = slot, hero.gear[slot]
         local x, y = (position - 1) % 2 * 292, 94 + math.floor((position - 1) / 2) * rowStep
-        local b = U.Button(p, "", x, y, 280, rowStep - 4, function()
+        local b = U.SelectButton(p, "", x, y, 280, rowStep - 4, function()
             ui.gearSlot, ui.bagFilter, ui.bagPage = id, id, 0
             ui:Refresh()
         end, slot == selectedSlot)
@@ -464,7 +436,7 @@ local function inventory(ui, p, s, hero, index)
             local previous = hero.gear[item.slot]
             local delta = power - G.ItemPower(previous, hero)
             local levelOK, restriction = G.CanEquip(hero, item)
-            local b = U.Button(p, "", 608, y, 688, 46, function()
+            local b = U.SelectButton(p, "", 608, y, 688, 46, function()
                 if not levelOK then
                     return
                 end
@@ -641,7 +613,7 @@ local function disenchant(ui, p, s)
         local entry = entries[page * 5 + row]
         if entry then
             local item = entry.item
-            local b = U.Button(p, "", 0, 102 + (row - 1) * 50, 792, 46, function()
+            local b = U.SelectButton(p, "", 0, 102 + (row - 1) * 50, 792, 46, function()
                 ui.disenchantItem = item
                 ui:Refresh()
             end, item == selected)
@@ -741,7 +713,7 @@ local function disenchant(ui, p, s)
     line(p, "Copies to disenchant", 848, 178, 448, 13, T.muted)
     local quantity = ui.disenchantQuantity or 1
     for position, amount in ipairs({ 1, 10, 100 }) do
-        local choice = U.Button(
+        local choice = U.SelectButton(
             p,
             tostring(amount),
             848 + (position - 1) * 78,
@@ -798,22 +770,28 @@ local function disenchant(ui, p, s)
         "Permanently destroys the selected copies for the displayed rewards. This cannot be undone.",
         320
     )
-    local protect = U.Button(
+    local protect = U.Checkbox(
         p,
-        selected and selected.protected and "Unprotect" or "Protect",
+        "Protected",
         1160,
         318,
         136,
-        32,
-        function()
+        selected and selected.protected,
+        function(checked)
             if selected and not selected.heirloom then
-                selected.protected = not selected.protected
+                selected.protected = checked
                 ui:Refresh()
             end
-        end,
-        selected and selected.protected
+        end
     )
-    U.Enabled(protect, selected ~= nil and not selected.heirloom)
+    protect:SetEnabled(selected ~= nil and not selected.heirloom)
+    ui.disenchantProtect = protect
+    U.Tooltip(
+        protect,
+        "Protect equipment",
+        "Protected items cannot be disenchanted or automatically salvaged.\n\nHeirlooms are always protected.",
+        350
+    )
     local total = G.DisenchantAllReward(s)
     local all = U.Button(p, "Disenchant all unprotected", 848, 376, 448, 32, function()
         W.Action(G.DisenchantAll)

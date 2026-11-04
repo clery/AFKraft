@@ -22,7 +22,7 @@ local function setup()
 end
 
 local function find(ui, label)
-    for _, kind in ipairs({ "button", "primary" }) do
+    for _, kind in ipairs({ "button", "primary", "selection" }) do
         for b in ui.panel._pool[kind]:EnumerateActive() do
             if b.text:GetText() == label then
                 return b
@@ -33,7 +33,7 @@ local function find(ui, label)
 end
 
 local function selectItem(ui, item)
-    for b in ui.panel._pool.button:EnumerateActive() do
+    for b in ui.panel._pool.selection:EnumerateActive() do
         if b._pool and b._pool.text then
             for label in b._pool.text:EnumerateActive() do
                 if label:GetText() == item.name .. " ×" .. (item.count or 1) then
@@ -83,7 +83,8 @@ test(
         ui.bagFilter, ui.bagPage = 1, 2
         click(find(ui, "Disenchant…"))
         selectItem(ui, item)
-        click(find(ui, "Protect"))
+        ui.disenchantProtect:SetChecked(true)
+        click(ui.disenchantProtect)
         assertTrue(item.protected)
         assertFalse(find(ui, "Disenchant 1 copy"):IsEnabled())
         assertFalse(find(ui, "Disenchant all unprotected"):IsEnabled())
@@ -95,7 +96,8 @@ test(
         assertEquals(1, #s.inventory)
         assertTrue(s.inventory[1] == item)
         assertEquals(20, s.stats.salvaged)
-        click(find(ui, "Unprotect"))
+        ui.disenchantProtect:SetChecked(false)
+        click(ui.disenchantProtect)
         click(find(ui, "Disenchant all unprotected"))
         assertEquals(0, #s.inventory)
         click(find(ui, "Back to equipment"))
@@ -135,7 +137,7 @@ test("Workbench pagination clamps after bulk deletion and heirlooms remain safe"
     click(find(ui, "Next"))
     assertEquals(1, ui.disenchantPage)
     selectItem(ui, heirloom)
-    assertFalse(find(ui, "Protect"):IsEnabled())
+    assertFalse(ui.disenchantProtect:IsEnabled())
     assertFalse(find(ui, "Disenchant 1 copy"):IsEnabled())
     click(find(ui, "Disenchant all unprotected"))
     assertEquals(1, #s.inventory)

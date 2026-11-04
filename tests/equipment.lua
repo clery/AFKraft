@@ -50,7 +50,7 @@ test("Party equipment buttons enforce class armor restrictions", function()
     ui.selected, ui.bagFilter, ui.bagView, ui.bagPage = 1, 0, {}, 0
     ui:SetTab("party")
     local mailButton, clothButton
-    for button in ui.panel._pool.button:EnumerateActive() do
+    for button in ui.panel._pool.selection:EnumerateActive() do
         if button._pool and button._pool.text then
             for label in button._pool.text:EnumerateActive() do
                 if label:GetText() == mail.name then
@@ -81,25 +81,15 @@ test("Party stat guide restores the shared tooltip width when hidden", function(
     W.state = s
     W.UI.selected = 1
     W.UI:SetTab("party")
-    local help, helpIcon
-    for button in W.UI.panel._pool.button:EnumerateActive() do
-        if button:GetWidth() == 32 and button:GetHeight() == 28 then
-            help = button
-            local icon = button._pool.rect:EnumerateActive()()
-            assertNotNil(icon:GetTexture())
-            helpIcon = icon
-        end
-    end
+    local help = W.UI.panel._pool.help:EnumerateActive()()
     assertNotNil(help)
+    assertNotNil(help.icon:GetTexture())
     local width, force = GameTooltip:GetMinimumWidth()
     help:GetScript("OnEnter")(help)
     assertEquals(380, GameTooltip:GetMinimumWidth())
-    assertTrue(helpIcon.helpHover:IsPlaying())
     help:GetScript("OnLeave")(help)
-    assertFalse(helpIcon.helpHover:IsPlaying())
     help:GetScript("OnEnter")(help)
     help:Hide()
-    assertFalse(helpIcon.helpHover:IsPlaying())
     GameTooltip:Hide()
     local restored, restoredForce = GameTooltip:GetMinimumWidth()
     assertEquals(width, restored)

@@ -79,6 +79,7 @@ function U.Rect(parent, x, y, w, h, color, alpha, layer)
     local t = pooled(parent, "rect", function()
         return parent:CreateTexture(nil, layer or "BACKGROUND")
     end)
+    t:SetDrawLayer(layer or "BACKGROUND")
     t:SetPoint("TOPLEFT", x, -y)
     t:SetSize(w, h)
     t:SetColorTexture(color[1], color[2], color[3], alpha or 1)
@@ -111,59 +112,162 @@ function U.SingleLine(fontString, width, height, align)
     return fontString
 end
 
+local function surface(parent, kind)
+    local frame = CreateFrame(kind, nil, parent, "BackdropTemplate")
+    frame.content = U.BorderContent(frame, 4)
+    frame:SetBackdrop({ edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 12 })
+    frame:SetBackdropBorderColor(unpack(T.line))
+    frame.fill = U.Rect(frame.content, 0, 0, 1, 1, T.panel)
+    return frame
+end
+
+function U.Selected(button, selected)
+    if button.nativeTab then
+        button:SetTabSelected(selected)
+        button.text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    else
+        button.selected = selected == true
+        if button.fill then
+            button.fill:SetColorTexture(unpack(button.selected and T.selected or T.panel))
+        end
+        if button.selection then
+            button.selection:SetShown(button.selected)
+        end
+        if button.SetBackdropBorderColor then
+            button:SetBackdropBorderColor(unpack(button.selected and T.gold or T.line))
+        end
+    end
+    button.text:SetTextColor(unpack(selected and T.gold or T.text))
+end
+
+local function resetTooltip(frame)
+    if frame:GetScript("OnEnter") == frame.tooltipEnter then
+        frame:SetScript("OnEnter", frame.tooltipBaseEnter)
+    end
+    if frame:GetScript("OnLeave") == frame.tooltipLeave then
+        frame:SetScript("OnLeave", frame.tooltipBaseLeave)
+    end
+    frame.tooltipEnter, frame.tooltipLeave = nil, nil
+end
+
 function U.Button(parent, text, x, y, w, h, fn, active, variant)
-    local b = pooled(parent, variant == "primary" and "primary" or "button", function()
-        if variant == "primary" then
-            local ok, button =
-                pcall(CreateFrame, "Button", nil, parent, "UIPanelGoldButtonTemplate")
+    local selection = variant == "selection"
+    local kind = selection and "selection" or variant == "primary" and "primary" or "button"
+    local b = pooled(parent, kind, function()
+        if not selection then
+            local template = variant == "primary" and "UIPanelGoldButtonTemplate"
+                or "UIPanelButtonTemplate"
+            local ok, button = pcall(CreateFrame, "Button", nil, parent, template)
             if ok then
                 button.native = true
+                button.text = button:GetFontString()
                 return button
             end
         end
-        local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
-        button.content = U.BorderContent(button, 4)
-        button:SetBackdrop({ edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 12 })
+        local button = surface(parent, "Button")
+        button.text = U.Text(button, "", 0, 0, 13)
+        if selection then
+            button.selection = U.Rect(button.content, 4, 6, 3, 1, T.gold, 1, "OVERLAY")
+        end
         return button
     end)
-    -- A pooled button may change roles between pages. Clear any custom content
-    -- from its previous role before rebuilding it beneath the button's layer.
     U.Begin(b)
     U.EndBuild(b)
     b:SetPoint("TOPLEFT", x, -y)
     b:SetSize(w, h)
     b:SetEnabled(true)
-    local color = active and { 0.085, 0.105, 0.15 } or T.panel
-    if not b.fill then
-        b.fill = U.Rect(b.content or b, 0, 0, w, h, color)
-        b.text = b.native and b:GetFontString() or U.Text(b, text, 0, 0, 13)
-    else
+    if b.fill then
         b.fill:SetSize(w, h)
-        b.fill:SetColorTexture(unpack(color))
+    end
+    if b.selection then
+        b.selection:SetHeight(math.max(1, h - 12))
     end
     b.text:ClearAllPoints()
-    -- Gold-button artwork sits above the frame center (the native template
-    -- anchors its label above the bottom padding). Match that visual center.
-    b.text:SetPoint("CENTER", b, "CENTER", 0, b.native and 3 or 0)
+    b.text:SetPoint("CENTER", b, "CENTER", 0, variant == "primary" and b.native and 3 or 0)
     b.text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-    U.SingleLine(b.text, w - 24, h - 8, b.native and "CENTER" or "LEFT")
+    U.SingleLine(b.text, w - 24, h - 8, selection and "LEFT" or "CENTER")
     b.text:SetText(text)
-    b.text:SetTextColor(unpack(active and T.gold or T.text))
     b.text:SetAlpha(1)
     b.text:Show()
-    b.fill:SetAlpha(b.native and 0 or 1)
-    if b.SetBackdropBorderColor and not b.native then
-        b:SetBackdropBorderColor(unpack(active and T.gold or T.line))
-    end
-    b:SetScript("OnEnter", function()
-        b.fill:SetColorTexture(0.105, 0.125, 0.17)
+    U.Selected(b, active)
+    b:SetScript("OnEnter", function(self)
+        if self.fill then
+            self.fill:SetColorTexture(0.105, 0.125, 0.17)
+        end
     end)
-    b:SetScript("OnLeave", function()
-        local c = active and { 0.085, 0.105, 0.15 } or T.panel
-        b.fill:SetColorTexture(unpack(c))
+    b:SetScript("OnLeave", function(self)
+        if self.fill then
+            self.fill:SetColorTexture(unpack(self.selected and T.selected or T.panel))
+        end
     end)
     b:SetScript("OnClick", fn)
     return b
+end
+
+function U.SelectButton(parent, text, x, y, w, h, fn, selected)
+    return U.Button(parent, text, x, y, w, h, fn, selected, "selection")
+end
+
+function U.Tab(parent, text, x, y, w, h, fn, selected)
+    local tab = pooled(parent, "tab", function()
+        local ok, button = pcall(CreateFrame, "Button", nil, parent, "TabSystemTopButtonTemplate")
+        if ok and button.SetTabSelected and button.Text then
+            button:HandleRotation()
+            button.nativeTab = true
+            button.text = button.Text
+            return button
+        end
+        if ok then
+            button:Hide()
+        end
+        button = surface(parent, "Button")
+        button.text = U.Text(button, "", 0, 0, 13)
+        button.text:SetPoint("CENTER")
+        return button
+    end)
+    tab:SetPoint("TOPLEFT", x, -y)
+    tab:SetSize(w, h)
+    if tab.fill then
+        tab.fill:SetSize(w, h)
+    end
+    U.SingleLine(tab.text, w - 24, h - 8, "CENTER")
+    tab.text:SetText(text)
+    tab:SetScript("OnClick", fn)
+    U.Selected(tab, selected)
+    return tab
+end
+
+function U.Card(parent, x, y, w, h)
+    local card = pooled(parent, "card", function()
+        local frame = surface(parent, "Frame")
+        frame:EnableMouse(true)
+        return frame
+    end)
+    U.Begin(card)
+    U.EndBuild(card)
+    card:SetPoint("TOPLEFT", x, -y)
+    card:SetSize(w, h)
+    card.fill:SetSize(w, h)
+    return card
+end
+
+function U.Input(parent, x, y, w, h)
+    local edit = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
+    edit:SetPoint("TOPLEFT", x, -y)
+    edit:SetSize(w, h)
+    edit:SetAutoFocus(false)
+    edit:SetMaxLetters(40)
+    edit:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
+    edit:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+    end)
+    edit:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+    end)
+    edit:SetScript("OnHide", function(self)
+        self:ClearFocus()
+    end)
+    return edit
 end
 
 function U.Checkbox(parent, label, x, y, width, checked, choose)
@@ -172,6 +276,8 @@ function U.Checkbox(parent, label, x, y, width, checked, choose)
         frame.label = U.Text(frame, "", 36, 7, 14, T.text)
         return frame
     end)
+    resetTooltip(check)
+    check:SetEnabled(true)
     check:SetPoint("TOPLEFT", x, -y)
     check:SetSize(32, 32)
     check:SetHitRectInsets(0, -(width - 32), 0, 0)
@@ -204,10 +310,20 @@ local tooltipWidth, tooltipWidthForce
 local tooltipWidthHooked = false
 
 function U.Tooltip(frame, title, text, width)
+    resetTooltip(frame)
+    if not frame.tooltipHideHooked then
+        frame:HookScript("OnHide", function(self)
+            if GameTooltip:IsOwned(self) then
+                GameTooltip:Hide()
+            end
+        end)
+        frame.tooltipHideHooked = true
+    end
     if frame.SetMotionScriptsWhileDisabled then
         frame:SetMotionScriptsWhileDisabled(true)
     end
     local enter, leave = frame:GetScript("OnEnter"), frame:GetScript("OnLeave")
+    frame.tooltipBaseEnter, frame.tooltipBaseLeave = enter, leave
     frame:SetScript("OnEnter", function(self)
         if enter then
             enter(self)
@@ -254,14 +370,25 @@ function U.Tooltip(frame, title, text, width)
         end
         GameTooltip:Hide()
     end)
+    frame.tooltipEnter, frame.tooltipLeave = frame:GetScript("OnEnter"), frame:GetScript("OnLeave")
 end
 
 function U.Help(parent, title, x, y, description)
-    local help = U.Button(parent, "?", x, y, 28, 28, function(self)
-        self:GetScript("OnEnter")(self)
+    local help = pooled(parent, "help", function()
+        local button = CreateFrame("Button", nil, parent)
+        button.icon = button:CreateTexture(nil, "ARTWORK")
+        button.icon:SetAllPoints()
+        button.icon:SetTexture("Interface\\common\\help-i")
+        button:SetHighlightTexture("Interface\\common\\help-i", "ADD")
+        button:SetScript("OnClick", function(self)
+            self:GetScript("OnEnter")(self)
+        end)
+        return button
     end)
-    help.text:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
-    U.SingleLine(help.text, 22, 22, "CENTER")
+    help:SetPoint("TOPLEFT", x, -y)
+    help:SetSize(28, 28)
+    help:SetScript("OnEnter", nil)
+    help:SetScript("OnLeave", nil)
     U.Tooltip(help, title, description, 380)
     return help
 end
@@ -278,6 +405,7 @@ function U.Choice(parent, label, x, y, w, options, value, choose)
         end
         return CreateFrame("Button", nil, parent)
     end)
+    resetTooltip(dropdown)
     dropdown:SetPoint("TOPLEFT", x, -y)
     dropdown:SetSize(w, 32)
     -- Choice frames retain disabled state when released by another panel.

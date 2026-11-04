@@ -27,18 +27,7 @@ function P.Draw(ui, parent, state)
         local frame = CreateFrame("Frame", nil, parent)
         frame:SetAllPoints(parent)
         ui.profileFrame = frame
-        local edit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-        edit:SetPoint("TOPLEFT", 478, -34)
-        edit:SetSize(714, 36)
-        edit:SetAutoFocus(false)
-        edit:SetMaxLetters(40)
-        edit:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
-        edit:SetScript("OnEnterPressed", function(self)
-            self:ClearFocus()
-        end)
-        edit:SetScript("OnEscapePressed", function(self)
-            self:ClearFocus()
-        end)
+        local edit = U.Input(frame, 478, 34, 714, 36)
         ui.profileName = edit
     end
     local frame, profiles = ui.profileFrame, state.boostProfiles
@@ -62,7 +51,7 @@ function P.Draw(ui, parent, state)
     U.Text(frame, "Saved profiles · " .. #entries .. "/8", 0, 0, 20, T.gold, 420)
     ui.profileControls = { rows = {} }
     for index, entry in ipairs(entries) do
-        local row = U.Button(frame, "", 0, 48 + (index - 1) * 66, 416, 56, function()
+        local row = U.SelectButton(frame, "", 0, 48 + (index - 1) * 66, 416, 56, function()
             ui.selectedProfile = entry.id
             ui:Refresh()
         end, ui.selectedProfile == entry.id)

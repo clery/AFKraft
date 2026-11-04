@@ -177,7 +177,7 @@ test("Selecting equipment is free and upgrading uses the displayed quote", funct
     ui.selected, ui.recruiting, ui.gearSlot, ui.bagFilter = 1, false, 2, 0
     ui:SetTab("party")
     local weapon
-    for button in ui.panel._pool.button:EnumerateActive() do
+    for button in ui.panel._pool.selection:EnumerateActive() do
         if button:IsShown() and button._pool and button._pool.text then
             for label in button._pool.text:EnumerateActive() do
                 if label:GetText() == "Weapon" then

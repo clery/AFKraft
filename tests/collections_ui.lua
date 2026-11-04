@@ -23,7 +23,7 @@ test(
         ui:Refresh()
         assertTrue(ui.collectionProgress:GetText():find("Session hunt: 8 kills", 1, true) ~= nil)
         local hovered = false
-        for card in ui.panel._pool.button:EnumerateActive() do
+        for card in ui.panel._pool.selection:EnumerateActive() do
             if math.abs(card:GetWidth() - 244) < 0.1 then
                 local enter, leave = card:GetScript("OnEnter"), card:GetScript("OnLeave")
                 enter(card)

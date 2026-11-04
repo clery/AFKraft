@@ -73,6 +73,22 @@ The shell owns fullscreen, windowed, and compact layouts. A labeled navigation r
 
 `UI/AdventureBar.lua` presents the same account-wide progress in full and compact modes, including rate explanations and rank-payout feedback. Its tooltip distinguishes Adventure XP from hero experience.
 
+Shared controls in `UI/Widgets.lua` follow the same roles across panels:
+
+| Purpose | Component |
+| --- | --- |
+| Perform a command | `Button`: native panel button; gold for the main commit action |
+| Switch peer views | `Tab`: native top tabs, as used by Forge |
+| Select a row, card, or small set of choices | `SelectButton` with `Selected` for one shared selection treatment |
+| Enable a preference or protect an item | Native `Checkbox` |
+| Choose from a longer list | `Choice`: native radio dropdown |
+| Display a report or affix without an action | `Card`: a passive frame with optional tooltip |
+| Explain a system | `Help`: one native information icon and paragraph-spaced tooltip |
+| Enter a route or profile name | `Input`: native edit box with shared focus and sizing behavior |
+| Show health, XP, or progress | `Bar`: native status bar; combat nameplates retain client styling |
+
+Keep models, maps, talent nodes, and AceConfig settings specialized. Shared widgets own template fallbacks, pooled state reset, and tooltip lifecycle; panels own the commands and selected values.
+
 Management panels acquire frames and regions from Blizzard object pools because WoW frames cannot be destroyed. Reused buttons clear their previous content, and custom icons and labels are parented to the button so its background cannot cover them. Native gold frame borders, panel buttons, and modern dropdowns supply the shared WoW visual language. Shared widgets constrain single-line labels and use the primary button's existing font string. Capability fallbacks remain inside widgets or compatibility code.
 
 `UI/Atlas.lua` renders both continent maps using native map-art tiles, region highlighting, hover tooltips, and direct click travel. `Compatibility/Maps.lua` selects verified client/artwork profiles and resolves destinations from generated ownership rows; native lookup is the fallback when no matching profile exists. Color masks and hit regions share that partition, with hits restricted to land and reviewed inland water. Padded mask bounds are texture placement, not hit rectangles. Other client IDs are discovered from their own hierarchy. Locked regions remain inspectable. See [the map maintenance and porting guide](MAPS.md) for generation and client/continent integration. Inventory views sort index-bearing entries by effective power without mutating the underlying saved inventory.

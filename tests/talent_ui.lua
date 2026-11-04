@@ -92,7 +92,7 @@ test(
         ui:SetTab("party")
         assert(not ui.cards[1].detail:GetText():find("Train to grow", 1, true))
         local found
-        for _, kind in ipairs({ "button", "primary" }) do
+        for _, kind in ipairs({ "button", "primary", "selection" }) do
             local pool = ui.panel._pool[kind]
             if pool then
                 for button in pool:EnumerateActive() do

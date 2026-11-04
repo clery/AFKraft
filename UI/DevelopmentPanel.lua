@@ -110,7 +110,7 @@ function P.Draw(ui, parent, state)
         local controls = { buy = buy, refund = refund, choices = {} }
         for choiceIndex, choice in ipairs(branch.choices) do
             local chosen = quote.choice == choice.id
-            local control = U.Button(
+            local control = U.SelectButton(
                 parent,
                 "",
                 x + 16 + (choiceIndex - 1) * 194,

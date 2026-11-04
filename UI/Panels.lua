@@ -93,7 +93,7 @@ function P.GuideStep(s, selectedHero)
 end
 
 local function opportunityCard(parent, y, icon, title, detail, tooltip, action)
-    local card = U.Button(parent, "", 710, y, 586, 72, action)
+    local card = U.SelectButton(parent, "", 710, y, 586, 72, action)
     U.Begin(card)
     U.Icon(card, icon, 12, 18, 36):SetParent(card.content or card)
     card.titleText = U.SingleLine(text(card, title, 62, 10, 16, T.gold, 510), 510, 24)
@@ -392,7 +392,7 @@ function P.boosts(ui, p, s)
     for index, boost in ipairs(C.boosts) do
         local id = boost.id
         local x, y = ((index - 1) % 5) * 260, 62 + math.floor((index - 1) / 5) * 88
-        local tile = U.Button(p, "", x, y, 248, 76, function()
+        local tile = U.SelectButton(p, "", x, y, 248, 76, function()
             ui.selectedBoost = id
             ui:Refresh()
         end, selectedID == id)
@@ -784,7 +784,7 @@ function P.crafting(ui, p, s)
     text(p, "EQUIPMENT SLOT", 0, 39, 13, T.gold)
     for position, i in ipairs(C.equipmentSlots) do
         local name, id = C.slots[i], i
-        ui.craftControls.slots[i] = U.Button(
+        ui.craftControls.slots[i] = U.SelectButton(
             p,
             name,
             (position - 1) % 2 * 220,
@@ -800,12 +800,13 @@ function P.crafting(ui, p, s)
     end
     text(p, "MATERIAL", 480, 0, 11, T.gold)
     for i, id in ipairs(C.materialOrder) do
-        ui.craftControls.materials[id] = button(
+        ui.craftControls.materials[id] = U.SelectButton(
             p,
             C.materials[id] .. " · " .. s.materials[id],
             480,
             48 + (i - 1) * 64,
             310,
+            32,
             function()
                 ui.craftMaterial = id
                 ui:Refresh()
@@ -851,11 +852,11 @@ function P.crafting(ui, p, s)
     if heirloom and not s.recipes[slot] then
         text(p, "Recipe locked", 850, 285, 13, T.gold, 446)
     end
-    ui.craftControls.ordinary = button(p, "Ordinary", 0, 309, 205, function()
+    ui.craftControls.ordinary = U.SelectButton(p, "Ordinary", 0, 309, 205, 32, function()
         ui.craftHeirloom = false
         ui:Refresh()
     end, not heirloom)
-    ui.craftControls.heirloom = button(p, "Heirloom", 220, 309, 205, function()
+    ui.craftControls.heirloom = U.SelectButton(p, "Heirloom", 220, 309, 205, 32, function()
         ui.craftHeirloom = true
         ui:Refresh()
     end, heirloom)

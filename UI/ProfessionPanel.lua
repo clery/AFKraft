@@ -230,10 +230,19 @@ function P.Draw(ui, parent, state)
                 visible = visible + 1
                 local x = (visible - 1) % 3 * 428
                 local y = expanded and (128 + math.floor((visible - 1) / 3) * 56) or 128
-                local control = U.Button(frame, "", x, y, 406, expanded and 50 or 76, function()
-                    ui.professionEnchant = enchant.id
-                    ui:Refresh()
-                end, enchantID == enchant.id)
+                local control = U.SelectButton(
+                    frame,
+                    "",
+                    x,
+                    y,
+                    406,
+                    expanded and 50 or 76,
+                    function()
+                        ui.professionEnchant = enchant.id
+                        ui:Refresh()
+                    end,
+                    enchantID == enchant.id
+                )
                 U.Begin(control)
                 U.Icon(control, enchant.icon, 12, expanded and 7 or 12, expanded and 36 or 48)
                     :SetParent(control.content or control)

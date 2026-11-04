@@ -31,21 +31,11 @@ function R.Draw(ui, parent, state)
         frame = CreateFrame("Frame", nil, parent)
         frame:SetAllPoints(parent)
         ui.routeFrame = frame
-        local input = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-        input:SetPoint("TOPLEFT", 352, -98)
-        input:SetSize(550, 30)
-        input:SetAutoFocus(false)
-        input:SetMaxLetters(40)
+        local input = U.Input(frame, 352, 98, 550, 36)
         input:SetScript("OnTextChanged", function(self)
             if ui.routeDraft then
                 ui.routeDraft.name = self:GetText()
             end
-        end)
-        input:SetScript("OnEnterPressed", function(self)
-            self:ClearFocus()
-        end)
-        input:SetScript("OnEscapePressed", function(self)
-            self:ClearFocus()
         end)
         ui.routeNameInput = input
     end
@@ -104,15 +94,17 @@ function R.Draw(ui, parent, state)
     for index, route in ipairs(state.routes.templates) do
         local saved = route
         local selected = state.routes.selected == route.id and " · selected" or ""
-        ui.routeTemplates[route.id] = button(
+        ui.routeTemplates[route.id] = U.SelectButton(
             frame,
             route.name .. selected,
             0,
             254 + (index - 1) * 38,
             280,
+            30,
             function()
                 draft(ui, saved)
-            end
+            end,
+            ui.routeDraft and ui.routeDraft.id == route.id
         )
     end
     if not ui.routeDraft then

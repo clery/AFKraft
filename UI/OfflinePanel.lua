@@ -25,7 +25,7 @@ local function count(value, singular, plural)
 end
 
 local function card(parent, title, icon, x, y, headline, detail, tooltip)
-    local frame = U.Button(parent, "", x, y, 416, 190, function() end)
+    local frame = U.Card(parent, x, y, 416, 190)
     U.Begin(frame)
     local art = U.Icon(frame, icon, 16, 16, 36)
     art:SetParent(frame.content or frame)

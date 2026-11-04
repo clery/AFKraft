@@ -347,9 +347,7 @@ function UI:Refresh(redraw)
             button.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
             button.xp:Hide()
         end
-        if button.SetBackdropBorderColor then
-            button:SetBackdropBorderColor(unpack(i == self.selected and T.gold or T.line))
-        end
+        U.Selected(button, i == self.selected)
     end
     local points, _, cappedHero, routes = W.Panels.Opportunities(s)
     self.tabs.talents.notice:SetText(
@@ -376,12 +374,7 @@ function UI:Refresh(redraw)
     }, ":")
     for id, button in pairs(self.tabs) do
         local active = s.ui.tab == id or (id == "crafting" and s.ui.tab == "workshop")
-        button.text:SetTextColor(unpack(active and T.gold or T.text))
-        button.selection:SetShown(active)
-        button.fill:SetColorTexture(unpack(active and T.selected or T.panel))
-        if button.SetBackdropBorderColor then
-            button:SetBackdropBorderColor(unpack(active and T.gold or T.line))
-        end
+        U.Selected(button, active)
     end
     for _, entry in ipairs(tabs) do
         if entry[1] == s.ui.tab then
@@ -391,8 +384,7 @@ function UI:Refresh(redraw)
     for id, control in pairs(self.forgeTabs) do
         local active = id == "crafting" and s.ui.tab == "crafting"
             or s.ui.tab == "workshop" and id == (self.professionTab or "enchanting")
-        control.text:SetTextColor(unpack(active and T.gold or T.text))
-        control:SetBackdropBorderColor(unpack(active and T.gold or T.line))
+        U.Selected(control, active)
     end
     if s.ui.tab == "workshop" then
         self.section:SetText("Forge")
@@ -654,7 +646,7 @@ function W.CreateUI()
             U.Text(expanded, entry[3], 32, y, 12, T.muted, 204)
             y = y + 26
         end
-        local tab = U.Button(expanded, "", 24, y, 220, 38, function()
+        local tab = U.SelectButton(expanded, "", 24, y, 220, 38, function()
             ui:SetTab(id)
         end)
         tab.text:ClearAllPoints()
@@ -663,7 +655,6 @@ function W.CreateUI()
         U.SingleLine(tab.text, 172, 26)
         tab.text:SetText(entry[2])
         U.Icon(tab.content or tab, tabIcons[id], 12, 10, 20)
-        tab.selection = U.Rect(tab.content or tab, 3, 8, 3, 24, T.gold, 1, "OVERLAY")
         tab.notice = U.SingleLine(U.Text(tab, "", 42, 25, 10, T.gold), 170, 12)
         U.Tooltip(tab, entry[2], "Open " .. entry[2])
         ui.tabs[id] = tab
@@ -677,7 +668,7 @@ function W.CreateUI()
         { "research", "Specializations" },
     }) do
         local id = entry[1]
-        ui.forgeTabs[id] = U.Button(workspace, entry[2], (index - 1) * 244, 155, 228, 34, function()
+        ui.forgeTabs[id] = U.Tab(workspace, entry[2], (index - 1) * 244, 155, 228, 34, function()
             if id == "crafting" then
                 ui.selected = ui.professionHero or ui.selected
                 ui:SetTab("crafting")
@@ -712,7 +703,7 @@ function W.CreateUI()
     )
     for i = 1, 5 do
         local index = i
-        local card = U.Button(workspace, "", 0, 0, 249.6, 72, function()
+        local card = U.SelectButton(workspace, "", 0, 0, 249.6, 72, function()
             ui:SelectHero(index)
         end)
         card.text:Hide()

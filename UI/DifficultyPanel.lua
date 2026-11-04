@@ -39,16 +39,18 @@ function D.Draw(ui, parent, state)
     for tier = 0, difficulty.maxTier do
         local value = tier
         local x = tier * 108
-        ui.difficultyTiers[tier] = button(
+        ui.difficultyTiers[tier] = U.SelectButton(
             parent,
             tier == 0 and "Base" or "Tier " .. tier,
             x,
             130,
             98,
+            34,
             function()
                 ui.difficultyTier, ui.difficultyConfirm = value, false
                 ui:Refresh()
-            end
+            end,
+            tier == ui.difficultyTier
         )
         local recipes = {}
         for _, enchant in ipairs(C.enchants) do
@@ -169,7 +171,7 @@ function D.Draw(ui, parent, state)
         U.Text(parent, "No tier affixes", 0, 380, 14, T.muted, 1296)
     end
     for index, affix in ipairs(affixes) do
-        local card = button(parent, "", (index - 1) * 430, 370, 410, function() end)
+        local card = U.Card(parent, (index - 1) * 430, 370, 410, 34)
         U.Begin(card)
         U.Icon(card, affix.icon, 4, 1, 32):SetParent(card.content or card)
         U.Text(card, affix.name, 46, 8, 14, T.gold, 350)

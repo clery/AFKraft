@@ -106,7 +106,7 @@ function P.Draw(ui, parent, state)
         local source = profile and profile.sources[itemID]
         local verified = enabled and source and source.verified
         local count, guarantee = counters[itemID] or 0, profile and profile.guarantee or 0
-        local card = U.Button(parent, "", (index - 1) * 258, 150, 244, 190, function()
+        local card = U.SelectButton(parent, "", (index - 1) * 258, 150, 244, 190, function()
             ui.collectionPiece = itemID
             ui:Refresh()
         end, selected == itemID)
