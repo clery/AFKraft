@@ -73,7 +73,10 @@ function G.Prestige(state)
         state.prestiges = state.prestiges + 1
         state.prestigeStrength = strength + reward / 2
     end
-    G.Log(state, "A new chapter begins. Earned " .. reward .. " Legacy. Unspent Essence retained.")
+    G.Log(
+        state,
+        "A new chapter begins. Earned " .. reward .. " Heritage. Unspent Essence retained."
+    )
     G.Emit(state, "prestige")
     return true
 end

@@ -51,7 +51,7 @@ function R.Draw(ui, parent, state)
     )
     ui.routeBuy = button(
         frame,
-        state.routes.owned and "Planning learned" or "Learn · 1 Legacy",
+        state.routes.owned and "Planning learned" or "Learn · 1 Heritage",
         0,
         92,
         280,

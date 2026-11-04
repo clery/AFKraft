@@ -181,7 +181,7 @@ function P.adventure(ui, p, s)
     end)
     local branch, quote = P.DevelopmentOpportunity(s)
     local upgradeTitle, upgradeDetail =
-        "Development complete", "All three branches are at their rank cap."
+        "Growth complete", "All three branches are at their rank cap."
     if branch and quote then
         upgradeTitle = branch.name
             .. " rank "
@@ -211,14 +211,14 @@ function P.adventure(ui, p, s)
         upgradeTitle,
         upgradeDetail,
         (branch and branch.description or "Your permanent development board is complete.")
-            .. "\nOpen Development to compare every benefit before buying. Rank redistribution is free; learned abilities stay owned.",
+            .. "\nOpen Growth to compare every benefit before buying. Rank redistribution is free; learned abilities stay owned.",
         function()
             ui:SetTab("development")
         end
     )
     button(
         p,
-        s.prestigeUnlocked and "Legacy +" .. G.PrestigeReward(s) or "Explore Legacy",
+        s.prestigeUnlocked and "Heritage +" .. G.PrestigeReward(s) or "Explore Heritage",
         710,
         173,
         160,
@@ -319,8 +319,8 @@ function P.boosts(ui, p, s)
             control,
             spec.name .. " automation",
             capability == "onCooldown"
-                    and "Permanent unlock: automatically activate an equipped boost when ready in combat. Learn once for 1 Legacy."
-                or "Permanent unlock: boss, ally health, safe farming and frontier triggers. Requires On cooldown. Learn once for 2 Legacy."
+                    and "Permanent unlock: automatically activate an equipped boost when ready in combat. Learn once for 1 Heritage."
+                or "Permanent unlock: boss, ally health, safe farming and frontier triggers. Requires On cooldown. Learn once for 2 Heritage."
         )
         ui.boostAutomationPurchases[capability] = control
     end
@@ -380,7 +380,7 @@ function P.boosts(ui, p, s)
     end)
     local alternate = button(
         p,
-        "Learn · " .. boost.legacyCost .. " Legacy",
+        "Learn · " .. boost.legacyCost .. " Heritage",
         190,
         detailY + 84,
         160,
@@ -533,7 +533,7 @@ function P.RefreshBoosts(ui, s, message)
             local owned = automation.owned[capability]
             control.text:SetText(
                 owned and (spec.name .. " · Learned")
-                    or ("Learn " .. spec.name .. " · " .. spec.cost .. " Legacy")
+                    or ("Learn " .. spec.name .. " · " .. spec.cost .. " Heritage")
             )
             U.Enabled(
                 control,
@@ -799,7 +799,7 @@ function P.crafting(ui, p, s)
         craft,
         "Craft targeted equipment",
         (preview and G.ItemDescription(preview, h) .. "\n\n" or "")
-            .. "Gold and idle materials pay the full cost shown above. Heirloom recipes must first be unlocked in Legacy."
+            .. "Gold and idle materials pay the full cost shown above. Heirloom recipes must first be unlocked in Heritage."
     )
     if heirloom and not s.recipes[slot] then
         text(p, "Recipe locked", 850, 285, 13, T.gold, 446)
@@ -813,7 +813,7 @@ function P.crafting(ui, p, s)
         ui:Refresh()
     end, heirloom)
     if heirloom and not s.recipes[slot] then
-        button(p, "View recipe in Legacy", 850, 325, 446, function()
+        button(p, "View recipe in Heritage", 850, 325, 446, function()
             ui.legacySlot = slot
             ui:SetTab("legacy")
         end)
@@ -831,7 +831,7 @@ function P.legacy(ui, p, s)
     text(p, ui.confirmPrestige and "REVIEW YOUR NEW CHAPTER" or "CHAPTER REWARDS", 0, 0, 24, T.gold)
     text(
         p,
-        s.legacy .. " Legacy available  ·  " .. s.prestiges .. " rewarded chapters",
+        s.legacy .. " Heritage available  ·  " .. s.prestiges .. " rewarded chapters",
         0,
         44,
         16,
@@ -853,7 +853,7 @@ function P.legacy(ui, p, s)
             p,
             "+"
                 .. reward
-                .. " Legacy  ·  Balance after reset: "
+                .. " Heritage  ·  Balance after reset: "
                 .. (s.legacy + reward)
                 .. "\nPermanent party bonus: +"
                 .. currentBonus
@@ -869,7 +869,7 @@ function P.legacy(ui, p, s)
         text(p, "KEEP", 0, 254, 14, T.gold)
         text(
             p,
-            "Hero identities and classes; talents, permanent talent points and Mastery; learned boosts, loadout and cooldowns; heirlooms; recipes, discoveries and collection talents; Legacy; Adventure rank and partial XP; unspent Essence.",
+            "Hero identities and classes; talents, permanent talent points and Mastery; learned boosts, loadout and cooldowns; heirlooms; recipes, discoveries and collection talents; Heritage; Adventure rank and partial XP; unspent Essence.",
             0,
             287,
             17,
@@ -920,13 +920,13 @@ function P.legacy(ui, p, s)
         "New chapter",
         624,
         138,
-        "Start a new run to earn Legacy and increase your permanent party bonus by 2 percentage points per Legacy earned.\n\nReview the rewards, retained progress and losses before confirming. The review button does not reset anything."
+        "Start a new run to earn Heritage and increase your permanent party bonus by 2 percentage points per Heritage earned.\n\nReview the rewards, retained progress and losses before confirming. The review button does not reset anything."
     )
 
     text(
         p,
         s.prestigeUnlocked
-                and ("Available now: +" .. reward .. " Legacy  ·  Party bonus +" .. currentBonus .. "% to +" .. nextBonus .. "%")
+                and ("Available now: +" .. reward .. " Heritage  ·  Party bonus +" .. currentBonus .. "% to +" .. nextBonus .. "%")
             or "Unlock: defeat a level 8 milestone boss.",
         0,
         190,
@@ -937,7 +937,7 @@ function P.legacy(ui, p, s)
     if s.prestigeUnlocked and reward == 0 then
         text(
             p,
-            "No Legacy or bonus increase this run. Defeat harder milestone bosses to earn a reward.",
+            "No Heritage or bonus increase this run. Defeat harder milestone bosses to earn a reward.",
             0,
             235,
             15,
@@ -959,7 +959,7 @@ function P.legacy(ui, p, s)
         "Heirlooms",
         1258,
         138,
-        "Heirlooms scale with hero level and survive chapter resets.\n\nUnlocking a recipe immediately spends 1 Legacy, then opens Crafting. Crafting uses gold and idle materials. Unlocking a recipe does not reset your run."
+        "Heirlooms scale with hero level and survive chapter resets.\n\nUnlocking a recipe immediately spends 1 Heritage, then opens Crafting. Crafting uses gold and idle materials. Unlocking a recipe does not reset your run."
     )
 
     for position, i in ipairs(C.equipmentSlots) do
@@ -967,7 +967,7 @@ function P.legacy(ui, p, s)
         local known = s.recipes[i]
         local recipe = button(
             p,
-            (known and "Craft · " or "Unlock · ") .. name .. (known and "" or " · 1 Legacy"),
+            (known and "Craft · " or "Unlock · ") .. name .. (known and "" or " · 1 Heritage"),
             710 + (position - 1) % 2 * 302,
             190 + math.floor((position - 1) / 2) * 40,
             285,
@@ -983,7 +983,7 @@ function P.legacy(ui, p, s)
             recipe,
             name .. " heirloom recipe",
             known and "Open Crafting to make this heirloom for the selected hero."
-                or "Spend 1 Legacy to permanently unlock this recipe, then open Crafting."
+                or "Spend 1 Heritage to permanently unlock this recipe, then open Crafting."
         )
     end
     text(p, "COLLECTION TALENTS", 0, 350, 14, T.gold)
@@ -1016,7 +1016,7 @@ function P.legacy(ui, p, s)
         )
         local learn = button(
             p,
-            cost and "Learn · " .. cost .. " Legacy" or "Fully learned",
+            cost and "Learn · " .. cost .. " Heritage" or "Fully learned",
             420,
             y,
             220,
@@ -1032,7 +1032,7 @@ function P.legacy(ui, p, s)
             talent.condition
                 .. " only. Each rank increases collection-piece drop chances by "
                 .. math.floor(C.collectionTalentBonus * 100 + 0.5)
-                .. "% of their base chance. Does not affect equipment loot.\n\nLearned ranks survive both resets. Purchases spend Legacy immediately. Every kill rolls independently; failures never increase future odds."
+                .. "% of their base chance. Does not affect equipment loot.\n\nLearned ranks survive both resets. Purchases spend Heritage immediately. Every kill rolls independently; failures never increase future odds."
         )
     end
 end

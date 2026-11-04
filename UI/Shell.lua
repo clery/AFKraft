@@ -12,10 +12,10 @@ local tabs = {
     { "boosts", "Commander", "STRATEGY" },
     { "profiles", "Profiles" },
     { "loot", "Loot rules" },
-    { "development", "Development", "PROGRESSION" },
+    { "development", "Growth", "PROGRESSION" },
     { "collections", "Collections" },
-    { "legacy", "Legacy" },
-    { "difficulty", "Prestige+" },
+    { "legacy", "Heritage" },
+    { "difficulty", "Transcendence" },
 }
 local tabIcons = {
     adventure = "INV_Misc_Map_01",
@@ -338,7 +338,7 @@ function UI:Refresh(redraw)
     self.tabs.party.notice:SetText(#s.heroes < W.Game.CompanionSlots(s) and "Recruit" or "")
     self.tabs.atlas.notice:SetText(routes > 0 and (routes .. " destinations") or "")
     self.tabs.legacy.notice:SetText(
-        s.prestigeUnlocked and ("+" .. W.Game.PrestigeReward(s) .. " Legacy") or ""
+        s.prestigeUnlocked and ("+" .. W.Game.PrestigeReward(s) .. " Heritage") or ""
     )
     local nextLesson = W.Tutorial.NextLesson(s)
     local guidance = table.concat({
@@ -391,7 +391,7 @@ function UI:Refresh(redraw)
         s.ui.tab == "adventure" and "Your company’s journey through Azeroth"
             or s.ui.tab == "party" and "Select a companion to manage equipment and growth"
             or s.ui.tab == "talents" and "Shape a companion’s talents and combat priorities"
-            or s.ui.tab == "crafting" and "Choose a hero, equipment slot and material, then craft the item for the cost shown.\n\nCrafted items enter your shared inventory. Equip them in Party.\n\nHeirlooms scale with hero level and survive resets. Unlock their recipes in Legacy first."
+            or s.ui.tab == "crafting" and "Choose a hero, equipment slot and material, then craft the item for the cost shown.\n\nCrafted items enter your shared inventory. Equip them in Party.\n\nHeirlooms scale with hero level and survive resets. Unlock their recipes in Heritage first."
             or s.ui.tab == "legacy" and "Permanent rewards, heirlooms and chapter resets"
             or s.ui.tab == "loot" and "Choose what to keep from future drops"
             or s.ui.tab == "boosts" and "Permanent abilities for temporary party support"
@@ -559,7 +559,7 @@ function W.CreateUI()
     for i, currency in ipairs({
         { "essence", "ESSENCE" },
         { "gold", "GOLD" },
-        { "legacy", "LEGACY" },
+        { "legacy", "HERITAGE" },
     }) do
         local x = 810 + (i - 1) * 198
         U.Text(expanded, currency[2], x + 12, 23, 12, T.muted, 160)
@@ -571,7 +571,7 @@ function W.CreateUI()
         local descriptions = {
             essence = "Earn Essence from real WoW activity through Adventure XP ranks. Invest it in permanent party development and learned Commander abilities. Hero levels and routine equipment never require Essence.",
             gold = "Your heroes earn gold from idle battles. Gold and idle materials fund crafting and equipment improvements. This is separate from your WoW character’s gold.",
-            legacy = "Earn Legacy by beginning a new chapter after unlocking resets. Spend it on permanent heirloom recipes. Review reset consequences in Legacy.",
+            legacy = "Earn Heritage by beginning a new chapter after unlocking resets. Spend it on permanent heirloom recipes. Review reset consequences in Heritage.",
         }
         U.Tooltip(help, currency[2], descriptions[currency[1]])
     end

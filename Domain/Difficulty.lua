@@ -135,7 +135,10 @@ function G.DifficultyVictory(state, battle)
     difficulty.unlocked, difficulty.cycleComplete = true, true
     difficulty.maxTier = math.max(difficulty.maxTier, math.min(LIMIT, state.tier + 1))
     if first then
-        G.Log(state, "Prestige+ ready. Review a new difficulty and permanent Inheritance rewards.")
+        G.Log(
+            state,
+            "Transcendence ready. Review a new difficulty and permanent Inheritance rewards."
+        )
     end
     return true
 end
@@ -182,7 +185,7 @@ function G.PrestigePlusPreview(state, targetTier)
         inheritance = gain,
         retained = {
             "Heroes, talents, earned points and Mastery",
-            "Adventure rank, partial XP, Essence and Legacy",
+            "Adventure rank, partial XP, Essence and Heritage",
             "Heirlooms, collection records and permanent purchases",
             "Boost ownership, cooldowns, rules, profiles and route templates",
             "Profession ownership, learned recipes, specializations and allocations",
@@ -221,7 +224,7 @@ function G.PrestigePlus(state, targetTier)
     state.tier = targetTier
     G.Log(
         state,
-        "Prestige+ "
+        "Transcendence "
             .. targetTier
             .. " begins. +"
             .. preview.inheritance

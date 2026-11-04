@@ -276,7 +276,7 @@ function G.BuyCollectionTalent(state, id)
         return false, "This collection talent is fully learned."
     end
     if state.legacy < cost then
-        return false, "Not enough Legacy."
+        return false, "Not enough Heritage."
     end
     state.legacy = state.legacy - cost
     state.collectionTalents[id] = rank + 1

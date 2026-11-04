@@ -174,7 +174,7 @@ function G.BuyRoutes(state)
         return false, "Route planning is already learned."
     end
     if state.legacy < 1 then
-        return false, "Route planning costs 1 Legacy."
+        return false, "Route planning costs 1 Heritage."
     end
     state.legacy = state.legacy - 1
     state.routes.owned = true
@@ -286,7 +286,7 @@ end
 function G.RouteStatus(state)
     local routes = state.routes
     if not routes.owned then
-        return false, "Learn route planning for 1 Legacy."
+        return false, "Learn route planning for 1 Heritage."
     end
     if not routes.enabled then
         return false, "Route travel disabled."

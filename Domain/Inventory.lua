@@ -542,7 +542,7 @@ function G.Craft(state, index, slot, material, heirloom)
         return false, "Choose a hero, slot, and material."
     end
     if heirloom and not state.recipes[slot] then
-        return false, "Unlock this heirloom recipe with Legacy first."
+        return false, "Unlock this heirloom recipe with Heritage first."
     end
     local cost = G.Cost(state, hero, heirloom)
     if state.gold < cost.gold or state.materials[material] < cost.material then
@@ -601,7 +601,7 @@ function G.UnlockRecipe(state, slot)
         return false, "Recipe already known."
     end
     if state.legacy < 1 then
-        return false, "Earn Legacy by beginning a new chapter."
+        return false, "Earn Heritage by beginning a new chapter."
     end
     state.legacy = state.legacy - 1
     state.recipes[slot] = true

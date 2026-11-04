@@ -62,21 +62,21 @@ Each hero has ten wearable equipment slots: weapon, armor, head, back, shoulders
 
 Each purchased enhancement adds 10% of the item’s base stats. Heirlooms use the same item identities with separate idle level scaling. WoW item requirements are mapped to idle requirements. Armor follows original class proficiencies, including lighter armor and plate for warriors/paladins or mail for hunters/shamans unlocking at idle level 40. Heirlooms still require the right armor proficiency. Incompatible equipped armor returns to shared inventory on load or prestige. Weapon proficiencies remain simplified. Loot pools and drop rates are adapted for the minigame. See [item sources and stat rules](Content/ITEMS.md) for the catalog, calculations, and currently unsupported item effects.
 
-In **Party**, select an equipment slot to compare items and preview the cost of an upgrade. Choose **Upgrade** to purchase it. Heroes gain levels naturally through idle combat up to 60; Mastery unlocks at 20. Open Development to invest Essence in permanent Might, Resolve and Provisioning ranks, with free redistribution.
+In **Party**, select an equipment slot to compare items and preview the cost of an upgrade. Choose **Upgrade** to purchase it. Heroes gain levels naturally through idle combat up to 60; Mastery unlocks at 20. Open Growth to invest Essence in permanent Might, Resolve and Provisioning ranks, with free redistribution.
 
 Crafting turns gold and idle materials into targeted equipment. Enhancement, enchantment and titanforging also use gold/materials rather than Essence. Configure salvage rules in the minigame to handle unwanted loot and protect items you want to keep. Talents and conditional ability priorities let you refine each hero's role as your party develops.
 
 Talent selections and earned points survive prestige, and respecs stay free. Hero levels stop at 60. Personal level records award a point every two levels, starting at level 1; repeating those levels never awards points twice. At level 20, permanent **Mastery** unlocks: victories at or above that hero's hardest completed encounter level grant Mastery XP, with double XP for bosses. Every Mastery rank grants another permanent talent point, up to the tree's 48-point total. The first rank costs 100 XP, and each later rank costs 50 more. Mastery continues when character levels are capped. The Talents view shows both tracks.
 
-In **Legacy**, learn permanent collection talents: **Fieldcraft** improves collection-piece chances from eligible outdoor kills, and **Relic Hunter** improves them inside eligible dungeons. Each has three ranks, provisionally costing 1, 2, then 3 Legacy. Each rank adds 10% of the base chance (5% becomes 6.5% at rank three), rather than ten percentage points. They affect collection pieces only, survive both resets, and never accumulate failed-roll progress or guarantee a discovery. Verified piece tooltips show the effective chance and active/inactive talent conditions. Costs and bonuses still need balancing.
+In **Heritage**, learn permanent collection talents: **Fieldcraft** improves collection-piece chances from eligible outdoor kills, and **Relic Hunter** improves them inside eligible dungeons. Each has three ranks, provisionally costing 1, 2, then 3 Heritage. Each rank adds 10% of the base chance (5% becomes 6.5% at rank three), rather than ten percentage points. They affect collection pieces only, survive both resets, and never accumulate failed-roll progress or guarantee a discovery. Verified piece tooltips show the effective chance and active/inactive talent conditions. Costs and bonuses still need balancing.
 
 ## Prestige and heirlooms
 
-Defeat a **level 8 milestone boss** to unlock prestige. Open **Legacy** to preview the rewards and reset consequences before confirming.
+Defeat a **level 8 milestone boss** to unlock prestige. Open **Heritage** to preview the rewards and reset consequences before confirming.
 
 Prestige starts a new run: hero levels reset, ordinary equipment and purchased run upgrades are lost, and gold, zone materials, and destination progress start over. Your heroes keep their identities, classes, talents, earned talent points, and Mastery. Lower-level encounters after a reset do not grant Mastery XP.
 
-Adventure rank, partial Adventure XP, unspent Essence, discoveries, unlocked recipes, Legacy currency, and heirlooms carry forward. Spent Essence is not refunded. Heirlooms scale with a hero's current idle level, giving future runs a useful foundation.
+Adventure rank, partial Adventure XP, unspent Essence, discoveries, unlocked recipes, Heritage currency, and heirlooms carry forward. Spent Essence is not refunded. Heirlooms scale with a hero's current idle level, giving future runs a useful foundation.
 
 ## Coming back later
 
@@ -92,7 +92,7 @@ Use the top-right controls to switch between **compact**, **windowed**, and **fu
 
 Open **Settings → AddOns → WoWIdle** to adjust display preferences, window locking, the minimap button, chat announcements, floating combat text, and audio. Preferences are saved account-wide and apply immediately. Loot rules remain in the minigame.
 
-To test a fresh start, open **Settings → AddOns → WoWIdle → New adventure** and choose **Reset all adventure progress**. Confirming permanently erases the account-wide adventure, including Legacy and heirlooms, and starts with one hero and the starter guide. Display and audio preferences are kept.
+To test a fresh start, open **Settings → AddOns → WoWIdle → New adventure** and choose **Reset all adventure progress**. Confirming permanently erases the account-wide adventure, including Heritage and heirlooms, and starts with one hero and the starter guide. Display and audio preferences are kept.
 
 Audio can be muted entirely or by category, including combat, encounters, progression, loot, and travel. Sounds play only while the adventure window is visible, use WoW's sound-effects volume, and stay silent during offline catch-up.
 

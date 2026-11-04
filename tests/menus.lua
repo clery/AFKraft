@@ -77,11 +77,11 @@ test("Locked chapters stay explorable and heirloom links preserve the chosen slo
     ui:SetTab("crafting")
     click(findButton(ui, "Heirloom"))
     assertTrue(ui.craftHeirloom)
-    click(findButton(ui, "View recipe in Legacy"))
+    click(findButton(ui, "View recipe in Heritage"))
     assertEquals("legacy", state.ui.tab)
     assertEquals(3, ui.legacySlot)
     state.legacy = 1
-    click(findButton(ui, "Unlock · Head · 1 Legacy"))
+    click(findButton(ui, "Unlock · Head · 1 Heritage"))
     assertTrue(state.recipes[3])
     assertEquals(0, state.legacy)
     assertEquals("crafting", state.ui.tab)
@@ -102,7 +102,7 @@ test(
         assertTrue(before ~= ui.tabs.talents.notice:GetText())
         state.prestigeUnlocked, state.runBest = true, 9
         ui:Refresh(false)
-        assertEquals("+2 Legacy", ui.tabs.legacy.notice:GetText())
+        assertEquals("+2 Heritage", ui.tabs.legacy.notice:GetText())
         ui:SetTab("loot")
         assertFalse(ui.scene.frame:IsShown())
         assertFalse(ui.cards[1]:IsShown())

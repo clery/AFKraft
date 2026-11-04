@@ -275,7 +275,7 @@ function P.Draw(ui, parent, state)
     if #legacy > 0 then
         U.Help(
             parent,
-            "Legacy collection bonuses",
+            "Earlier collection bonuses",
             900,
             500,
             string.format(

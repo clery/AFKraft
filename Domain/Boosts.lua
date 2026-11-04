@@ -55,12 +55,12 @@ function G.BuyBoost(state, id, currency)
     currency = currency or "essence"
     local cost = currency == "essence" and boost.cost or currency == "legacy" and boost.legacyCost
     if not cost then
-        return false, "Choose Essence or Legacy to learn this boost."
+        return false, "Choose Essence or Heritage to learn this boost."
     end
     if state[currency] < cost then
         return false,
             "Not enough "
-                .. (currency == "essence" and "Essence" or "Legacy")
+                .. (currency == "essence" and "Essence" or "Heritage")
                 .. " to learn this boost."
     end
     state[currency] = state[currency] - cost
@@ -214,7 +214,7 @@ function G.BuyBoostAutomation(state, capability)
         return false, "Learn on-cooldown automation first."
     end
     if state[unlock.currency] < unlock.cost then
-        return false, "Not enough Legacy to learn this automation capability."
+        return false, "Not enough Heritage to learn this automation capability."
     end
     state[unlock.currency] = state[unlock.currency] - unlock.cost
     automation.owned[capability] = true

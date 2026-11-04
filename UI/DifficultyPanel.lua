@@ -15,7 +15,7 @@ function D.Draw(ui, parent, state)
     U.Text(parent, "DIFFICULTY", 0, 0, 22, T.gold, 1296)
     U.Help(
         parent,
-        "Prestige+",
+        "Transcendence",
         1258,
         0,
         "Choose a difficulty and inspect its modifiers, affixes and Inheritance reward.\n\nA deeper reset rebuilds your run. Review what is kept and rebuilt before confirming.\n\nEssence and real-activity Adventure XP are unchanged by difficulty."
@@ -102,7 +102,7 @@ function D.Draw(ui, parent, state)
         U.Text(parent, table.concat(preview.rebuilt, "\n"), 670, 320, 15, T.text, 590)
         ui.difficultyExecute = button(
             parent,
-            "Begin Prestige+ " .. selected,
+            "Begin Transcendence " .. selected,
             670,
             576,
             380,
@@ -125,7 +125,7 @@ function D.Draw(ui, parent, state)
     local modifiers = G.DifficultyModifiers({ tier = selected, difficulty = difficulty })
     U.Text(
         parent,
-        "Selected: " .. (selected == 0 and "Base adventure" or "Prestige+ " .. selected),
+        "Selected: " .. (selected == 0 and "Base adventure" or "Transcendence " .. selected),
         0,
         236,
         20,

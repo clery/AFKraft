@@ -172,7 +172,7 @@ local function equipment(ui, p, s, hero, index)
     U.Tooltip(
         development,
         "Permanent party development · Equipment stats",
-        "Heroes earn levels naturally in idle combat without paid gates. Essence invests in permanent Might, Resolve and Provisioning ranks; redistribute ranks freely in Development.\n\n"
+        "Heroes earn levels naturally in idle combat without paid gates. Essence invests in permanent Might, Resolve and Provisioning ranks; redistribute ranks freely in Growth.\n\n"
             .. table.concat(attributeLines, "\n")
     )
 

@@ -65,13 +65,13 @@ function Tutorial.NextLesson(state)
         state,
         "lessonLegacy",
         "legacy",
-        "Legacy is ready. Review the reset preview before beginning a new chapter. Talents, Mastery, owned tools and unspent Essence stay with your company.",
+        "Heritage is ready. Review the reset preview before beginning a new chapter. Talents, Mastery, owned tools and unspent Essence stay with your company.",
         state.prestigeUnlocked and state.prestiges == 0 and G.PrestigeReward(state) > 0
     ) or lesson(
         state,
         "lessonAutomation",
         "boosts",
-        "Spend Legacy in Commander to learn automation once. Enable the global toggle and this boost's Auto-cast, then choose On cooldown or a condition. The waiting reason explains each decision.",
+        "Spend Heritage in Commander to learn automation once. Enable the global toggle and this boost's Auto-cast, then choose On cooldown or a condition. The waiting reason explains each decision.",
         owned
             and not automation.enabled
             and (automation.owned.onCooldown or state.legacy >= C.boostAutomation.onCooldown.cost)
@@ -122,13 +122,13 @@ function Tutorial.NextLesson(state)
         state,
         "lessonResearch",
         "workshop",
-        "Profession specializations are unlocked. Successful paid work earns separate profession points. Your saved allocation plan survives Prestige+ and reactivates as work ranks rebuild.",
+        "Profession specializations are unlocked. Successful paid work earns separate profession points. Your saved allocation plan survives Transcendence and reactivates as work ranks rebuild.",
         professions.research and not specialized
     ) or lesson(
         state,
         "lessonPrestigePlus",
         "difficulty",
-        "Prestige+ is ready. Review a deeper reset and an unlocked difficulty. Permanent tools remain; levels, ordinary gear, resources and profession work rebuild. Inheritance rewards each completed tier once.",
+        "Transcendence is ready. Review a deeper reset and an unlocked difficulty. Permanent tools remain; levels, ordinary gear, resources and profession work rebuild. Inheritance rewards each completed tier once.",
         state.difficulty.unlocked and state.difficulty.ascensions == 0
     )
 end

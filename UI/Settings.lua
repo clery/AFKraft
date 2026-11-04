@@ -90,11 +90,11 @@ function W.RegisterSettings()
             reset = {
                 type = "execute",
                 name = "Reset all adventure progress…",
-                desc = "Permanently erase heroes, equipment, currencies, Adventure XP, Legacy, recipes, discoveries and destination progress. This is a full reset, not a new chapter.",
+                desc = "Permanently erase heroes, equipment, currencies, Adventure XP, Heritage, recipes, discoveries and destination progress. This is a full reset, not a new chapter.",
                 order = 2,
                 width = "full",
                 confirm = true,
-                confirmText = "Erase ALL account-wide WoWIdle progress? Heroes, equipment, gold, materials, Essence, Adventure XP, Legacy, heirlooms, recipes and discoveries will be lost. This cannot be undone. Display and audio preferences are kept.",
+                confirmText = "Erase ALL account-wide WoWIdle progress? Heroes, equipment, gold, materials, Essence, Adventure XP, Heritage, heirlooms, recipes and discoveries will be lost. This cannot be undone. Display and audio preferences are kept.",
                 func = function()
                     W.ResetAdventure()
                 end,

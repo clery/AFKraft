@@ -113,7 +113,7 @@ test("Adventure cards preview affordable development without spending", function
     s.development.ranks = { might = 10, resolve = 10, provisioning = 10 }
     s.development.invested, s.essence = 69300, 0
     ui:Refresh(false)
-    assertEquals("Development complete", ui.adventureDevelopment.titleText:GetText())
+    assertEquals("Growth complete", ui.adventureDevelopment.titleText:GetText())
     assertTrue(G.BeginHuntSession(s, W.Client.Now()))
     assertTrue(G.AdventureXP(s, 100, "quest", "Activity fixture"))
     ui:Refresh(false)
