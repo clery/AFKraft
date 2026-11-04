@@ -146,9 +146,9 @@ class MapMasks(unittest.TestCase):
             "western_plaguelands": [(590, 280), (600, 300)],
             "eastern_plaguelands": [(640, 280), (700, 300), (755, 250)],
             "alterac": [(610, 337), (620, 342)],
-            "hillsbrad": [(596, 360), (616, 363)],
+            "hillsbrad": [(555, 345), (560, 360), (578, 350), (596, 360), (616, 363)],
             "tirisfal": [(534, 289)],
-            "silverpine": [(520, 350), (550, 350)],
+            "silverpine": [(520, 350), (530, 350), (530, 365)],
             "hinterlands": [(650, 350)],
         }.items():
             for x, y in points:
