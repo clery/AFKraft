@@ -10,7 +10,7 @@ local function workshop(level)
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")
     local hero = s.heroes[1]
-    hero.level = level or 50
+    hero.level = level or 60
     W.Game.TalentProgress(hero)
     local item = W.Game.CraftItem(hero, 1, false)
     item.uid = s.nextItem

@@ -64,6 +64,7 @@ test(
         local G = W.Game
         assertTrue(W.Tutorial.NextLesson(s) == nil)
         s.essence = 30
+        s.professions.bestLevel = 22
         ui:Refresh(false)
         assertEquals("lessonBoost", W.Tutorial.NextLesson(s).key)
         assertEquals(ui.tabs.boosts, ui.guideTarget)
@@ -72,6 +73,7 @@ test(
         assertFalse(s.guide.dismissed)
         assertTrue(G.BuyBoost(s, "battleOrders"))
         s.legacy, s.prestigeUnlocked, s.prestiges = 3, true, 1
+        s.professions.bestLevel = 45
         assertEquals("lessonAutomation", W.Tutorial.NextLesson(s).key)
         ui:Refresh(false)
         HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
@@ -81,6 +83,7 @@ test(
         ui:Refresh(false)
         HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
         assertTrue(s.guide.lessonProfiles)
+        s.difficulty.unlocked, s.difficulty.maxTier = true, 3
         assertEquals("lessonRoutes", W.Tutorial.NextLesson(s).key)
         ui:Refresh(false)
         HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
@@ -123,10 +126,10 @@ test(
         h.level, h.rank = 30, 7
         G.TalentProgress(h)
         acknowledge("lessonEnchanting")
-        h.level, h.rank = 40, 9
+        h.level, h.rank = 50, 12
         G.TalentProgress(h)
         acknowledge("lessonTitanforging")
-        h.level, h.rank = 50, 12
+        h.level, h.rank = 60, 15
         G.TalentProgress(h)
         acknowledge("lessonResearch")
         s.difficulty.unlocked, s.difficulty.maxTier = true, 1

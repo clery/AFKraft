@@ -11,6 +11,7 @@ test("Route editor drafts steps, saves, selects and pauses independently", funct
     W.Initialize()
     local G, ui = W.Game, W.UI
     local state = G.New(W.Client.Now())
+    state.difficulty.unlocked, state.difficulty.maxTier = true, 3
     G.AddHero(state, "WARRIOR")
     state.legacy, state.guide.dismissed = 1, true
     state.ui.compact = false
@@ -52,6 +53,7 @@ test("Route editor configures material stock and outdoor discovery milestones", 
     local W = WoWIdle
     local G, U, ui = W.Game, W.Widgets, W.UI
     local s = G.New(W.Client.Now())
+    s.difficulty.unlocked, s.difficulty.maxTier = true, 3
     G.AddHero(s, "WARRIOR")
     s.legacy, s.guide.dismissed = 1, true
     W.state = s

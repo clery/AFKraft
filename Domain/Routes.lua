@@ -173,6 +173,10 @@ function G.BuyRoutes(state)
     if state.routes.owned then
         return false, "Route planning is already learned."
     end
+    local hint = G.FeatureHint(state, "routes")
+    if hint then
+        return false, hint
+    end
     if state.legacy < 1 then
         return false, "Route planning costs 1 Heritage."
     end

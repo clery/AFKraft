@@ -10,6 +10,7 @@ end
 
 local function party()
     local s = G.New(0)
+    s.professions.bestLevel = 60
     G.AddHero(s, "WARRIOR")
     s.essence, s.legacy = 60, 3
     assert(G.BuyBoost(s, "battleOrders"))
@@ -376,6 +377,43 @@ case("Enabling a boost supplies on-cooldown behavior without replacing saved con
     assert(G.ConfigureBoostAutomation(s, "battleOrders", "enabled", false))
     assert(G.ConfigureBoostAutomation(s, "battleOrders", "enabled", true))
     assert(config.mode == "boss")
+end)
+
+case("Convenience unlocks require earned milestones and never charge early", function()
+    local s = G.New(0)
+    assert(G.AddHero(s, "WARRIOR"))
+    s.legacy = 100
+    assert(not G.BuyBoost(s, "battleOrders"))
+    assert(not G.BuyBoost(s, "battleOrders", "legacy"))
+    s.professions.bestLevel = 22
+    assert(G.BuyBoost(s, "battleOrders", "legacy"))
+    s.legacy = 100
+    s.clock = 1000000
+    for _, level in ipairs({ 1, 44 }) do
+        s.professions.bestLevel = level
+        assert(not G.BuyBoostAutomation(s, "onCooldown"))
+        assert(s.legacy == 100)
+    end
+    s.heroes[1].level = 45
+    assert(G.BuyBoostAutomation(s, "onCooldown"))
+    assert(not G.BuyBoostAutomation(s, "conditional") and s.legacy == 99)
+    s.professions.bestLevel = 60
+    assert(G.BuyBoostAutomation(s, "conditional"))
+    s.difficulty.unlocked, s.difficulty.maxTier = true, 2
+    assert(not G.BuyRoutes(s) and s.legacy == 97)
+    s.difficulty.maxTier = 3
+    assert(G.BuyRoutes(s) and s.legacy == 96)
+    assert(not G.UnlockRecipe(s, 1) and s.legacy == 96)
+    s.difficulty.maxTier = 4
+    assert(G.UnlockRecipe(s, 1) and s.legacy == 95)
+    s = assert(G.Load(G.Copy(s), 0))
+    s.heroes[1].level, s.professions.bestLevel = 1, 1
+    s.difficulty.maxTier = 0
+    assert(not G.FeatureHint(s, "onCooldown"))
+    assert(not G.FeatureHint(s, "conditional"))
+    assert(not G.FeatureHint(s, "routes"))
+    assert(G.BuyBoost(s, "ironResolve", "legacy"))
+    assert(G.UnlockRecipe(s, 2)) -- Grandfather the whole heirloom feature for existing owners.
 end)
 
 return cases

@@ -117,9 +117,12 @@ case(
     "Development redistribution refunds only board spending and retains other permanent capabilities",
     function()
         local s = party()
+        s.professions.bestLevel = math.max(s.professions.bestLevel, 22)
         assert(G.BuyBoost(s, "battleOrders"))
         s.legacy = 5
+        s.professions.bestLevel = 60
         assert(G.BuyBoostAutomation(s, "onCooldown"))
+        s.difficulty.unlocked, s.difficulty.maxTier = true, 3
         assert(G.BuyRoutes(s))
         local baseline = s.essence
         for _, id in ipairs({ "might", "resolve", "provisioning" }) do
@@ -169,6 +172,7 @@ end)
 
 case("Development edits preserve battle health proportion, cooldowns and active effects", function()
     local s = party()
+    s.professions.bestLevel = math.max(s.professions.bestLevel, 22)
     assert(G.BuyBoost(s, "battleOrders"))
     assert(G.ActivateBoost(s, "battleOrders"))
     G.StartBattle(s)
@@ -197,7 +201,7 @@ case("Development saves validate exact ledgers and survive ordinary and deeper r
     h.level = 60
     assert(G.TalentProgress(h))
     s.encounter = s.encounter + 1
-    assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
+    assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
     assert(G.PrestigePlus(s, 1))
     assert(s.development.ranks.might == 3 and s.development.choices.might == "assault")
     assert(G.Load(G.Copy(s), 100))

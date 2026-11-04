@@ -11,7 +11,7 @@ local function party(level)
     local s = G.New(0)
     G.AddHero(s, "WARRIOR")
     local hero = s.heroes[1]
-    hero.level = level or 50
+    hero.level = level or 60
     assert(G.TalentProgress(hero))
     s.gold, s.essence, s.legacy = 1000000, 1000000, 100
     for _, material in ipairs(C.materialOrder) do
@@ -33,13 +33,17 @@ case("Profession unlocks follow lifetime idle records and remain owned after res
     )
     hero.level = 30
     assert(G.ProfessionUnlocks(s).enchanting)
-    hero.level = 40
-    assert(G.ProfessionUnlocks(s).titanforging)
+    hero.level = 49
+    assert(not G.ProfessionUnlocks(s).titanforging)
     hero.level = 50
+    assert(G.ProfessionUnlocks(s).titanforging)
+    hero.level = 59
+    assert(not G.ProfessionUnlocks(s).research)
+    hero.level = 60
     assert(G.ProfessionUnlocks(s).research)
     hero.level = 1
     hero.talentProgress.bestLevel = 1
-    assert(G.ProfessionUnlocks(s).research and s.professions.bestLevel == 50)
+    assert(G.ProfessionUnlocks(s).research and s.professions.bestLevel == 60)
 end)
 
 case(
@@ -59,9 +63,9 @@ case(
         assert(s.professions.xp.enchanting == 10 and s.professions.ranks.enchanting == 0)
         assert(item.enchant.id == "offense" and item.upgrade == 2 and not item.forge)
         local stats = G.ProfessionStatBonus(item, hero)
-        assert(stats.attackPower == 30 and stats.spellPower == 30)
+        assert(stats.attackPower == 36 and stats.spellPower == 36)
         stats.attackPower = 9999
-        assert(item.enchant.stats.attackPower == 30)
+        assert(item.enchant.stats.attackPower == 36)
         assert(not G.Enchant(s, 1, 1, "offense"))
         assert(s.professions.xp.enchanting == 10)
         assert(G.Enchant(s, 1, 1, "defense"))
@@ -265,7 +269,7 @@ case(
         assert(G.Titanforge(s, 1, 1))
         local invested, flat = item.forgePower, item.enchant.stats.attackPower
         s.encounter = s.encounter + 1
-        assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
+        assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
         assert(G.PrestigePlus(s, 1))
         assert(s.professions.ranks.enchanting == 0 and s.professions.xp.enchanting == 0)
         assert(s.professions.allocations.enchanting.offense == 1 and s.professions.owned.enchanting)
@@ -339,7 +343,7 @@ case("Offline bosses supply known runic work but cannot discover new recipes", f
     assert(not G.ProfessionBossRewards(s, { boss = true, level = 19 }))
     assert(not G.ProfessionBossRewards(s, { boss = false, level = 60 }))
     s.tier = 1
-    assert(not G.ProfessionBossRewards(s, { boss = true, level = 60 }))
+    assert(not G.ProfessionBossRewards(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
 end)
 
 case("Runic resources reset while recipe ownership and receipt history survive", function()

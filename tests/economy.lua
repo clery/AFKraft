@@ -16,7 +16,7 @@ local function party(level)
 end
 
 case("Routine equipment and heirlooms need no Essence at every production step", function()
-    local state, hero = party(50)
+    local state, hero = party(60)
     state.gold, state.legacy = 100000, 1
     for _, id in ipairs(C.materialOrder) do
         state.materials[id] = 100000
@@ -30,6 +30,7 @@ case("Routine equipment and heirlooms need no Essence at every production step",
     assert(G.EnchantQuote(state, 1, 1, "offense"))
     assert(G.Enchant(state, 1, 1, "offense"))
     assert(G.Titanforge(state, 1, 1))
+    state.difficulty.unlocked, state.difficulty.maxTier = true, 4
     assert(G.UnlockRecipe(state, 1))
     assert(G.Craft(state, 1, 1, "timber", true))
     assert(state.inventory[#state.inventory].heirloom)
@@ -39,7 +40,7 @@ end)
 case(
     "Equipment investment cannot refund its gold or idle material costs in a closed loop",
     function()
-        local state, hero = party(50)
+        local state, hero = party(60)
         state.essence, state.gold, state.materials.ore = 100000, 100000, 100000
         state.professions.ranks.crafting = 10
         G.ProfessionUnlocks(state)
@@ -207,7 +208,7 @@ case("Unidentified legacy equipment cannot mint guessed credit or crash migratio
 end)
 
 case("New runic recipes cannot receive retired historical Essence credits", function()
-    local state, hero = party(50)
+    local state, hero = party(60)
     state.economyVersion = nil
     local item = assert(G.CraftItem(hero, 1, false, state))
     item.uid = 1

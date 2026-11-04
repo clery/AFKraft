@@ -16,7 +16,9 @@ test(
         local state = G.New(W.Client.Now())
         G.AddHero(state, "WARRIOR")
         state.essence, state.guide.dismissed = 60, true
+        state.professions.bestLevel = math.max(state.professions.bestLevel, 22)
         assertTrue(G.BuyBoost(state, "battleOrders"))
+        state.professions.bestLevel = math.max(state.professions.bestLevel, 22)
         assertTrue(G.BuyBoost(state, "ironResolve"))
         W.state = state
         ui.selectedProfile, ui.profileNameSelection = nil, nil

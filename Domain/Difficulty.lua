@@ -17,12 +17,19 @@ end
 
 function G.ValidateDifficulty(state)
     local difficulty = state.difficulty
+    if type(difficulty) == "table" and type(difficulty.cycleComplete) == "boolean"
+        and difficulty.finalBossEncounter == nil then
+        -- Old level-60 boss readiness does not prove the final boss was defeated.
+        difficulty.finalBossEncounter, difficulty.cycleComplete = 0, false
+    end
     if
         not whole(state.tier, 0, LIMIT)
         or type(difficulty) ~= "table"
         or type(difficulty.unlocked) ~= "boolean"
         or not whole(difficulty.maxTier, state.tier, LIMIT)
         or type(difficulty.cycleComplete) ~= "boolean"
+        or not whole(difficulty.finalBossEncounter, 0, state.encounter)
+        or difficulty.cycleComplete ~= (difficulty.finalBossEncounter > 0)
         or not whole(difficulty.ascensions, 0, 1000000000)
         or not whole(difficulty.currency, 0, 1000000000)
         or type(difficulty.purchases) ~= "table"
@@ -121,7 +128,10 @@ function G.DifficultyVictory(state, battle)
     for zone, stage in pairs(state.safe) do
         record.safe[zone] = math.max(record.safe[zone] or 0, stage)
     end
-    if state.offline or not battle.boss or battle.level < C.heroLevelCap then
+    local finalBoss = C.transcendenceBoss
+    if state.offline or not battle.boss or battle.zone ~= finalBoss.zone
+        or battle.level < finalBoss.level or not whole(battle.stage, finalBoss.stage, 1000000000)
+        or battle.stage % 10 ~= 0 then
         return false
     end
     local qualified = false
@@ -133,6 +143,7 @@ function G.DifficultyVictory(state, battle)
     end
     local first = not difficulty.cycleComplete
     difficulty.unlocked, difficulty.cycleComplete = true, true
+    difficulty.finalBossEncounter = state.encounter
     difficulty.maxTier = math.max(difficulty.maxTier, math.min(LIMIT, state.tier + 1))
     if first then
         G.Log(
@@ -150,7 +161,7 @@ function G.BuyInheritance(state, id)
     end
     local difficulty = state.difficulty
     if not difficulty.unlocked then
-        return false, "Complete a level 60 boss with a level 60 hero first."
+        return false, "Defeat " .. C.transcendenceBoss.name .. " in Blackrock Mountain with a level 60 hero first."
     end
     local rank = difficulty.purchases[id] or 0
     if rank >= purchase.max then
@@ -171,7 +182,8 @@ function G.PrestigePlusPreview(state, targetTier)
     local eligible, reason = true, "Ready for a deeper reset."
     if not difficulty.unlocked or not difficulty.cycleComplete then
         eligible, reason =
-            false, "Complete a level 60 boss with a current level 60 hero this cycle."
+            false,
+            "Defeat " .. C.transcendenceBoss.name .. " in Blackrock Mountain online with a level 60 hero this cycle."
     elseif not whole(targetTier, 0, difficulty.maxTier) then
         eligible, reason = false, "Choose an unlocked difficulty tier."
     end

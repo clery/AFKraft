@@ -5,18 +5,17 @@ W.Tutorial = Tutorial
 
 -- Menu discoveries persist with the existing guide record across chapters.
 function Tutorial.MenuHint(state, id)
-    local owned = next(state.boosts.owned) ~= nil
     local automation = next(state.boosts.automation.owned) ~= nil
     local professions = G.ProfessionUnlocks(state)
     local best = state.professions.bestLevel
     local conditions = {
         routes = {
-            state.routes.owned or state.prestigeUnlocked or state.prestiges > 0,
-            "you unlock your first chapter reset",
+            not G.FeatureHint(state, "routes"),
+            "you unlock difficulty tier 3",
         },
         boosts = {
-            owned or state.essence > 0 or (state.stats.essence or 0) > 0 or state.legacy > 0,
-            "you earn Essence",
+            not G.FeatureHint(state, "boosts"),
+            "a hero reaches idle level 22",
         },
         profiles = {
             automation or next(state.boostProfiles.entries) ~= nil,
@@ -38,11 +37,11 @@ function Tutorial.MenuHint(state, id)
         },
         difficulty = {
             state.difficulty.unlocked,
-            "a level 60 hero defeats a level 60 milestone boss",
+            "a level 60 hero defeats " .. C.transcendenceBoss.name .. " in Blackrock Mountain online",
         },
         enchanting = { professions.enchanting, "a hero reaches idle level 30" },
-        titanforging = { professions.titanforging, "a hero reaches idle level 40" },
-        research = { professions.research, "a hero reaches idle level 50" },
+        titanforging = { professions.titanforging, "a hero reaches idle level 50" },
+        research = { professions.research, "a hero reaches idle level 60" },
         crafting = { best >= 1, "you recruit your first hero" },
     }
     local condition = conditions[id]
@@ -109,7 +108,7 @@ function Tutorial.NextLesson(state)
         "lessonBoost",
         "boosts",
         "Choose a Commander boost, learn it and equip it. Activate for temporary party support. Uses are free; cooldowns survive both resets.",
-        affordable and (state.stats.boostUses or 0) == 0
+        not G.FeatureHint(state, "boosts") and affordable and (state.stats.boostUses or 0) == 0
     ) or lesson(
         state,
         "lessonDevelopment",
@@ -129,6 +128,7 @@ function Tutorial.NextLesson(state)
         "Learn automation in Commander with Heritage. Turn on Automation and Auto-cast, then choose a trigger. The status explains why it is waiting.",
         owned
             and not automation.enabled
+            and not G.FeatureHint(state, "onCooldown")
             and (automation.owned.onCooldown or state.legacy >= C.boostAutomation.onCooldown.cost)
     ) or lesson(
         state,
@@ -141,7 +141,8 @@ function Tutorial.NextLesson(state)
         "lessonRoutes",
         "routes",
         "Learn route planning, add destinations and milestones, then save and enable the route. Travel happens between encounters. Manual travel pauses it until Resume.",
-        (state.routes.owned or (state.prestigeUnlocked and state.legacy >= 1))
+        not G.FeatureHint(state, "routes")
+            and (state.routes.owned or state.legacy >= 1)
             and #state.routes.templates == 0
     ) or lesson(
         state,

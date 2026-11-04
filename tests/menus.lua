@@ -81,6 +81,9 @@ test("Locked chapters stay explorable and heirloom links preserve the chosen slo
     assertEquals("legacy", state.ui.tab)
     assertEquals(3, ui.legacySlot)
     state.legacy = 1
+    assertFalse(findButton(ui, "Unlock · Head · 1 Heritage"):IsEnabled())
+    state.difficulty.unlocked, state.difficulty.maxTier = true, 4
+    ui:Refresh()
     click(findButton(ui, "Unlock · Head · 1 Heritage"))
     assertTrue(state.recipes[3])
     assertEquals(0, state.legacy)

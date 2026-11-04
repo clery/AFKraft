@@ -27,7 +27,7 @@ function G.ProfessionUnlocks(state)
             p.owned[profession.id] = true
         end
     end
-    if best >= 50 then
+    if best >= 60 then
         p.owned.research = true
     end
     return p.owned
@@ -225,7 +225,7 @@ end
 function G.AllocateProfession(state, kind, branchID)
     local profession = C.professionByID[kind]
     if not profession or not G.ProfessionUnlocks(state).research then
-        return false, "Reach lifetime idle level 50 to specialize professions."
+        return false, "Reach lifetime idle level 60 to specialize professions."
     end
     local known = false
     for _, branch in ipairs(profession.branches) do
@@ -465,4 +465,20 @@ function G.Enchant(state, heroIndex, slot, enchantID)
 end
 function G.Titanforge(state, heroIndex, slot)
     return modify(state, heroIndex, slot, "titanforging")
+end
+
+-- Existing purchases remain usable, including recipes learned before these milestones.
+function G.FeatureHint(state, id)
+    if id == "boosts" and next(state.boosts.owned) ~= nil
+        or id == "routes" and state.routes.owned
+        or id == "heirlooms" and next(state.recipes) ~= nil
+        or state.boosts.automation.owned[id] then
+        return nil
+    end
+    local milestone = C.featureMilestones[id]
+    G.ProfessionUnlocks(state)
+    if milestone.level and state.professions.bestLevel < milestone.level
+        or milestone.tier and state.difficulty.maxTier < milestone.tier then
+        return milestone.hint
+    end
 end

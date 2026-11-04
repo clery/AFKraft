@@ -16,26 +16,54 @@ local function qualify(state)
     state.heroes[1].level = 60
     assert(G.TalentProgress(state.heroes[1]))
     state.encounter = state.encounter + 1
-    return G.DifficultyVictory(state, { boss = true, level = 60 })
+    return G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 })
 end
 
-case("Prestige+ unlock requires current hero cap and an online level 60 boss", function()
+case("Prestige+ unlock requires the online Blackrock final champion and current hero cap", function()
     local state = party()
     state.encounter = 1
-    assert(not G.DifficultyVictory(state, { boss = true, level = 60 }))
+    assert(not G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
     state.heroes[1].level = 60
     state.encounter, state.offline = 2, true
-    assert(not G.DifficultyVictory(state, { boss = true, level = 60 }))
+    assert(not G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
     assert(not state.difficulty.unlocked)
     state.offline, state.encounter = nil, 3
     assert(not G.DifficultyVictory(state, { boss = false, level = 60 }))
     state.encounter = 4
     assert(not G.DifficultyVictory(state, { boss = true, level = 59 }))
+    state.encounter = 5
+    assert(not G.DifficultyVictory(state, { boss = true, level = 60, zone = "blackrock_mountain", stage = 215 }))
+    state.encounter = 6
+    assert(not G.DifficultyVictory(state, { boss = true, level = 61, zone = "elwynn", stage = 300 }))
+    state.encounter = 7
+    assert(not G.DifficultyVictory(state, { boss = true, level = 62, zone = "blackrock_mountain", stage = 225 }))
     assert(qualify(state))
     assert(state.difficulty.unlocked and state.difficulty.cycleComplete)
     assert(state.difficulty.maxTier == 1 and state.difficulty.currency == 0)
-    assert(not G.DifficultyVictory(state, { boss = true, level = 60 }))
+    assert(not G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
     assert(G.ValidateDifficulty(state))
+end)
+
+case("Older readiness retains earned tiers but requires a new final-boss victory", function()
+    local s = party()
+    s.difficulty.unlocked, s.difficulty.maxTier = true, 3
+    s.difficulty.cycleComplete, s.difficulty.finalBossEncounter = true, nil
+    s = assert(G.Load(G.Copy(s), 0))
+    assert(s.difficulty.unlocked and s.difficulty.maxTier == 3)
+    assert(not G.PrestigePlusPreview(s, 3).eligible)
+    assert(qualify(s))
+    s = assert(G.Load(G.Copy(s), 0))
+    assert(G.PrestigePlusPreview(s, 3).eligible)
+    assert(G.PrestigePlus(s, 3))
+    assert(s.difficulty.finalBossEncounter == 0 and not s.difficulty.cycleComplete)
+end)
+
+case("The designated final boss is the actual final Blackrock champion", function()
+    local s = party()
+    s.zone, s.stage = "blackrock_mountain", W.Content.transcendenceBoss.stage
+    G.StartBattle(s)
+    assert(s.battle.boss and s.battle.enemies[1].name == W.Content.transcendenceBoss.name)
+    assert(s.battle.zone == s.zone)
 end)
 
 case("Difficulty selection is bounded and never changes the active tier in a preview", function()
@@ -54,12 +82,14 @@ end)
 case("Deeper reset grants each tier Inheritance once and retains permanent progress", function()
     local state = party()
     state.essence, state.legacy = 75, 10
+    state.professions.bestLevel = math.max(state.professions.bestLevel, 22)
     assert(G.BuyBoost(state, "battleOrders"))
     assert(G.ActivateBoost(state, "battleOrders"))
+    state.professions.bestLevel = 60
     assert(G.BuyBoostAutomation(state, "onCooldown"))
     assert(G.ConfigureBoostAutomation(state, "battleOrders", "enabled", true))
     assert(G.SetBoostAutomationEnabled(state, true))
-    assert(G.BuyRoutes(state))
+    state.routes.owned = true -- Existing route ownership survives the new late-game gate.
     local saved, id = G.SaveRoute(
         state,
         nil,

@@ -49,6 +49,7 @@ function G.ResetAdventure(state, deep)
     G.ResetRouteRun(state)
     if state.difficulty then
         state.difficulty.cycleComplete = false
+        state.difficulty.finalBossEncounter = 0
     end
     if deep and state.professions then
         for _, id in ipairs({ "crafting", "enchanting", "titanforging" }) do

@@ -29,17 +29,39 @@ These results replace the older handoff's 64-case build matrix and faster rebuil
 | Mastery | Keep level-20 unlock, per-tier highest-encounter eligibility, 100 initial XP plus 50 per rank through rank eight, a quadratic late-rank premium, and double boss XP. Repeated easy resets cannot generate new level points or bypass the Mastery frontier. |
 | Equipment loot and crafting | Loot supplies incidental upgrades; crafting fills specific gaps. Reduce normal craft materials to `max(5, ceil((4 + ceil(level/4)) * discounts))`, from `4 + level`. At level 60 an undiscounted replacement costs 19 materials instead of 64. Gold remains `8 * level`. |
 | Enhancement | Keep +10% base stats per purchase and the existing Ore price. Gold becomes `16 + 10*r + 6*r^2`, where `r` is prior upgrades. Early enhancement remains cheap; repeated enhancement eventually competes with enchanting and forging rather than dominating them indefinitely. Already earned stats are unchanged. |
-| Enchanting and titanforging | Keep unlocks at 30/40 and paid-work specialization at 50. Gold becomes `(24 + 6*itemLevel) * nextRank`; Relic dust is `2 + nextRank`; forging also costs `4 + 2*nextRank` Ore, before discounts. Enchanting uses rank one. A level-60 first modification costs 384 gold and 3 dust rather than 760 and 5. |
-| Profession plans and heirlooms | Retain work XP, branch ranks, forge power, recipes and heirloom scaling. Basic heirloom craft remains 30 gold/12 materials before discounts. Profession plans and item investments make later rebuilds faster. Salvage/disenchant returns remain below paid inputs. |
+| Enchanting and titanforging | Unlock at 30/50 and paid-work specialization at 60. Gold becomes `(24 + 6*itemLevel) * nextRank`; Relic dust is `2 + nextRank`; forging also costs `4 + 2*nextRank` Ore, before discounts. Enchanting uses rank one. A level-60 first modification costs 384 gold and 3 dust rather than 760 and 5. |
+| Profession plans and heirlooms | Retain work XP, branch ranks, forge power, recipes and heirloom scaling. New heirloom access requires unlocked tier 4, then 1 Heritage per slot. Basic heirloom craft remains 30 gold/12 materials before discounts. Profession plans and item investments make later rebuilds faster. Salvage/disenchant returns remain below paid inputs. |
 | Adventure and Development | Retain activity rates and exact investment receipts; increase permanent branch benefits instead of changing prices under existing saves. First-rank purchases should produce a visible combat or rebuilding benefit. |
-| Commander and automation | Retain single equipped ability, 300-second effects/600-second cooldowns and permanent 30/60 Essence or 1 Legacy ownership. Automation costs 1/2 Legacy once, never per activation. Aim for a useful convenience/throughput benefit without mandatory clicking. |
-| Routes and profiles | Retain 1 Legacy route ownership, eight templates/profiles and existing safe offline travel rules. These reduce management friction; they do not create income independently. |
+| Commander and automation | Retain single equipped ability, 300-second effects/600-second cooldowns and permanent 30/60 Essence or 1 Legacy ownership. Manual boosts require lifetime hero level 22; automation requires 45/60 and costs 1/2 Legacy once, never per activation. Aim for a useful convenience/throughput benefit without mandatory clicking. |
+| Routes and profiles | Require unlocked tier 3 for 1 Legacy route ownership; retain eight templates/profiles and existing safe offline travel rules. These reduce management friction; they do not create income independently. |
 | Collections and hunt talents | Preserve verified sources, eligibility, independent rolls and earned bonuses. Double the relative chance bonus per talent rank to 20%, at unchanged 1/2/3 Legacy prices. Hunting remains optional permanent progression. No failure counters or guaranteed discovery. |
 | Ordinary prestige | Keep `floor((runBest - 1)/3)` Legacy and two percentage points of permanent party power per Legacy earned. Existing strength is preserved. Short and deeper rebuilds should have comparable power per minute, so resetting at the earliest opportunity is not universally best. |
-| Transcendence and Inheritance | Keep online level-60 completion, one-time `tier + 1` Inheritance, tier cap 10, permanent purchases and profession-work reset. Higher tiers should be attainable with investment, not a blanket timeout. |
+| Transcendence and Inheritance | Require online defeat of Spire dragonmarshal in Blackrock Mountain with a current level-60 hero; retain, one-time `tier + 1` Inheritance, tier cap 10, permanent purchases and profession-work reset. Higher tiers should be attainable with investment, not a blanket timeout. |
 | Offline farming | Keep 24-hour catch-up, quarter-second combat and the same yields, resource/boost rules and safe-route constraints as online. No offline Adventure XP, live collection kills, frontier unlocks or newly learned Runic recipes. |
 
 All prices and chances used in previews still come from the same domain/content functions used by transactions. No new currencies, dependencies, telemetry, daily caps or reset losses are introduced.
+
+## Feature pacing: hands-on play before convenience
+
+Aim for a substantial new layer roughly every 4–6 adventure hours after the opening. This is a pacing target, not a clock gate: levels and unlocked difficulty tiers control access. Early party building, crafting, talents, Growth, collections and ordinary prestige remain available. Manual Commander play precedes automation; route planning and heirlooms are post-60 rewards. Existing purchases, profession ownership, recipes and discovered menu names are retained; no migration removes access.
+
+Before the final-boss requirement replaced any level-60 boss, two fresh 40-hour `balance_journey.lua deep` runs (seeds 17/73, 15-minute check-ins, assumed 8 quests/80 eligible kills/4 nodes per hour) produced:
+
+| Layer | Permanent milestone | Observed adventure hours |
+| --- | --- | --- |
+| Mastery | Hero 20 | 1.0 |
+| Manual Commander boosts | Hero 22 | 6.5 |
+| Enchanting | Hero 30 | 10.25–11.0 |
+| On-cooldown automation and profiles | Hero 45, then learn automation | 14.0–16.0 |
+| Titanforging | Hero 50 | 18.25–19.0 |
+| Specializations / conditional automation | Hero 60 | 21.0–21.75 |
+| First Transcendence | Current hero 60 and Blackrock final champion | 21.75–22.75 |
+| Route planning | Unlock tier 3 | 25.0–26.0 |
+| Heirloom recipes | Unlock tier 4 | 27.25–28.25 |
+
+The opening is deliberately denser. The later cadence is still uneven: forging, capstone features and the first tier unlocks sometimes arrive 2–3 hours apart. These runs establish the ordering and remove first-hour convenience purchases; they do not establish a universal 4–6-hour interval. Active play, reset decisions, drops, party composition and Forever collections require playtest calibration. Both runs reached tier 6 by hour 40 with repeated ordinary resets; gates do not make pre-heirloom progression impossible.
+
+The journey logs unlocks and targets Blackrock Mountain once encounter 60 is accessible instead of repeatedly resetting just before the final boss. The times above predate this new endpoint and must be remeasured. All rewards and transactions remain earned; the simulation does not grant unlock entitlements.
 
 ## Challenge curve and recurring prestige
 
@@ -157,3 +179,5 @@ lua scripts/balance_hunts.lua 1000
 The profile arguments are horizon hours (1–100), check-in seconds (60–86400), and optional single seed. Longer runs expose savings/stalls under a policy that never resets; they are not an optimal endgame strategy. The activity model projects 100 hours of real-activity income independently of combat policy. Compare results before changing coefficients again.
 
 For a few-hour Retail session, record first prestige unlock, first chosen reset, reset frontier/hero levels, and how soon the next wall arrives. Try one blocked boss after an equipment/build change, then compare a prestige rebuild. Review prestige should open the existing review without spending or resetting. Check a fresh party through recruitment and prestige, compare craft/enchant/forge quotes against actual deductions, buy/refund a Development rank during combat, reload an existing invested save, and compare visible/offline safe-farm rewards. Exercise tier-five Renewal and a tier-eight boss with both offensive and defensive parties. Simulator tests cannot validate live activity attribution, 3D rendering or actual player pacing. Forever simulator/client validation remains deferred until its testing setup is updated.
+
+Final-boss recheck: a fresh 40-hour deep journey with seed 17 reached first Transcendence at 22.75 hours, routes at 26.5 hours, heirlooms at 29.75 hours, and tier 6 by hour 40. This is one simulation seed, not live-client evidence. Readiness now requires the designated Blackrock final champion; older saves retain their earned tiers and purchases but must defeat that boss to earn current-cycle readiness again.

@@ -93,7 +93,7 @@ case("Hero resource preferences survive replacement and both reset layers", func
     state.heroes[1].level = 60
     G.TalentProgress(state.heroes[1])
     state.encounter = state.encounter + 1
-    assert(G.DifficultyVictory(state, { boss = true, level = 60 }))
+    assert(G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
     assert(G.PrestigePlus(state, 1))
     assert(state.heroes[1].resourceThreshold == 75)
     G.StartBattle(state)

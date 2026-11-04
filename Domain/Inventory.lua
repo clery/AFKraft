@@ -600,6 +600,10 @@ function G.UnlockRecipe(state, slot)
     if not C.slots[slot] or state.recipes[slot] then
         return false, "Recipe already known."
     end
+    local hint = G.FeatureHint(state, "heirlooms")
+    if hint then
+        return false, hint
+    end
     if state.legacy < 1 then
         return false, "Earn Heritage by beginning a new chapter."
     end

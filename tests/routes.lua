@@ -9,6 +9,7 @@ local function case(name, fn)
 end
 local function party()
     local state = G.New(0)
+    state.difficulty.unlocked, state.difficulty.maxTier = true, 3
     G.AddHero(state, "WARRIOR")
     state.legacy = 1
     assert(G.BuyRoutes(state))
@@ -30,6 +31,7 @@ end
 
 case("Route planning is a permanent atomic purchase and defaults disabled", function()
     local state = G.New(0)
+    state.difficulty.unlocked, state.difficulty.maxTier = true, 3
     assert(not G.BuyRoutes(state))
     state.legacy = 1
     assert(G.BuyRoutes(state))
@@ -341,7 +343,7 @@ case(
         s.heroes[1].level = 60
         G.TalentProgress(s.heroes[1])
         s.encounter = 1
-        assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
+        assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
         assert(G.PrestigePlus(s, 1))
         assert(s.routes.offlineEnabled and s.routes.enabled and next(s.safe) == nil)
         assert(s.routes.run.cursor == 1 and #s.routes.templates == 1)

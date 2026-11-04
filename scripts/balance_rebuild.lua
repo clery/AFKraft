@@ -116,7 +116,7 @@ local function established(seed)
     assert(G.Craft(state, 1, 1, "ore", false)) -- Ordinary investment must be lost.
     state.prestigeUnlocked, state.stage, state.safe.elwynn = true, 300, 300
     state.encounter = state.encounter + 1
-    assert(G.DifficultyVictory(state, { boss = true, level = 60 }))
+    assert(G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
     assert(G.Load(G.Copy(state), 0))
     return state
 end

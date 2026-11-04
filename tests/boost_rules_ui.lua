@@ -12,6 +12,7 @@ test("Ordered boost rule drafts reorder four rows and save only on request", fun
     W.Initialize()
     local G, ui = W.Game, W.UI
     local state = G.New(W.Client.Now())
+    state.professions.bestLevel = 60
     G.AddHero(state, "WARRIOR")
     state.essence, state.legacy, state.guide.dismissed = 30, 3, true
     assertTrue(G.BuyBoost(state, "battleOrders"))

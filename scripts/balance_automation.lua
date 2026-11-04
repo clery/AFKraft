@@ -41,6 +41,7 @@ local G, C = W.Game, W.Content
 local boostID, stepSeconds = "battleOrders", 0.25
 local function snapshot(seed)
     local state = G.New(0)
+    state.professions.bestLevel = 60 -- Established automation on a low-level rebuild.
     state.seed = seed
     state.gold, state.legacy = 100000, 4
     state.materials.ore = 10000

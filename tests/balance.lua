@@ -59,7 +59,7 @@ case("A developed prestige party can finish base and first-tier capstones", func
             end
             hero.priority = C.classByID[class].role == "healer" and "heal" or "special"
         end
-        state.stage = 300
+        state.zone, state.stage = "blackrock_mountain", C.transcendenceBoss.stage
         G.StartBattle(state)
         local ticks = 0
         while state.battle and ticks < 720 do

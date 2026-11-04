@@ -51,7 +51,7 @@ C.professions = {
         id = "titanforging",
         name = "Titanforging",
         icon = "INV_Hammer_20",
-        unlockLevel = 40,
+        unlockLevel = 50,
         branches = {
             {
                 id = "efficiency",
@@ -128,3 +128,12 @@ for _, enchant in ipairs(C.enchants) do
     C.enchantByID[enchant.id] = enchant
 end
 C.professionRankCap, C.professionBranchCap, C.forgeCap = 30, 3, 5
+
+-- Convenience follows hands-on progression; tiers use the permanent unlocked record.
+C.featureMilestones = {
+    boosts = { level = 22, hint = "Reach lifetime idle level 22 to learn Commander boosts." },
+    onCooldown = { level = 45, hint = "Reach lifetime idle level 45 to learn automation." },
+    conditional = { level = 60, hint = "Reach lifetime idle level 60 to learn conditional automation." },
+    routes = { tier = 3, hint = "Unlock difficulty tier 3 to learn route planning." },
+    heirlooms = { tier = 4, hint = "Unlock difficulty tier 4 to learn heirloom recipes." },
+}

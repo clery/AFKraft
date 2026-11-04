@@ -147,7 +147,7 @@ function G.StartBattle(state)
         end
     end
     local battle =
-        { heroes = {}, enemies = {}, elapsed = 0, boss = boss, level = level, stage = state.stage }
+    { heroes = {}, enemies = {}, elapsed = 0, boss = boss, level = level, stage = state.stage, zone = state.zone }
     for i, hero in ipairs(state.heroes) do
         local stats = G.Stats(state, hero)
         battle.heroes[i] = {

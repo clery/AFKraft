@@ -21,6 +21,7 @@ local function win(s)
 end
 local function plan(s, destination, trigger)
     s.legacy = 1
+    s.difficulty.unlocked, s.difficulty.maxTier = true, 3
     assert(G.BuyRoutes(s))
     local ok, id = G.SaveRoute(s, nil, "Plan", { { destination = destination, trigger = trigger } })
     assert(ok and G.SelectRoute(s, id) and G.SetRoutesEnabled(s, true))
@@ -170,7 +171,7 @@ case(
     function()
         local s = party()
         local hero = s.heroes[1]
-        hero.level, hero.rank = 50, 12
+        hero.level, hero.rank = 60, 15
         G.TalentProgress(hero)
         G.ProfessionUnlocks(s)
         s.professions.ranks.crafting = 10
@@ -194,6 +195,7 @@ case(
     function()
         local s = party()
         s.legacy = 2
+        s.professions.bestLevel = math.max(s.professions.bestLevel, 22)
         assert(G.BuyBoost(s, "focusedAssault", "legacy"))
         s.essence = 60
         assert(not G.BuyBoost(s, "focusedAssault"))
@@ -213,6 +215,7 @@ case(
         G.AddHero(healing, "PRIEST")
         G.AddHero(healing, "MAGE")
         healing.essence = 60
+        healing.professions.bestLevel = math.max(healing.professions.bestLevel, 22)
         assert(G.BuyBoost(healing, "restorativeFocus"))
         G.StartBattle(healing)
         for _, actor in ipairs(healing.battle.heroes) do

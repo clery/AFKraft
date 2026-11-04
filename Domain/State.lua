@@ -94,6 +94,7 @@ function G.New(now)
             maxTier = 0,
             records = {},
             cycleComplete = false,
+            finalBossEncounter = 0,
             ascensions = 0,
             currency = 0,
             purchases = {},

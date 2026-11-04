@@ -442,7 +442,7 @@ case(
             hero.level = 60
             assert(G.TalentProgress(hero))
             s.encounter = s.encounter + 1
-            assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
+            assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
             assert(G.PrestigePlus(s, 1))
             assert(s.outdoorCollections.effect == setID and G.CollectionProgress(s, setID).complete)
             assert(G.Load(G.Copy(s), 20))

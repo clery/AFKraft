@@ -9,6 +9,8 @@ local function case(name, fn)
 end
 local function party()
     local s = G.New(0)
+    s.professions.bestLevel = 60
+    s.difficulty.unlocked, s.difficulty.maxTier = true, 3
     G.AddHero(s, "WARRIOR")
     s.essence, s.legacy = 60, 10
     assert(G.BuyBoost(s, "battleOrders"))

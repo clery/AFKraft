@@ -11,6 +11,7 @@ local function party()
     local s = G.New(0)
     G.AddHero(s, "WARRIOR")
     s.essence = 60
+    s.professions.bestLevel = math.max(s.professions.bestLevel, 22)
     assert(G.BuyBoost(s, "battleOrders"))
     assert(G.BuyBoost(s, "ironResolve"))
     return s
@@ -21,6 +22,7 @@ case("Boost purchases are permanent, atomic, and available before prestige", fun
     assert(not G.BuyBoost(s, "unknown"))
     assert(not G.BuyBoost(s, "battleOrders"))
     s.essence = 60
+    s.professions.bestLevel = math.max(s.professions.bestLevel, 22)
     assert(G.BuyBoost(s, "battleOrders"))
     assert(s.essence == 30 and s.boosts.equipped == "battleOrders")
     assert(not G.BuyBoost(s, "battleOrders"))

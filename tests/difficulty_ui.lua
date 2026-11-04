@@ -15,7 +15,7 @@ test("Prestige+ tier selection previews retention before an explicit deeper rese
     state.heroes[1].level = 60
     assertTrue(G.TalentProgress(state.heroes[1]) ~= nil)
     state.encounter = 1
-    assertTrue(G.DifficultyVictory(state, { boss = true, level = 60 }))
+    assertTrue(G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
     state.ui.compact, state.guide.dismissed = false, true
     W.state = state
     ui.difficultyTier, ui.difficultyConfirm = nil, false

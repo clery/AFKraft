@@ -80,7 +80,7 @@ local function research(ui, frame, state)
     )
     local unlocked = G.ProfessionUnlocks(state).research
     if not unlocked then
-        text(frame, "Unlocks when any hero first reaches level 50.", 0, 116, 1260, T.gold)
+        text(frame, "Unlocks when any hero first reaches level 60.", 0, 116, 1260, T.gold)
     end
     local active = G.ProfessionActiveAllocations(state, kind)
     local desired = 0

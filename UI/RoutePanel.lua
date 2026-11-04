@@ -59,7 +59,9 @@ function R.Draw(ui, parent, state)
             W.Action(G.BuyRoutes)
         end
     )
-    U.Enabled(ui.routeBuy, not state.routes.owned and state.legacy >= 1)
+    U.Enabled(ui.routeBuy, not state.routes.owned and state.legacy >= 1 and not G.FeatureHint(state, "routes"))
+    U.Tooltip(ui.routeBuy, "Route planning",
+        G.FeatureHint(state, "routes") or "Spend 1 Heritage to learn route planning permanently.")
     ui.routeEnabled = U.Checkbox(
         frame,
         "Routes enabled",

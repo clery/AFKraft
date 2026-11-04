@@ -580,6 +580,8 @@ function P.RefreshBoosts(ui, s, message)
         for capability, control in pairs(ui.boostAutomationPurchases or {}) do
             local spec = C.boostAutomation[capability]
             local owned = automation.owned[capability]
+            local unlockHint = G.FeatureHint(s, capability)
+            U.Tooltip(control, spec.name .. " automation", unlockHint or "Learn this capability permanently with Heritage.")
             control.text:SetText(
                 owned and (spec.name .. " · Learned")
                     or ("Learn " .. spec.name .. " · " .. spec.cost .. " Heritage")
@@ -587,6 +589,7 @@ function P.RefreshBoosts(ui, s, message)
             U.Enabled(
                 control,
                 not owned
+                    and not unlockHint
                     and s.legacy >= spec.cost
                     and (capability ~= "conditional" or automation.owned.onCooldown == true)
             )
@@ -614,9 +617,15 @@ function P.RefreshBoosts(ui, s, message)
             controls.purchase.text:SetText(
                 owned and "Learned" or "Learn · " .. C.boostByID[id].cost .. " Essence"
             )
-            U.Enabled(controls.purchase, not owned and s.essence >= C.boostByID[id].cost)
+            U.Enabled(controls.purchase,
+                not owned and not G.FeatureHint(s, "boosts") and s.essence >= C.boostByID[id].cost)
+            U.Tooltip(controls.purchase, "Learn boost",
+                G.FeatureHint(s, "boosts") or "Spend Essence to learn this boost permanently.")
             controls.alternate:SetShown(not owned)
-            U.Enabled(controls.alternate, not owned and s.legacy >= C.boostByID[id].legacyCost)
+            U.Enabled(controls.alternate,
+                not owned and not G.FeatureHint(s, "boosts") and s.legacy >= C.boostByID[id].legacyCost)
+            U.Tooltip(controls.alternate, "Learn boost",
+                G.FeatureHint(s, "boosts") or "Spend Heritage to learn this boost permanently.")
             controls.equip.text:SetText(equipped == id and "Equipped" or "Equip")
             U.Enabled(controls.equip, owned and equipped ~= id)
             U.Enabled(controls.activate, G.CanActivateBoost(s, id))
@@ -1008,7 +1017,7 @@ function P.legacy(ui, p, s)
         "Heirlooms",
         1258,
         138,
-        "Heirlooms scale with hero level and survive both resets.\n\nUnlock a recipe for 1 Heritage, then craft it in Forge with gold and materials. Learning a recipe does not reset your run."
+        "Heirlooms unlock at difficulty tier 4, scale with hero level and survive both resets.\n\nUnlock a recipe for 1 Heritage, then craft it in Forge with gold and materials. Learning a recipe does not reset your run."
     )
 
     for position, i in ipairs(C.equipmentSlots) do
@@ -1032,8 +1041,10 @@ function P.legacy(ui, p, s)
             recipe,
             name .. " heirloom recipe",
             known and "Open Crafting to make this heirloom for the selected hero."
+                or G.FeatureHint(s, "heirlooms")
                 or "Spend 1 Heritage to permanently unlock this recipe, then open Crafting."
         )
+        U.Enabled(recipe, known or (not G.FeatureHint(s, "heirlooms") and s.legacy >= 1))
     end
     text(p, "COLLECTION TALENTS", 0, 350, 14, T.gold)
     text(p, "Permanent ranks · survive both resets", 0, 378, 13, T.muted, 640)

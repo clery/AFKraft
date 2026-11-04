@@ -12,6 +12,7 @@ test("Commander controls buy once, equip, activate, and refresh timers without r
     W.Initialize()
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")
+    s.professions.bestLevel = 22
     s.essence, s.guide.dismissed = 60, true
     W.state = s
     local ui = W.UI
@@ -48,6 +49,7 @@ test("Adventure and compact boost controls share readiness and respect window lo
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")
     s.essence, s.guide.dismissed = 30, true
+    s.professions.bestLevel = math.max(s.professions.bestLevel, 22)
     assertTrue(W.Game.BuyBoost(s, "battleOrders"))
     W.state = s
     local ui = W.UI
@@ -79,6 +81,7 @@ test("Commander automation purchases, rules and pause remain inspectable", funct
     local W = WoWIdle
     local G, U = W.Game, W.Widgets
     local s = G.New(W.Client.Now())
+    s.professions.bestLevel = 60
     G.AddHero(s, "WARRIOR")
     s.essence, s.legacy, s.guide.dismissed = 30, 3, true
     assertTrue(G.BuyBoost(s, "battleOrders"))
@@ -142,6 +145,7 @@ test("Commander selectors recover enabled state across redraws and pooled reuse"
     local W = WoWIdle
     local G, U = W.Game, W.Widgets
     local s = G.New(W.Client.Now())
+    s.professions.bestLevel = 60
     G.AddHero(s, "WARRIOR")
     s.essence, s.legacy, s.guide.dismissed = 30, 1, true
     assertTrue(G.BuyBoost(s, "battleOrders"))
@@ -174,6 +178,7 @@ test("Boost automation runs while the addon window is hidden", function()
     local W = WoWIdle
     local G = W.Game
     local s = G.New(W.Client.Now())
+    s.professions.bestLevel = 60
     G.AddHero(s, "WARRIOR")
     s.essence, s.legacy, s.guide.dismissed = 30, 1, true
     assertTrue(G.BuyBoost(s, "battleOrders"))

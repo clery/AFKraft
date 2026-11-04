@@ -50,7 +50,7 @@ Kills and bosses must be within your XP range; gathering must be skill-up eligib
 
 Each hero has **10 wearable slots**. Drops have fixed Classic item stats; class proficiencies and idle level requirements apply. **Power** estimates item value for the selected class, not damage per second. Compare items, equip individual upgrades, or use **Equip best power** in Party.
 
-**Forge** crafts targeted equipment with gold and idle materials. Enhancement adds **10% of base stats per purchase**. Enchanting unlocks when a hero first reaches **30**, titanforging at **40**, and profession specializations at **50**. Enchanting replaces the current enchantment; titanforging has five potential tiers. Previews show outcomes and costs before purchase. Heirloom investments survive both resets.
+**Forge** crafts targeted equipment with gold and idle materials. Enhancement adds **10% of base stats per purchase**. Enchanting unlocks when a hero first reaches **30**, titanforging at **50**, and profession specializations at **60**. Enchanting replaces the current enchantment; titanforging has five potential tiers. Previews show outcomes and costs before purchase. Heirloom recipes open at difficulty tier **4** for **1 Heritage per slot**. Heirloom investments survive both resets.
 
 Identical ordinary items stack. Loot rules salvage unwanted future drops; **Disenchant** destroys stored equipment for gold and Relic dust. Equipped gear, heirlooms and protected items are kept. **Disenchant all** includes unprotected upgrades across every page and filter.
 
@@ -58,9 +58,9 @@ Empty torso, leg and foot slots use cosmetic clothing with no stats. Exact offli
 
 ## Commander, routes and collections
 
-Learn one of four party boosts permanently with Essence or **1 Heritage**. Equip one at a time: effects last **5 adventure minutes**, with a **10-minute cooldown from activation**. Uses are free. Learn on-cooldown automation for **1 Heritage**, then conditional automation for **2 Heritage**. Enable both **Automation** and **Auto-cast** to use it.
+At lifetime idle level **22**, learn one of four party boosts permanently with Essence or **1 Heritage**. Equip one at a time: effects last **5 adventure minutes**, with a **10-minute cooldown from activation**. Uses are free. At lifetime idle level **45**, learn on-cooldown automation for **1 Heritage**; level **60** opens conditional automation for **2 Heritage**. Enable both **Automation** and **Auto-cast** to use it.
 
-Learn route planning for **1 Heritage**. Save destinations and milestones, then enable the route to travel between encounters. Manual travel pauses it until Resume. Profiles save your boost, automation, route preferences and selected collection effect without restoring currencies or cooldowns.
+Unlock difficulty tier **3** to learn route planning for **1 Heritage**. Save destinations and milestones, then enable the route to travel between encounters. Manual travel pauses it until Resume. Profiles save your boost, automation, route preferences and selected collection effect without restoring currencies or cooldowns.
 
 **Collections** come from eligible kills by your real WoW character. Hover a piece for its creature families, locations and chance. Each kill rolls independently; no discovery is guaranteed. Passive discovery bonuses survive both resets, and a completed set unlocks a selectable effect. Only one set effect can be active. Fieldcraft and Relic Hunter improve outdoor and dungeon chances respectively; each has three permanent ranks costing **1, 2 and 3 Heritage**.
 
@@ -81,7 +81,7 @@ Defeat a **level 8 milestone boss** to unlock ordinary prestige in **Heritage**.
 
 New chapters award Heritage and permanent party strength. Each Heritage earned adds **2 percentage points** to party health, damage and healing. Spent Essence is not refunded.
 
-**Transcendence** requires a current level-60 hero and an online victory over an encounter-level-60+ boss in that cycle. Choose an unlocked tier and review the deeper reset. Each completed tier pays Inheritance once, funding permanent rebuilding bonuses. Both reset types remain manual.
+**Transcendence** requires a current level-60 hero and an online victory over **Spire dragonmarshal**, the final Blackrock Mountain champion, in that cycle. Choose an unlocked tier and review the deeper reset. Each completed tier pays Inheritance once, funding permanent rebuilding bonuses. Both reset types remain manual.
 
 ## Returning and window controls
 

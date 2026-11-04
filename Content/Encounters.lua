@@ -398,3 +398,13 @@ for zoneID, entries in pairs(C.encounterAdditions) do
         zone.enemyLevels[#zone.enemyLevels + 1] = entry.level
     end
 end
+
+local finalZone = C.zoneByID.blackrock_mountain
+local finalRoster = C.encounterAdditions[finalZone.id]
+local finalChampion = finalRoster[#finalRoster]
+C.transcendenceBoss = {
+    zone = finalZone.id,
+    name = finalChampion.name,
+    level = finalChampion.level,
+    stage = math.ceil(((finalChampion.level - finalZone.level) * 5 + 1) / 10) * 10,
+}

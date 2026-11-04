@@ -190,7 +190,7 @@ case("Dungeon discoveries, pending receipts and effect survive reload and both r
         hero.level = 60
         assert(G.TalentProgress(hero))
         s.encounter = s.encounter + 1
-        assert(G.DifficultyVictory(s, { boss = true, level = 60 }))
+        assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
         assert(G.PrestigePlus(s, 1))
         assert(G.ActiveCollectionEffect(s) == "defiasLeather")
         assert(G.CollectionProgress(s, "defiasLeather").complete)

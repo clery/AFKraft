@@ -52,6 +52,10 @@ function G.BuyBoost(state, id, currency)
     if state.boosts.owned[id] then
         return false, "This boost is already learned."
     end
+    local hint = G.FeatureHint(state, "boosts")
+    if hint then
+        return false, hint
+    end
     currency = currency or "essence"
     local cost = currency == "essence" and boost.cost or currency == "legacy" and boost.legacyCost
     if not cost then
@@ -209,6 +213,10 @@ function G.BuyBoostAutomation(state, capability)
     end
     if automation.owned[capability] then
         return false, "This automation capability is already learned."
+    end
+    local hint = G.FeatureHint(state, capability)
+    if hint then
+        return false, hint
     end
     if capability == "conditional" and not automation.owned.onCooldown then
         return false, "Learn on-cooldown automation first."

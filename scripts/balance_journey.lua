@@ -126,7 +126,29 @@ local function travel()
     end
     if target and target.id ~= s.zone then command(G.Travel(s, target.id)) end
 end
+local discovered = {}
+local function milestones(second)
+    G.ProfessionUnlocks(s)
+    local available = {
+        Mastery = s.professions.bestLevel >= 20,
+        Commander = not G.FeatureHint(s, "boosts"),
+        Enchanting = s.professions.owned.enchanting,
+        Titanforging = s.professions.owned.titanforging,
+        Specializations = s.professions.owned.research,
+        Automation = not G.FeatureHint(s, "onCooldown"),
+        Conditional = not G.FeatureHint(s, "conditional"),
+        Routes = not G.FeatureHint(s, "routes"),
+        Heirlooms = not G.FeatureHint(s, "heirlooms"),
+    }
+    for _, name in ipairs({ "Mastery", "Commander", "Enchanting", "Automation", "Titanforging", "Specializations", "Conditional", "Routes", "Heirlooms" }) do
+        if available[name] and not discovered[name] then
+            discovered[name] = true
+            print(string.format("UNLOCK | %.2fh | %s", second / 3600, name))
+        end
+    end
+end
 local function checkin(second)
+    milestones(second)
     metrics.checkins = metrics.checkins + 1
     metrics.lastWall = s.farming
     while #s.heroes < G.CompanionSlots(s) do
@@ -152,9 +174,7 @@ local function checkin(second)
             end
         end
     end
-    local highestLevel = 1
-    for _, hero in ipairs(s.heroes) do highestLevel = math.max(highestLevel, hero.level) end
-    local awaitingCap = plan.ascend and highestLevel >= 60 and s.runBest >= 60 and not s.difficulty.cycleComplete
+    local awaitingCap = plan.ascend and s.runBest >= 60 and not s.difficulty.cycleComplete
     local target = plan.adaptive and math.min(60, plan.reset + s.prestiges * 3) or plan.reset
     local eligible = G.PrestigePlusPreview(s, math.min(10, s.tier + 1))
     if plan.ascend and eligible.eligible and eligible.inheritance > 0 then
@@ -177,12 +197,7 @@ local function checkin(second)
         metrics.legacyEarned = metrics.legacyEarned + reward
         metrics.lastReset, metrics.lastFrontier, metrics.stalled = second, 0, 0
     elseif awaitingCap then
-        local targetZone, bestLevel
-        for id, stage in pairs(s.safe) do
-            local level = C.zoneByID[id].level + math.floor((stage - 1) / 5)
-            if level >= 60 and (not bestLevel or level > bestLevel) then targetZone, bestLevel = id, level end
-        end
-        if targetZone then command(G.Travel(s, targetZone)) end
+        command(G.Travel(s, C.transcendenceBoss.zone))
     elseif plan.spend then
         travel()
     end
