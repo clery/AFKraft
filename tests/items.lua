@@ -386,6 +386,81 @@ case("Power follows stats and class instead of item level or rarity", function()
     item.stats = { intellect = 20 }
     assert(G.ItemPower(item, mage) > G.ItemPower(item, warrior))
 end)
+case("Class main stats match their intended archetypes and scale through progression", function()
+    local expected = {
+        WARRIOR = "strength",
+        PALADIN = "strength",
+        HUNTER = "agility",
+        ROGUE = "agility",
+        PRIEST = "intellect",
+        SHAMAN = "intellect",
+        MAGE = "intellect",
+        WARLOCK = "intellect",
+        DRUID = "intellect",
+    }
+    for class, main in pairs(expected) do
+        assert(C.primaryStats[class] == main, class)
+        for _, level in ipairs({ 1, 20, 60 }) do
+            local s = state()
+            local hero = s.heroes[1]
+            hero.class, hero.level = class, level
+            local base = G.Stats(s, hero)
+            local item = { stats = { [main] = 10 }, itemID = 1455 }
+            hero.gear = { item }
+            local power = G.ItemPower(item, hero)
+            assert(math.abs(G.Stats(s, hero).damage - base.damage - 10) < 0.000001, class)
+            item.upgrade = 3
+            assert(math.abs(G.Stats(s, hero).damage - base.damage - 13) < 0.000001, class)
+            assert(G.ItemPower(item, hero) > power, class)
+            item.heirloom = true
+            local mainAmount = 13 * level / C.itemByID[1455].level
+            assert(math.abs(G.ItemStats(item, hero)[main] - mainAmount) < 0.000001, class)
+            assert(math.abs(G.Stats(s, hero).damage - base.damage - mainAmount) < 0.000001, class)
+            s.prestigeStrength = 25
+            assert(
+                math.abs(G.Stats(s, hero).damage - (base.damage + mainAmount) * 2) < 0.000001,
+                class
+            )
+        end
+    end
+end)
+case("Every class has several main-stat drops in each progression pool", function()
+    local bands = {
+        elwynn = 3,
+        durotar = 3,
+        westfall = 5,
+        barrens = 5,
+        redridge = 7,
+        ashenvale = 7,
+        duskwood = 9,
+        wetlands = 9,
+        stranglethorn = 11,
+        desolace = 11,
+        tanaris = 13,
+        winterspring = 15,
+    }
+    for zone, level in pairs(bands) do
+        for _, class in ipairs(C.classes) do
+            local hero = { class = class.id, level = level }
+            local count, slots = 0, {}
+            for _, id in ipairs(C.zoneItems[zone]) do
+                local item = C.itemByID[id]
+                if G.CanEquip(hero, item) and (item.stats[C.primaryStats[class.id]] or 0) > 0 then
+                    count = count + 1
+                    slots[item.slot] = true
+                end
+            end
+            local slotCount = 0
+            for _ in pairs(slots) do
+                slotCount = slotCount + 1
+            end
+            assert(
+                count >= 2 and slotCount >= 2,
+                zone .. " lacks main-stat choices for " .. class.id
+            )
+        end
+    end
+end)
 case("Every class scores its main stat and offensive bonuses by their combat effects", function()
     for _, class in ipairs(C.classes) do
         local s = state()
