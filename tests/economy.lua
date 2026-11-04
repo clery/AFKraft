@@ -95,8 +95,8 @@ case(
         end
         assert(developed.heroes[1].xp > base.heroes[1].xp)
         assert(math.abs(base.heroes[1].health - 0.36) < 0.000001)
-        assert(math.abs(developed.heroes[1].health - 0.364) < 0.000001)
-        assert(base.materials.timber == 31 and developed.materials.timber == 33)
+        assert(math.abs(developed.heroes[1].health - 0.366) < 0.000001)
+        assert(base.materials.timber == 31 and developed.materials.timber == 35)
         assert(
             base.heroes[1].mastery.rank == developed.heroes[1].mastery.rank
                 and base.heroes[1].mastery.xp == developed.heroes[1].mastery.xp

@@ -346,3 +346,24 @@ test("First hunt lesson waits for verified sources and retains its acknowledgeme
     W.CollectionSources.ActiveProfile = original
     assertTrue(ok, message)
 end)
+
+
+test("A stalled company can review prestige before sixty without resetting from the advice", function()
+    local W, s, ui = advanced()
+    local G = W.Game
+    for _, class in ipairs({ "PRIEST", "MAGE", "ROGUE", "SHAMAN" }) do
+        assertTrue(G.AddHero(s, class))
+    end
+    for index, hero in ipairs(s.heroes) do
+        assertTrue(G.Talent(s, index, G.TalentList(hero)[1].id))
+    end
+    s.best, s.runBest, s.farming, s.prestigeUnlocked = 12, 12, true, true
+    s.guide.dismissed = true
+    ui:SetTab("adventure")
+    assertNotNil(find(ui, "Review prestige"))
+    click(find(ui, "Review prestige"))
+    assertEquals("legacy", s.ui.tab)
+    assertEquals(0, s.prestiges)
+    assertEquals(0, s.legacy)
+    assertEquals(12, s.runBest)
+end)

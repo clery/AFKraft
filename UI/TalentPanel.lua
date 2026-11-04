@@ -150,7 +150,11 @@ function P.Draw(ui, parent, hero, index)
             .. C.heroLevelCap
             .. ". Each rank needs "
             .. C.mastery.xpPerRank
-            .. " more XP than the previous rank.",
+            .. " more XP per rank through rank "
+            .. C.mastery.softCap
+            .. ". Later prices also add "
+            .. C.mastery.xpPerLateRank
+            .. " XP times the square of ranks beyond that point.",
         360
     )
     ui.talentTrees:Show()

@@ -156,12 +156,17 @@ function P.adventure(ui, p, s)
     end
     if s.farming and label ~= "Recruit companions" then
         title = "Build strength, then push forward"
+        if s.prestigeUnlocked and G.PrestigeReward(s) > 0 and points == 0 then
+            title, label, tab = "Begin a stronger chapter", "Review prestige", "legacy"
+        end
     end
     text(p, "NEXT STEP", 0, 0, 12, T.gold)
     text(p, title, 0, 27, 23, T.text, 640)
     if s.farming then
         detail = (s.lastDefeat or "Your party is farming a safe encounter.")
-            .. " Improve your heroes, then use Retry."
+            .. (s.prestigeUnlocked and G.PrestigeReward(s) > 0
+                and " Improve your heroes and Retry, or prestige now for permanent party power. Level 60 is not required."
+                or " Improve your heroes, then use Retry.")
     end
     U.Help(p, title, 652, 0, detail)
     ui.adventureNext = button(p, label, 0, 128, 240, function()

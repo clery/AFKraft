@@ -23,6 +23,7 @@ for _, file in ipairs({
     "Domain/Mastery.lua",
     "Domain/Inventory.lua",
     "Domain/Collections.lua",
+    "Domain/HuntSession.lua",
     "Compatibility/CollectionSources.lua",
     "Domain/Routes.lua",
     "Domain/Profiles.lua",
@@ -38,6 +39,14 @@ for _, file in ipairs({
     assert(loadfile(file))("WoWIdle", W)
 end
 local G, C = W.Game, W.Content
+local hours = tonumber(arg and arg[1]) or 6
+local checkinSeconds = tonumber(arg and arg[2]) or 900
+assert(hours >= 1 and hours <= 100 and hours == math.floor(hours))
+assert(
+    checkinSeconds >= 60
+        and checkinSeconds <= 86400
+        and checkinSeconds == math.floor(checkinSeconds)
+)
 -- Synthetic sources exist only in this standalone process. No client mapping is enabled.
 io.stdout:setvbuf("line")
 local acquisitionFlags = {}
@@ -94,7 +103,7 @@ local function run(profile, seed)
     local activities = { quest = 0, kill = 0, gather = 0 }
     local rates = { quest = profile.quests, kill = profile.kills, gather = profile.gathers }
     local huntCount, firstPrestige, firstPiece, completed = 0, nil, nil, nil
-    for second = 1, 21600 do
+    for second = 1, hours * 3600 do
         -- Real activity runs through the actual XP command; counts include travel/downtime.
         for _, kind in ipairs({ "quest", "kill", "gather" }) do
             local due = math.floor(second * rates[kind] / 3600)
@@ -136,10 +145,10 @@ local function run(profile, seed)
         if state.prestigeUnlocked then
             firstPrestige = firstPrestige or second
         end
-        if second == 1 or second % 900 == 0 then
+        if second == 1 or second % checkinSeconds == 0 then
             checkin(state)
         end
-        if second == 900 or second == 3600 or second == 21600 then
+        if second == 900 or second == 3600 or second == hours * 3600 then
             local level = 0
             for _, hero in ipairs(state.heroes) do
                 level = math.max(level, hero.level)
@@ -165,9 +174,14 @@ local function run(profile, seed)
             )
         end
     end
+    assert(G.Load(G.Copy(state), hours * 3600), "Profile must leave a loadable save")
 end
 print(
-    "Hypotheses only: six online idle hours, 15-minute check-ins, fixed class/talent policy, no resets."
+    string.format(
+        "Hypotheses only: %d online idle hours, %g-minute check-ins, fixed class/talent policy, no resets.",
+        hours,
+        checkinSeconds / 60
+    )
 )
 print(
     "Hunts use synthetic one-piece sources: 5% independent rolls, no collection talents; never verified client availability."
@@ -182,7 +196,7 @@ print(
     "Profile | Seed | Hours | Max hero level | Frontier | Gold | Real XP | Board M/R/P | Pieces | Prestige h | First piece h | Set h"
 )
 for _, profile in ipairs(profiles) do
-    for _, seed in ipairs({ 17, 91, 403 }) do
+    for _, seed in ipairs(arg and arg[3] and { assert(tonumber(arg[3])) } or { 17, 91, 403 }) do
         run(profile, seed)
     end
 end

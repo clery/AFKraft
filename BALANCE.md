@@ -1,145 +1,145 @@
-# Adventure XP balance
+# Progression and economy balance
 
-## Role and persistence
+## Design intent
 
-Real WoW activities fill one account-wide Adventure XP bar. Every 100 XP raises Adventure rank and awards 60 Essence. Excess XP carries into the next rank, including quarter points from skinning. The requirement and payout stay constant so a high account rank does not make the same activity worth less over time.
+WoWIdle is a companion idle RPG: short management visits should produce useful decisions, while battles and safe offline farming supply the resources between visits. Real WoW play accelerates permanent development without buying permission to level, equip, or prestige. A new feature should create another useful investment, not make the older investments irrelevant.
 
-Adventure rank, partial XP, and unspent Essence survive prestige. Idle battles supply hero experience, gold, equipment, and materials. They do not generate Adventure XP. Essence funds permanent party development and learned Commander abilities. Heroes grow naturally to 60. Gold and idle materials fund crafting, enhancement, enchantments, titanforging and heirloom production.
+This pass follows the production/cost comparison and reset-loop modeling described in Anthony Pecorella’s [The Math of Idle Games, Part I](https://www.kongregate.com/en/pages/the-math-of-idle-games-part-i) and [Part III](https://www.kongregate.com/en/pages/the-math-of-idle-games-part-iii). These sources explain modeling methods, not universal timings. The targets below are this project's design choices. All reported results are simulations or analytical models, not observed player behavior or in-client validation.
 
-Existing version-one saves retain their currency, hero experience, equipment, and discoveries. The new bar starts at rank 1 with zero XP: earlier activity already paid rewards and is not credited a second time.
+## Feature roles and targets
 
-## Initial reward weights
+| System | Role and balance decision |
+| --- | --- |
+| Opening, recruitment and destinations | Preserve the first eight encounter levels, existing companion discoveries and all 41 destination unlocks. Aim for a useful first session and first prestige access in roughly 45–60 minutes with 15-minute check-ins. Access is optional; it is not a forced reset. |
+| Hero levels, talents and class resources | Keep natural growth to 60, level-earned permanent points, free respecs and encounter resource pools. Never charge Essence for levels. Class priorities and party composition should affect throughput and survival. |
+| Mastery | Keep level-20 unlock, per-tier highest-encounter eligibility, 100 initial XP plus 50 per rank through rank eight, a quadratic late-rank premium, and double boss XP. Repeated easy resets cannot generate new level points or bypass the Mastery frontier. |
+| Equipment loot and crafting | Loot supplies incidental upgrades; crafting fills specific gaps. Reduce normal craft materials to `max(5, ceil((4 + ceil(level/4)) * discounts))`, from `4 + level`. At level 60 an undiscounted replacement costs 19 materials instead of 64. Gold remains `8 * level`. |
+| Enhancement | Keep +10% base stats per purchase and the existing Ore price. Gold becomes `16 + 10*r + 6*r^2`, where `r` is prior upgrades. Early enhancement remains cheap; repeated enhancement eventually competes with enchanting and forging rather than dominating them indefinitely. Already earned stats are unchanged. |
+| Enchanting and titanforging | Keep unlocks at 30/40 and paid-work specialization at 50. Gold becomes `(24 + 6*itemLevel) * nextRank`; Relic dust is `2 + nextRank`; forging also costs `4 + 2*nextRank` Ore, before discounts. Enchanting uses rank one. A level-60 first modification costs 384 gold and 3 dust rather than 760 and 5. |
+| Profession plans and heirlooms | Retain work XP, branch ranks, forge power, recipes and heirloom scaling. Basic heirloom craft remains 30 gold/12 materials before discounts. Profession plans and item investments make later rebuilds faster. Salvage/disenchant returns remain below paid inputs. |
+| Adventure and Development | Retain activity rates and exact investment receipts; increase permanent branch benefits instead of changing prices under existing saves. First-rank purchases should produce a visible combat or rebuilding benefit. |
+| Commander and automation | Retain single equipped ability, 300-second effects/600-second cooldowns and permanent 30/60 Essence or 1 Legacy ownership. Automation costs 1/2 Legacy once, never per activation. Aim for a useful convenience/throughput benefit without mandatory clicking. |
+| Routes and profiles | Retain 1 Legacy route ownership, eight templates/profiles and existing safe offline travel rules. These reduce management friction; they do not create income independently. |
+| Collections and hunt talents | Preserve verified sources, eligibility, independent rolls and earned bonuses. Double the relative chance bonus per talent rank to 20%, at unchanged 1/2/3 Legacy prices. Hunting remains optional permanent progression. No failure counters or guaranteed discovery. |
+| Ordinary prestige | Keep `floor((runBest - 1)/3)` Legacy and two percentage points of permanent party power per Legacy earned. Existing strength is preserved. Short and deeper rebuilds should have comparable power per minute, so resetting at the earliest opportunity is not universally best. |
+| Transcendence and Inheritance | Keep online level-60 completion, one-time `tier + 1` Inheritance, tier cap 10, permanent purchases and profession-work reset. Higher tiers should be attainable with investment, not a blanket timeout. |
+| Offline farming | Keep 24-hour catch-up, quarter-second combat and the same yields, resource/boost rules and safe-route constraints as online. No offline Adventure XP, live collection kills, frontier unlocks or newly learned Runic recipes. |
 
-| Activity | Adventure XP | Rationale |
+All prices and chances used in previews still come from the same domain/content functions used by transactions. No new currencies, dependencies, telemetry, daily caps or reset losses are introduced.
+
+## Challenge curve and recurring prestige
+
+The first eight encounter levels are unchanged, preserving recruitment and the level-eight prestige unlock. After eight, health grows by **1.14 per encounter level** and damage by **1.065**, replacing 1.055/1.025. Prestige is intended during the climb, not just after reaching 60. First prestige access remains around 46–47 minutes; the regular-reset model first chooses it at 75 minutes, then completes six chapters by hour six. This is a policy observation, not a forced schedule or unlock delay.
+
+A naked same-level party fails at 20/40/60. At 20, crafted gear plus legal talents clears in 49.75 seconds, while either alone fails. At 40 and 60, crafted gear plus the level-earned talent budget also fails: retained talents, Mastery, heirlooms, Development, modifications and ordinary-prestige power become necessary investments. No new level-training fee, timer gate, combat restriction or reset loss is added.
+
+Difficulty tiers add `1.27^tier * 1.12^max(0,tier-2)` health and `1.18^tier` damage. The extra health slope begins after tier two, leaving early ascensions gentler while preserving later walls. Relentless starts at tier two (2.16-second attacks); Renewal at tier five heals 0.1% maximum health/second after ten seconds; Boss fury at tier eight adds 20% damage after 30 seconds, once. Basic resistance, reward multipliers and Runic tier 2/5/8 requirements remain unchanged.
+
+Mastery cost at current rank `r` is `100 + 50*r + 100*max(0,r-8)^2`. The first eight ranks retain their old prices. Filling all 24 extra level-60 points now costs 140,200 XP rather than 16,200. This preserves early build development while slowing the passive acquisition of every late-tree choice. Existing earned points, selected talents, ranks and partial XP are retained. Offline summaries sum actual prices across rank-ups, including the late premium.
+
+`scripts/balance_matrix.lua walls` checks progression at 20/40/60 and every tier 0–10. Its cumulative funded comparisons show that board rank three alone cannot erase the late wall. Full Mastery, weapon enhancement five, board rank three and 1,000 synthetic prestige strength clear through tier six; additional tested strength of 3,000 clears tiers seven–nine. Tier ten clears at 10,000 synthetic strength with Focused Assault. These large fixture budgets establish a finite tested escape, **not** reasonable acquisition time. The earned journey reaches tier eight in 100 hours; tier-nine/ten acquisition remains an aspirational pacing question for playtests.
+
+`scripts/balance_builds.lua` now explicitly supplies 1,000 prestige strength, eight Mastery ranks, paid equipment and retained work access, across 96 class-composition/profession/level/tier cases. It produces 80 wins and 16 timeouts. Tests require funded baseline/early tiers to remain viable; later timeouts are deliberate walls rather than a reason to flatten the curve again. These fixtures do not establish broad build parity or earned affordability.
+
+## Adventure XP and permanent development
+
+Every 100 account-wide Adventure XP pays 60 Essence. Rank, partial XP, lifetime XP and unspent Essence survive both resets. Idle battles never generate Adventure XP. Rewards remain:
+
+| Activity | XP |
+| --- | ---: |
+| Eligible creature kill | 1 |
+| Skill-eligible herb/ore node | 4 |
+| Skill-eligible skin | 0.25 |
+| Quest/world quest completion | 20 |
+| Eligible boss | 25 |
+| Confirmed eligible dungeon completion, in addition to kills/bosses | 40 |
+| Character level gained | 5 |
+
+Keep non-gray participation/loot attribution, skill-eligible gathering evidence, per-cast deduplication and explicit dungeon-completion checks. Legacy farming and uncertain eligibility never gain guessed rewards. These rules belong to compatibility adapters; this balance pass does not change their client behavior.
+
+The optional first bundle (one rank in each branch plus Battle Orders) still costs 210 Essence, requiring 400 XP in whole payouts. Modeled affordability is 1.56 hours mixed questing, 1.54 gathering, 1.36 confirmed dungeon play, and 2.13 kill-and-skin play. Counts include assumed travel/downtime; actual rates vary. The activity sensitivity model samples 5,000 variations at 75–125% efficiency. At 100 hours it buys board ranks 5–6 per branch across the active profiles; idle-only earns no Essence and can still progress naturally.
+
+Prices remain `60 * nextRank^2`, ten ranks per branch, 23,100 Essence per branch and 69,300 total. Exact refunds, free milestone switching and investment validation are unchanged. With `f = rank/(rank+4)`, benefits now are:
+
+| Branch | Benefits before unchanged rank-three choices |
+| --- | --- |
+| Might | `1 + 0.4*f` damage/healing (rank one +8%, rank ten +28.57%) |
+| Resolve | `1 + 0.4*f` health, `0.03*f` victory recovery, `1 - 0.15*f` incoming damage |
+| Provisioning | `1 + 0.6*f` materials, `1 + 0.5*f` hero XP, unchanged `1 - 0.25*f` equipment cost |
+
+Might previously gave +5% at rank one. New Resolve starts at +8% health/0.6% recovery/3% less damage; Provisioning starts at +12% materials/+10% hero XP. Mastery XP and real activity rewards do not receive these multipliers. Material-family secondary yields remain capped at 25% before shared multipliers, with fractional remainders preserved.
+
+## Collection investment and variance
+
+Collection talent costs stay 1/2/3 Legacy, six per completed talent. Outdoor and dungeon conditions do not overlap. At rank three the source chance becomes `base * 1.6`: 5% → 8% outdoors and 20% → 32% in dungeons. Expected eligible kills per piece fall by 37.5%. Legacy spending never subtracts already earned prestige strength.
+
+`scripts/balance_activity.lua` additionally samples 5,000 five-piece sets per kind/rank using the live purchase and effective-chance functions. This is an independent geometric model with distinct sequential sources; it excludes travel, overlapping sources, dungeon boss availability and repeat visits. It never enables client acquisition profiles.
+
+| Model | Expected kills/piece | Set kills p50/p90/p99 |
 | --- | ---: | --- |
-| Eligible creature kill | 1 | Frequent baseline; non-gray credited kills remain eligible at character level cap. |
-| Herb or ore node | 4 | Includes finding and traveling between eligible nodes. |
-| Skinning | 0.25 | A small additional reward after the kill; four skins equal one kill. |
-| Quest completed | 20 | Includes objectives, travel, and turn-in time. World quests use the same completion signal. |
-| Eligible boss defeated | 25 | Recognizes encounter effort and coordination. |
-| Confirmed dungeon completion | 40 bonus | Added to its kills and bosses, rather than replacing them. |
-| Character level gained | 5 bonus | Small milestone reward; most leveling effort already receives kill and quest XP. |
+| Outdoor, untrained | 20 | 95 / 158 / 230 |
+| Outdoor, rank three | 12.5 | 59 / 98 / 143 |
+| Dungeon, untrained | 5 | 24 / 38 / 55 |
+| Dungeon, rank three | 3.125 | 15 / 23 / 33 |
 
-The shared bar makes small activities immediately visible without issuing currency for every event. There is no daily earning cap. Rates live in `Content.lua`.
+These are sample quantiles, not guarantees or equal elapsed-time targets for outdoor/dungeon play. Arbitrarily long dry streaks remain possible. Existing collection bonuses, targeting behavior and source verification are unchanged.
 
-## Eligibility and duplicate handling
+## Integrated earned progression and attention
 
-- Kills require combat-XP delivery or readable non-trivial unit evidence with participation or loot credit.
-- Mining, herbalism, and skinning require a successful gather whose pre-cast difficulty can grant profession skill: orange, yellow, or green. A matching actual skill-up can confirm eligibility when difficulty is unavailable. Multiple signals for the same cast pay once.
-- Bosses use observed non-gray status before death, matching the player's XP eligibility and current scaling. Cached encounter evidence survives the boss frame disappearing.
-- Dungeon completion requires an explicit completion signal and an eligible boss in the current run. A verified current-instance recommended level bracket is the fallback when boss evidence is unavailable. Portal admission limits are not treated as recommended levels. Legacy farming and unverified eligibility do not award boss or completion XP.
-- The completion bonus is available only where the client confirms completion. Manual runs still receive eligible boss rewards; leaving an instance does not prove completion.
+`scripts/balance_journey.lua` starts with one level-one Warrior and zero gold, items, permanent power or talent grants. Recruitment, talent purchases, crafting, enhancement, enchanting, forging, specialization, Commander ownership/automation, heirloom recipes, collections talents, ordinary prestige, ascensions and Inheritance use real domain commands. Every check-in validates a loadable save. Resource income comes from actual fights; optional real activity assumes eight quests, 80 kills and four nodes/hour through the live XP command. No collection kills are fabricated in this model.
 
-## Time and effort model
+Policies compare unmanaged play, investment without resets, early resets, regular deep progression, hourly management, idle-resource-only management and a daily return. The regular policy chooses progressively deeper reset targets (12 plus three per rewarded chapter, capped at 60), or resets after a stalled check-in. It waits for a qualifying online boss when a current level-60 hero is ready, and never repeats a zero-reward ascension just to satisfy a script. These are illustrative policies, not optimal bots or measured player preferences.
 
-These are design assumptions, not measured player statistics. Counts include travel, loot, grouping, and other downtime. Individual routes, classes, gear, and dungeon lengths will vary.
+| Model | Observed outcome |
+| --- | --- |
+| Regular, 15-minute visits, seed 17 | First reset at 1.25 hours, frontier 15/hero 20; six ordinary prestiges by six hours, with reset hero levels 15–21. Eighteen by 24 hours. First ascension at 30.75 hours. |
+| Same regular model, 100 hours | 29 ordinary prestiges, eight ascensions, tier eight, 438 Legacy and 36 Inheritance earned. Paid 899 crafts, 860 enhancements, 624 enchants and 484 forge steps. About 37.76 hours spent farming at walls. |
+| Hourly regular visits, seed 91, 24 hours | 16 ordinary prestiges, 208 Legacy, no ascension yet. Reset observations include hero levels 19–48 long before cap. |
+| Idle-resource-only management, seed 17, 24 hours | No Adventure XP/Essence injection; 16 prestiges, 175 Legacy, frontier 61 and hero level 49 at the endpoint. Legacy buys Commander ownership when Essence is unavailable. |
+| Investing without prestige, seed 17, 24 hours | Caps hero levels but reaches only frontier 54 under the bounded purchasing policy. Waiting and routine purchases do not bypass the prestige curve. |
+| Daily return | One hour online plus 23 hours of actual catch-up farms an already safe encounter. Hero levels can grow offline, but new frontiers and ascension completion still require online play. |
 
-| Play style | Assumed activity per hour | XP/hour | Essence/hour, long-run average |
-| --- | --- | ---: | ---: |
-| Mixed questing | 8 quests, 80 kills, 4 nodes | 256 | 153.6 |
-| Herb / ore route | 60 nodes, 20 kills | 260 | 156 |
-| Kill and skin | 150 kills, 150 skins | 187.5 | 112.5 |
-| Dense skinnable packs | 240 kills, 240 skins | 300 | 180 |
-| Confirmed dungeon | 80 creature kills, 4 boss bonuses, completion per 45 minutes | 293.3 | 176 |
-| Manual dungeon | Same run, without an exposed completion signal | 240 | 144 |
-| Pure mob farming | 180 kills | 180 | 108 |
+The 100-hour policy still accumulates substantial gold (981,140 in seed 17; 918,631 in seed 91) because its purchases stop at enhancement five/forge two and it does not optimize every material route. Seed 91 independently reaches tier eight with 33 ordinary prestiges/eight ascensions and 517 Legacy/36 Inheritance earned. A separate endpoint intervention spends that **same account's** available stock toward enhancement twenty/forge five: 900 paid modifications consume 862,278 gold and turn its failed tier-eight level-60 encounter (180-second timeout) into a 102-second victory. This establishes an earned, non-waiting escape from that wall. It does not establish acceptable management effort: 900 modifications would be substantial player input, and the model does not simulate a human performing them. The 24-hour no-prestige account has no affordable modification at its wall despite surplus gold, identifying a material-route bottleneck instead. Neither accumulation nor one intervention proves every endgame sink is balanced. Commands count successful domain calls, including repeated configuration, rather than observed clicks. Real management burden and the best reset moment remain playtest questions.
 
-Skinning is a supplemental reward to combat. At the dense-pack assumption, 1 XP per skin would raise income to 480 XP/hour; quarter points keep it at 300. Dedicated gathering and ordinary questing remain competitive. Optimized play can earn more; the goal is to avoid a universally dominant routine, not force identical hourly returns.
+The older no-reset `balance_profiles.lua` policy now reaches hero levels 25–28 and frontiers 33–38 after six hours, across idle-only/mixed/hunting profiles and three seeds. Its easy-talent ordering and infrequent purchases are deliberately distinct from the integrated strategy. Earlier results reaching level 60 in six hours used the flatter curve and no longer describe this build.
 
-## Permanent development affordability
+## Class, profession, Commander and destination comparisons
 
-The optional first bundle is one rank each in Might, Resolve and Provisioning (60 Essence each), plus Battle Orders (30): 210 Essence. Whole-rank payouts require 400 Adventure XP. Modeled mixed questing reaches it in 1.56 hours, gathering in 1.54, and a confirmed dungeon profile in 1.36. Idle-only play does not earn Essence and has no paid level or equipment gate; Legacy remains an alternative for Commander ownership.
+- **Classes/resources:** `balance_matrix.lua builds` covers all nine classes, three initial talent-path orders, levels 20/40/60, tiers 0/5 and resource thresholds 0/50/90: 486 cases. The declared 1,000-strength/eight-Mastery funded budget wins all 243 base-tier cases and 162/243 tier-five cases. Candidate damage/healing rates expose role tradeoffs; tank/healing paths should not be judged solely by DPS. The matrix is not an exhaustive search of mixed talent allocations or party permutations.
+- **Professions:** `balance_matrix.lua professions` compares all 27 combinations of crafting branch, forge branch and enchant type at declared late-game power. Eighteen clear tier eight; nine defense-enchant choices time out in this offensive fixture. Efficiency lowers expenditure, precision/quality improve power, utility improves cadence, and defense trades damage for survival. The heirloom branch intentionally offers no discount to ordinary items; its retained-item discount and reset behavior are covered by the existing profession/reset tests. No branch is made universally equal in one task.
+- **Commander:** `balance_matrix.lua boosts` compares all four abilities, both offensive/support parties, tiers 0/5/8/10 and none/on-cooldown/boss/low-health policies: 128 half-hour runs. It starts from declared cleared encounters instead of allowing a failed high-tier case to fall back to an unearned level-one benchmark. Ownership/automation costs are paid once and recurring fees are asserted absent. Offense boosts improve throughput; defensive boosts need incoming-damage pressure to have value. These results do not establish a single best trigger or equal performance for every ability.
+- **Destinations:** `balance_matrix.lua zones` compares all 41 destinations for ten simulated minutes, with common level-60 gear/power and the same absolute starting encounter level. It reports gold, primary/secondary material rates, upgrade drops and defeats. Gold/combat curves are shared; material-family output and curated item pools differentiate routes. No map geometry or client artwork changes are involved. The equipped late-game fixture has no useful low-level loot upgrades; this does not prove that early-zone loot is irrelevant to leveling heroes.
+- **Collections:** `balance_hunts.lua` uses the actual Forever piece-to-NPC overlap, real `CollectionKill` transactions and all catalog sets at ranks zero/three, 1,000 samples each. It models outdoor kills at 120/hour plus ten minutes per source-zone visit; dungeon sources appear once per assumed 45-minute run. Outdoor shared sources can roll several missing pieces per kill. For Redridge, median completion is 55/35 kills and 0.96/0.79 hours untrained/trained; Defias is 37/21 listed-source kills and 7.5/4.5 hours. Travel, source availability and dungeon cadence are assumptions, not client measurements. Full collection passive bonuses cap at 5% each; only one completed-set effect is active. Every selectable effect is checked against matching-family defense/basic/material bounds. Retail source profiles remain disabled; these hunts cannot be validated through Retail drops.
 
-Each Development branch has ten ranks. Its next rank costs `60 * nextRank^2`; a complete branch costs 23,100 Essence, and all three cost 69,300. Benefits use a diminishing `rank / (rank + 4)` curve. Rank three offers a free two-way milestone choice. Refunding ranks returns their exact Essence investment; learned capabilities are never refunded or revoked.
+The one-time tier-zero-through-ten Inheritance supply is 66; both five-rank permanent branches cost 30 total. The remaining 36 is finite completion surplus, not a growing faucet or a new mandatory sink. Short resets intentionally yield Legacy without earning high-tier recipes or Inheritance. Their time/attention opportunity cost remains visible in the journey comparisons; no reset cooldown was added.
 
-Might improves damage/healing; Resolve improves health, incoming damage and post-victory recovery; Provisioning improves material yield, hero XP and equipment costs. Mastery XP and real-activity rewards remain separate. Combined discounts leave all equipment transactions with positive gold/material costs. Crafting consumes at least five materials, exceeding the maximum four Ore recovered from a crafted item's salvage. No equipment operation returns Essence.
+## Persistence and verification
 
+No save schema or purchase receipt changes are required. Mastery prices change only future requirements; earned ranks and partial XP are preserved. Existing Development investment/refunds, collection talent ranks, prestige strength, forgePower, enhancements, profession work and heirloom modifications remain intact. New benefits apply to existing ownership; new prices apply only to future purchases. The historical economy migration remains unchanged: only evidenced retired training/enhancement/enchantment purchases receive credits, with zero guessed fallback. No retroactive refund is issued for prior gold/material purchases.
 
-## Reproducible checks and tuning
+Run from the repository root:
 
-Run `lua scripts/balance_activity.lua`. It reads the live reward, Commander and Development definitions, projects 100 hours, and samples 5,000 efficiency variations per profile at 75–125% of the assumed rates. It reports optional-bundle affordability, acquired board ranks and unspent Essence, including an idle-only profile. These results are a sensitivity model, not a substitute for playtesting.
+```sh
+lua scripts/test.lua
+lua scripts/balance_activity.lua
+lua scripts/balance_builds.lua
+lua scripts/balance_profiles.lua
+lua scripts/balance_profiles.lua 100 3600 17
+lua scripts/balance_scenarios.lua
+lua scripts/balance_rebuild.lua
+lua scripts/balance_automation.lua
+lua scripts/balance_journey.lua 100 deep 17
+lua scripts/balance_journey.lua 24 casual 91
+lua scripts/balance_journey.lua 24 builder 17
+lua scripts/balance_journey.lua 24 returning 17
+lua scripts/balance_matrix.lua walls
+lua scripts/balance_matrix.lua builds
+lua scripts/balance_matrix.lua professions
+lua scripts/balance_matrix.lua boosts
+lua scripts/balance_matrix.lua zones
+lua scripts/balance_hunts.lua 1000
+```
 
-Adventure progress stores per-source activity counts and XP totals. Use timed playtests to compare those totals against the assumptions, including dense pack farms, fast quest turn-ins, repeated quests, level scaling, and long manual dungeon runs. Keep these weights provisional until observed rates support them. Do not infer extra rewards from signals the client cannot verify.
+The profile arguments are horizon hours (1–100), check-in seconds (60–86400), and optional single seed. Longer runs expose savings/stalls under a policy that never resets; they are not an optimal endgame strategy. The activity model projects 100 hours of real-activity income independently of combat policy. Compare results before changing coefficients again.
 
-## Permanent talents and Mastery
-
-Character levels stop at 60. Each hero retains selected talents, earned points, and their highest level through ordinary prestige. Higher personal level records award a point every two levels, starting at level 1, for up to 30 level-earned points. Repeating old levels and respeccing do not award new points or change Mastery prices.
-
-Mastery unlocks permanently at hero level 20 and uses its own rank and XP bar. Every victory records that hero's highest completed encounter level for the current difficulty tier. Victories at or above that frontier award the encounter's base XP with the tier's Mastery multiplier, doubled for bosses; easier encounters award none. Frontiers survive both resets; existing records migrate to tier zero. Hero-XP rebuilding purchases do not multiply Mastery XP. This rewards pushing harder encounters while permitting steady progress at the current frontier, including offline farming and character-level caps.
-
-Mastery rank-ups grant one permanent talent point. The first costs 100 XP, with 50 XP added to each subsequent price. Twenty-four ranks cost 16,200 XP in total; alongside 30 level-earned points, they fill the current 54-talent budget. Reaching level 60 is not required before earning Mastery points. Once all points are earned, further talent Mastery gains stop. Constants live in `Content/TalentTraits.lua`.
-
-Existing saves retain allocated and unspent talent points. Old hero levels above 60 become Mastery ranks once on load, preserving the existing talent budget; older resets that already discarded talents cannot be reconstructed.
-
-## Combined progression feasibility
-
-Run `lua scripts/balance_rebuild.lua` for actual ordinary prestige, same-tier Prestige+ control and next-tier Prestige+ rebuilds. Two seeds, two-hour horizons and 15-minute check-ins are replayed exactly. A declared level-60 established-account fixture pays for its board, heirloom recipes/equipment and weapon modifications through real commands, then loses ordinary resources through real reset commands. Retention, paid rebuilding and deterministic results are asserted. Setup funding is synthetic; no resources or real activity are injected after reset. Ordinary Legacy strength, deeper-reset profession losses and the next tier's challenge/rewards differ deliberately and are disclosed.
-
-Both seeds regain frontier 60 after 37.18 minutes for ordinary prestige, 43.38 minutes for same-tier Prestige+ and 53.93 minutes for tier-one Prestige+. Final frontiers are 91/85/79. Ordinary prestige pays 19 Legacy; either first deeper reset pays one Inheritance. The policy buys 4/6/6 crafts respectively. All 40 weapon-modification quotes per scenario defer because this initial-zone policy earns no Relic dust. This is a source/route-policy bottleneck, not evidence that modifications are globally unaffordable. No acquisition-time, measured player-attention or balanced-reset-loop claim follows from the fixture.
-
-Run `lua scripts/balance_builds.lua` for 64 build/profession cases, each replayed exactly: two party compositions, unallocated/specialized profession plans, levels 40/60, tiers 0/2/5/8 and two seeds. Equal initial budgets fund real craft/enchant/forge commands; the script checks each quoted payment. Lifetime profession access at 60, retained work rank 7, prestige strength 40 and eight Mastery ranks are synthetic fixture assumptions, including for the level-40 cases. They do not establish acquisition time.
-
-This matrix produces 44 wins and 20 timeouts, with no wipes. Every tier-8 case times out. Level-60 tier-5 support/survival cases also time out; mixed-offense cases clear in 69 seconds without allocations and 57.25 seconds with specialization. All level-40 tier-5 cases clear in 47–108.25 seconds. Both seeds agree in these fixtures. Paid costs per party are 120,000 gold/3,150 Ore/850 Relic dust at level 40 and 176,000/4,150/850 at level 60. The selected branches improve power rather than reducing these costs. These bounded boss checks identify comparison targets; they do not diagnose every damage, healing or resource bottleneck or prove broad build viability.
-
-Run `lua scripts/balance_automation.lua` to compare no activation, manual boss-entry activation, on-cooldown automation and conditional boss rules from identical level-20 mixed-party snapshots. Three fixed seeds and 15-minute/one-hour horizons are replayed exactly; assertions cover paid transactions, activation deadlines, encounter accounting and absence of recurring fees. Active and combat-active seconds integrate the actual per-step boost fractions. The fixture supplies starting resources and uses real purchase/crafting commands; it does not measure acquisition time or player attention, and makes no later equipment, talent or reset decisions.
-
-In this fixture, all three seeds produce 101 one-hour victories without activation, 104 with manual boss-entry or conditional-boss use, and 105 with on-cooldown use. All reach frontier 37 without defeats. Manual boss observation makes 21 attempts for five successful activations, matching the conditional policy's five uses and 1,378.5 combat-active seconds. On-cooldown makes six activations and supplies 1,660.5 combat-active seconds without scripted manual attempts. These results compare one basic-attack boost and one party policy; they do not establish broad build balance or a universally preferred rule.
-
-Run `lua scripts/balance_scenarios.lua` for bounded, fixed-seed combat and reset scenarios using the live simulation. The fixtures provide five mixed-class heroes, legal talent allocations, same-level crafted equipment, and natural growth without training resources. They test feasibility; supplied equipment and currency do not establish acquisition time or measured player behavior.
-
-Enemy health and damage retain their original curves through encounter level 8. Above 8, each level multiplies health by 1.055 and damage by 1.025, anchored to the level-8 values. The previous uninterrupted 1.16/1.12 curves produced a level-60 boss with 38.1 million health and 268,317 damage per hit, preventing the capstone progression required for Prestige+ even with a developed party.
-
-With eight retained Mastery points per hero and no boosts, the fixed mixed-party fixture defeats the level-60 boss in 26.75 seconds at base difficulty and 42.75 seconds at tier one. Forty equivalent prestige bonuses reduce those times to 12 and 18 seconds. These are provisional checks for this build and seed; other parties, equipment budgets, higher tiers, and actual-client play need testing. The regression suite preserves opening combat exactly and checks that base and first-tier capstones remain attainable.
-
-Tier modifiers, profession investments, collection bonuses, and temporary boosts affect idle rewards and combat only. Real-activity Adventure XP and its Essence payout remain unchanged. Prices, collection guarantees, and higher-tier multipliers remain prototype values.
-
-Ordinary prestige now adds two percentage points of permanent party health, damage, and healing per Legacy earned, independently of spending that Legacy. Existing saves retain their previous party bonus through a one-time `prestigeStrength` migration. Rewarded chapter count remains a separate record. Empty resets and Prestige+ add no ordinary prestige strength. In the retained-talent/heirloom fixture, level-8 and level-20 reset loops earn approximately 1.52 and 1.53 percentage points per simulated minute, compared with the former roughly threefold short-reset advantage. The fixture supplies retained equipment and talents, but needs no training currency; actual acquisition and rebuild costs still need playtesting.
-
-## Economy migration
-
-`economyVersion = 1` distinguishes the natural-growth economy from older saves. Migration operates on a copy and commits credits only after validation. Current-cycle training rank `r` proves `60*r*(r+1)` Essence and `80*r` gold. Retained enhancement rank `n` proves `8*n + 5*n*(n-1)/2` Essence per unit; a retained enchantment proves one historical fixed-price 15-Essence application. Duplicate item identities count once.
-
-Crafting discounts, forging discounts, earlier enchantment replacements, discarded items and previous reset cycles lack complete receipts. Their documented conservative fallback is zero credit. Items without a valid stable identity likewise receive no guessed equipment credit. Existing gear, modifications, hero/Adventure progression, currencies and learned capabilities remain; migration never marks credited Essence as newly earned real-activity XP. The saved migration report is inspectable on Development, and repeated loads/resets never pay it again.
-
-Tier affixes currently add a fixed 2.16-second enemy attack interval at tier 2, 0.2% maximum-health regeneration per second after 10 seconds at tier 5, and a one-time 20% boss damage increase after 30 seconds at tier 8. They add no separate reward multiplier. Regeneration is capped at maximum health, excludes dead enemies, and does not extend the 180-second encounter limit.
-
-The fixed level-60 scenario with 40 retained prestige strength and eight Mastery ranks wins at tier 2 in 26.75 seconds and tier 5 in 133 seconds, but times out at tier 8. This exposes a high-tier pacing gap for that party, not a validated target or a claim that every tier is attainable at this investment. Broader Mastery/development/profession budgets and class compositions still need comparison before tuning these coefficients.
-
-Runic recipes currently unlock from online level-20+ bosses at tiers 2/5/8. Their offense/defense/utility bases are 8 attack/spell power, 10 stamina plus 32 armor, and 5 spirit plus 4 haste, scaled through existing item-level and specialization rules. Fragment costs are 3/5/8 per application, alongside ordinary gold/material costs. One fragment per eligible tier 2+ level-20+ boss is capped at 1,000; fragments reset with the run and never convert back from an enchantment. Recipe ownership and heirloom investments persist. These are provisional optional late-cycle sinks; combined high-tier recipe, affix and profession pacing still needs comparison.
-
-### Encounter resources
-
-Idle resources are authored simulation rules, not live character resources. Warrior Rage starts empty, gains 15 per basic swing and 5 per damaging hit received, and costs 20/15/30 for strike/recovery/special. Rogue Energy starts at 100, regenerates 8 per second, and costs 45/30/60. Other supported classes use 100 Mana, regenerate 4 per second, and pay 30/20/40. Regeneration is capped at 100; pools reset each encounter. A per-hero percentage threshold applies before payment, without delaying basic attacks or consuming ability cooldowns when unmet. Values remain provisional.
-
-The fixed-seed mixed-party scenario with no prestige, boosts or supplied training reaches encounter 8 in 160 seconds, 12 in 262.75 seconds, and 20 in 476.5 seconds. Same-level geared level-8 parties beat base and first-tier milestone bosses in 7.25 and 12.75 seconds respectively. These feasibility checks do not establish parity between class compositions or final high-tier pacing.
-
-### Combined progression profiles
-
-Run `lua scripts/balance_profiles.lua` from the repository root. Seeds 17, 91 and 403 each simulate six online idle hours, with checkpoints at 15 minutes, one hour and six hours. The common policy checks in every 15 minutes, recruits available companions, allocates legal talents in catalog order, equips usable upgrades, crafts one affordable improvement per hero, buys one affordable Development rank per branch, and retries failed frontiers. It supplies no equipment, currency, training, prestige bonuses or automatic resets. This is one policy rather than optimal play.
-
-| Profile | Assumed real activity per hour | Six-hour hero level range | Six-hour Development M/R/P | First prestige unlock |
-| --- | --- | --- | --- | --- |
-| Idle only | None | 50–51 | 0/0/0 | 0.77–0.79 hours |
-| Mixed play | 8 quests, 80 kills, 4 gathers | 55 | 2/2/2 | 0.77–0.78 hours |
-| Focused hunt | 150 kills | 54–55 | 2/1/1 | 0.79 hours |
-
-Mixed play earns 1,536 real-activity XP over six hours; focused hunting earns 900. Idle-only earns zero Adventure XP and makes substantial natural hero/equipment progress. Under this policy the first Development rank is bought after 30 minutes of mixed activity or 45 minutes of focused hunting. No activity is required to unlock ordinary prestige. The observed 46–47-minute unlock contradicts the provisional 4–6-hour first-prestige target; the model measures access, not a player's decision to reset. Do not claim that target is met or delay the unlock without checking the intended early-game experience.
-
-Collection comparisons are explicitly synthetic: one hypothetical source per piece, 5% addon chance, sequential hunting of the next missing piece, and eligible hunt kills as a subset of the profile's activity kills. No Retail or Forever source is enabled by this script. Mixed play assumes 12 eligible hunt kills per hour; focused hunting assumes 120. Earlier completion-time measurements used a retired 30-kill guarantee and no longer establish current acquisition pacing. Independent rolls have an unbounded long tail; rerun these profiles and measure broader distributions before claiming balanced completion times. Source verification, representative builds, commander/profession policies and observed check-ins remain required before coefficient tuning.
-
-### Legacy collection talents — balancing pending
-
-Hypothesis: optional Legacy investment should modestly shorten collection hunts without changing source eligibility, equipment loot, or the independence of each kill. Fieldcraft applies to eligible outdoor collection kills; Relic Hunter applies to eligible dungeon collection kills. Each has three permanent ranks, provisionally priced at 1/2/3 Legacy (6 total per talent). Each rank adds 10% of the base collection chance; these two conditions never overlap. Learned ranks survive ordinary prestige and Prestige+. These values are implementation placeholders, not a balanced progression target.
-
-| Current source profile | Base chance | Rank 1 | Rank 2 | Rank 3 | Expected eligible kills per piece, base → rank 3 |
-| --- | --- | --- | --- | --- | --- |
-| Outdoor | 5% | 5.5% | 6% | 6.5% | 20 → 15.38 |
-| Dungeon | 20% | 22% | 24% | 26% | 5 → 3.85 |
-
-Expectations use `1 / p` for independent geometric rolls, excluding travel, source availability, overlapping piece sources and duplicate signals. They are analytical means, not completion guarantees or live measurements. Rank three reduces expected eligible kills by about 23%, while arbitrarily long dry streaks remain possible. Tooltips and rolls use the same chance, rounded to a basis point. The combined-profile script models the untrained baseline and does not purchase these talents.
-
-Before tuning, compare untrained and ranked median/p90/p99 eligible kills and elapsed hunt time, total-set completion distributions, outdoor versus dungeon access and travel, Legacy earning/spending opportunity costs against recipes and other unlocks, and actual talent uptake. Validate attribution and persistence in supported clients. Tune costs, rank count and relative bonus together; never restore saved failure progress or a guaranteed discovery threshold as a balancing shortcut.
-
-### Secondary family spoils
-
-Explicit encounter family tags add secondary materials while preserving the destination's base yield. Humanoids yield timber; beasts/dragonkin/critters hide; machines/giants ore; elementals/undead/demons Relic dust. Each tagged enemy contributes `base yield * 0.25 / enemy count`; total secondary output is capped at 25%, including boss encounters. Collection, Development and tier material multipliers apply once to both outputs; existing per-material fractional remainders preserve small awards online/offline. Untagged enemies add no guessed output. All 41 destinations have aligned enemy and boss profiles; appearance records without type evidence stay unknown. Values remain provisional. Combined-profile comparisons must account for this extra material income.
+For a few-hour Retail session, record first prestige unlock, first chosen reset, reset frontier/hero levels, and how soon the next wall arrives. Try one blocked boss after an equipment/build change, then compare a prestige rebuild. Review prestige should open the existing review without spending or resetting. Check a fresh party through recruitment and prestige, compare craft/enchant/forge quotes against actual deductions, buy/refund a Development rank during combat, reload an existing invested save, and compare visible/offline safe-farm rewards. Exercise tier-five Renewal and a tier-eight boss with both offensive and defensive parties. Simulator tests cannot validate live activity attribution, 3D rendering or actual player pacing. Forever simulator/client validation remains deferred until its testing setup is updated.

@@ -6,10 +6,12 @@ for _, file in ipairs({
     "Content/Encounters.lua",
     "Content/Items.lua",
     "Content/Boosts.lua",
+    "Content/Collections.lua",
     "Content/Professions.lua",
     "Content/Development.lua",
     "Domain/State.lua",
     "Domain/Development.lua",
+    "Domain/Collections.lua",
     "Domain/Boosts.lua",
     "Domain/Party.lua",
     "Domain/Inventory.lua",
@@ -93,4 +95,50 @@ for _, profile in ipairs(profiles) do
             state.essence
         )
     )
+end
+
+-- Independent geometric rolls, five distinct sequential sources, no travel or duplicates.
+-- Use the live talent purchase and chance query; this models kills, not client access.
+print("Collection model: 5000 five-piece hunts per kind/rank; independent sources; no travel.")
+print("Kind | Rank | Legacy spent | Chance % | Expected kills/piece | Set kills p50/p90/p99")
+for _, kind in ipairs({ "outdoor", "dungeon" }) do
+    local state = G.New(0)
+    state.legacy = 6
+    local talent = kind == "outdoor" and "fieldcraft" or "relicHunter"
+    local baseChance = kind == "outdoor" and 5 or 20
+    local previous = math.huge
+    for rank = 0, C.collectionTalentRankCap do
+        if rank > 0 then
+            assert(G.BuyCollectionTalent(state, talent))
+        end
+        local chance = G.CollectionDropChance(state, { kind = kind, chance = baseChance }) / 100
+        local randomState = G.New(17)
+        local hunts, total = {}, 0
+        for sample = 1, samples do
+            local kills = 0
+            for _ = 1, 5 do
+                local uniform = (G.Random(randomState, 1000000) - 0.5) / 1000000
+                kills = kills + math.ceil(math.log(1 - uniform) / math.log(1 - chance))
+            end
+            hunts[sample], total = kills, total + kills
+        end
+        table.sort(hunts)
+        local mean = total / samples
+        assert(math.abs(mean / (5 / chance) - 1) < 0.05)
+        assert(mean < previous, "Paid hunt ranks must reduce expected acquisition effort")
+        previous = mean
+        print(
+            string.format(
+                "%s | %d | %d | %.2f | %.2f | %d/%d/%d",
+                kind,
+                rank,
+                6 - state.legacy,
+                chance * 100,
+                1 / chance,
+                hunts[math.ceil(samples * 0.5)],
+                hunts[math.ceil(samples * 0.9)],
+                hunts[math.ceil(samples * 0.99)]
+            )
+        )
+    end
 end

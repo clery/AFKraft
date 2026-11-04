@@ -310,11 +310,11 @@ local function costFor(state, kind, item, hero, rank)
         * G.DevelopmentModifiers(state).costMultiplier
     local level = math.max(1, item.heirloom and hero.level or item.level)
     return {
-        gold = math.max(1, math.ceil((40 + level * 12) * rank * discount)),
+        gold = math.max(1, math.ceil((24 + level * 6) * rank * discount)),
         essence = 0,
         materials = {
-            relic = math.max(1, math.ceil((3 + rank * 2) * discount)),
-            ore = kind == "titanforging" and math.max(1, math.ceil((5 + rank * 3) * discount)) or 0,
+            relic = math.max(1, math.ceil((2 + rank) * discount)),
+            ore = kind == "titanforging" and math.max(1, math.ceil((4 + rank * 2) * discount)) or 0,
         },
     }
 end

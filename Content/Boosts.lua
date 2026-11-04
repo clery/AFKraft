@@ -1,6 +1,6 @@
 local _, W = ...
 
--- Initial prototype values; shared by previews, commands, and simulation.
+-- Shared by previews, commands, and simulation; see BALANCE.md for uptime tradeoffs.
 W.Content.boosts = {
     {
         id = "battleOrders",

@@ -39,9 +39,9 @@ test("Legacy collection talents purchase ranks and show active conditional drop 
         end
         ui.collectionSelected = "redridgeOutriders"
         ui:SetTab("collections")
-        assertTrue(details:find("6.50% chance", 1, true) ~= nil)
+        assertTrue(details:find("8.00% chance", 1, true) ~= nil)
         assertTrue(details:find("base 5.00%", 1, true) ~= nil)
-        assertTrue(details:find("Fieldcraft: Active (+30% of base)", 1, true) ~= nil)
+        assertTrue(details:find("Fieldcraft: Active (+60% of base)", 1, true) ~= nil)
         assertTrue(details:find("Relic Hunter: Inactive", 1, true) ~= nil)
     end)
     W.CollectionPanel.SourceProfile, U.Tooltip = sourceProfile, tooltip

@@ -1221,7 +1221,7 @@ for _, class in ipairs(C.classes) do
 end
 -- Historical alias for Warrior content; consumers should use talentsByClass.
 C.talents = C.talentsByClass.WARRIOR
--- Fixed tier challenges; coefficients are provisional and do not scale recursively.
+-- Fixed tier challenges; see BALANCE.md for pacing targets.
 C.difficultyAffixes = {
     {
         id = "relentless",
@@ -1236,8 +1236,8 @@ C.difficultyAffixes = {
         tier = 5,
         name = "Renewal",
         icon = "Spell_Nature_Rejuvenation",
-        description = "After 10 seconds, living enemies restore 0.2% of maximum health per second. Cannot revive enemies.",
-        regen = 0.002,
+        description = "After 10 seconds, living enemies restore 0.1% of maximum health per second. Cannot revive enemies.",
+        regen = 0.001,
         regenAfter = 10,
     },
     {

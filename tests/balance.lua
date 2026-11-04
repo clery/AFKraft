@@ -31,11 +31,11 @@ case("Enemy growth preserves opening levels one through eight exactly", function
     end
 end)
 
-case("A mixed level sixty party can finish base and first-tier milestone bosses", function()
+case("A developed prestige party can finish base and first-tier capstones", function()
     local preferred = { WARRIOR = 3, PRIEST = 2, MAGE = 1, ROGUE = 2, SHAMAN = 3 }
     for _, tier in ipairs({ 0, 1 }) do
         local state = G.New(0)
-        state.tier = tier
+        state.tier, state.prestigeStrength = tier, 1000
         if tier > 0 then
             state.difficulty.unlocked, state.difficulty.maxTier = true, tier
         end
@@ -110,6 +110,58 @@ case("Prestige strength rejects negative, fractional and non-finite saved values
     local state = G.New(0)
     state.prestigeStrength = 1.5
     assert(G.Load(state, 0).prestigeStrength == 1.5)
+end)
+
+case("Replacement gear stays affordable while repeated enhancement yields to forging", function()
+    local state = G.New(0)
+    assert(G.AddHero(state, "WARRIOR"))
+    local hero = state.heroes[1]
+    for _, level in ipairs({ 1, 20, 40, 60 }) do
+        hero.level = level
+        local quote = G.Cost(state, hero, false)
+        assert(quote.material >= 5 and quote.material <= 19)
+        assert(quote.gold == level * 8 and quote.essence == 0)
+    end
+    local item = assert(G.CraftItem(hero, 1, false, state))
+    hero.gear[1] = item
+    G.ProfessionUnlocks(state)
+    local _, forge = G.ForgeQuote(state, 1, 1)
+    assert(forge and forge.materials.relic == 3 and forge.materials.ore == 6)
+    local first = G.UpgradeCost(item, state)
+    assert(first.gold == 16 and first.materials.ore == 2)
+    assert(first.gold / 0.1 < forge.gold / 0.04)
+    item.upgrade = 10
+    local later = G.UpgradeCost(item, state)
+    assert(later.gold / (0.1 / 2) > forge.gold / 0.04)
+    assert(item.upgrade == 10 and G.Load(G.Copy(state), 0))
+end)
+
+case("All challenge tiers remain bounded with a useful health progression", function()
+    local state = G.New(0)
+    local previous = G.DifficultyModifiers(state)
+    for tier = 1, 10 do
+        state.tier = tier
+        local current = G.DifficultyModifiers(state)
+        assert(current.enemyHealth > previous.enemyHealth)
+        assert(current.enemyHealth / previous.enemyHealth < 1.43)
+        assert(current.enemyDamage > previous.enemyDamage)
+        assert(current.gold > previous.gold and current.masteryXP > previous.masteryXP)
+        previous = current
+    end
+    assert(previous.enemyHealth > 25 and previous.enemyHealth < 28 and previous.enemyDamage < 6)
+end)
+
+case("Post-opening enemy growth creates an early prestige wall without changing rewards", function()
+    local state = G.New(0)
+    assert(G.AddHero(state, "WARRIOR"))
+    state.stage = 100
+    G.StartBattle(state)
+    local level, enemy = state.battle.level, state.battle.enemies[1]
+    local openingHP = (60 + level * 24) * 1.16 ^ 7
+    local openingDamage = (6 + level * 3) * 1.12 ^ 7 * 1.2
+    assert(enemy.hp == math.floor(openingHP * 1.14 ^ (level - 8) * 2))
+    assert(math.abs(enemy.damage / openingDamage - 1.065 ^ (level - 8)) < 0.000001)
+    assert(G.PrestigeReward({ runBest = 15 }) == 4)
 end)
 
 return cases

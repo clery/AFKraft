@@ -441,7 +441,7 @@ function G.Cost(state, hero, heirloom)
         gold = math.max(1, math.ceil((heirloom and 30 or level * 8) * discount)),
         -- Even full discounts consume more material than the maximum four Ore
         -- returned by salvaging a crafted item, preventing a closed profit loop.
-        material = math.max(5, math.ceil((heirloom and 12 or 4 + level) * discount)),
+        material = math.max(5, math.ceil((heirloom and 12 or 4 + math.ceil(level / 4)) * discount)),
     }
 end
 
@@ -573,7 +573,7 @@ function G.UpgradeCost(item, state)
         or 1
     return {
         essence = 0,
-        gold = math.max(1, math.ceil((16 + rank * 10) * discount)),
+        gold = math.max(1, math.ceil((16 + rank * 10 + rank * rank * 6) * discount)),
         materials = { ore = math.max(1, math.ceil((2 + rank) * discount)) },
     }
 end

@@ -49,13 +49,13 @@ case("Collection talent conditions apply only to their acquisition kind", functi
     local outdoor, dungeon = { chance = 5 }, { kind = "dungeon", chance = 20 }
     assert(G.CollectionDropChance(s, outdoor) == 5)
     s.collectionTalents.fieldcraft = 3
-    assert(G.CollectionDropChance(s, outdoor) == 6.5)
+    assert(G.CollectionDropChance(s, outdoor) == 8)
     assert(G.CollectionDropChance(s, dungeon) == 20)
     s.collectionTalents.relicHunter = 3
-    assert(G.CollectionDropChance(s, dungeon) == 26)
-    assert(G.CollectionDropChance(s, outdoor) == 6.5)
+    assert(G.CollectionDropChance(s, dungeon) == 32)
+    assert(G.CollectionDropChance(s, outdoor) == 8)
     s.collectionTalents.fieldcraft = 1
-    assert(G.CollectionDropChance(s, outdoor) == 5.5)
+    assert(G.CollectionDropChance(s, outdoor) == 6)
     assert(G.CollectionDropChance(s, { chance = 0 }) == 0)
 end)
 

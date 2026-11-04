@@ -1,13 +1,13 @@
 local _, W = ...
 local C = W.Content
 
--- Provisional Legacy costs and bonuses; see BALANCE.md before tuning.
+-- Permanent hunt investments; see BALANCE.md for acquisition distributions.
 C.collectionTalents = {
     { id = "fieldcraft", name = "Fieldcraft", kind = "outdoor", condition = "Outdoor kills" },
     { id = "relicHunter", name = "Relic Hunter", kind = "dungeon", condition = "Dungeon kills" },
 }
 C.collectionTalentRankCap = 3
-C.collectionTalentBonus = 0.1
+C.collectionTalentBonus = 0.2
 C.collectionTalentCosts = { 1, 2, 3 }
 C.collectionTalentByID = {}
 for _, talent in ipairs(C.collectionTalents) do

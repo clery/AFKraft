@@ -549,7 +549,7 @@ case("All 54 permanent choices reload and refund even after current levels decre
     for _, class in ipairs(C.classes) do
         local state, h = hero(class.id)
         h.level, h.rank = 60, 14
-        G.RewardMastery(h, 1, 100000, false)
+        G.RewardMastery(h, 1, 1000000, false)
         assert(G.Points(h) == 54)
         for _, node in ipairs(G.TalentList(h)) do
             assert(G.Talent(state, 1, node.id))
@@ -728,7 +728,11 @@ case(
     "Previously complete builds retain their points and resume Mastery toward the new choices",
     function()
         local state, h = hero("WARRIOR")
-        G.RewardMastery(h, 60, 9450, false)
+        local experience = 0
+        for rank = 0, 17 do
+            experience = experience + G.MasteryCost(rank)
+        end
+        G.RewardMastery(h, 60, experience, false)
         assert(G.Points(h) == 48)
         for _, node in ipairs(G.TalentList(h)) do
             if node.row <= 8 then
@@ -739,7 +743,7 @@ case(
         local loaded = assert(G.Load(G.Copy(state), 1000))
         h = loaded.heroes[1]
         assert(G.Points(h) == 0 and h.mastery.rank == 18)
-        G.RewardMastery(h, 60, 1000, false)
+        G.RewardMastery(h, 60, G.MasteryCost(h.mastery.rank), false)
         assert(G.Points(h) == 1 and h.mastery.rank == 19)
         assert(G.Talent(loaded, 1, "warrior_1_17"))
     end

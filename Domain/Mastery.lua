@@ -7,7 +7,8 @@ local function whole(value)
 end
 
 function G.MasteryCost(rank)
-    return C.mastery.baseXP + rank * C.mastery.xpPerRank
+    local late = max(0, rank - C.mastery.softCap)
+    return C.mastery.baseXP + rank * C.mastery.xpPerRank + late * late * C.mastery.xpPerLateRank
 end
 
 function G.MasteryProgress(hero)

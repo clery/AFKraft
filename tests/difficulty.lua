@@ -198,7 +198,7 @@ case("Tier affixes are fixed, cumulative, bounded and independent of reward mult
         assert(#affixes == expected)
         local m = G.DifficultyModifiers(s)
         assert(m.enemyAttackInterval == (tier >= 2 and 2.16 or 2.4))
-        assert(m.enemyRegen == (tier >= 5 and 0.002 or 0))
+        assert(m.enemyRegen == (tier >= 5 and 0.001 or 0))
         assert(m.bossDamage == (tier >= 8 and 1.2 or 1))
         assert(m.heroXP == 1 + tier * 0.25 and m.gold == 1 + tier * 0.2)
     end
@@ -223,7 +223,7 @@ case("Renewal starts after its delay, clamps health and never revives dead enemi
     G.Step(s, 0.25)
     assert(enemy.hp == 5000)
     G.Step(s, 0.25)
-    assert(enemy.hp == 5005)
+    assert(enemy.hp == 5002.5)
     enemy.hp = 9999
     G.Step(s, 0.25)
     assert(enemy.hp == 10000)

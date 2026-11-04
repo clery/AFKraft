@@ -180,7 +180,7 @@ function G.StartBattle(state)
         local hp = floor(
             (60 + level * 24)
                 * 1.16 ^ min(level - 1, 7)
-                * 1.055 ^ max(0, level - 8)
+                * 1.14 ^ max(0, level - 8)
                 * (boss and min(4, #state.heroes + 1) or 1)
                 * difficulty.enemyHealth
         )
@@ -194,7 +194,7 @@ function G.StartBattle(state)
             maxHP = hp,
             damage = (6 + level * 3)
                 * 1.12 ^ min(level - 1, 7)
-                * 1.025 ^ max(0, level - 8)
+                * 1.065 ^ max(0, level - 8)
                 * difficulty.enemyDamage
                 * (boss and (opening and 1.2 or 1.8) or 1),
             attackCD = 1 + i * 0.3,

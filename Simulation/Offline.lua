@@ -169,9 +169,9 @@ function G.FinishCatchup(state, job)
             local ranks = current.rank - before.rank
             local gained = current.xp - before.xp
             if ranks > 0 then
-                gained = gained
-                    + ranks
-                        * (W.Content.mastery.baseXP + (current.rank + before.rank - 1) * W.Content.mastery.xpPerRank / 2)
+                for rank = before.rank, current.rank - 1 do
+                    gained = gained + G.MasteryCost(rank)
+                end
             end
             if gained >= 0 and gained < math.huge then
                 summary.masteryXP = summary.masteryXP + gained

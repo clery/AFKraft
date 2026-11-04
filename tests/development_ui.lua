@@ -96,7 +96,7 @@ test("Adventure cards preview affordable development without spending", function
     assertEquals(60, quote.cost)
     assertNotNil(ui.adventureDevelopment)
     assertTrue(ui.adventureDevelopment.titleText:GetText():find("Might rank 1", 1, true) ~= nil)
-    assertTrue(ui.adventureDevelopment.detailText:GetText():find("+5.0%", 1, true) ~= nil)
+    assertTrue(ui.adventureDevelopment.detailText:GetText():find("+8.0%", 1, true) ~= nil)
     ui.adventureDevelopment:GetScript("OnClick")()
     assertEquals("development", s.ui.tab)
     assertEquals(60, s.essence)

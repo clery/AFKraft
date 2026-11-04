@@ -83,7 +83,7 @@ case(
 case("Mastery rank prices grow gently, preserve overflow, and grant one point each", function()
     local _, h = hero(20)
     local initial = G.Points(h)
-    assert(G.MasteryCost(0) == 100 and G.MasteryCost(1) == 150 and G.MasteryCost(9) == 550)
+    assert(G.MasteryCost(0) == 100 and G.MasteryCost(1) == 150 and G.MasteryCost(9) == 650)
     local gained, ranks = G.RewardMastery(h, 10, 300, false)
     assert(gained == 300 and ranks == 2 and h.mastery.rank == 2 and h.mastery.xp == 50)
     assert(G.Points(h) == initial + 2)
@@ -165,6 +165,35 @@ case("Offline and visible victories use the same permanent Mastery progression",
     assert(offline.mastery.rank == visible.heroes[1].mastery.rank)
     assert(offline.mastery.xp == visible.heroes[1].mastery.xp)
     assert(G.Points(offline) == G.Points(visible.heroes[1]))
+end)
+
+case("Late Mastery prices preserve early access and previously earned ranks and XP", function()
+    assert(G.MasteryCost(8) == 500)
+    assert(G.MasteryCost(9) == 650 and G.MasteryCost(16) == 7300)
+    local state, h = hero(60)
+    G.TalentProgress(h)
+    h.mastery.rank, h.mastery.xp = 16, 899
+    h.talentProgress.earned = h.talentProgress.levelPoints + 16
+    local loaded = assert(G.Load(G.Copy(state), 1000))
+    assert(loaded.heroes[1].mastery.rank == 16 and loaded.heroes[1].mastery.xp == 899)
+    assert(loaded.heroes[1].talentProgress.earned == h.talentProgress.earned)
+end)
+
+case("Offline Mastery summary sums the actual nonlinear prices across rank eight", function()
+    local state, h = hero(60)
+    G.TalentProgress(h)
+    h.mastery.rank, h.mastery.xp = 8, 490
+    h.talentProgress.earned = h.talentProgress.levelPoints + 8
+    state.safe.elwynn, state.stage = 100, 100
+    local job = assert(G.BeginCatchup(state, 1300))
+    local before = G.Copy(h.mastery)
+    local earnedHero = job.state.heroes[1]
+    local gained = 2000
+    G.RewardMastery(earnedHero, 20, gained, false)
+    job.remaining = 0
+    assert(G.FinishCatchup(state, job))
+    local after = state.heroes[1].mastery
+    assert(after.rank > before.rank and state.lastOfflineSummary.masteryXP == gained)
 end)
 
 return cases

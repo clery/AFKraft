@@ -65,11 +65,11 @@ local function modifiers(ranks, choices)
     local might = (ranks.might or 0) / ((ranks.might or 0) + 4)
     local resolve = (ranks.resolve or 0) / ((ranks.resolve or 0) + 4)
     local provision = (ranks.provisioning or 0) / ((ranks.provisioning or 0) + 4)
-    result.damage, result.healing = 1 + 0.25 * might, 1 + 0.25 * might
+    result.damage, result.healing = 1 + 0.4 * might, 1 + 0.4 * might
     result.health, result.recovery, result.damageTaken =
-        1 + 0.3 * resolve, 0.02 * resolve, 1 - 0.1 * resolve
+        1 + 0.4 * resolve, 0.03 * resolve, 1 - 0.15 * resolve
     result.materials, result.costMultiplier, result.heroXP =
-        1 + 0.4 * provision, 1 - 0.25 * provision, 1 + 0.3 * provision
+        1 + 0.6 * provision, 1 - 0.25 * provision, 1 + 0.5 * provision
     if ranks.might >= 3 then
         if choices.might == "assault" then
             result.damage = result.damage * 1.05

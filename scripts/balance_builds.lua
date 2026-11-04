@@ -47,6 +47,12 @@ local compositions = {
         enchant = "offense",
     },
     {
+        name = "ranged-control",
+        classes = { "WARRIOR", "PRIEST", "HUNTER", "MAGE", "WARLOCK" },
+        path = 3,
+        enchant = "offense",
+    },
+    {
         name = "support-survival",
         classes = { "PALADIN", "PRIEST", "DRUID", "WARRIOR", "WARLOCK" },
         path = 2,
@@ -70,7 +76,7 @@ local function paid(state, cost, command)
 end
 local function setup(seed, level, tier, composition, professionPlan)
     local s = G.New(0)
-    s.seed, s.gold, s.prestigeStrength = seed, budget.gold, 40
+    s.seed, s.gold, s.prestigeStrength = seed, budget.gold, 1000
     s.materials.ore, s.materials.relic = budget.ore, budget.relic
     s.tier = tier
     s.difficulty.maxTier, s.difficulty.unlocked = tier, tier > 0
@@ -167,6 +173,7 @@ local function run(seed, level, tier, composition, professionPlan)
     local outcome = wins == 1 and "win"
         or (s.lastDefeat and s.lastDefeat:find("timed out", 1, true) and "timeout" or "wipe")
     assert(wins == 0 or wins == 1)
+    assert(tier > 2 or wins == 1, "Baseline and early-tier funded builds must remain viable")
     assert(s.stats.boostUses == 0 and s.essence == 0)
     assert(G.ValidateProfessions(s))
     assert(next(s.outdoorCollections.pieces) == nil and next(s.dungeonCollections.pieces) == nil)
@@ -202,7 +209,7 @@ print(
     "Synthetic equal initial budgets: 1,000,000 gold; 100,000 ore; 100,000 Relic dust. Unspent balances retained; costs reported, not equalized."
 )
 print(
-    "Both levels40/60 assume lifetime profession access60, retained work rank7 per profession, prestige strength40 and eight Mastery ranks."
+    "Both levels40/60 assume lifetime profession access60, retained work rank7 per profession, prestige strength1000 and eight Mastery ranks."
 )
 print(
     "All cases pay real commands: ten crafted/enchant slots per hero, two forge ranks each. No heirlooms, board, collections, boosts or Runic recipes."

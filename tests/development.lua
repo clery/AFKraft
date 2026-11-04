@@ -55,9 +55,9 @@ case(
                 and quote.current.damageTaken == 1
         )
         assert(
-            near(quote.next.health, 1.06)
-                and near(quote.next.recovery, 0.004)
-                and near(quote.next.damageTaken, 0.98)
+            near(quote.next.health, 1.08)
+                and near(quote.next.recovery, 0.006)
+                and near(quote.next.damageTaken, 0.97)
         )
         assert(
             s.development.ranks.resolve == 0 and s.development.invested == 0 and s.essence == 100000
@@ -152,14 +152,14 @@ case("Development branches use distinct bounded multipliers and milestone bonuse
     assert(G.SetDevelopmentChoice(s, "resolve", "renewal"))
     assert(G.SetDevelopmentChoice(s, "provisioning", "harvest"))
     local mods = G.DevelopmentModifiers(s)
-    assert(near(mods.damage, 1 + 0.25 * 10 / 14) and near(mods.healing, mods.damage))
-    assert(near(mods.health, 1 + 0.3 * 10 / 14) and near(mods.recovery, 0.02 * 10 / 14 + 0.005))
-    assert(near(mods.damageTaken, 1 - 0.1 * 10 / 14))
+    assert(near(mods.damage, 1 + 0.4 * 10 / 14) and near(mods.healing, mods.damage))
+    assert(near(mods.health, 1 + 0.4 * 10 / 14) and near(mods.recovery, 0.03 * 10 / 14 + 0.005))
+    assert(near(mods.damageTaken, 1 - 0.15 * 10 / 14))
     assert(
-        near(mods.materials, (1 + 0.4 * 10 / 14) * 1.1)
+        near(mods.materials, (1 + 0.6 * 10 / 14) * 1.1)
             and near(mods.costMultiplier, 1 - 0.25 * 10 / 14)
     )
-    assert(near(mods.heroXP, 1 + 0.3 * 10 / 14))
+    assert(near(mods.heroXP, 1 + 0.5 * 10 / 14))
     assert(G.SetDevelopmentChoice(s, "resolve", "bulwark"))
     assert(G.SetDevelopmentChoice(s, "provisioning", "rebuild"))
     local alternate = G.DevelopmentModifiers(s)
