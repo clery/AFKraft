@@ -66,29 +66,27 @@ case("Dungeon collection identities remain outside ordinary equipment pools", fu
         assert(C.collectionByItem[itemID] == "defiasLeather")
     end
 end)
-case(
-    "Dungeon kills use independent durable counters and reject repeats and wrong contexts",
-    function()
-        fixture(function()
-            local s = state()
-            assert(G.CollectionKill(s, kill(1)))
-            assert(not G.CollectionKill(s, kill(1)))
-            assert(s.dungeonCollections.counters.dungeonFixture[10399] == 1)
-            assert(s.dungeonCollections.stats.kills == 1 and s.outdoorCollections.stats.kills == 0)
-            local context = kill(2)
-            context.dungeon = false
-            assert(not G.CollectionKill(s, context))
-            context.dungeon, context.profile = true, "outdoorFixture"
-            assert(not G.CollectionKill(s, context))
-            s.offline = true
-            assert(not G.CollectionKill(s, kill(2)))
-            s.offline = nil
-            assert(G.CollectionKill(s, kill(2)))
-            assert(s.dungeonCollections.pieces[10399] and not s.outdoorCollections.pieces[10399])
-            assert(s.dungeonCollections.stats.discoveries == 1 and G.ValidateCollections(s))
-        end)
-    end
-)
+case("Dungeon kills use independent rolls and reject repeats and wrong contexts", function()
+    fixture(function(profiles)
+        local s = state()
+        assert(G.CollectionKill(s, kill(1)))
+        assert(not G.CollectionKill(s, kill(1)))
+        assert(next(s.dungeonCollections.counters) == nil)
+        assert(s.dungeonCollections.stats.kills == 1 and s.outdoorCollections.stats.kills == 0)
+        local context = kill(2)
+        context.dungeon = false
+        assert(not G.CollectionKill(s, context))
+        context.dungeon, context.profile = true, "outdoorFixture"
+        assert(not G.CollectionKill(s, context))
+        s.offline = true
+        assert(not G.CollectionKill(s, kill(2)))
+        s.offline = nil
+        profiles.dungeonFixture.chance = 100
+        assert(G.CollectionKill(s, kill(2)))
+        assert(s.dungeonCollections.pieces[10399] and not s.outdoorCollections.pieces[10399])
+        assert(s.dungeonCollections.stats.discoveries == 1 and G.ValidateCollections(s))
+    end)
+end)
 case("Tracking and selected effects are shared across collection books", function()
     local s = state()
     assert(G.SetCollectionTarget(s, 4701) and G.CollectionTarget(s) == 4701)
@@ -156,7 +154,7 @@ case("Dungeon context rejects contradictory location flags without consuming pro
         assert(s.outdoorCollections.stats.kills == 0 and next(s.outdoorCollections.counters) == nil)
     end)
 end)
-case("Dungeon kills cannot advance outdoor discovery milestones or counters", function()
+case("Dungeon kills cannot advance outdoor discovery milestones or drop chances", function()
     fixture(function()
         local s = state()
         s.outdoorCollections.pieces[4701] = true
@@ -178,7 +176,7 @@ end)
 case(
     "Dungeon discoveries, pending receipts, target and effect survive reload and both resets",
     function()
-        fixture(function()
+        fixture(function(profiles)
             local s = state()
             G.AddHero(s, "WARRIOR")
             assert(G.CollectionKill(s, kill(1)))
@@ -187,9 +185,10 @@ case(
             assert(not G.CollectionKill(s, kill(1)))
             s.prestigeUnlocked, s.runBest = true, 8
             assert(G.Prestige(s))
-            assert(s.dungeonCollections.counters.dungeonFixture[10399] == 1)
+            assert(next(s.dungeonCollections.counters) == nil)
             assert(s.dungeonCollections.receipts.dungeonFixture[10399][kill(1).receipt])
             assert(G.CollectionTarget(s) == 10399)
+            profiles.dungeonFixture.chance = 100
             assert(G.CollectionKill(s, kill(2)))
             complete(s, "defiasLeather")
             assert(G.SetCollectionEffect(s, "defiasLeather"))
@@ -207,7 +206,7 @@ case(
                 s.dungeonCollections.stats.kills == 2
                     and s.dungeonCollections.stats.discoveries == 1
             )
-            assert(s.dungeonCollections.counters.dungeonFixture[10399] == 2)
+            assert(next(s.dungeonCollections.counters) == nil)
             assert(G.Load(G.Copy(s), 20))
         end)
     end

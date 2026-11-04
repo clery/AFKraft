@@ -121,7 +121,7 @@ function P.Draw(ui, parent, state)
                 or count(report.discoveries, "new discovery", "new discoveries"),
             report.collectionMode == "outdoor" and "No offline discoveries or hunt progress"
                 or count(report.upgrades, "higher-tier piece", "higher-tier pieces"),
-            "Outdoor discoveries and per-piece guarantees require attributed real-world kills. Offline battles award ordinary equipment and materials. Historical reports may include retired simulated collection rewards."
+            "Outdoor discoveries require attributed real-world kills. Offline battles award ordinary equipment and materials. Historical reports may include retired simulated collection rewards."
         )
         cards.automation = card(
             parent,

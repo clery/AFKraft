@@ -2,7 +2,6 @@ local _, W = ...
 local G, C = W.Game, W.Content
 local floor, min = math.floor, math.min
 local receiptLimit = 128
-local maximumGuarantee = 1000
 
 local function integer(value)
     return type(value) == "number" and value >= 0 and value < math.huge and value == floor(value)
@@ -42,9 +41,6 @@ end
 local function validProfile(profile, id)
     return type(profile) == "table"
         and profile.id == id
-        and integer(profile.guarantee)
-        and profile.guarantee >= 1
-        and profile.guarantee <= maximumGuarantee
         and type(profile.chance) == "number"
         and profile.chance >= 0
         and profile.chance <= 100
@@ -216,60 +212,33 @@ local function validBook(book, kind)
     if book.stats.discoveries > found then
         return false
     end
-    for id, counters in pairs(book.counters) do
+    for id, receipts in pairs(book.receipts) do
         local profile = profileID(id) and sourceProfile(id)
         if
             type(profile) ~= "table"
             or not validProfile(profile, id)
             or (profile.kind or "outdoor") ~= kind
-            or type(counters) ~= "table"
+            or type(receipts) ~= "table"
         then
             return false
         end
-        local receipts = book.receipts[id] or {}
-        if type(receipts) ~= "table" then
-            return false
-        end
-        for itemID, count in pairs(counters) do
-            if
-                not belongs(itemID, kind)
-                or not integer(count)
-                or count > profile.guarantee
-                or (not book.pieces[itemID] and count >= profile.guarantee)
-            then
+        for itemID, pending in pairs(receipts) do
+            if not belongs(itemID, kind) or type(pending) ~= "table" then
                 return false
             end
-            local pending = receipts[itemID] or {}
-            if type(pending) ~= "table" then
-                return false
-            end
-            local seen = 0
+            local count = 0
             for receipt, value in pairs(pending) do
                 if not killNPC(receipt) or value ~= true then
                     return false
                 end
-                seen = seen + 1
-                if seen >= profile.guarantee then
-                    return false
-                end
+                count = count + 1
             end
-            if
-                (book.pieces[itemID] and seen ~= 0) or (not book.pieces[itemID] and seen ~= count)
-            then
+            if count > receiptLimit then
                 return false
             end
         end
     end
-    for id, receipts in pairs(book.receipts) do
-        if not profileID(id) or type(receipts) ~= "table" or type(book.counters[id]) ~= "table" then
-            return false
-        end
-        for itemID, pending in pairs(receipts) do
-            if book.counters[id][itemID] == nil or type(pending) ~= "table" then
-                return false
-            end
-        end
-    end
+    book.counters = {}
     if book.effect then
         for _, itemID in ipairs(C.collectionByID[book.effect].pieces) do
             if not book.pieces[itemID] then
@@ -457,7 +426,6 @@ function G.CollectionKill(state, context)
         return false, "Collections are unavailable."
     end
     local pending, unique = {}, {}
-    local counters = book.counters[context.profile] or {}
     local receipts = book.receipts[context.profile] or {}
     for _, itemID in ipairs(eligible) do
         if not belongs(itemID, kind) then
@@ -476,13 +444,11 @@ function G.CollectionKill(state, context)
     if #pending == 0 then
         return false, "No unfinished piece can count this kill."
     end
-    book.counters[context.profile], book.receipts[context.profile] = counters, receipts
+    book.receipts[context.profile] = receipts
     local discoveries = {}
     for _, itemID in ipairs(pending) do
-        local count = (counters[itemID] or 0) + 1
-        counters[itemID] = count
         receipts[itemID] = receipts[itemID] or {}
-        local discovered = count >= profile.guarantee or G.Random(state, 100) <= profile.chance
+        local discovered = G.Random(state, 100) <= profile.chance
         if discovered then
             book.pieces[itemID] = true
             for _, ledger in pairs(book.receipts) do
@@ -490,6 +456,14 @@ function G.CollectionKill(state, context)
             end
             discoveries[#discoveries + 1] = itemID
         else
+            local count = 0
+            for _ in pairs(receipts[itemID]) do
+                count = count + 1
+            end
+            -- shortcut: retain 128 receipts per piece; expand if delayed duplicate signals exceed this window.
+            if count >= receiptLimit then
+                receipts[itemID][next(receipts[itemID])] = nil
+            end
             receipts[itemID][context.receipt] = true
         end
     end

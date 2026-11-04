@@ -188,37 +188,29 @@ case(
     end
 )
 
-case("Each eligible piece has an independent guarantee and every fresh kill counts once", function()
-    fixture(function()
+case("Loading discards retired kill counters without losing discoveries", function()
+    local s = state()
+    s.outdoorCollections.counters.syntheticA = { [pieces[1]] = 29 }
+    s.outdoorCollections.pieces[pieces[2]] = true
+    local loaded = assert(G.Load(G.Copy(s), 0))
+    assert(next(loaded.outdoorCollections.counters) == nil)
+    assert(loaded.outdoorCollections.pieces[pieces[2]])
+    assert(s.outdoorCollections.counters.syntheticA[pieces[1]] == 29)
+end)
+
+case("Eligible kills never accumulate progress or guarantee a discovery", function()
+    fixture(function(sources)
         local s = state()
-        local gold, essence, nextItem = s.gold, s.essence, s.nextItem
-        for serial = 1, 29 do
-            assert(G.CollectionKill(s, context(serial)))
+        for serial = 1, 300 do
+            assert(G.CollectionKill(s, context(serial, 101)))
         end
-        for serial = 30, 36 do
-            assert(G.CollectionKill(s, context(serial, 102)))
-        end
-        local ok, result = G.CollectionKill(s, context(37, 101))
-        assert(
-            ok
-                and result.progressed == 2
-                and #result.discoveries == 1
-                and result.discoveries[1] == pieces[1]
-        )
-        assert(
-            s.outdoorCollections.pieces[pieces[1]] and not s.outdoorCollections.pieces[pieces[2]]
-        )
-        assert(
-            s.outdoorCollections.counters.syntheticA[pieces[1]] == 30
-                and s.outdoorCollections.counters.syntheticA[pieces[2]] == 8
-        )
-        assert(s.outdoorCollections.receipts.syntheticA[pieces[1]] == nil)
-        assert(
-            s.outdoorCollections.stats.kills == 37 and s.outdoorCollections.stats.discoveries == 1
-        )
-        assert(
-            s.gold == gold and s.essence == essence and s.nextItem == nextItem and #s.inventory == 0
-        )
+        assert(next(s.outdoorCollections.pieces) == nil)
+        assert(next(s.outdoorCollections.counters) == nil)
+        assert(s.outdoorCollections.stats.discoveries == 0)
+        assert(G.Load(G.Copy(s), 0))
+        sources.profiles.syntheticA.chance = 100
+        local ok, result = G.CollectionKill(s, context(301, 101))
+        assert(ok and #result.discoveries == 2)
         assert(G.ValidateCollections(s))
     end)
 end)
@@ -239,7 +231,7 @@ case(
             local seed, kills = s.seed, s.outdoorCollections.stats.kills
             assert(not G.CollectionKill(s, first))
             assert(s.seed == seed and s.outdoorCollections.stats.kills == kills)
-            assert(s.outdoorCollections.counters.syntheticA[pieces[1]] == 1)
+            assert(next(s.outdoorCollections.counters) == nil)
             assert(s.outdoorCollections.receipts.syntheticA[pieces[1]][first.receipt])
             assert(G.ValidateCollections(s))
         end)
@@ -247,7 +239,7 @@ case(
 )
 
 case(
-    "Discovery clears pending receipts across source profiles and freezes completed counters",
+    "Discovery clears pending receipts across source profiles and never adds kill progress",
     function()
         fixture(function(sources)
             local s = state()
@@ -260,12 +252,9 @@ case(
                 s.outdoorCollections.receipts.syntheticA[pieces[1]] == nil
                     and s.outdoorCollections.receipts.syntheticB[pieces[1]] == nil
             )
-            assert(s.outdoorCollections.counters.syntheticB[pieces[1]] == 1)
+            assert(next(s.outdoorCollections.counters) == nil)
             assert(not G.CollectionKill(s, context(4, 105, "syntheticB")))
-            assert(
-                s.outdoorCollections.counters.syntheticB[pieces[1]] == 1
-                    and G.ValidateCollections(s)
-            )
+            assert(next(s.outdoorCollections.counters) == nil and G.ValidateCollections(s))
         end)
     end
 )
@@ -423,17 +412,16 @@ case(
                     s.outdoorCollections.stats.discoveries = 1
                 end,
                 function(s)
-                    s.outdoorCollections.counters.unknown = { [pieces[1]] = 1 }
+                    s.outdoorCollections.receipts.unknown = {}
                 end,
                 function(s)
-                    s.outdoorCollections.counters.syntheticA = { [pieces[1]] = 30 }
+                    s.outdoorCollections.receipts.syntheticA = { [1930] = {} }
                 end,
                 function(s)
-                    s.outdoorCollections.counters.syntheticA = { [pieces[1]] = 1 }
+                    s.outdoorCollections.receipts.syntheticA = { [pieces[1]] = false }
                 end,
                 function(s)
-                    s.outdoorCollections.receipts.syntheticA =
-                        { [pieces[1]] = { [context(1).receipt] = true } }
+                    s.outdoorCollections.receipts.syntheticA = { [pieces[1]] = { invalid = true } }
                 end,
             }) do
                 local s = state()
@@ -460,7 +448,7 @@ case(
             s.prestigeUnlocked, s.runBest = true, 8
             assert(G.Prestige(s))
             assert(
-                s.outdoorCollections.counters.syntheticA[pieces[1]] == 1
+                next(s.outdoorCollections.counters) == nil
                     and s.outdoorCollections.target == pieces[1]
             )
             sources.profiles.syntheticA.chance = 100
@@ -494,7 +482,7 @@ case(
             assert(G.CatchupBatch(job, 10000))
             assert(G.FinishCatchup(s, job))
             assert(s.outdoorCollections == live and s.outdoorCollections.target == pieces[1])
-            assert(s.outdoorCollections.counters.syntheticA[pieces[1]] == 1)
+            assert(next(s.outdoorCollections.counters) == nil)
             assert(s.outdoorCollections.receipts.syntheticA[pieces[1]][context(1).receipt])
             assert(not G.CollectionKill(s, context(1)))
             sources.profiles.syntheticA.chance = 100

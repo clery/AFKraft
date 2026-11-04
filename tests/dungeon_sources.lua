@@ -22,7 +22,7 @@ case("Dungeon profiles keep outdoor, Retail and Forever mappings separate", func
         for _, piece in ipairs(pieces) do
             found = found or piece == itemID
         end
-        assert(found and profile.kind == "dungeon" and profile.guarantee == 10)
+        assert(found and profile.kind == "dungeon" and profile.chance == 20)
     end
 end)
 case(

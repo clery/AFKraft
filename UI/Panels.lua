@@ -223,7 +223,7 @@ function P.adventure(ui, p, s)
         "Choose a missing piece and inspect its real outdoor or dungeon sources. Unverified source mappings remain disabled. Idle routes do not perform hunts."
     if hunt then
         huntTitle = hunt.item.name
-        local progress = hunt.guarantee and (hunt.count .. "/" .. hunt.guarantee .. " saved")
+        local progress = hunt.chance and string.format("%.1f%% per eligible kill", hunt.chance)
             or "No source profile"
         huntDetail = hunt.found and "Discovered | Review completed-set effects"
             or (

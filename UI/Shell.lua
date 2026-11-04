@@ -270,7 +270,7 @@ function UI:Refresh(redraw)
     if trackedItem then
         local available = huntInfo and huntInfo.available
         local progress = huntInfo and huntInfo.found and "Found"
-            or available and (huntInfo.count .. "/" .. huntInfo.guarantee)
+            or available and string.format("%.1f%% per kill", huntInfo.chance)
             or "Unverified"
         self.compactCollectionGoal.text:SetText(trackedItem.name .. " · " .. progress)
         self.compactCollectionGoal.icon:SetTexture("Interface\\Icons\\" .. trackedItem.icon)

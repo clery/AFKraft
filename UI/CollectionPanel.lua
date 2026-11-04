@@ -39,16 +39,14 @@ function P.TrackedPiece(state)
     local book = G.CollectionBook(state, collection.id)
     local profile = P.SourceProfile(collection.kind)
     local source = profile and profile.sources[id]
-    local counters = profile and book.counters[profile.id]
     return {
         item = item,
         source = source,
         found = book.pieces[id] == true,
         kind = collection.kind,
+        chance = profile and profile.chance,
         available = profile and profile.enabled and profile.verified and source and source.verified
             or false,
-        count = counters and counters[id] or 0,
-        guarantee = profile and profile.guarantee,
     }
 end
 
@@ -64,15 +62,13 @@ function P.Draw(ui, parent, state)
     local kind = collection.kind or "outdoor"
     local profile = P.SourceProfile(kind)
     local enabled = profile and profile.enabled and profile.verified
-    local counters = profile and book.counters[profile.id] or {}
-    counters = counters or {}
     U.Text(parent, "SET CATALOG", 0, 0, 24, T.gold, 1000)
     U.Help(
         parent,
         "Collections",
         600,
         0,
-        "Select a set, then a piece to inspect its source and kill progress. Tracking never changes drop chances.\n\nDiscoveries require eligible real WoW kills in the correct location; idle battles and crafting do not count. Discoveries and partial-set bonuses survive resets.\n\nComplete a set to choose its effect. Only one completed-set effect can be active."
+        "Select a set, then a piece to inspect its source and drop chance. Tracking never changes drop chances.\n\nDiscoveries require eligible real WoW kills in the correct location; idle battles and crafting do not count. Discoveries and partial-set bonuses survive resets.\n\nComplete a set to choose its effect. Only one completed-set effect can be active."
     )
     ui.collectionChoice = U.Choice(
         parent,
@@ -105,7 +101,6 @@ function P.Draw(ui, parent, state)
         local found = book.pieces[itemID] == true
         local source = profile and profile.sources[itemID]
         local verified = enabled and source and source.verified
-        local count, guarantee = counters[itemID] or 0, profile and profile.guarantee or 0
         local card = U.SelectButton(parent, "", (index - 1) * 258, 150, 244, 190, function()
             ui.collectionPiece = itemID
             ui:Refresh()
@@ -130,7 +125,7 @@ function P.Draw(ui, parent, state)
         U.Text(
             card,
             found and "Complete"
-                or profile and "Saved progress " .. count .. "/" .. guarantee
+                or profile and string.format("%.1f%% per eligible kill", profile.chance)
                 or "No acquisition profile",
             12,
             108,
@@ -151,9 +146,8 @@ function P.Draw(ui, parent, state)
         local evidence = source and P.SourceLabel(source) or "No source evidence for this client."
         local tuning = profile
                 and string.format(
-                    "Prototype: %.1f%% per eligible kill for this piece; guaranteed by %d eligible kills.",
-                    profile.chance,
-                    guarantee
+                    "Prototype: %.1f%% per eligible kill for this piece. Each kill is an independent roll.",
+                    profile.chance
                 )
             or "No acquisition profile available."
         U.Tooltip(
@@ -164,9 +158,7 @@ function P.Draw(ui, parent, state)
                 verified and "Verified " .. kind .. " source."
                     or "Candidate source only. Acquisition remains disabled until verified for this client.",
                 tuning,
-                "Saved eligible-kill progress: "
-                    .. count
-                    .. ". The same creature cannot count twice.",
+                "Kills do not build progress toward a discovery.",
                 "Tracking changes the selected target only; it never changes drop chances. Only attributed real kills in the correct location discover pieces; idle combat and crafted items do not.",
             }, "\n"),
             400

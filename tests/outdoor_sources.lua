@@ -30,6 +30,10 @@ case(
 case("Forever source adapter can complete the outdoor set without real-item drops", function()
     local client, build, instance = W.Client, GetBuildInfo, IsInInstance
     local S, G = W.CollectionSources, W.Game
+    local random = G.Random
+    G.Random = function()
+        return 1
+    end
     local ok, message = pcall(function()
         W.Client = { flavor = "forever" }
         GetBuildInfo = function()
@@ -61,6 +65,7 @@ case("Forever source adapter can complete the outdoor set without real-item drop
         end
         assert(not S.ActiveProfile())
     end)
+    G.Random = random
     W.Client, GetBuildInfo, IsInInstance = client, build, instance
     assert(ok, message)
 end)
@@ -97,14 +102,14 @@ case(
             end
             assert(not S.ObserveKill(state, "Player-1-42"))
             assert(S.ObserveKill(state, guid))
-            assert(state.outdoorCollections.counters.fixture[4701] == 1)
+            assert(next(state.outdoorCollections.counters) == nil)
             assert(not S.ObserveKill(state, guid))
             GetBuildInfo = function()
                 return "fixture", "", "", 778
             end
             assert(not S.ActiveProfile())
             assert(not S.ObserveKill(state, "Creature-0-1-2-3-423-000002"))
-            assert(state.outdoorCollections.counters.fixture[4701] == 1)
+            assert(next(state.outdoorCollections.counters) == nil)
         end)
         S.profiles.fixture = nil
         W.Client, GetBuildInfo, IsInInstance = client, build, instance
@@ -186,7 +191,7 @@ case(
         local random = G.Random
         local ok, message = pcall(function()
             G.Random = function()
-                return 100
+                return 1
             end
             local all = G.New(0)
             for _, collection in ipairs(C.collections) do
@@ -225,14 +230,6 @@ case(
                         assert(G.CollectionKill(state, context))
                         assert(not G.CollectionKill(state, context))
                         assert(G.Load(G.Copy(state), 0))
-                        for kill = 2, profile.guarantee do
-                            context.receipt = string.format(
-                                "kill:Creature-0-1-1-1-%d-%012X",
-                                source.npcID,
-                                itemID + kill * 1000000
-                            )
-                            G.CollectionKill(state, context)
-                        end
                     end
                     assert(G.CollectionBook(state, collection.id).pieces[itemID])
                     G.CollectionBook(all, collection.id).pieces[itemID] = true
