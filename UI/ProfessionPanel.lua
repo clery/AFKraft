@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, C, U, T = W.Game, W.Content, W.Widgets, W.Theme
 local P = {}
 W.ProfessionPanel = P
@@ -29,9 +30,9 @@ local function affordable(state, cost)
 end
 
 local function costText(cost)
-    local parts = { cost.gold .. " gold" }
+    local parts = { cost.gold .. L[" gold"] }
     if (cost.fragments or 0) > 0 then
-        parts[#parts + 1] = cost.fragments .. " Runic fragments"
+        parts[#parts + 1] = cost.fragments .. L[" Runic fragments"]
     end
     for _, material in ipairs(C.materialOrder) do
         local count = cost.materials[material] or 0
@@ -64,16 +65,16 @@ local function research(ui, frame, state)
     )
     local p = state.professions
     local available, total = G.ProfessionPoints(state, kind)
-    text(frame, available .. " / " .. total .. " profession points", 360, 74, 500, T.gold, 19)
+    text(frame, available .. " / " .. total .. L[" profession points"], 360, 74, 500, T.gold, 19)
     text(
         frame,
-        "Work rank "
+        L["Work rank "]
             .. p.ranks[kind]
             .. "/30 · "
             .. p.xp[kind]
             .. "/"
             .. (20 + p.ranks[kind] * 10)
-            .. " work XP",
+            .. L[" work XP"],
         880,
         74,
         390,
@@ -81,7 +82,7 @@ local function research(ui, frame, state)
     )
     local unlocked = G.ProfessionUnlocks(state).research
     if not unlocked then
-        text(frame, "Unlocks when any hero first reaches level 60.", 0, 116, 1260, T.gold)
+        text(frame, L["Unlocks when any hero first reaches level 60."], 0, 116, 1260, T.gold)
     end
     local active = G.ProfessionActiveAllocations(state, kind)
     local desired = 0
@@ -99,17 +100,17 @@ local function research(ui, frame, state)
             x + 372,
             166,
             branch.description
-                .. "\n\nPaid work earns points. Reallocate for free. Plans stay saved through both resets."
+                .. L["\n\nPaid work earns points. Reallocate for free. Plans stay saved through both resets."]
         )
         ui.professionControls.branches[branch.id] = {}
         for rank = 1, 3 do
             local requirement = 1 + (rank - 1) * 3
-            local label = rank <= (active[branch.id] or 0) and "Active"
-                or rank <= chosen and "Saved plan"
-                or "Learn · 1 point"
+            local label = rank <= (active[branch.id] or 0) and L["Active"]
+                or rank <= chosen and L["Saved plan"]
+                or L["Learn · 1 point"]
             local control = button(
                 frame,
-                "Rank " .. rank .. " · " .. label,
+                L["Rank "] .. rank .. " · " .. label,
                 x,
                 232 + (rank - 1) * 52,
                 400,
@@ -120,11 +121,11 @@ local function research(ui, frame, state)
             )
             U.Tooltip(
                 control,
-                branch.name .. " rank " .. rank,
+                branch.name .. L[" rank "] .. rank,
                 branch.description
-                    .. "\n\nRequires work rank "
+                    .. L["\n\nRequires work rank "]
                     .. requirement
-                    .. ". Costs one profession point.",
+                    .. L[". Costs one profession point."],
                 380
             )
             U.Enabled(
@@ -138,13 +139,13 @@ local function research(ui, frame, state)
             ui.professionControls.branches[branch.id][rank] = control
         end
     end
-    ui.professionControls.respec = button(frame, "Reset allocation", 0, 420, 240, function()
+    ui.professionControls.respec = button(frame, L["Reset allocation"], 0, 420, 240, function()
         W.Action(G.ResetProfessionAllocations, kind)
     end)
     U.Tooltip(
         ui.professionControls.respec,
-        "Reallocate profession points",
-        "Refund all points in this profession for free. Work ranks and combat talents are unchanged. Transcendence keeps the plan; paid work reactivates it."
+        L["Reallocate profession points"],
+        L["Refund all points in this profession for free. Work ranks and combat talents are unchanged. Transcendence keeps the plan; paid work reactivates it."]
     )
 end
 
@@ -171,7 +172,7 @@ function P.Draw(ui, parent, state)
     end
     local hero = state.heroes[heroIndex] or state.heroes[1]
     if not hero then
-        text(frame, "Recruit a companion to work on their equipment.", 0, 74, 1200)
+        text(frame, L["Recruit a companion to work on their equipment."], 0, 74, 1200)
         U.EndBuild(frame)
         return
     end
@@ -209,7 +210,7 @@ function P.Draw(ui, parent, state)
         end
     )
     local p = state.professions
-    text(frame, "Work rank " .. p.ranks[tab] .. "/30", 890, 76, 380, T.gold, 18)
+    text(frame, L["Work rank "] .. p.ranks[tab] .. "/30", 890, 76, 380, T.gold, 18)
     local enchantID = ui.professionEnchant or "offense"
     ui.professionControls.enchants = {}
     if tab == "enchanting" then
@@ -218,7 +219,7 @@ function P.Draw(ui, parent, state)
         if expanded then
             text(
                 frame,
-                "Runic fragments " .. p.fragments .. "/" .. C.runicFragmentCap,
+                L["Runic fragments "] .. p.fragments .. "/" .. C.runicFragmentCap,
                 890,
                 104,
                 380,
@@ -257,7 +258,7 @@ function P.Draw(ui, parent, state)
                     expanded and 16 or 19
                 )
                 local status = enchant.tier
-                        and (p.recipes[enchant.id] and (enchant.fragments .. " Runic fragments") or ("Idle tier " .. enchant.tier .. "+ boss, level 20+"))
+                        and (p.recipes[enchant.id] and (enchant.fragments .. L[" Runic fragments"]) or (L["Idle tier "] .. enchant.tier .. L["+ boss, level 20+"]))
                     or enchant.id
                 text(
                     control,
@@ -272,11 +273,11 @@ function P.Draw(ui, parent, state)
                     U.Tooltip(
                         control,
                         enchant.name,
-                        "Learn from an online idle boss at encounter level 20+ in tier "
+                        L["Learn from an online idle boss at encounter level 20+ in tier "]
                             .. enchant.tier
-                            .. "+.\n\nEarn 1 fragment per tier 2+ boss at encounter level 20+; cap: "
+                            .. L["+.\n\nEarn 1 fragment per tier 2+ boss at encounter level 20+; cap: "]
                             .. C.runicFragmentCap
-                            .. ". Cleared bosses can supply fragments offline once a recipe is learned.\n\nBoth resets clear fragments but keep recipes and heirloom enchantments."
+                            .. L[". Cleared bosses can supply fragments offline once a recipe is learned.\n\nBoth resets clear fragments but keep recipes and heirloom enchantments."]
                     )
                 end
                 U.EndBuild(control)
@@ -285,7 +286,7 @@ function P.Draw(ui, parent, state)
         end
     else
         U.Icon(frame, C.professionByID.titanforging.icon, 0, 132, 56)
-        text(frame, "ITEM POTENTIAL", 80, 146, 1100, T.gold, 21)
+        text(frame, L["ITEM POTENTIAL"], 80, 146, 1100, T.gold, 21)
     end
     local item = hero.gear[slot]
     local preview, cost, reason
@@ -294,14 +295,14 @@ function P.Draw(ui, parent, state)
     else
         preview, cost, reason = G.ForgeQuote(state, heroIndex, slot)
     end
-    text(frame, item and item.name or "Empty equipment slot", 0, 252, 1200, T.gold, 23)
+    text(frame, item and L[item.name] or L["Empty equipment slot"], 0, 252, 1200, T.gold, 23)
     if item then
         U.Icon(frame, item.icon or "INV_Misc_Book_09", 0, 298, 64)
-        text(frame, "Current power " .. G.ItemPower(item, hero), 90, 306, 500, T.muted, 18)
+        text(frame, L["Current power "] .. G.ItemPower(item, hero), 90, 306, 500, T.muted, 18)
         if preview then
             text(
                 frame,
-                "New power " .. G.ItemPower(preview, hero),
+                L["New power "] .. G.ItemPower(preview, hero),
                 660,
                 306,
                 530,
@@ -322,16 +323,16 @@ function P.Draw(ui, parent, state)
             text(frame, table.concat(lines, " · "), 0, 392, 1250, T.green, 19)
             local previous = item.enchant and C.enchantByID[item.enchant.id]
             if previous then
-                text(frame, "Replaces " .. previous.name, 0, 430, 1250, T.gold)
+                text(frame, L["Replaces "] .. previous.name, 0, 430, 1250, T.gold)
             end
         else
             text(
                 frame,
-                "Titanforge "
+                L["Titanforge "]
                     .. (item.forge or 0)
-                    .. " to "
+                    .. L[" to "]
                     .. preview.forge
-                    .. " · Item potential +"
+                    .. L[" · Item potential +"]
                     .. string.format("%.1f", (G.ForgeMultiplier(preview) - 1) * 100)
                     .. "%",
                 0,
@@ -342,31 +343,51 @@ function P.Draw(ui, parent, state)
             )
             U.Help(
                 frame,
-                "Titanforging",
+                L["Titanforging"],
                 1258,
                 252,
-                "5 potential tiers, separate from enhancement and enchanting. The preview shows the total bonus.\n\nHeirloom upgrades survive both resets; ordinary gear is lost."
+                L["5 potential tiers, separate from enhancement and enchanting. The preview shows the total bonus.\n\nHeirloom upgrades survive both resets; ordinary gear is lost."]
             )
         end
         text(frame, costText(cost), 0, 488, 1250, T.gold, 17)
         local source = next(cost.components or {})
         if source then
-            text(frame, C.zoneComponents[source].name .. " · "
-                .. (state.professions.components[source] or 0) .. " / " .. cost.components[source]
-                .. " · Guaranteed from idle bosses in " .. C.zoneByID[source].name, 0, 516, 1250, T.gold, 15)
+            text(
+                frame,
+                C.zoneComponents[source].name
+                    .. " · "
+                    .. (state.professions.components[source] or 0)
+                    .. " / "
+                    .. cost.components[source]
+                    .. L[" · Guaranteed from idle bosses in "]
+                    .. C.zoneByID[source].name,
+                0,
+                516,
+                1250,
+                T.gold,
+                15
+            )
             local cleared = (state.safe[source] or 0) >= 5
-            ui.professionControls.farm = button(frame, (cleared and "Farm · " or "Travel · ") .. C.zoneByID[source].name,
-                360, 548, 400, function()
-                if W.Action(cleared and G.FarmZoneBoss or G.Travel, source) then ui:SetTab("adventure") end
-            end)
+            ui.professionControls.farm = button(
+                frame,
+                (cleared and L["Farm · "] or L["Travel · "]) .. C.zoneByID[source].name,
+                360,
+                548,
+                400,
+                function()
+                    if W.Action(cleared and G.FarmZoneBoss or G.Travel, source) then
+                        ui:SetTab("adventure")
+                    end
+                end
+            )
             U.Enabled(ui.professionControls.farm, G.IsUnlocked(state, C.zoneByID[source]))
         end
     else
-        text(frame, reason or "Choose an equipped item.", 0, 392, 1250, T.gold, 18)
+        text(frame, reason or L["Choose an equipped item."], 0, 392, 1250, T.gold, 18)
     end
     ui.professionControls.commit = button(
         frame,
-        tab == "enchanting" and "Apply enchantment" or "Titanforge item",
+        tab == "enchanting" and L["Apply enchantment"] or L["Titanforge item"],
         0,
         548,
         340,

@@ -1,14 +1,15 @@
 local _, W = ...
+local L = W.L
 local G, U, T = W.Game, W.Widgets, W.Theme
 local P = {}
 W.BoostRulePanel = P
 local conditions = {
-    { id = "always", name = "Always in combat" },
-    { id = "boss", name = "Boss encounter" },
-    { id = "lowHealth", name = "Living ally below health" },
-    { id = "farming", name = "Safe farming" },
-    { id = "pushing", name = "Frontier pushing" },
-    { id = "tier", name = "Current tier at least" },
+    { id = "always", name = L["Always in combat"] },
+    { id = "boss", name = L["Boss encounter"] },
+    { id = "lowHealth", name = L["Living ally below health"] },
+    { id = "farming", name = L["Safe farming"] },
+    { id = "pushing", name = L["Frontier pushing"] },
+    { id = "tier", name = L["Current tier at least"] },
 }
 
 function P.Draw(ui, parent, state, id, x, y)
@@ -22,29 +23,29 @@ function P.Draw(ui, parent, state, id, x, y)
     local editable = state.boosts.owned[id] and state.boosts.automation.owned.conditional == true
     local controls = { rows = {} }
     ui.boostRuleControls = controls
-    U.Text(parent, "ORDERED RULES", x, y + 5, 14, T.gold, 860)
-    controls.add = U.Button(parent, "Add rule", x + 946, y, 140, 28, function()
+    U.Text(parent, L["ORDERED RULES"], x, y + 5, 14, T.gold, 860)
+    controls.add = U.Button(parent, L["Add rule"], x + 946, y, 140, 28, function()
         if #draft.rules < 4 then
             draft.rules[#draft.rules + 1] = { condition = "boss", action = "activate" }
             ui:Refresh()
         end
     end)
     U.Enabled(controls.add, editable and #draft.rules < 4)
-    controls.save = U.Button(parent, "Save rules", x + 1104, y, 140, 28, function()
+    controls.save = U.Button(parent, L["Save rules"], x + 1104, y, 140, 28, function()
         W.Action(G.SetBoostRules, id, draft.rules)
     end, false, "primary")
     U.Enabled(controls.save, editable)
     U.Tooltip(
         controls.save,
-        "Ordered activation rules",
-        "Save to apply your edits. The first matching rule activates the boost when ready. Automation and Auto-cast must be on. With no rules, the selected preset applies.",
+        L["Ordered activation rules"],
+        L["Save to apply your edits. The first matching rule activates the boost when ready. Automation and Auto-cast must be on. With no rules, the selected preset applies."],
         380
     )
     if #draft.rules == 0 then
         U.Text(
             parent,
-            editable and "No ordered rules. The selected preset remains in use."
-                or "Learn this boost and conditional automation to create up to four rules.",
+            editable and L["No ordered rules. The selected preset remains in use."]
+                or L["Learn this boost and conditional automation to create up to four rules."],
             x,
             y + 42,
             13,
@@ -63,7 +64,7 @@ function P.Draw(ui, parent, state, id, x, y)
         end
         local condition = U.Choice(
             parent,
-            label or "Choose condition",
+            label or L["Choose condition"],
             x + 34,
             rowY,
             430,
@@ -83,8 +84,8 @@ function P.Draw(ui, parent, state, id, x, y)
         condition:SetEnabled(editable)
         U.Tooltip(
             condition,
-            "Activation condition",
-            "The first matching rule wins. Health checks living allies strictly below the selected percentage. Tier means the current difficulty.",
+            L["Activation condition"],
+            L["The first matching rule wins. Health checks living allies strictly below the selected percentage. Tier means the current difficulty."],
             360
         )
         local threshold
@@ -97,21 +98,22 @@ function P.Draw(ui, parent, state, id, x, y)
             for value = low, high, step do
                 options[#options + 1] = {
                     id = value,
-                    name = rule.condition == "lowHealth" and (value .. "% health")
-                        or ("Tier " .. value),
+                    name = rule.condition == "lowHealth" and (value .. L["% health"])
+                        or (L["Tier "] .. value),
                 }
             end
             -- Preserve exact thresholds entered through commands or saved profiles.
             if rule.condition == "lowHealth" and rule.threshold % 5 ~= 0 then
-                options[#options + 1] = { id = rule.threshold, name = rule.threshold .. "% health" }
+                options[#options + 1] =
+                    { id = rule.threshold, name = rule.threshold .. L["% health"] }
                 table.sort(options, function(a, b)
                     return a.id < b.id
                 end)
             end
             threshold = U.Choice(
                 parent,
-                rule.condition == "lowHealth" and (rule.threshold .. "% health")
-                    or ("Tier " .. rule.threshold),
+                rule.condition == "lowHealth" and (rule.threshold .. L["% health"])
+                    or (L["Tier "] .. rule.threshold),
                 x + 482,
                 rowY,
                 300,
@@ -124,7 +126,7 @@ function P.Draw(ui, parent, state, id, x, y)
             )
             threshold:SetEnabled(editable)
         end
-        local up = U.Button(parent, "Up", x + 800, rowY, 66, 28, function()
+        local up = U.Button(parent, L["Up"], x + 800, rowY, 66, 28, function()
             if index > 1 then
                 draft.rules[index], draft.rules[index - 1] =
                     draft.rules[index - 1], draft.rules[index]
@@ -132,7 +134,7 @@ function P.Draw(ui, parent, state, id, x, y)
             end
         end)
         U.Enabled(up, editable and index > 1)
-        local down = U.Button(parent, "Down", x + 878, rowY, 82, 28, function()
+        local down = U.Button(parent, L["Down"], x + 878, rowY, 82, 28, function()
             if index < #draft.rules then
                 draft.rules[index], draft.rules[index + 1] =
                     draft.rules[index + 1], draft.rules[index]
@@ -140,7 +142,7 @@ function P.Draw(ui, parent, state, id, x, y)
             end
         end)
         U.Enabled(down, editable and index < #draft.rules)
-        local remove = U.Button(parent, "Remove", x + 978, rowY, 118, 28, function()
+        local remove = U.Button(parent, L["Remove"], x + 978, rowY, 118, 28, function()
             table.remove(draft.rules, index)
             ui:Refresh()
         end)

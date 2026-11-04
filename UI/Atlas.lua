@@ -1,10 +1,13 @@
 local _, W = ...
+local L = W.L
 local A, C, G, U, T = W.Client, W.Content, W.Game, W.Widgets, W.Theme
 local Atlas = {}
 W.Atlas = Atlas
 
 local function unlockText(zone)
-    return "Unlock: defeat a level " .. math.max(1, zone.level - 1) .. " or higher milestone boss."
+    return L["Unlock: defeat a level "]
+        .. math.max(1, zone.level - 1)
+        .. L[" or higher milestone boss."]
 end
 
 local function familySpoils(zone)
@@ -27,25 +30,36 @@ local function describe(self, zone)
     zone = zone or C.zoneByID[W.state.zone]
     self.focus = zone
     self.title:SetText(zone.name)
-    GameTooltip:AddLine(C.zoneComponents[zone.id].name .. " · Owned: "
-        .. (W.state.professions.components[zone.id] or 0), 1, 0.82, 0)
-    GameTooltip:AddLine("Idle bosses guarantee 1 trophy for enchanting or titanforging. Kept through both resets.", 0.8,
-        0.8, 0.7, true)
+    GameTooltip:AddLine(
+        C.zoneComponents[zone.id].name
+            .. L[" · Owned: "]
+            .. (W.state.professions.components[zone.id] or 0),
+        1,
+        0.82,
+        0
+    )
+    GameTooltip:AddLine(
+        L["Idle bosses guarantee 1 trophy for enchanting or titanforging. Kept through both resets."],
+        0.8,
+        0.8,
+        0.7,
+        true
+    )
     local spoils = familySpoils(zone)
     self.detail:SetText(
         C.materials[zone.material]
-            .. "  ·  Frontier "
+            .. L["  ·  Frontier "]
             .. zone.level
             .. "  ·  "
-            .. (G.IsUnlocked(W.state, zone) and "Available" or unlockText(zone))
-            .. (spoils and ("\nSecondary spoils: " .. spoils .. " (up to 25%).") or "")
+            .. (G.IsUnlocked(W.state, zone) and L["Available"] or unlockText(zone))
+            .. (spoils and (L["\nSecondary spoils: "] .. spoils .. L[" (up to 25%)."]) or "")
     )
 end
 
 local function travel(self, zone)
     if zone and W.Action(G.Travel, zone.id) then
         describe(self, zone)
-        W.Notify("Your company is traveling through " .. zone.name .. ".")
+        W.Notify(L["Your company is traveling through "] .. zone.name .. ".")
         W.UI:SetTab("adventure")
     end
 end
@@ -53,23 +67,39 @@ end
 local function zoneTooltip(map, zone)
     GameTooltip:SetOwner(map, "ANCHOR_CURSOR")
     GameTooltip:SetText(zone.name, unpack(T.gold))
-    GameTooltip:AddLine(C.materials[zone.material] .. " · Frontier " .. zone.level, 0.8, 0.8, 0.7)
     GameTooltip:AddLine(
-        #zone.enemies .. " creature encounters; new opponents at frontiers 20, 40 and 60.",
+        C.materials[zone.material] .. L[" · Frontier "] .. zone.level,
+        0.8,
+        0.8,
+        0.7
+    )
+    GameTooltip:AddLine(
+        #zone.enemies .. L[" creature encounters; new opponents at frontiers 20, 40 and 60."],
         0.8,
         0.8,
         0.7,
         true
     )
-    GameTooltip:AddLine(C.zoneComponents[zone.id].name .. " · Owned: "
-        .. (W.state.professions.components[zone.id] or 0), 1, 0.82, 0)
-    GameTooltip:AddLine("Idle bosses guarantee 1 trophy for enchanting or titanforging. Kept through both resets.", 0.8,
-        0.8, 0.7, true)
+    GameTooltip:AddLine(
+        C.zoneComponents[zone.id].name
+            .. L[" · Owned: "]
+            .. (W.state.professions.components[zone.id] or 0),
+        1,
+        0.82,
+        0
+    )
+    GameTooltip:AddLine(
+        L["Idle bosses guarantee 1 trophy for enchanting or titanforging. Kept through both resets."],
+        0.8,
+        0.8,
+        0.7,
+        true
+    )
     local spoils = familySpoils(zone)
     if spoils then
-        GameTooltip:AddLine("Family spoils: " .. spoils, 0.8, 0.8, 0.7)
+        GameTooltip:AddLine(L["Family spoils: "] .. spoils, 0.8, 0.8, 0.7)
         GameTooltip:AddLine(
-            "Up to 25% additional idle materials, shared across the encounter's enemies.",
+            L["Up to 25% additional idle materials, shared across the encounter's enemies."],
             0.7,
             0.7,
             0.7,
@@ -77,7 +107,7 @@ local function zoneTooltip(map, zone)
         )
     end
     GameTooltip:AddLine(
-        G.IsUnlocked(W.state, zone) and "Click to travel" or unlockText(zone),
+        G.IsUnlocked(W.state, zone) and L["Click to travel"] or unlockText(zone),
         0.8,
         0.8,
         0.7
@@ -212,7 +242,7 @@ local function paintMap(map)
         tile:Hide()
     end
     local textures, info = A.MapTiles(map.id)
-    map.message:SetText(textures and "" or "Continent artwork is unavailable in this client.")
+    map.message:SetText(textures and "" or L["Continent artwork is unavailable in this client."])
     if not textures or not info then
         return
     end
@@ -309,17 +339,17 @@ function Atlas.Draw(ui)
         self = { frame = CreateFrame("Frame", nil, ui.panel) }
         ui.atlas = self
         self.frame:SetAllPoints()
-        U.Text(self.frame, "DESTINATIONS", 0, 0, 24, T.gold)
+        U.Text(self.frame, L["DESTINATIONS"], 0, 0, 24, T.gold)
         U.Help(
             self.frame,
-            "World map",
+            L["World map"],
             1258,
             0,
-            "Hover a region to inspect its rewards and requirements. Click an unlocked region to travel. Gray regions are locked.\n\nTravel abandons the current encounter without rewards and preserves current health. Your idle destination is independent of your WoW character."
+            L["Hover a region to inspect its rewards and requirements. Click an unlocked region to travel. Gray regions are locked.\n\nTravel abandons the current encounter without rewards and preserves current health. Your idle destination is independent of your WoW character."]
         )
         self.maps = {
-            createMap(self, self.frame, "kalimdor", "Kalimdor", 0),
-            createMap(self, self.frame, "eastern", "Eastern Kingdoms", 664),
+            createMap(self, self.frame, "kalimdor", L["Kalimdor"], 0),
+            createMap(self, self.frame, "eastern", L["Eastern Kingdoms"], 664),
         }
         self.title = U.Text(self.frame, "", 0, 599, 22, T.gold, 900)
         self.detail = U.Text(self.frame, "", 0, 634, 13, T.muted, 920)

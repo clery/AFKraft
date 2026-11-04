@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, C, U, T = W.Game, W.Content, W.Widgets, W.Theme
 local R = {}
 W.RoutePanel = R
@@ -8,7 +9,7 @@ local function button(parent, label, x, y, width, action)
 end
 
 local function draft(ui, route)
-    ui.routeDraft = route and G.Copy(route) or { name = "New route", steps = {} }
+    ui.routeDraft = route and G.Copy(route) or { name = L["New route"], steps = {} }
     ui:Refresh()
 end
 
@@ -41,17 +42,17 @@ function R.Draw(ui, parent, state)
     end
     frame:Show()
     U.Begin(frame)
-    U.Text(frame, "ROUTE PLANNER", 0, 0, 22, T.gold, 1296)
+    U.Text(frame, L["ROUTE PLANNER"], 0, 0, 22, T.gold, 1296)
     U.Help(
         frame,
-        "Routes",
+        L["Routes"],
         1258,
         0,
-        "Add destinations and milestones, then save. Select Use saved route and enable Routes to travel between encounters. Manual travel pauses the route.\n\nOffline travel has a separate option and uses only cleared checkpoints."
+        L["Add destinations and milestones, then save. Select Use saved route and enable Routes to travel between encounters. Manual travel pauses the route.\n\nOffline travel has a separate option and uses only cleared checkpoints."]
     )
     ui.routeBuy = button(
         frame,
-        state.routes.owned and "Planning learned" or "Learn · 1 Heritage",
+        state.routes.owned and L["Planning learned"] or L["Learn · 1 Heritage"],
         0,
         92,
         280,
@@ -59,12 +60,18 @@ function R.Draw(ui, parent, state)
             W.Action(G.BuyRoutes)
         end
     )
-    U.Enabled(ui.routeBuy, not state.routes.owned and state.legacy >= 1 and not G.FeatureHint(state, "routes"))
-    U.Tooltip(ui.routeBuy, "Route planning",
-        G.FeatureHint(state, "routes") or "Spend 1 Heritage to learn route planning permanently.")
+    U.Enabled(
+        ui.routeBuy,
+        not state.routes.owned and state.legacy >= 1 and not G.FeatureHint(state, "routes")
+    )
+    U.Tooltip(
+        ui.routeBuy,
+        L["Route planning"],
+        G.FeatureHint(state, "routes") or L["Spend 1 Heritage to learn route planning permanently."]
+    )
     ui.routeEnabled = U.Checkbox(
         frame,
-        "Routes enabled",
+        L["Routes enabled"],
         0,
         136,
         280,
@@ -75,7 +82,7 @@ function R.Draw(ui, parent, state)
     )
     ui.routeOffline = U.Checkbox(
         frame,
-        "Offline cleared routes",
+        L["Offline cleared routes"],
         0,
         174,
         280,
@@ -86,16 +93,16 @@ function R.Draw(ui, parent, state)
     )
     U.Tooltip(
         ui.routeOffline,
-        "Offline route travel",
-        "While away, visit only checkpoints cleared in this run and tier before departure. Limit: 12 transitions per absence. Paused routes stay paused. No new progression or collection discoveries."
+        L["Offline route travel"],
+        L["While away, visit only checkpoints cleared in this run and tier before departure. Limit: 12 transitions per absence. Paused routes stay paused. No new progression or collection discoveries."]
     )
-    ui.routeNew = button(frame, "New template", 0, 214, 280, function()
+    ui.routeNew = button(frame, L["New template"], 0, 214, 280, function()
         draft(ui)
     end)
     ui.routeTemplates = {}
     for index, route in ipairs(state.routes.templates) do
         local saved = route
-        local selected = state.routes.selected == route.id and " · selected" or ""
+        local selected = state.routes.selected == route.id and L[" · selected"] or ""
         ui.routeTemplates[route.id] = U.SelectButton(
             frame,
             route.name .. selected,
@@ -110,11 +117,11 @@ function R.Draw(ui, parent, state)
         )
     end
     if not ui.routeDraft then
-        ui.routeDraft = { name = "New route", steps = {} }
+        ui.routeDraft = { name = L["New route"], steps = {} }
     end
     local preview = ui.routeDraft
     ui.routeNameInput:SetText(preview.name)
-    ui.routeSave = button(frame, "Save template", 930, 98, 170, function()
+    ui.routeSave = button(frame, L["Save template"], 930, 98, 170, function()
         preview.name = ui.routeNameInput:GetText()
         ui.routeNameInput:ClearFocus()
         local ok, value = G.SaveRoute(state, preview.id, preview.name, preview.steps)
@@ -129,18 +136,18 @@ function R.Draw(ui, parent, state)
         end
         ui:Refresh()
     end)
-    ui.routeUse = button(frame, "Use saved route", 352, 142, 224, function()
+    ui.routeUse = button(frame, L["Use saved route"], 352, 142, 224, function()
         W.Action(G.SelectRoute, preview.id)
     end)
     U.Enabled(ui.routeUse, preview.id ~= nil)
-    ui.routeDelete = button(frame, "Delete", 596, 142, 140, function()
+    ui.routeDelete = button(frame, L["Delete"], 596, 142, 140, function()
         local ok = G.DeleteRoute(state, preview.id)
         if ok then
             draft(ui)
         end
     end)
     U.Enabled(ui.routeDelete, preview.id ~= nil)
-    ui.routeResume = button(frame, "Resume route", 756, 142, 224, function()
+    ui.routeResume = button(frame, L["Resume route"], 756, 142, 224, function()
         W.Action(G.ResumeRoute)
     end)
     U.Enabled(ui.routeResume, state.routes.run.paused and state.routes.selected ~= nil)
@@ -152,13 +159,13 @@ function R.Draw(ui, parent, state)
         heroes[#heroes + 1] = { id = index, name = hero.name }
     end
     if #heroes == 0 then
-        heroes[1] = { id = 1, name = "Party member 1" }
+        heroes[1] = { id = 1, name = L["Party member 1"] }
     end
     for value = 1, C.heroLevelCap do
-        levels[#levels + 1] = { id = value, name = "Level " .. value }
+        levels[#levels + 1] = { id = value, name = L["Level "] .. value }
     end
     for value = 5, C.heroLevelCap * 5, 5 do
-        bosses[#bosses + 1] = { id = value, name = "Boss " .. value }
+        bosses[#bosses + 1] = { id = value, name = L["Boss "] .. value }
     end
     local materials, amounts, pieces = {}, {}, {}
     for _, id in ipairs(C.materialOrder) do
@@ -184,15 +191,15 @@ function R.Draw(ui, parent, state)
     end
     for _, collection in ipairs(C.collections) do
         for _, itemID in ipairs(collection.pieces) do
-            pieces[#pieces + 1] = { id = itemID, name = G.CollectionItem(itemID).name }
+            pieces[#pieces + 1] = { id = itemID, name = L[G.CollectionItem(itemID).name] }
         end
     end
     local kinds = {
-        { id = "boss", name = "Zone boss" },
-        { id = "level", name = "Hero level" },
-        { id = "unlock", name = "Unlock zone" },
-        { id = "material", name = "Material stock" },
-        { id = "collection", name = "Discovery" },
+        { id = "boss", name = L["Zone boss"] },
+        { id = "level", name = L["Hero level"] },
+        { id = "unlock", name = L["Unlock zone"] },
+        { id = "material", name = L["Material stock"] },
+        { id = "collection", name = L["Discovery"] },
     }
     ui.routeSteps = {}
     for index, step in ipairs(preview.steps) do
@@ -214,11 +221,11 @@ function R.Draw(ui, parent, state)
         )
         row.kind = U.Choice(
             frame,
-            trigger.kind == "boss" and "Zone boss"
-                or trigger.kind == "level" and "Hero level"
-                or trigger.kind == "material" and "Material stock"
-                or trigger.kind == "collection" and "Discovery"
-                or "Unlock zone",
+            trigger.kind == "boss" and L["Zone boss"]
+                or trigger.kind == "level" and L["Hero level"]
+                or trigger.kind == "material" and L["Material stock"]
+                or trigger.kind == "collection" and L["Discovery"]
+                or L["Unlock zone"],
             622,
             y,
             160,
@@ -239,7 +246,7 @@ function R.Draw(ui, parent, state)
         if trigger.kind == "material" then
             row.target = U.Choice(
                 frame,
-                C.materials[trigger.material] or "Unavailable",
+                C.materials[trigger.material] or L["Unavailable"],
                 792,
                 y,
                 230,
@@ -265,14 +272,14 @@ function R.Draw(ui, parent, state)
             )
             U.Tooltip(
                 row.value,
-                "Material stock milestone",
-                "Travel after an encounter when you hold this amount. Materials are not spent; earlier purchases can delay travel."
+                L["Material stock milestone"],
+                L["Travel after an encounter when you hold this amount. Materials are not spent; earlier purchases can delay travel."]
             )
         elseif trigger.kind == "collection" then
             local item = G.CollectionItem(trigger.itemID)
             row.target = U.Choice(
                 frame,
-                item and item.name or "Unavailable piece",
+                item and L[item.name] or L["Unavailable piece"],
                 792,
                 y,
                 390,
@@ -285,14 +292,14 @@ function R.Draw(ui, parent, state)
             )
             U.Tooltip(
                 row.target,
-                "Collection discovery milestone",
-                "Travel after this outdoor or dungeon piece is discovered. Routes never move your WoW character or earn discoveries."
+                L["Collection discovery milestone"],
+                L["Travel after this outdoor or dungeon piece is discovered. Routes never move your WoW character or earn discoveries."]
             )
         elseif trigger.kind == "level" then
             row.target = U.Choice(
                 frame,
                 state.heroes[trigger.hero] and state.heroes[trigger.hero].name
-                    or "Party member " .. trigger.hero,
+                    or L["Party member "] .. trigger.hero,
                 792,
                 y,
                 230,
@@ -305,7 +312,7 @@ function R.Draw(ui, parent, state)
             )
             row.value = U.Choice(
                 frame,
-                "Level " .. trigger.level,
+                L["Level "] .. trigger.level,
                 1032,
                 y,
                 150,
@@ -333,7 +340,7 @@ function R.Draw(ui, parent, state)
             if trigger.kind == "boss" then
                 row.value = U.Choice(
                     frame,
-                    "Boss " .. trigger.stage,
+                    L["Boss "] .. trigger.stage,
                     1032,
                     y,
                     150,
@@ -352,7 +359,7 @@ function R.Draw(ui, parent, state)
         end)
         ui.routeSteps[index] = row
     end
-    ui.routeAdd = button(frame, "Add step", 352, 588, 224, function()
+    ui.routeAdd = button(frame, L["Add step"], 352, 588, 224, function()
         local used = {}
         for _, step in ipairs(preview.steps) do
             used[step.destination] = true

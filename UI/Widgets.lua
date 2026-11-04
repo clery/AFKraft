@@ -90,6 +90,7 @@ function U.Text(parent, text, x, y, size, color, width)
     local f = pooled(parent, "text", function()
         return parent:CreateFontString(nil, "OVERLAY")
     end)
+    f.fitSize = nil
     f:SetFont("Fonts\\FRIZQT__.TTF", size or 14, "")
     f:SetPoint("TOPLEFT", x, -y)
     f:SetJustifyH("LEFT")
@@ -104,11 +105,35 @@ function U.Text(parent, text, x, y, size, color, width)
     return f
 end
 
+function U.FitText(fontString)
+    local font, currentSize, flags = fontString:GetFont()
+    local size = fontString.fitSize
+    if not size then
+        return
+    end
+    if currentSize ~= size then
+        fontString:SetFont(font, size, flags)
+    end
+    local width = fontString:GetWidth()
+    local natural = fontString.GetUnboundedStringWidth and fontString:GetUnboundedStringWidth()
+        or fontString:GetStringWidth()
+    if width > 0 and natural > width then
+        fontString:SetFont(font, math.max(10, math.floor(size * width / natural)), flags)
+    end
+end
+
 function U.SingleLine(fontString, width, height, align)
+    local _, size = fontString:GetFont()
+    fontString.fitSize = size
+    if not fontString.fitHook then
+        hooksecurefunc(fontString, "SetText", U.FitText)
+        fontString.fitHook = true
+    end
     fontString:SetSize(width, height)
     fontString:SetWordWrap(false)
     fontString:SetJustifyH(align or "LEFT")
     fontString:SetJustifyV("MIDDLE")
+    U.FitText(fontString)
     return fontString
 end
 
@@ -137,6 +162,7 @@ function U.Selected(button, selected)
             button:SetBackdropBorderColor(unpack(button.selected and T.gold or T.line))
         end
     end
+    U.FitText(button.text)
     button.text:SetTextColor(unpack(selected and T.gold or T.text))
 end
 

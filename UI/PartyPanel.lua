@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local C, G, U, T = W.Content, W.Game, W.Widgets, W.Theme
 local Party = {}
 W.PartyPanel = Party
@@ -31,12 +32,12 @@ local function qualityText(item)
 end
 
 local function statGuide(hero)
-    return "|cffffffffPrimary stat: "
+    return L["|cffffffffPrimary stat: "]
         .. C.itemStatNames[C.primaryStats[hero.class]]
         .. "|r\n"
-        .. "Your primary stat increases damage. Intellect also improves healing for every class.\n\n"
-        .. "Stamina: maximum health.\nSpirit / Healing Power: healing.\nHaste: attack and ability speed.\nArmor: damage reduction, with diminishing returns.\nWeapon DPS: damage.\nAttack Power: damage for Strength/Agility classes.\nSpell Power: damage for Intellect/hybrid classes; healing for all.\nHealth / 5 sec: combat health regeneration.\nResistances: no combat effect.\n\n"
-        .. "Power estimates item value for this class; it is not damage per second."
+        .. L["Your primary stat increases damage. Intellect also improves healing for every class.\n\n"]
+        .. L["Stamina: maximum health.\nSpirit / Healing Power: healing.\nHaste: attack and ability speed.\nArmor: damage reduction, with diminishing returns.\nWeapon DPS: damage.\nAttack Power: damage for Strength/Agility classes.\nSpell Power: damage for Intellect/hybrid classes; healing for all.\nHealth / 5 sec: combat health regeneration.\nResistances: no combat effect.\n\n"]
+        .. L["Power estimates item value for this class; it is not damage per second."]
 end
 
 local function costText(state, cost)
@@ -73,7 +74,7 @@ local function recruit(ui, p, s)
     local available = #s.heroes < G.CompanionSlots(s)
     line(
         p,
-        available and "A companion is ready to join" or "Find your next companion",
+        available and L["A companion is ready to join"] or L["Find your next companion"],
         0,
         0,
         950,
@@ -84,15 +85,15 @@ local function recruit(ui, p, s)
         local milestone = G.NextCompanionMilestone(s)
         U.Text(
             p,
-            milestone and ("Defeat a level " .. milestone .. " milestone boss.")
-                or "All five companions have joined your company.",
+            milestone and (L["Defeat a level "] .. milestone .. L[" milestone boss."])
+                or L["All five companions have joined your company."],
             0,
             54,
             18,
             T.text,
             1000
         )
-        U.Button(p, "Back to equipment", 0, 135, 240, 34, function()
+        U.Button(p, L["Back to equipment"], 0, 135, 240, 34, function()
             ui.recruiting = false
             ui:Refresh()
         end)
@@ -100,14 +101,14 @@ local function recruit(ui, p, s)
     end
     U.Text(
         p,
-        "Choose a class for companion " .. (#s.heroes + 1) .. " of 5.",
+        L["Choose a class for companion "] .. (#s.heroes + 1) .. L[" of 5."],
         0,
         39,
         14,
         T.muted,
         1030
     )
-    local back = U.Button(p, "Back to equipment", 1090, 0, 206, 34, function()
+    local back = U.Button(p, L["Back to equipment"], 1090, 0, 206, 34, function()
         ui.recruiting = false
         ui:Refresh()
     end)
@@ -131,28 +132,34 @@ local function recruit(ui, p, s)
         U.Tooltip(
             b,
             class.name,
-            "Recruit a new "
+            L["Recruit a new "]
                 .. class.name
-                .. ". Repeated classes are allowed. A recruit joins the next encounter if your company is fighting."
+                .. L[". Repeated classes are allowed. A recruit joins the next encounter if your company is fighting."]
         )
     end
     U.Help(
         p,
-        "Recruitment",
+        L["Recruitment"],
         1030,
         0,
-        "Choose any class, including duplicates. Names and appearances are generated.\n\nRecruits join the next encounter and use your shared inventory."
+        L["Choose any class, including duplicates. Names and appearances are generated.\n\nRecruits join the next encounter and use your shared inventory."]
     )
 end
 
 local function equipment(ui, p, s, hero, index)
     local class, stats = C.classByID[hero.class], G.Stats(s, hero)
     local outfit = W.ModelAssets.starterOutfits[hero.class] or W.ModelAssets.starterOutfits.MAGE
-    line(p, hero.name .. "’s equipment", 0, 0, 280, 20, class.color)
-    U.Help(p, "Equipment stat guide", 288, 0, statGuide(hero))
+    line(p, string.format(L["Equipment: %s"], hero.name), 0, 0, 280, 20, class.color)
+    U.Help(p, L["Equipment stat guide"], 288, 0, statGuide(hero))
     line(
         p,
-        "Level " .. hero.level .. " " .. class.name .. "  ·  " .. U.Number(stats.hp) .. " health",
+        L["Level "]
+            .. hero.level
+            .. " "
+            .. class.name
+            .. "  ·  "
+            .. U.Number(stats.hp)
+            .. L[" health"],
         0,
         33,
         315,
@@ -167,17 +174,17 @@ local function equipment(ui, p, s, hero, index)
                 string.format("%s: %.1f", C.itemStatNames[key], stats.attributes[key])
         end
     end
-    local development = U.Button(p, "Party development", 332, 0, 240, 34, function()
+    local development = U.Button(p, L["Party development"], 332, 0, 240, 34, function()
         ui:SetTab("development")
     end)
 
     U.Tooltip(
         development,
-        "Permanent party development · Equipment stats",
-        "Invest Essence in party-wide bonuses in Growth. Ranks can be refunded freely. Hero levels come from idle combat.\n\nEquipment stats:\n"
+        L["Permanent party development · Equipment stats"],
+        L["Invest Essence in party-wide bonuses in Growth. Ranks can be refunded freely. Hero levels come from idle combat.\n\nEquipment stats:\n"]
             .. (
                 #attributeLines > 0 and table.concat(attributeLines, "\n")
-                or "No equipment bonuses."
+                or L["No equipment bonuses."]
             )
     )
 
@@ -198,7 +205,7 @@ local function equipment(ui, p, s, hero, index)
         line(b, name, 48, 2, 220, 12, slot == selectedSlot and T.gold or T.text)
         line(
             b,
-            item and item.name or (outfit[slot] and "Basic clothing" or "Empty slot"),
+            item and L[item.name] or (outfit[slot] and L["Basic clothing"] or L["Empty slot"]),
             48,
             rowStep - 22,
             220,
@@ -208,56 +215,58 @@ local function equipment(ui, p, s, hero, index)
         U.EndBuild(b)
         U.Tooltip(
             b,
-            item and item.name or name,
+            item and L[item.name] or name,
             item
-                    and (qualityText(item) .. " · " .. G.ItemPower(item, hero) .. " power\n" .. G.ItemDescription(
+                    and (qualityText(item) .. " · " .. G.ItemPower(item, hero) .. L[" power\n"] .. G.ItemDescription(
                         item,
                         hero
-                    ) .. "\nSelect to view upgrades and matching inventory.")
-                or (outfit[slot] and "Basic clothing is cosmetic and adds no stats. " or "")
-                    .. "Select this slot to find matching equipment in the shared inventory."
+                    ) .. L["\nSelect to view upgrades and matching inventory."])
+                or (outfit[slot] and L["Basic clothing is cosmetic and adds no stats. "] or "")
+                    .. L["Select this slot to find matching equipment in the shared inventory."]
         )
     end
 
     local item = hero.gear[selectedSlot]
     if item then
         local cost = G.UpgradeCost(item, s)
-        line(p, "Upgrade " .. C.slots[selectedSlot], 0, 351, 320, 16, T.gold)
+        line(p, L["Upgrade "] .. C.slots[selectedSlot], 0, 351, 320, 16, T.gold)
         line(
             p,
             G.ItemPower(item, hero)
-                .. " to "
+                .. L[" to "]
                 .. G.ItemPower(item, hero, 1)
-                .. " power  ·  "
+                .. L[" power  ·  "]
                 .. costText(s, cost),
             0,
             381,
             572,
             12
         )
-        local upgrade = U.Button(p, "Upgrade +10% stats", 332, 346, 240, 34, function()
+        local upgrade = U.Button(p, L["Upgrade +10% stats"], 332, 346, 240, 34, function()
             if W.Action(G.Upgrade, index, selectedSlot) then
-                W.Notify(hero.name .. "’s " .. C.slots[selectedSlot] .. " gained 10% base stats.")
+                W.Notify(
+                    hero.name .. "’s " .. C.slots[selectedSlot] .. L[" gained 10% base stats."]
+                )
             end
         end, false, "primary")
         U.Enabled(upgrade, affordable(s, cost))
         U.Tooltip(
             upgrade,
-            "Improve this item",
-            "Adds 10% of the base item stats. The power preview uses this hero’s class. Changes take effect immediately."
+            L["Improve this item"],
+            L["Adds 10% of the base item stats. The power preview uses this hero’s class. Changes take effect immediately."]
         )
     else
         line(
             p,
-            outfit[selectedSlot] and "Basic clothing · " .. C.slots[selectedSlot]
-                or "An empty " .. string.lower(C.slots[selectedSlot]) .. " slot",
+            outfit[selectedSlot] and L["Basic clothing · "] .. C.slots[selectedSlot]
+                or L["An empty "] .. string.lower(C.slots[selectedSlot]) .. L[" slot"],
             0,
             351,
             320,
             16,
             T.gold
         )
-        U.Button(p, "Craft equipment", 332, 346, 240, 34, function()
+        U.Button(p, L["Craft equipment"], 332, 346, 240, 34, function()
             ui.craftSlot = selectedSlot
             ui:SetTab("crafting")
         end)
@@ -266,7 +275,7 @@ local function equipment(ui, p, s, hero, index)
     if hero.generated and hero.class == identity.class then
         local replace = U.Button(
             p,
-            "Use " .. identity.name .. " as this companion",
+            L["Use "] .. identity.name .. L[" as this companion"],
             0,
             413,
             572,
@@ -281,7 +290,7 @@ end
 
 local function inventory(ui, p, s, hero, index)
     local filter = C.slots[ui.bagFilter or 0] and ui.bagFilter or 0
-    local options, entries = { { id = 0, name = "All equipment" } }, {}
+    local options, entries = { { id = 0, name = L["All equipment"] } }, {}
     for _, slot in ipairs(C.equipmentSlots) do
         options[#options + 1] = { id = slot, name = C.slots[slot] }
     end
@@ -297,17 +306,17 @@ local function inventory(ui, p, s, hero, index)
     end
     describe(filter, 0, C.slots[filter])
     local availabilityNames = {
-        all = "Any availability",
-        usable = "Equippable now",
-        locked = "Cannot equip",
-        upgrades = "Usable upgrades",
+        all = L["Any availability"],
+        usable = L["Equippable now"],
+        locked = L["Cannot equip"],
+        upgrades = L["Usable upgrades"],
     }
     local traitNames = {
-        all = "Any trait",
-        heirloom = "Heirlooms",
-        protected = "Protected",
-        effect = "With effect",
-        upgraded = "Upgraded",
+        all = L["Any trait"],
+        heirloom = L["Heirlooms"],
+        protected = L["Protected"],
+        effect = L["With effect"],
+        upgraded = L["Upgraded"],
     }
     describe(view.availability or "all", "all", availabilityNames[view.availability])
     describe(view.quality or 0, 0, C.qualityNames[view.quality])
@@ -316,18 +325,18 @@ local function inventory(ui, p, s, hero, index)
         ui.bagView, ui.bagFilter, ui.bagPage = nil, 0, 0
         ui:Refresh()
     end
-    line(p, "Shared inventory · " .. #s.inventory .. " stacks", 608, 0, 320, 21, T.gold)
-    U.Button(p, "Disenchant…", 944, 0, 152, 32, function()
+    line(p, L["Shared inventory · "] .. #s.inventory .. L[" stacks"], 608, 0, 320, 21, T.gold)
+    U.Button(p, L["Disenchant…"], 944, 0, 152, 32, function()
         ui.disenchantOpen, ui.disenchantItem, ui.disenchantPage = true, nil, 0
         ui:Refresh()
     end)
-    local equipBest = U.Button(p, "Equip best power", 1112, 0, 184, 32, function()
+    local equipBest = U.Button(p, L["Equip best power"], 1112, 0, 184, 32, function()
         W.Action(G.EquipBest, index)
     end, false, "primary")
     U.Rect(p, 608, 38, 688, 36, T.panel, 0.65)
     U.Button(
         p,
-        (ui.bagFiltersOpen and "- Filters" or "+ Filters")
+        (ui.bagFiltersOpen and L["- Filters"] or L["+ Filters"])
             .. (active > 0 and " (" .. active .. ")" or ""),
         608,
         40,
@@ -342,11 +351,11 @@ local function inventory(ui, p, s, hero, index)
     )
     local sorts, sortValue = {}, (view.sort or "power") .. (view.ascending and ":asc" or ":desc")
     for _, option in ipairs({
-        { "power", "Power", "High to low", "Low to high" },
-        { "level", "Level", "High to low", "Low to high" },
-        { "quality", "Quality", "High to low", "Low to high" },
-        { "slot", "Equipment slot", "Last to first", "First to last" },
-        { "name", "Name", "Z to A", "A to Z" },
+        { "power", L["Power"], L["High to low"], L["Low to high"] },
+        { "level", L["Level"], L["High to low"], L["Low to high"] },
+        { "quality", L["Quality"], L["High to low"], L["Low to high"] },
+        { "slot", L["Equipment slot"], L["Last to first"], L["First to last"] },
+        { "name", L["Name"], L["Z to A"], L["A to Z"] },
     }) do
         sorts[#sorts + 1] = { id = option[1] .. ":desc", name = option[2] .. ": " .. option[3] }
         sorts[#sorts + 1] = { id = option[1] .. ":asc", name = option[2] .. ": " .. option[4] }
@@ -357,16 +366,16 @@ local function inventory(ui, p, s, hero, index)
             sortLabel = option.name
         end
     end
-    line(p, "Sort", 772, 49, 44, 12, T.muted)
+    line(p, L["Sort"], 772, 49, 44, 12, T.muted)
     U.Choice(p, sortLabel, 816, 40, 320, sorts, sortValue, function(id)
         view.sort, view.ascending = id:match("^(.-):"), id:match(":asc$") ~= nil
         ui.bagPage = 0
         ui:Refresh()
     end)
-    local clear = U.Button(p, "Clear filters", 1152, 40, 144, 32, reset)
+    local clear = U.Button(p, L["Clear filters"], 1152, 40, 144, 32, reset)
     U.Enabled(clear, active > 0)
     ui.guideInventoryTarget = active > 0 and clear or nil
-    ui.guideInventoryLabel = "Clear filters"
+    ui.guideInventoryLabel = L["Clear filters"]
     if ui.bagFiltersOpen then
         U.Rect(p, 608, 78, 688, 70, T.panel, 0.65)
         local function choice(key, title, choices, default, x)
@@ -388,29 +397,29 @@ local function inventory(ui, p, s, hero, index)
                 ui:Refresh()
             end)
         end
-        choice("slot", "Equipment", options, 0, 608)
-        choice("availability", "Availability", {
-            { id = "all", name = "Any availability" },
-            { id = "usable", name = "Equippable now" },
-            { id = "locked", name = "Cannot equip" },
-            { id = "upgrades", name = "Usable upgrades" },
+        choice("slot", L["Equipment"], options, 0, 608)
+        choice("availability", L["Availability"], {
+            { id = "all", name = L["Any availability"] },
+            { id = "usable", name = L["Equippable now"] },
+            { id = "locked", name = L["Cannot equip"] },
+            { id = "upgrades", name = L["Usable upgrades"] },
         }, "all", 784)
-        local qualities = { { id = 0, name = "Any quality" } }
+        local qualities = { { id = 0, name = L["Any quality"] } }
         for quality, name in ipairs(C.qualityNames) do
             qualities[#qualities + 1] = { id = quality, name = name }
         end
-        choice("quality", "Quality", qualities, 0, 960)
-        choice("trait", "Item trait", {
-            { id = "all", name = "Any trait" },
-            { id = "heirloom", name = "Heirlooms" },
-            { id = "protected", name = "Protected" },
-            { id = "effect", name = "With effect" },
-            { id = "upgraded", name = "Upgraded" },
+        choice("quality", L["Quality"], qualities, 0, 960)
+        choice("trait", L["Item trait"], {
+            { id = "all", name = L["Any trait"] },
+            { id = "heirloom", name = L["Heirlooms"] },
+            { id = "protected", name = L["Protected"] },
+            { id = "effect", name = L["With effect"] },
+            { id = "upgraded", name = L["Upgraded"] },
         }, "all", 1136)
     else
         line(
             p,
-            active > 0 and table.concat(summary, "  ·  ") or "All equipment",
+            active > 0 and table.concat(summary, "  ·  ") or L["All equipment"],
             612,
             80,
             680,
@@ -420,10 +429,10 @@ local function inventory(ui, p, s, hero, index)
     end
     U.Tooltip(
         equipBest,
-        "Equip best power",
-        "Equip the highest-power usable item in every slot for "
+        L["Equip best power"],
+        L["Equip the highest-power usable item in every slot for "]
             .. hero.name
-            .. ". Uses the shared inventory, keeps current items on equal power, and returns replaced gear to the inventory."
+            .. L[". Uses the shared inventory, keeps current items on equal power, and returns replaced gear to the inventory."]
     )
 
     local bottom = p:GetHeight() - 34
@@ -447,7 +456,7 @@ local function inventory(ui, p, s, hero, index)
                 end
                 ui.gearSlot = item.slot
                 if W.Action(G.Equip, index, n) then
-                    W.Notify("Equipped " .. item.name .. " on " .. hero.name .. ".")
+                    W.Notify(L["Equipped "] .. L[item.name] .. L[" on "] .. hero.name .. ".")
                 end
             end)
             if levelOK and item.uid == s.guide.craftItem then
@@ -463,7 +472,7 @@ local function inventory(ui, p, s, hero, index)
             U.Icon(b, item.icon or slotIcons[item.slot], 12, 7, 32):SetParent(b.content or b)
             line(
                 b,
-                item.name .. ((item.count or 1) > 1 and "  ×" .. item.count or ""),
+                L[item.name] .. ((item.count or 1) > 1 and "  ×" .. item.count or ""),
                 58,
                 5,
                 360,
@@ -474,10 +483,10 @@ local function inventory(ui, p, s, hero, index)
                 b,
                 C.slots[item.slot]
                     .. "  ·  "
-                    .. (item.heirloom and "Heirloom" or "Level " .. item.level)
+                    .. (item.heirloom and L["Heirloom"] or L["Level "] .. item.level)
                     .. "  ·  "
                     .. power
-                    .. " power",
+                    .. L[" power"],
                 58,
                 27,
                 360,
@@ -495,7 +504,7 @@ local function inventory(ui, p, s, hero, index)
             ):SetJustifyH("RIGHT")
             line(
                 b,
-                not levelOK and "Locked" or "Equip",
+                not levelOK and L["Locked"] or L["Equip"],
                 584,
                 15,
                 90,
@@ -505,16 +514,16 @@ local function inventory(ui, p, s, hero, index)
             U.EndBuild(b)
             U.Tooltip(
                 b,
-                item.name,
+                L[item.name],
                 qualityText(item)
                     .. " · "
                     .. power
-                    .. " power\n"
+                    .. L[" power\n"]
                     .. G.ItemDescription(item, hero, true)
                     .. "\n\n"
                     .. (
                         not levelOK and ("|cffff6060" .. restriction .. "|r")
-                        or "Click to equip on " .. hero.name .. "."
+                        or L["Click to equip on "] .. hero.name .. "."
                     ),
                 320
             )
@@ -523,7 +532,7 @@ local function inventory(ui, p, s, hero, index)
     if #entries == 0 then
         line(
             p,
-            #s.inventory == 0 and "Your first treasures await" or "No matching equipment",
+            #s.inventory == 0 and L["Your first treasures await"] or L["No matching equipment"],
             632,
             179,
             640,
@@ -533,8 +542,8 @@ local function inventory(ui, p, s, hero, index)
         U.Text(
             p,
             #s.inventory == 0
-                    and "Win encounters or craft a targeted item. Equipment is shared by your company."
-                or "Try another filter, or reset the inventory view to show all equipment.",
+                    and L["Win encounters or craft a targeted item. Equipment is shared by your company."]
+                or L["Try another filter, or reset the inventory view to show all equipment."],
             632,
             221,
             14,
@@ -543,7 +552,7 @@ local function inventory(ui, p, s, hero, index)
         )
         U.Button(
             p,
-            #s.inventory == 0 and "Visit the forge" or "Reset filters",
+            #s.inventory == 0 and L["Visit the forge"] or L["Reset filters"],
             632,
             258,
             216,
@@ -558,11 +567,11 @@ local function inventory(ui, p, s, hero, index)
             end
         )
     end
-    local previous = U.Button(p, "Previous", 608, bottom, 116, 32, function()
+    local previous = U.Button(p, L["Previous"], 608, bottom, 116, 32, function()
         ui.bagPage = page - 1
         ui:Refresh()
     end)
-    local nextPage = U.Button(p, "Next", 1180, bottom, 116, 32, function()
+    local nextPage = U.Button(p, L["Next"], 1180, bottom, 116, 32, function()
         ui.bagPage = page + 1
         ui:Refresh()
     end)
@@ -570,13 +579,18 @@ local function inventory(ui, p, s, hero, index)
     U.Enabled(nextPage, page < pages - 1)
     if not ui.guideInventoryTarget then
         ui.guideInventoryTarget = page < pages - 1 and nextPage or page > 0 and previous or nil
-        ui.guideInventoryLabel = page < pages - 1 and "Next" or "Previous"
+        ui.guideInventoryLabel = page < pages - 1 and L["Next"] or L["Previous"]
     end
     previous.text:SetJustifyH("CENTER")
     nextPage.text:SetJustifyH("CENTER")
     line(
         p,
-        "Page " .. (page + 1) .. " of " .. pages .. "  ·  Power compared with " .. hero.name,
+        L["Page "]
+            .. (page + 1)
+            .. L[" of "]
+            .. pages
+            .. L["  ·  Power compared with "]
+            .. hero.name,
         742,
         bottom + 5,
         420,
@@ -599,21 +613,21 @@ local function disenchant(ui, p, s)
     end
     -- Never select a neighboring stack automatically after destroying the current one.
     ui.disenchantItem = selected
-    line(p, "Disenchant equipment", 0, 0, 900, 22, T.gold)
-    U.Button(p, "Back to equipment", 1096, 0, 200, 32, function()
+    line(p, L["Disenchant equipment"], 0, 0, 900, 22, T.gold)
+    U.Button(p, L["Back to equipment"], 1096, 0, 200, 32, function()
         ui.disenchantOpen, ui.disenchantItem = false, nil
         ui:Refresh()
     end)
     line(
         p,
-        "Turn spare equipment into gold and Relic dust. Equipped gear, heirlooms and protected items are kept.",
+        L["Turn spare equipment into gold and Relic dust. Equipped gear, heirlooms and protected items are kept."],
         0,
         36,
         1296,
         14,
         T.muted
     )
-    line(p, "STORED EQUIPMENT", 0, 76, 792, 12, T.gold)
+    line(p, L["STORED EQUIPMENT"], 0, 76, 792, 12, T.gold)
     for row = 1, 5 do
         local entry = entries[page * 5 + row]
         if entry then
@@ -627,7 +641,7 @@ local function disenchant(ui, p, s)
             U.Icon(b, item.icon or slotIcons[item.slot], 12, 7, 32):SetParent(b.content or b)
             line(
                 b,
-                item.name .. " ×" .. (item.count or 1),
+                L[item.name] .. " ×" .. (item.count or 1),
                 62,
                 4,
                 580,
@@ -638,7 +652,7 @@ local function disenchant(ui, p, s)
                 b,
                 C.slots[item.slot]
                     .. " · "
-                    .. (item.heirloom and "Heirloom" or "Level " .. item.level)
+                    .. (item.heirloom and L["Heirloom"] or L["Level "] .. item.level)
                     .. " · "
                     .. C.qualityNames[item.quality],
                 62,
@@ -649,10 +663,10 @@ local function disenchant(ui, p, s)
             )
             line(
                 b,
-                item.heirloom and "Heirloom"
-                    or item.protected and "Protected"
-                    or item == selected and "Selected"
-                    or "Select",
+                item.heirloom and L["Heirloom"]
+                    or item.protected and L["Protected"]
+                    or item == selected and L["Selected"]
+                    or L["Select"],
                 656,
                 14,
                 120,
@@ -660,14 +674,14 @@ local function disenchant(ui, p, s)
                 (item.protected or item.heirloom) and T.gold or T.muted
             ):SetJustifyH("RIGHT")
             U.EndBuild(b)
-            U.Tooltip(b, item.name, G.ItemDescription(item, s.heroes[ui.selected], true), 360)
+            U.Tooltip(b, L[item.name], G.ItemDescription(item, s.heroes[ui.selected], true), 360)
         end
     end
     if #entries == 0 then
-        line(p, "No stored equipment", 12, 133, 760, 20)
+        line(p, L["No stored equipment"], 12, 133, 760, 20)
         U.Text(
             p,
-            "Win encounters or craft equipment, then return here to disenchant spare items.",
+            L["Win encounters or craft equipment, then return here to disenchant spare items."],
             12,
             174,
             14,
@@ -675,11 +689,11 @@ local function disenchant(ui, p, s)
             740
         )
     end
-    local previous = U.Button(p, "Previous", 0, 376, 116, 32, function()
+    local previous = U.Button(p, L["Previous"], 0, 376, 116, 32, function()
         ui.disenchantPage = page - 1
         ui:Refresh()
     end)
-    local nextPage = U.Button(p, "Next", 676, 376, 116, 32, function()
+    local nextPage = U.Button(p, L["Next"], 676, 376, 116, 32, function()
         ui.disenchantPage = page + 1
         ui:Refresh()
     end)
@@ -687,7 +701,7 @@ local function disenchant(ui, p, s)
     U.Enabled(nextPage, page < pages - 1)
     line(
         p,
-        "Page " .. (page + 1) .. " of " .. pages .. " · " .. #entries .. " stacks",
+        L["Page "] .. (page + 1) .. L[" of "] .. pages .. " · " .. #entries .. L[" stacks"],
         136,
         383,
         520,
@@ -695,10 +709,10 @@ local function disenchant(ui, p, s)
         T.muted
     ):SetJustifyH("CENTER")
 
-    line(p, "SELECTED STACK", 848, 76, 448, 12, T.gold)
+    line(p, L["SELECTED STACK"], 848, 76, 448, 12, T.gold)
     line(
         p,
-        selected and selected.name or "Choose equipment",
+        selected and selected.name or L["Choose equipment"],
         848,
         105,
         448,
@@ -707,15 +721,15 @@ local function disenchant(ui, p, s)
     )
     line(
         p,
-        selected and ((selected.count or 1) .. " copies in inventory")
-            or "Select a stack from the list to preview its rewards.",
+        selected and ((selected.count or 1) .. L[" copies in inventory"])
+            or L["Select a stack from the list to preview its rewards."],
         848,
         136,
         448,
         13,
         T.muted
     )
-    line(p, "Copies to disenchant", 848, 178, 448, 13, T.muted)
+    line(p, L["Copies to disenchant"], 848, 178, 448, 13, T.muted)
     local quantity = ui.disenchantQuantity or 1
     for position, amount in ipairs({ 1, 10, 100 }) do
         local choice = U.SelectButton(
@@ -734,19 +748,19 @@ local function disenchant(ui, p, s)
         choice.text:SetJustifyH("CENTER")
         U.Tooltip(
             choice,
-            "Disenchant quantity",
-            "Destroy up to "
+            L["Disenchant quantity"],
+            L["Destroy up to "]
                 .. amount
-                .. " copies of the selected stack for gold and Relic dust. Smaller stacks use all remaining copies.",
+                .. L[" copies of the selected stack for gold and Relic dust. Smaller stacks use all remaining copies."],
             320
         )
     end
     local reward = G.DisenchantReward(selected, quantity)
-    line(p, "You receive", 848, 252, 448, 13, T.muted)
+    line(p, L["You receive"], 848, 252, 448, 13, T.muted)
     line(
         p,
-        reward and (reward.gold .. " gold + " .. reward.relic .. " Relic dust")
-            or selected and "This stack is protected"
+        reward and (reward.gold .. L[" gold + "] .. reward.relic .. L[" Relic dust"])
+            or selected and L["This stack is protected"]
             or "—",
         848,
         279,
@@ -757,7 +771,7 @@ local function disenchant(ui, p, s)
     local count = reward and reward.count or quantity
     local destroy = U.Button(
         p,
-        "Disenchant " .. count .. (count == 1 and " copy" or " copies"),
+        L["Disenchant "] .. count .. (count == 1 and L[" copy"] or L[" copies"]),
         848,
         318,
         300,
@@ -771,13 +785,13 @@ local function disenchant(ui, p, s)
     U.Enabled(destroy, reward ~= nil)
     U.Tooltip(
         destroy,
-        "Disenchant selected equipment",
-        "Permanently destroys the selected copies for the displayed rewards. This cannot be undone.",
+        L["Disenchant selected equipment"],
+        L["Permanently destroys the selected copies for the displayed rewards. This cannot be undone."],
         320
     )
     local protect = U.Checkbox(
         p,
-        "Protected",
+        L["Protected"],
         1160,
         318,
         136,
@@ -793,25 +807,25 @@ local function disenchant(ui, p, s)
     ui.disenchantProtect = protect
     U.Tooltip(
         protect,
-        "Protect equipment",
-        "Protected items cannot be disenchanted or automatically salvaged.\n\nHeirlooms are always protected.",
+        L["Protect equipment"],
+        L["Protected items cannot be disenchanted or automatically salvaged.\n\nHeirlooms are always protected."],
         350
     )
     local total = G.DisenchantAllReward(s)
-    local all = U.Button(p, "Disenchant all unprotected", 848, 376, 448, 32, function()
+    local all = U.Button(p, L["Disenchant all unprotected"], 848, 376, 448, 32, function()
         W.Action(G.DisenchantAll)
     end)
     U.Enabled(all, total.count > 0)
     U.Tooltip(
         all,
-        "Disenchant all unprotected equipment",
-        "Permanently destroys "
+        L["Disenchant all unprotected equipment"],
+        L["Permanently destroys "]
             .. total.count
-            .. " items across every page for "
+            .. L[" items across every page for "]
             .. total.gold
-            .. " gold and "
+            .. L[" gold and "]
             .. total.relic
-            .. " Relic dust. Includes upgrades. Equipped gear, heirlooms and protected stacks are kept. The quantity selector does not limit this action.",
+            .. L[" Relic dust. Includes upgrades. Equipped gear, heirlooms and protected stacks are kept. The quantity selector does not limit this action."],
         360
     )
 end

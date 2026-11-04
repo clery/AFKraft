@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G = W.Game
 local max, floor = math.max, math.floor
 
@@ -61,7 +62,7 @@ end
 
 function G.Prestige(state)
     if not state.prestigeUnlocked then
-        return false, "Defeat a level 8 milestone boss to unlock prestige."
+        return false, L["Defeat a level 8 milestone boss to unlock prestige."]
     end
     local reward = G.PrestigeReward(state)
     local strength = state.prestigeStrength or state.prestiges
@@ -76,7 +77,7 @@ function G.Prestige(state)
     end
     G.Log(
         state,
-        "A new chapter begins. Earned " .. reward .. " Heritage. Unspent Essence retained.",
+        L["A new chapter begins. Earned "] .. reward .. L[" Heritage. Unspent Essence retained."],
         nil,
         "progress"
     )

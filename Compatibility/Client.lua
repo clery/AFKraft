@@ -1,6 +1,7 @@
 local _, W = ...
+local L = W.L
 local A = {
-    status = "Quest, level, boss, eligible kill, and gathering rewards active.",
+    status = L["Quest, level, boss, eligible kill, and gathering rewards active."],
     xpSequence = 0,
 }
 W.Client = A
@@ -51,8 +52,8 @@ function A.StyleNameplate(bar, background)
         border:SetPoint("CENTER")
         border:SetSize(bar:GetWidth() + 8, bar:GetHeight() + 6)
     else
-        bar:GetStatusBarTexture():SetAtlas("UI-HUD-CoolDownManager-Bar")
-        background:SetAtlas("UI-HUD-CoolDownManager-Bar-BG")
+        bar:GetStatusBarTexture():SetAtlas(L["UI-HUD-CoolDownManager-Bar"])
+        background:SetAtlas(L["UI-HUD-CoolDownManager-Bar-BG"])
         background:SetPoint("TOPLEFT", bar, "TOPLEFT", -2, 3)
         background:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 6, -6)
     end
@@ -69,7 +70,7 @@ end
 function A.Identity()
     local _, class = UnitClass("player")
     return {
-        name = UnitName("player") or "Adventurer",
+        name = UnitName("player") or L["Adventurer"],
         class = class or "WARRIOR",
         guid = UnitGUID("player") or "local-player",
     }
@@ -303,7 +304,7 @@ function A.Event(s, event, ...)
                 s,
                 "quest:" .. questID .. ":" .. math.floor(A.Now() / 2),
                 "quest",
-                "Quest completed"
+                L["Quest completed"]
             )
         end
     elseif event == "PLAYER_LEVEL_UP" then
@@ -313,7 +314,7 @@ function A.Event(s, event, ...)
                 s,
                 "level:" .. A.Identity().guid .. ":" .. level,
                 "level",
-                "Character level " .. level
+                L["Character level "] .. level
             )
         end
     elseif event == "BOSS_KILL" then
@@ -324,7 +325,7 @@ function A.Event(s, event, ...)
                     s,
                     "boss:" .. id .. ":" .. math.floor(A.Now() / 30),
                     "boss",
-                    "Boss defeated"
+                    L["Boss defeated"]
                 )
             end
             s.discoveries["boss:" .. id] = true
@@ -344,7 +345,7 @@ function A.Event(s, event, ...)
             s,
             "combat-xp:" .. A.Identity().guid .. ":" .. A.Now() .. ":" .. A.xpSequence,
             "kill",
-            "Combat experience"
+            L["Combat experience"]
         )
     end
 end

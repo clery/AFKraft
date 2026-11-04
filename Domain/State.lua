@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local C = W.Content
 local G = {}
 W.Game = G
@@ -173,7 +174,7 @@ function G.New(now)
         identities = {},
         seenRewards = {},
         rewardOrder = {},
-        log = { "A new legend begins. Choose your companions." },
+        log = { L["A new legend begins. Choose your companions."] },
     }
 end
 
@@ -198,7 +199,7 @@ function G.Load(db, now)
         db.version = C.version
         db.adventure = { rank = 1, xp = 0, totalXP = 0, sources = {} }
     elseif db.version ~= C.version then
-        return nil, "This save belongs to an unsupported version. It has not been changed."
+        return nil, L["This save belongs to an unsupported version. It has not been changed."]
     end
     local previousEconomy = db.economyVersion
     if
@@ -231,7 +232,7 @@ function G.Load(db, now)
             end
         elseif type(db[k]) ~= type(v) then
             return nil,
-                "The saved adventure has an invalid " .. k .. " field. It has not been reset."
+                L["The saved adventure has an invalid "] .. k .. L[" field. It has not been reset."]
         end
     end
     if db.salvage.policy == nil then
@@ -239,7 +240,7 @@ function G.Load(db, now)
     end
     local strength = db.prestigeStrength
     if strength < 0 or strength * 2 >= math.huge or strength * 2 ~= floor(strength * 2) then
-        return nil, "The saved prestige strength is invalid. Your adventure has not been reset."
+        return nil, L["The saved prestige strength is invalid. Your adventure has not been reset."]
     end
     local policy = db.salvage.policy
     if
@@ -248,7 +249,7 @@ function G.Load(db, now)
         or (policy.slot ~= 0 and not C.slots[policy.slot])
         or (policy.stat ~= "any" and not C.itemStatNames[policy.stat])
     then
-        return nil, "The saved loot policy is invalid. Your adventure has not been reset."
+        return nil, L["The saved loot policy is invalid. Your adventure has not been reset."]
     end
     for key, value in pairs(defaults.guide) do
         if type(db.guide[key]) ~= "boolean" then
@@ -276,7 +277,7 @@ function G.Load(db, now)
         end
     end
     if not C.zoneByID[db.zone] then
-        return nil, "The saved destination is unknown. Your adventure has not been reset."
+        return nil, L["The saved destination is unknown. Your adventure has not been reset."]
     end
     local progress = db.adventure
     local function whole(value)
@@ -296,7 +297,7 @@ function G.Load(db, now)
         or progress.xp ~= progress.totalXP % C.adventure.xpPerRank
         or type(progress.sources) ~= "table"
     then
-        return nil, "The saved Adventure XP is invalid. Your adventure has not been reset."
+        return nil, L["The saved Adventure XP is invalid. Your adventure has not been reset."]
     end
     if db.boosts.automation == nil then
         db.boosts.automation = copy(C.boostAutomationDefaults)
@@ -311,7 +312,7 @@ function G.Load(db, now)
         end
     end
     if not G.ValidateBoosts(db) then
-        return nil, "The saved commander boosts are invalid. Your adventure has not been reset."
+        return nil, L["The saved commander boosts are invalid. Your adventure has not been reset."]
     end
     for material, remainder in pairs(db.materialRemainders) do
         if
@@ -321,45 +322,50 @@ function G.Load(db, now)
             or remainder >= 1
             or remainder ~= remainder
         then
-            return nil, "The saved material progress is invalid. Your adventure has not been reset."
+            return nil,
+                L["The saved material progress is invalid. Your adventure has not been reset."]
         end
     end
     if db.routes.offlineEnabled == nil then
         db.routes.offlineEnabled = false
     end
     if not G.ValidateRoutes(db) then
-        return nil, "The saved routes are invalid. Your adventure has not been reset."
+        return nil, L["The saved routes are invalid. Your adventure has not been reset."]
     end
     if not G.ValidateProfiles(db) then
-        return nil, "The saved commander profiles are invalid. Your adventure has not been reset."
+        return nil,
+            L["The saved commander profiles are invalid. Your adventure has not been reset."]
     end
     if not G.ValidateHuntSummary(db) then
-        return nil, "The saved outdoor hunt report is invalid. Your adventure has not been reset."
+        return nil,
+            L["The saved outdoor hunt report is invalid. Your adventure has not been reset."]
     end
     if not G.ValidateCollections(db) then
-        return nil, "The saved collections are invalid. Your adventure has not been reset."
+        return nil, L["The saved collections are invalid. Your adventure has not been reset."]
     end
     if not whole(db.encounter) or (db.collectionBook.lastEncounter or 0) > db.encounter then
-        return nil, "The saved encounter receipts are invalid. Your adventure has not been reset."
+        return nil,
+            L["The saved encounter receipts are invalid. Your adventure has not been reset."]
     end
     if not G.ValidateDifficulty(db) then
-        return nil, "The saved difficulty progress is invalid. Your adventure has not been reset."
+        return nil,
+            L["The saved difficulty progress is invalid. Your adventure has not been reset."]
     end
     if db.tier == 0 and not db.difficulty.records[0] then
         db.difficulty.records[0] = { best = math.max(0, db.runBest - 1), safe = copy(db.safe) }
     end
     if not G.ValidateProfessions(db) then
-        return nil, "The saved professions are invalid. Your adventure has not been reset."
+        return nil, L["The saved professions are invalid. Your adventure has not been reset."]
     end
     if db.stats.boostUses == nil then
         db.stats.boostUses = 0
     elseif not whole(db.stats.boostUses) then
-        return nil, "The saved boost usage count is invalid. Your adventure has not been reset."
+        return nil, L["The saved boost usage count is invalid. Your adventure has not been reset."]
     end
     if migrated then
         G.Log(
             db,
-            "Adventure XP unlocked. Existing Essence and hero progression retained.",
+            L["Adventure XP unlocked. Existing Essence and hero progression retained."],
             nil,
             "updates"
         )
@@ -378,7 +384,7 @@ function G.Load(db, now)
         if finished then
             db.battle = nil
             db.rest = 0
-            G.Log(db, "The party regrouped and is ready to continue.", nil, "updates")
+            G.Log(db, L["The party regrouped and is ready to continue."], nil, "updates")
         end
     end
     -- Purge excluded equipment from older saves, including protected stacks and heirlooms.
@@ -486,7 +492,7 @@ function G.Load(db, now)
     for _, item in ipairs(db.inventory) do
         if not validModifications(item) then
             return nil,
-                "The saved item modifications are invalid. Your adventure has not been reset."
+                L["The saved item modifications are invalid. Your adventure has not been reset."]
         end
         migrateItem(item)
     end
@@ -501,11 +507,11 @@ function G.Load(db, now)
             )
         then
             return nil,
-                "The saved ability resource threshold is invalid. Your adventure has not been reset."
+                L["The saved ability resource threshold is invalid. Your adventure has not been reset."]
         end
         if hero.targetMode ~= nil and not C.targetModeByID[hero.targetMode] then
             return nil,
-                "The saved combat target priority is invalid. Your adventure has not been reset."
+                L["The saved combat target priority is invalid. Your adventure has not been reset."]
         end
         local talentProgress, errorMessage = G.TalentProgress(hero)
         if not talentProgress then
@@ -529,7 +535,7 @@ function G.Load(db, now)
                 or hero.xp ~= floor(hero.xp)
             then
                 return nil,
-                    "The saved hero experience is invalid. Your adventure has not been reset."
+                    L["The saved hero experience is invalid. Your adventure has not been reset."]
             end
             mastery.rank = mastery.rank + hero.level - C.heroLevelCap
             mastery.xp = math.min(hero.xp, G.MasteryCost(mastery.rank) - 1)
@@ -540,7 +546,7 @@ function G.Load(db, now)
         for _, item in pairs(hero.gear or {}) do
             if not validModifications(item) then
                 return nil,
-                    "The saved item modifications are invalid. Your adventure has not been reset."
+                    L["The saved item modifications are invalid. Your adventure has not been reset."]
             end
             migrateItem(item)
         end
@@ -557,11 +563,11 @@ function G.Load(db, now)
     end
     G.ProfessionUnlocks(db)
     if not G.ValidateDevelopment(db) then
-        return nil, "The saved party development is invalid. Your adventure has not been reset."
+        return nil, L["The saved party development is invalid. Your adventure has not been reset."]
     end
     if not G.MigrateEconomy(db, previousEconomy) then
         return nil,
-            "The saved economy cannot be migrated safely. Your adventure has not been reset."
+            L["The saved economy cannot be migrated safely. Your adventure has not been reset."]
     end
     db.paused, db.pauseAfter = false, nil
     db.events = nil

@@ -85,6 +85,10 @@ New chapters award Heritage and permanent party strength. Each Heritage earned a
 
 **Transcendence** requires a current level-60 hero and an online victory over **Spire dragonmarshal**, the final Blackrock Mountain champion, in that cycle. Choose an unlocked tier and review the deeper reset. Each completed tier pays Inheritance once, funding permanent rebuilding bonuses. Both reset types remain manual.
 
+## Language
+
+AFKcraft follows the game language for French, German, and Spanish (including Spanish clients in Latin America), with English as the fallback. Choose a different language in **Settings → Language**, then use `/reload` to apply it. Player-created names and existing journal entries are preserved.
+
 ## Returning and window controls
 
 The adventure continues while its window is closed. On the next login, up to **24 hours** of safe offline farming is calculated and applied automatically. No code runs while WoW is closed. Offline routes default off; when enabled, they visit only checkpoints cleared in the current run and tier before departure, with at most **12 transitions**. New progression and resets wait for you.

@@ -1,6 +1,10 @@
 -- Run from the repository root: lua scripts/test.lua
 local W = {}
 local files = {
+    "Localization.lua",
+    "Locales/frFR.lua",
+    "Locales/deDE.lua",
+    "Locales/esES.lua",
     "Content.lua",
     "Content/Encounters.lua",
     "Content/TalentTraits.lua",
@@ -40,6 +44,7 @@ for _, file in ipairs(files) do
 end
 local cases = {}
 for _, file in ipairs({
+    "tests/localization.lua",
     "tests/domain.lua",
     "tests/encounters.lua",
     "tests/progression.lua",

@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, C = W.Game, W.Content
 
 function G.HeroResource(hero, unit)
@@ -38,18 +39,22 @@ end
 function G.CanHeroAbility(hero, unit, action)
     local profile, value = G.HeroResource(hero, unit)
     if not profile or not profile.costs[action] then
-        return false, "Ability unavailable."
+        return false, L["Ability unavailable."]
     end
     local threshold = hero.resourceThreshold or 0
     if value / profile.maximum * 100 < threshold then
         return false,
-            "Waiting for " .. threshold .. "% " .. profile.name .. ". Basic attacks continue."
+            L["Waiting for "] .. threshold .. "% " .. profile.name .. L[". Basic attacks continue."]
     end
     if value < profile.costs[action] then
         return false,
-            "Need " .. profile.costs[action] .. " " .. profile.name .. ". Basic attacks continue."
+            L["Need "]
+                .. profile.costs[action]
+                .. " "
+                .. profile.name
+                .. L[". Basic attacks continue."]
     end
-    return true, "Resource ready."
+    return true, L["Resource ready."]
 end
 
 function G.SpendHeroResource(hero, unit, action)
@@ -59,7 +64,7 @@ function G.SpendHeroResource(hero, unit, action)
     end
     local profile, value = G.HeroResource(hero, unit)
     if not profile then
-        return false, "Resource unavailable."
+        return false, L["Resource unavailable."]
     end
     unit.resource = value - profile.costs[action]
     return true

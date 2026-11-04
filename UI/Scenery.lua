@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local Scenery = {}
 Scenery.__index = Scenery
 W.Scenery = Scenery
@@ -46,7 +47,7 @@ function Scenery:SetZone(zoneID)
                 end
                 if not actor.SetModelByFileID then
                     self.supported = false
-                    self.lastError = "Scenery actor loading is unavailable in this renderer."
+                    self.lastError = L["Scenery actor loading is unavailable in this renderer."]
                     return
                 end
                 actor:SetModelByFileID(id)

@@ -89,7 +89,7 @@ case("Rank payouts received during offline catch-up survive reconciliation", fun
 end)
 
 local function dungeonAdapter()
-    local n, now = { Content = W.Content, Game = G }, 1000
+    local n, now = { Content = W.Content, Game = G, L = W.L }, 1000
     local settings = { level = 20, visible = false, trivial = false }
     local host = setmetatable({
         GetBuildInfo = function()

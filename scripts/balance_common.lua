@@ -1,5 +1,6 @@
 -- Shared fixture helpers for standalone balance checks, never loaded by the addon.
 local W = {}
+assert(loadfile("Localization.lua"))("WoWIdle", W)
 for line in io.lines("WoWIdle.toc") do
     local file = line:gsub("\\", "/")
     if file:match("^Content") or file:match("^Domain/") or file:match("^Simulation/") then

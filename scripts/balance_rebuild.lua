@@ -1,6 +1,7 @@
 -- Run from the repository root: lua scripts/balance_rebuild.lua
 -- Fixed-seed feasibility checks, not a substitute for supported-client playtests.
 local W = {}
+assert(loadfile("Localization.lua"))("WoWIdle", W)
 for _, file in ipairs({
     "Content.lua",
     "Content/Encounters.lua",
@@ -119,7 +120,12 @@ local function established(seed)
     assert(G.Craft(state, 1, 1, "ore", false)) -- Ordinary investment must be lost.
     state.prestigeUnlocked, state.stage, state.safe.elwynn = true, 300, 300
     state.encounter = state.encounter + 1
-    assert(G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
+    assert(
+        G.DifficultyVictory(
+            state,
+            { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+        )
+    )
     assert(G.Load(G.Copy(state), 0))
     return state
 end

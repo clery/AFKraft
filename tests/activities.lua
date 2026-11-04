@@ -8,7 +8,7 @@ local function case(name, fn)
 end
 
 local function fixture()
-    local namespace = { Content = W.Content, Game = W.Game }
+    local namespace = { L = W.L, Content = W.Content, Game = W.Game }
     local secret = {}
     local host = { dead = false, trivial = false, denied = false, threat = 0, level = 90 }
     local names = { [2575] = "Mining", [2366] = "Herb Gathering", [8613] = "Skinning" }

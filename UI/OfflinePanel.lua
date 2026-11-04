@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local U, T, C = W.Widgets, W.Theme, W.Content
 local P = {}
 W.OfflinePanel = P
@@ -12,10 +13,10 @@ end
 
 local function duration(seconds)
     if type(seconds) ~= "number" or seconds < 0 or seconds >= math.huge or seconds ~= seconds then
-        return "Time not recorded"
+        return L["Time not recorded"]
     end
     local minutes = math.floor(seconds / 60)
-    return minutes >= 60 and string.format("%dh %02dm", math.floor(minutes / 60), minutes % 60)
+    return minutes >= 60 and string.format(L["%dh %02dm"], math.floor(minutes / 60), minutes % 60)
         or minutes > 0 and (minutes .. "m")
         or (math.floor(seconds) .. "s")
 end
@@ -38,17 +39,17 @@ local function card(parent, title, icon, x, y, headline, detail, tooltip)
 end
 
 function P.Draw(ui, parent, state)
-    U.Text(parent, "EARNINGS SUMMARY", 0, 0, 24, T.gold, 1250)
+    U.Text(parent, L["EARNINGS SUMMARY"], 0, 0, 24, T.gold, 1250)
     ui.offlineCards = {}
     local report = state.lastOfflineSummary
     if type(report) ~= "table" then
-        U.Text(parent, "No offline adventure to report yet.", 0, 56, 17, T.text, 1250)
+        U.Text(parent, L["No offline adventure to report yet."], 0, 56, 17, T.text, 1250)
     else
-        U.Text(parent, "Safe farming · " .. duration(report.seconds), 0, 44, 16, T.text, 1250)
+        U.Text(parent, L["Safe farming · "] .. duration(report.seconds), 0, 44, 16, T.text, 1250)
         if report.interrupted then
             U.Text(
                 parent,
-                duration(report.remainingSeconds) .. " left to resolve",
+                duration(report.remainingSeconds) .. L[" left to resolve"],
                 0,
                 78,
                 14,
@@ -59,37 +60,37 @@ function P.Draw(ui, parent, state)
         local cards = ui.offlineCards
         cards.earnings = card(
             parent,
-            "Earnings",
+            L["Earnings"],
             "INV_Misc_Map_01",
             0,
             100,
-            number(report.gold) .. " gold",
+            number(report.gold) .. L[" gold"],
             count(report.victories, "victory", "victories"),
-            "Earned from offline battles. No Adventure XP or Essence is awarded offline."
+            L["Earned from offline battles. No Adventure XP or Essence is awarded offline."]
         )
         cards.progress = card(
             parent,
-            "Hero progress",
+            L["Hero progress"],
             "INV_Misc_Book_09",
             440,
             100,
-            number(report.heroXP) .. " hero XP",
-            count(report.heroLevels, "level gained", "levels gained")
+            number(report.heroXP) .. L[" hero XP"],
+            count(report.heroLevels, L["level gained"], L["levels gained"])
                 .. "\n"
                 .. number(report.masteryXP)
-                .. " Mastery XP · "
+                .. L[" Mastery XP · "]
                 .. count(report.masteryRanks, "rank", "ranks"),
-            "XP retained across the party. Includes level and Mastery gains; excludes XP lost at a cap."
+            L["XP retained across the party. Includes level and Mastery gains; excludes XP lost at a cap."]
         )
         cards.equipment = card(
             parent,
-            "Equipment",
+            L["Equipment"],
             "INV_Misc_Bag_10",
             880,
             100,
-            count(report.itemsKept, "item kept", "items kept"),
-            number(report.salvaged) .. " automatically salvaged",
-            "Items added to your shared inventory, including stacked copies. Loot rules and inventory space determine what is kept."
+            count(report.itemsKept, L["item kept"], L["items kept"]),
+            number(report.salvaged) .. L[" automatically salvaged"],
+            L["Items added to your shared inventory, including stacked copies. Loot rules and inventory space determine what is kept."]
         )
         local materials = {}
         for _, id in ipairs(C.materialOrder) do
@@ -104,49 +105,53 @@ function P.Draw(ui, parent, state)
             local amount = components[zone] or 0
             if type(amount) == "number" and amount > 0 and amount < math.huge then
                 trophies = trophies + amount
-                trophyDetails[#trophyDetails + 1] = C.zoneComponents[zone].name .. " +" .. number(amount)
+                trophyDetails[#trophyDetails + 1] = C.zoneComponents[zone].name
+                    .. " +"
+                    .. number(amount)
             end
         end
         cards.materials = card(
             parent,
-            "Materials",
+            L["Materials"],
             "Trade_BlackSmithing",
             0,
             314,
-            trophies > 0 and ("Boss trophies +" .. number(trophies)) or report.fragments
-            and report.fragments > 0
-            and ("Runic fragments +" .. number(report.fragments))
-            or "Zone supplies",
+            trophies > 0 and (L["Boss trophies +"] .. number(trophies))
+                or report.fragments and report.fragments > 0 and (L["Runic fragments +"] .. number(
+                    report.fragments
+                ))
+                or L["Zone supplies"],
             table.concat(materials, "\n"),
-            "Materials gained, including salvage. Fractional bonuses carry forward. Runic fragments require eligible tier bosses and a learned recipe.\n\n" ..
-            table.concat(trophyDetails, "\n")
+            L["Materials gained, including salvage. Fractional bonuses carry forward. Runic fragments require eligible tier bosses and a learned recipe."]
+                .. "\n\n"
+                .. table.concat(trophyDetails, "\n")
         )
         cards.automation = card(
             parent,
-            "Automation",
+            L["Automation"],
             "INV_Misc_Book_09",
             440,
             314,
-            count(report.boostUses, "boost use", "boost uses"),
+            count(report.boostUses, L["boost use"], L["boost uses"]),
             number(report.routeTransitions)
-                .. " route transitions\n"
+                .. L[" route transitions\n"]
                 .. (
                     report.routeStatus
-                    or report.routesWaiting and "Routes waited during offline farming"
-                    or report.routesWaiting == false and "Routes were disabled"
-                    or "Route state not recorded"
+                    or report.routesWaiting and L["Routes waited during offline farming"]
+                    or report.routesWaiting == false and L["Routes were disabled"]
+                    or L["Route state not recorded"]
                 ),
-            "Enabled boosts use normal cooldowns. Optional offline routes visit departure-cleared checkpoints, up to 12 transitions. New progression and resets wait for you."
+            L["Enabled boosts use normal cooldowns. Optional offline routes visit departure-cleared checkpoints, up to 12 transitions. New progression and resets wait for you."]
         )
     end
     U.Help(
         parent,
-        "Offline progress",
+        L["Offline progress"],
         1258,
         0,
-        "Rewards are already applied. Offline farming is capped at 24 hours.\n\nA dash means the older report did not record that total."
+        L["Rewards are already applied. Offline farming is capped at 24 hours.\n\nA dash means the older report did not record that total."]
     )
-    ui.offlineBack = U.Button(parent, "Back to adventure", 0, 552, 280, 34, function()
+    ui.offlineBack = U.Button(parent, L["Back to adventure"], 0, 552, 280, 34, function()
         ui:SetTab("adventure")
     end)
 end

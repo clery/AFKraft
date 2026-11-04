@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local C, G = W.Content, W.Game
 local min, max, floor = math.min, math.max, math.floor
 
@@ -23,19 +24,20 @@ function G.MasteryProgress(hero)
         or G.MasteryCost(mastery.rank) >= math.huge
         or mastery.xp >= G.MasteryCost(mastery.rank)
     then
-        return nil, "The saved Mastery progression is invalid. Your adventure has not been reset."
+        return nil,
+            L["The saved Mastery progression is invalid. Your adventure has not been reset."]
     end
     hero.mastery = mastery
     if mastery.frontiers == nil then
         mastery.frontiers = { [0] = mastery.frontier }
     elseif type(mastery.frontiers) ~= "table" then
         return nil,
-            "The saved tier Mastery frontiers are invalid. Your adventure has not been reset."
+            L["The saved tier Mastery frontiers are invalid. Your adventure has not been reset."]
     end
     for tier, frontier in pairs(mastery.frontiers) do
         if not whole(tier) or tier > 10 or not whole(frontier) then
             return nil,
-                "The saved tier Mastery frontiers are invalid. Your adventure has not been reset."
+                L["The saved tier Mastery frontiers are invalid. Your adventure has not been reset."]
         end
     end
     mastery.frontiers[0] = max(mastery.frontiers[0] or 0, mastery.frontier)

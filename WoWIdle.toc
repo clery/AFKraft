@@ -1,6 +1,10 @@
 ## Interface: 120105, 16001
 ## Title: AFKraft : WoW Idle Game
 ## Notes: Your adventures. Their growing legend.
+## Notes-frFR: Vos aventures. Leur légende grandissante.
+## Notes-deDE: Deine Abenteuer. Ihre wachsende Legende.
+## Notes-esES: Tus aventuras. Su leyenda crece.
+## Notes-esMX: Tus aventuras. Su leyenda crece.
 ## Author: AFKcraft
 ## Version: 0.2.0
 ## SavedVariables: WoWIdleDB, WoWIdlePreferencesDB
@@ -17,6 +21,11 @@ Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
+
+Localization.lua
+Locales\frFR.lua
+Locales\deDE.lua
+Locales\esES.lua
 
 Content.lua
 Content\Encounters.lua

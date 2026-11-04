@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, C = W.Game, W.Content
 local limit = 8
 
@@ -102,13 +103,13 @@ end
 
 local function configuration(state, profile)
     if not validEntry(profile) then
-        return nil, "This profile is invalid."
+        return nil, L["This profile is invalid."]
     end
     if
         profile.equipped
         and (not C.boostByID[profile.equipped] or not state.boosts.owned[profile.equipped])
     then
-        return nil, "This profile needs a boost that is unavailable or not learned."
+        return nil, L["This profile needs a boost that is unavailable or not learned."]
     end
     local automation = {
         owned = state.boosts.automation.owned,
@@ -117,7 +118,7 @@ local function configuration(state, profile)
     }
     for id, config in pairs(profile.automation.abilities) do
         if not C.boostByID[id] then
-            return nil, "This profile references an unavailable boost."
+            return nil, L["This profile references an unavailable boost."]
         end
         automation.abilities[id] = {
             enabled = config.enabled,
@@ -132,17 +133,17 @@ local function configuration(state, profile)
     end
     local candidate = { boosts = { owned = state.boosts.owned, automation = automation } }
     if not G.ValidateBoostAutomation(candidate) then
-        return nil, "This profile requires boost or automation unlocks you do not own."
+        return nil, L["This profile requires boost or automation unlocks you do not own."]
     end
     if profile.route then
         if not state.routes then
-            return nil, "Route planning is unavailable for this profile."
+            return nil, L["Route planning is unavailable for this profile."]
         end
         if
             (profile.route.selected or profile.route.enabled or profile.route.offlineEnabled)
             and not state.routes.owned
         then
-            return nil, "This profile requires route planning."
+            return nil, L["This profile requires route planning."]
         end
         local found = profile.route.selected == nil
         for _, template in ipairs(state.routes.templates) do
@@ -152,7 +153,7 @@ local function configuration(state, profile)
             end
         end
         if not found then
-            return nil, "This profile references a route that no longer exists."
+            return nil, L["This profile references a route that no longer exists."]
         end
     end
     if profile.collection then
@@ -167,21 +168,21 @@ end
 function G.SaveBoostProfile(state, id, name)
     local profiles, normalized = state.boostProfiles, nameOf(name)
     if not normalized then
-        return false, "Choose a profile name of 1 to 40 characters."
+        return false, L["Choose a profile name of 1 to 40 characters."]
     end
     if id ~= nil and (not integer(id) or not profiles.entries[id]) then
-        return false, "Unknown commander profile."
+        return false, L["Unknown commander profile."]
     end
     local count = 0
     for _ in pairs(profiles.entries) do
         count = count + 1
     end
     if id == nil and (count >= limit or profiles.nextID >= 1000000000) then
-        return false, "Keep at most eight commander profiles."
+        return false, L["Keep at most eight commander profiles."]
     end
     local savedID = id or profiles.nextID
     if not G.ValidateBoostAutomation(state) then
-        return false, "The current automation setup is invalid."
+        return false, L["The current automation setup is invalid."]
     end
     local entry = {
         id = savedID,
@@ -221,7 +222,7 @@ end
 function G.ApplyBoostProfile(state, id)
     local profile = state.boostProfiles.entries[id]
     if not profile then
-        return false, "Unknown commander profile."
+        return false, L["Unknown commander profile."]
     end
     local automation, reason = configuration(state, profile)
     if not automation then
@@ -248,7 +249,7 @@ end
 
 function G.DeleteBoostProfile(state, id)
     if not state.boostProfiles.entries[id] then
-        return false, "Unknown commander profile."
+        return false, L["Unknown commander profile."]
     end
     state.boostProfiles.entries[id] = nil
     return true
@@ -257,10 +258,10 @@ end
 function G.RenameBoostProfile(state, id, name)
     local normalized = nameOf(name)
     if not normalized then
-        return false, "Choose a profile name of 1 to 40 characters."
+        return false, L["Choose a profile name of 1 to 40 characters."]
     end
     if not state.boostProfiles.entries[id] then
-        return false, "Unknown commander profile."
+        return false, L["Unknown commander profile."]
     end
     state.boostProfiles.entries[id].name = normalized
     return true

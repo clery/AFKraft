@@ -22,6 +22,8 @@
     "GameTooltip",
     "HelpTip",
     "GetBuildInfo",
+    "GetLocale",
+    "hooksecurefunc",
     "GetServerTime",
     "GetTime",
     "GetCVar",

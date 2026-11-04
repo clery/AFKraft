@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, C = W.Game, W.Content
 local conditions =
     { always = true, boss = true, lowHealth = true, farming = true, pushing = true, tier = true }
@@ -47,13 +48,13 @@ end
 
 function G.SetBoostRules(state, id, rules)
     if not C.boostByID[id] or not state.boosts.owned[id] then
-        return false, "Learn this boost first."
+        return false, L["Learn this boost first."]
     end
     if not state.boosts.automation.owned.conditional then
-        return false, "Learn conditional automation first."
+        return false, L["Learn conditional automation first."]
     end
     if not G.ValidateBoostRules(rules) then
-        return false, "Use up to four valid ordered activation rules."
+        return false, L["Use up to four valid ordered activation rules."]
     end
     state.boosts.automation.abilities[id].rules = G.Copy(rules or {})
     return true
@@ -63,11 +64,11 @@ function G.EvaluateBoostRules(state, id)
     local config = state.boosts.automation.abilities[id]
     local rules = config and config.rules
     if not G.ValidateBoostRules(rules) or not rules or #rules == 0 then
-        return false, "Waiting: no ordered rules."
+        return false, L["Waiting: no ordered rules."]
     end
     local battle = state.battle
     if not battle or (state.rest or 0) > 0 then
-        return false, "Waiting: combat."
+        return false, L["Waiting: combat."]
     end
     local livingEnemy, livingAlly = false, false
     for _, enemy in ipairs(battle.enemies) do
@@ -77,7 +78,7 @@ function G.EvaluateBoostRules(state, id)
         livingAlly = livingAlly or ally.hp > 0
     end
     if not livingEnemy or not livingAlly then
-        return false, "Waiting: living combatants."
+        return false, L["Waiting: living combatants."]
     end
     for index, rule in ipairs(rules) do
         local matches = rule.condition == "always"
@@ -98,8 +99,8 @@ function G.EvaluateBoostRules(state, id)
             end
         end
         if matches then
-            return true, "Rule " .. index .. ": ready.", index
+            return true, L["Rule "] .. index .. L[": ready."], index
         end
     end
-    return false, "Waiting: no rule matches."
+    return false, L["Waiting: no rule matches."]
 end

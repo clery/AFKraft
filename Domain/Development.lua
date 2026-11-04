@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, C = W.Game, W.Content
 
 local function rankCost(rank)
@@ -103,10 +104,10 @@ end
 function G.DevelopmentQuote(state, id)
     local branch = C.developmentByID[id]
     if not branch then
-        return nil, "Choose a development branch."
+        return nil, L["Choose a development branch."]
     end
     if not G.ValidateDevelopment(state) then
-        return nil, "The saved development board is invalid."
+        return nil, L["The saved development board is invalid."]
     end
     local development, ranks = state.development, {}
     for key, rank in pairs(development.ranks) do
@@ -141,10 +142,10 @@ function G.BuyDevelopment(state, id)
         return false, reason
     end
     if quote.maximum then
-        return false, "This development branch is complete."
+        return false, L["This development branch is complete."]
     end
     if state.essence < quote.cost then
-        return false, "Not enough Essence for this development rank."
+        return false, L["Not enough Essence for this development rank."]
     end
     state.essence = state.essence - quote.cost
     state.development.ranks[id] = quote.nextRank
@@ -159,7 +160,7 @@ function G.RefundDevelopment(state, id)
         return false, reason
     end
     if quote.rank == 0 then
-        return false, "This branch has no invested ranks."
+        return false, L["This branch has no invested ranks."]
     end
     state.development.ranks[id] = quote.rank - 1
     state.development.invested = state.development.invested - quote.refund
@@ -170,7 +171,7 @@ end
 
 function G.ResetDevelopment(state)
     if not G.ValidateDevelopment(state) then
-        return false, "The saved development board is invalid."
+        return false, L["The saved development board is invalid."]
     end
     state.essence = state.essence + state.development.invested
     state.development.invested = 0
@@ -184,13 +185,13 @@ end
 function G.SetDevelopmentChoice(state, id, choice)
     local branch = C.developmentByID[id]
     if not branch then
-        return false, "Choose a development branch."
+        return false, L["Choose a development branch."]
     end
     if not G.ValidateDevelopment(state) then
-        return false, "The saved development board is invalid."
+        return false, L["The saved development board is invalid."]
     end
     if state.development.ranks[id] < 3 then
-        return false, "Reach rank 3 in this branch to choose a milestone."
+        return false, L["Reach rank 3 in this branch to choose a milestone."]
     end
     local valid = false
     for _, option in ipairs(branch.choices) do
@@ -199,7 +200,7 @@ function G.SetDevelopmentChoice(state, id, choice)
         end
     end
     if not valid then
-        return false, "Choose one of this branch's milestones."
+        return false, L["Choose one of this branch's milestones."]
     end
     state.development.choices[id] = choice
     refresh(state)

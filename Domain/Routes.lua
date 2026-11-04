@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, C = W.Game, W.Content
 
 local function whole(value, low, high)
@@ -171,40 +172,40 @@ end
 
 function G.BuyRoutes(state)
     if state.routes.owned then
-        return false, "Route planning is already learned."
+        return false, L["Route planning is already learned."]
     end
     local hint = G.FeatureHint(state, "routes")
     if hint then
         return false, hint
     end
     if state.legacy < 1 then
-        return false, "Route planning costs 1 Heritage."
+        return false, L["Route planning costs 1 Heritage."]
     end
     state.legacy = state.legacy - 1
     state.routes.owned = true
-    G.Log(state, "Route planning learned permanently.", nil, "progress")
+    G.Log(state, L["Route planning learned permanently."], nil, "progress")
     return true
 end
 
 function G.SaveRoute(state, id, name, steps)
     local routes = state.routes
     if not routes.owned then
-        return false, "Learn route planning first."
+        return false, L["Learn route planning first."]
     end
     if type(name) ~= "string" then
-        return false, "Give the route a name."
+        return false, L["Give the route a name."]
     end
     name = name:match("^%s*(.-)%s*$")
     if #name < 1 or #name > 40 or name:find("[%c]") or not validSteps(steps, false) then
         return false,
-            "Use a name up to 40 characters and 1–12 distinct destinations with valid milestones."
+            L["Use a name up to 40 characters and 1–12 distinct destinations with valid milestones."]
     end
     local previous, index = template(state, id)
     if id ~= nil and not previous then
-        return false, "Unknown route template."
+        return false, L["Unknown route template."]
     end
     if not previous and #routes.templates >= 8 then
-        return false, "Keep at most eight routes."
+        return false, L["Keep at most eight routes."]
     end
     local nextID, existing = routes.nextID, {}
     if previous then
@@ -220,14 +221,14 @@ function G.SaveRoute(state, id, name, steps)
     end
     for _, step in ipairs(saved.steps) do
         if step.id and not existing[step.id] then
-            return false, "Unknown route step."
+            return false, L["Unknown route step."]
         end
         if not step.id then
             step.id, nextID = nextID, nextID + 1
         end
     end
     if nextID > 1000000000 then
-        return false, "Route identifier limit reached."
+        return false, L["Route identifier limit reached."]
     end
     routes.templates[index or #routes.templates + 1] = saved
     routes.nextID = nextID
@@ -239,7 +240,7 @@ end
 
 function G.SelectRoute(state, id)
     if not state.routes.owned or (id ~= nil and not template(state, id)) then
-        return false, "Choose a learned route template."
+        return false, L["Choose a learned route template."]
     end
     state.routes.selected = id
     G.ResetRouteRun(state)
@@ -248,10 +249,10 @@ end
 
 function G.SetRoutesEnabled(state, enabled)
     if type(enabled) ~= "boolean" then
-        return false, "Choose whether routes are enabled."
+        return false, L["Choose whether routes are enabled."]
     end
     if enabled and not state.routes.owned then
-        return false, "Learn route planning first."
+        return false, L["Learn route planning first."]
     end
     state.routes.enabled = enabled
     return true
@@ -259,7 +260,7 @@ end
 
 function G.SetOfflineRoutesEnabled(state, enabled)
     if type(enabled) ~= "boolean" or (enabled and not state.routes.owned) then
-        return false, "Learn route planning before enabling offline routes."
+        return false, L["Learn route planning before enabling offline routes."]
     end
     state.routes.offlineEnabled = enabled
     return true
@@ -267,7 +268,7 @@ end
 
 function G.ResumeRoute(state)
     if not state.routes.selected then
-        return false, "Select a route first."
+        return false, L["Select a route first."]
     end
     state.routes.run.paused = false
     state.routes.run.lastEncounter = state.encounter
@@ -277,7 +278,7 @@ end
 function G.DeleteRoute(state, id)
     local _, index = template(state, id)
     if not index then
-        return false, "Unknown route template."
+        return false, L["Unknown route template."]
     end
     table.remove(state.routes.templates, index)
     if state.routes.selected == id then
@@ -290,37 +291,37 @@ end
 function G.RouteStatus(state)
     local routes = state.routes
     if not routes.owned then
-        return false, "Learn route planning for 1 Heritage."
+        return false, L["Learn route planning for 1 Heritage."]
     end
     if not routes.enabled then
-        return false, "Route travel disabled."
+        return false, L["Route travel disabled."]
     end
     if routes.run.paused then
-        return false, "Paused by manual travel. Resume when ready."
+        return false, L["Paused by manual travel. Resume when ready."]
     end
     local route = template(state, routes.selected)
     if not route then
-        return false, "Select a saved route."
+        return false, L["Select a saved route."]
     end
     local step = route.steps[routes.run.cursor]
     if not step then
-        return false, "Route complete."
+        return false, L["Route complete."]
     end
     local destination = C.zoneByID[step.destination]
     if not destination then
-        return false, "Destination unavailable: " .. step.destination, step, "destination"
+        return false, L["Destination unavailable: "] .. step.destination, step, "destination"
     end
     if state.offline then
         local permission = state.offlineRoute
         if not routes.offlineEnabled or not permission then
-            return false, "Offline route travel is disabled.", step
+            return false, L["Offline route travel is disabled."], step
         end
         if permission.tier ~= state.tier or permission.transitions >= 12 then
-            return false, "Offline route travel limit reached.", step
+            return false, L["Offline route travel limit reached."], step
         end
         if not permission.safe[step.destination] or permission.safe[step.destination] < 1 then
             return false,
-                "Waiting for an online clear of " .. destination.name .. ".",
+                L["Waiting for an online clear of "] .. destination.name .. ".",
                 step,
                 "destination"
         end
@@ -329,21 +330,23 @@ function G.RouteStatus(state)
     if trigger.kind == "boss" then
         local zone = C.zoneByID[trigger.zone]
         if not zone then
-            return false, "Milestone destination unavailable: " .. trigger.zone, step
+            return false, L["Milestone destination unavailable: "] .. trigger.zone, step
         end
         if (state.safe[trigger.zone] or 0) < trigger.stage then
-            return false, "Waiting for " .. zone.name .. " boss " .. trigger.stage .. ".", step
+            return false,
+                L["Waiting for "] .. zone.name .. L[" boss "] .. trigger.stage .. ".",
+                step
         end
     elseif trigger.kind == "level" then
         local hero = state.heroes[trigger.hero]
         if not hero then
-            return false, "Waiting for party member " .. trigger.hero .. ".", step
+            return false, L["Waiting for party member "] .. trigger.hero .. ".", step
         end
         if hero.level < trigger.level then
             return false,
-                "Waiting for "
+                L["Waiting for "]
                     .. hero.name
-                    .. " level "
+                    .. L[" level "]
                     .. trigger.level
                     .. " ("
                     .. hero.level
@@ -354,11 +357,11 @@ function G.RouteStatus(state)
         local held = state.materials[trigger.material] or 0
         if held < trigger.amount then
             return false,
-                "Waiting for "
+                L["Waiting for "]
                     .. trigger.amount
                     .. " "
                     .. C.materials[trigger.material]
-                    .. " in stock ("
+                    .. L[" in stock ("]
                     .. held
                     .. ").",
                 step
@@ -366,26 +369,26 @@ function G.RouteStatus(state)
     elseif trigger.kind == "collection" then
         local item = G.CollectionItem(trigger.itemID)
         if not C.collectionByItem[trigger.itemID] or not item then
-            return false, "Collection piece unavailable: " .. trigger.itemID .. ".", step
+            return false, L["Collection piece unavailable: "] .. trigger.itemID .. ".", step
         end
         if
             not G.CollectionBook(state, C.collectionByItem[trigger.itemID]).pieces[trigger.itemID]
         then
-            return false, "Waiting for collection discovery: " .. item.name .. ".", step
+            return false, L["Waiting for collection discovery: "] .. L[item.name] .. ".", step
         end
     elseif trigger.kind == "unlock" then
         local zone = C.zoneByID[trigger.zone]
         if not zone then
-            return false, "Milestone destination unavailable: " .. trigger.zone, step
+            return false, L["Milestone destination unavailable: "] .. trigger.zone, step
         end
         if not G.IsUnlocked(state, zone) then
-            return false, "Waiting to unlock " .. zone.name .. ".", step
+            return false, L["Waiting to unlock "] .. zone.name .. ".", step
         end
     end
     if not G.IsUnlocked(state, destination) then
-        return false, "Waiting to unlock " .. destination.name .. ".", step, "destination"
+        return false, L["Waiting to unlock "] .. destination.name .. ".", step, "destination"
     end
-    return true, "Next encounter boundary: " .. destination.name .. ".", step
+    return true, L["Next encounter boundary: "] .. destination.name .. ".", step
 end
 
 function G.RouteBoundary(state)

@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local U, T, C = W.Widgets, W.Theme, W.Content
 local Bar = {}
 Bar.__index = Bar
@@ -96,12 +97,12 @@ function Bar.Create(parent, x, y, width)
     frame:SetScript("OnEnter", function()
         local rules = C.adventure
         GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
-        GameTooltip:SetText("Adventure XP · Account-wide", unpack(T.gold))
+        GameTooltip:SetText(L["Adventure XP · Account-wide"], unpack(T.gold))
         GameTooltip:AddLine(
             rules.xpPerRank
-                .. " Adventure XP = "
+                .. L[" Adventure XP = "]
                 .. rules.essencePerRank
-                .. " Essence. Rank and partial XP survive both resets.",
+                .. L[" Essence. Rank and partial XP survive both resets."],
             0.85,
             0.85,
             0.8,
@@ -110,11 +111,11 @@ function Bar.Create(parent, x, y, width)
         GameTooltip:AddLine(" ")
         for _, kind in ipairs(C.activityOrder) do
             local reward = C.activityRewards[kind]
-            GameTooltip:AddLine(reward.name .. " · " .. reward.xp .. " XP", 0.85, 0.85, 0.8)
+            GameTooltip:AddLine(reward.name .. " · " .. reward.xp .. L[" XP"], 0.85, 0.85, 0.8)
         end
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(
-            "No gray or legacy rewards. Gathering must be skill-up eligible. Idle battles earn hero XP instead.",
+            L["No gray or legacy rewards. Gathering must be skill-up eligible. Idle battles earn hero XP instead."],
             0.65,
             0.65,
             0.6,
@@ -138,12 +139,12 @@ function Bar:Refresh(state)
         self.earned = (progress.rank - self.rank) * rules.essencePerRank
         self.rank, self.rewardUntil = progress.rank, GetTime() + 4
     end
-    local text = "Adventure rank " .. progress.rank
+    local text = L["Adventure rank "] .. progress.rank
     if self.rewardUntil and GetTime() < self.rewardUntil then
-        text = text .. "  ·  +" .. self.earned .. " Essence earned"
+        text = text .. "  ·  +" .. self.earned .. L[" Essence earned"]
         self.label:SetTextColor(unpack(T.gold))
     else
-        text = text .. "  ·  Next: " .. rules.essencePerRank .. " Essence"
+        text = text .. L["  ·  Next: "] .. rules.essencePerRank .. L[" Essence"]
         self.label:SetTextColor(unpack(T.text))
     end
     self.label:SetText(text)

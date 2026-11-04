@@ -1,12 +1,13 @@
 local _, W = ...
+local L = W.L
 
 -- Shared by previews, commands, and simulation; see BALANCE.md for uptime tradeoffs.
 W.Content.boosts = {
     {
         id = "battleOrders",
-        name = "Battle Orders",
+        name = L["Battle Orders"],
         icon = "Ability_Warrior_BattleShout",
-        description = "+25% basic-attack speed. Spell and healing cooldowns are unchanged.",
+        description = L["+25% basic-attack speed. Spell and healing cooldowns are unchanged."],
         cost = 30,
         duration = 300,
         cooldown = 600,
@@ -14,9 +15,9 @@ W.Content.boosts = {
     },
     {
         id = "ironResolve",
-        name = "Iron Resolve",
+        name = L["Iron Resolve"],
         icon = "Ability_Warrior_ShieldWall",
-        description = "Up to 20% less incoming damage, limited by 90% total reduction. Stronger defenses are kept.",
+        description = L["Up to 20% less incoming damage, limited by 90% total reduction. Stronger defenses are kept."],
         cost = 30,
         duration = 300,
         cooldown = 600,
@@ -24,9 +25,9 @@ W.Content.boosts = {
     },
     {
         id = "focusedAssault",
-        name = "Focused Assault",
+        name = L["Focused Assault"],
         icon = "Ability_Warrior_SavageBlow",
-        description = "+20% party damage, including strikes and ongoing effects.",
+        description = L["+20% party damage, including strikes and ongoing effects."],
         cost = 60,
         duration = 300,
         cooldown = 600,
@@ -34,9 +35,9 @@ W.Content.boosts = {
     },
     {
         id = "restorativeFocus",
-        name = "Restorative Focus",
+        name = L["Restorative Focus"],
         icon = "Spell_Holy_FlashHeal",
-        description = "+25% healing from spells. Cannot revive fallen allies.",
+        description = L["+25% healing from spells. Cannot revive fallen allies."],
         cost = 60,
         duration = 300,
         cooldown = 600,
@@ -51,16 +52,16 @@ end
 
 -- Automation unlocks are permanent capabilities, never activation fees.
 W.Content.boostAutomation = {
-    onCooldown = { name = "On cooldown", currency = "legacy", cost = 1 },
-    conditional = { name = "Conditional", currency = "legacy", cost = 2 },
+    onCooldown = { name = L["On cooldown"], currency = "legacy", cost = 1 },
+    conditional = { name = L["Conditional"], currency = "legacy", cost = 2 },
 }
 W.Content.boostAutomationModes = {
-    { id = "manual", name = "Manual" },
-    { id = "onCooldown", name = "On cooldown", capability = "onCooldown" },
-    { id = "boss", name = "Bosses", capability = "conditional" },
-    { id = "lowHealth", name = "Low health", capability = "conditional" },
-    { id = "farming", name = "Farming", capability = "conditional" },
-    { id = "pushing", name = "Pushing", capability = "conditional" },
+    { id = "manual", name = L["Manual"] },
+    { id = "onCooldown", name = L["On cooldown"], capability = "onCooldown" },
+    { id = "boss", name = L["Bosses"], capability = "conditional" },
+    { id = "lowHealth", name = L["Low health"], capability = "conditional" },
+    { id = "farming", name = L["Farming"], capability = "conditional" },
+    { id = "pushing", name = L["Pushing"], capability = "conditional" },
 }
 W.Content.boostAutomationModeByID = {}
 W.Content.boostAutomationDefaults = { owned = {}, enabled = false, abilities = {} }

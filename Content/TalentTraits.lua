@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local C = W.Content
 
 C.heroLevelCap = 60
@@ -305,9 +306,14 @@ function C.ApplyTalentTrait(node, entry)
         elseif entry[2] == "defense" and entry[3] == "burning" then
             condition = "while the attacker has a magical damage-over-time effect"
         end
-        node.text = node.text .. "\n" .. subject .. " " .. entry[4] .. change .. condition .. "."
+        node.text = node.text
+            .. "\n"
+            .. string.format(
+                L[subject .. " %d" .. change:gsub("%%", "%%%%") .. condition:gsub("%%", "%%%%") .. "."],
+                entry[4]
+            )
         if entry[2] == "defense" then
-            node.text = node.text .. " Situational damage reduction is capped at 60%."
+            node.text = node.text .. L[" Situational damage reduction is capped at 60%."]
         end
     end
 end

@@ -1,6 +1,7 @@
 -- Run from the repository root: lua scripts/balance_automation.lua
 -- Equal synthetic starting snapshots compare execution policies, not acquisition time.
 local W = {}
+assert(loadfile("Localization.lua"))("WoWIdle", W)
 for _, file in ipairs({
     "Content.lua",
     "Content/Encounters.lua",

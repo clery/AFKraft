@@ -1,21 +1,22 @@
 local _, W = ...
+local L = W.L
 local U, T, C = W.Widgets, W.Theme, W.Content
 local UI = {}
 UI.__index = UI
 local tabs = {
-    { "adventure", "Adventure", "JOURNEY" },
-    { "atlas", "World map" },
-    { "routes", "Routes" },
-    { "party", "Party & equipment", "COMPANY" },
-    { "talents", "Talents & priorities" },
-    { "crafting", "Forge" },
-    { "boosts", "Commander", "STRATEGY" },
-    { "profiles", "Profiles" },
-    { "loot", "Loot rules" },
-    { "development", "Growth", "PROGRESSION" },
-    { "collections", "Collections" },
-    { "legacy", "Heritage" },
-    { "difficulty", "Transcendence" },
+    { "adventure", L["Adventure"], L["JOURNEY"] },
+    { "atlas", L["World map"] },
+    { "routes", L["Routes"] },
+    { "party", L["Party & equipment"], L["COMPANY"] },
+    { "talents", L["Talents & priorities"] },
+    { "crafting", L["Forge"] },
+    { "boosts", L["Commander"], L["STRATEGY"] },
+    { "profiles", L["Profiles"] },
+    { "loot", L["Loot rules"] },
+    { "development", L["Growth"], L["PROGRESSION"] },
+    { "collections", L["Collections"] },
+    { "legacy", L["Heritage"] },
+    { "difficulty", L["Transcendence"] },
 }
 local tabIcons = {
     adventure = "INV_Misc_Map_01",
@@ -197,7 +198,7 @@ function UI:ShowMap()
         U.Rect(map, 0, 0, 960, 690, T.bg)
         map.tiles = {}
         map.title = U.Text(map, "", 24, 22, 22, T.gold)
-        U.Button(map, "Close map", 780, 20, 150, 32, function()
+        U.Button(map, L["Close map"], 780, 20, 150, 32, function()
             map:Hide()
         end)
         map.note = U.Text(map, "", 24, 640, 14, T.muted, 900)
@@ -234,11 +235,11 @@ function UI:ShowMap()
             tile:Show()
         end
         map.note:SetText(
-            "Your party travels independently of your WoW character. Choose destinations in the Atlas."
+            L["Your party travels independently of your WoW character. Choose destinations in the Atlas."]
         )
     else
         map.note:SetText(
-            "Map artwork is unavailable here. Destinations remain available in the Atlas."
+            L["Map artwork is unavailable here. Destinations remain available in the Atlas."]
         )
     end
     map:Show()
@@ -255,34 +256,34 @@ function UI:Refresh(redraw)
     self.currencies.legacy:SetText(U.Number(s.legacy))
     self.adventureBar:Refresh(s)
     self.adventureCompact:Refresh(s)
-    self.destination.text:SetText(s.ui.tab == "atlas" and "Adventure" or "World map")
+    self.destination.text:SetText(s.ui.tab == "atlas" and L["Adventure"] or L["World map"])
     local resourceText = ""
     for _, id in ipairs(C.materialOrder) do
         resourceText = resourceText .. C.materials[id] .. " " .. U.Number(s.materials[id]) .. "    "
     end
     self.materials:SetText(resourceText)
     self.compactInfo:SetText(
-        U.Number(s.essence) .. " Essence   /   " .. U.Number(s.gold) .. " Gold"
+        U.Number(s.essence) .. L[" Essence   /   "] .. U.Number(s.gold) .. L[" Gold"]
     )
-    self.compactZone:SetText(C.zoneByID[s.zone].name .. "  /  Encounter " .. s.stage)
+    self.compactZone:SetText(C.zoneByID[s.zone].name .. L["  /  Encounter "] .. s.stage)
     self.battleState:SetText(
         (
-            s.farming and "Farming"
-            or not s.battle and (s.rest or 0) > 0 and "Recovering"
-            or "Advancing"
+            s.farming and L["Farming"]
+            or not s.battle and (s.rest or 0) > 0 and L["Recovering"]
+            or L["Advancing"]
         )
-            .. " · Encounter "
+            .. L[" · Encounter "]
             .. s.stage
     )
     U.Enabled(self.retry, s.farming == true)
-    self.lock.text:SetText(s.ui.locked and "Unlock" or "Lock")
+    self.lock.text:SetText(s.ui.locked and L["Unlock"] or L["Lock"])
     self.compactMap:SetShown(not s.ui.locked)
     self.compactExpand:SetShown(not s.ui.locked)
     self.compactRetry:SetShown(not s.ui.locked)
     U.Enabled(self.compactRetry, s.farming == true)
     self.compactHint:SetText(
-        s.ui.locked and "Window locked · adventure continues"
-            or "Select a hero to manage their build at any time."
+        s.ui.locked and L["Window locked · adventure continues"]
+            or L["Select a hero to manage their build at any time."]
     )
     for i, button in ipairs(self.cards) do
         local h = s.heroes[i]
@@ -292,14 +293,14 @@ function UI:Refresh(redraw)
             button.label:SetTextColor(unpack(i == self.selected and T.gold or class.color))
             local cap = W.Game.LevelCap(h)
             button.detail:SetText(
-                "Lv "
+                L["Lv "]
                     .. h.level
                     .. " / "
                     .. cap
                     .. "  ·  "
                     .. (
                         h.level >= C.heroLevelCap
-                            and ("Mastery " .. W.Game.MasteryProgress(h).rank)
+                            and (L["Mastery "] .. W.Game.MasteryProgress(h).rank)
                         or class.name
                     )
             )
@@ -319,12 +320,12 @@ function UI:Refresh(redraw)
         else
             local available = i <= W.Game.CompanionSlots(s)
             button.label:SetText(
-                available and "Companion found!" or "Companion " .. i .. " · Locked"
+                available and L["Companion found!"] or L["Companion "] .. i .. L[" · Locked"]
             )
             button.label:SetTextColor(unpack(available and T.gold or T.muted))
             button.detail:SetText(
-                available and "Choose a class in Party"
-                    or "Milestone boss level " .. C.companionMilestones[i]
+                available and L["Choose a class in Party"]
+                    or L["Milestone boss level "] .. C.companionMilestones[i]
             )
             button.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
             button.xp:Hide()
@@ -333,12 +334,12 @@ function UI:Refresh(redraw)
     end
     local points, _, cappedHero, routes = W.Panels.Opportunities(s)
     self.tabs.talents.notice:SetText(
-        points > 0 and (points .. (points == 1 and " point" or " points")) or ""
+        points > 0 and (points .. (points == 1 and L[" point"] or L[" points"])) or ""
     )
-    self.tabs.party.notice:SetText(#s.heroes < W.Game.CompanionSlots(s) and "Recruit" or "")
-    self.tabs.atlas.notice:SetText(routes > 0 and (routes .. " destinations") or "")
+    self.tabs.party.notice:SetText(#s.heroes < W.Game.CompanionSlots(s) and L["Recruit"] or "")
+    self.tabs.atlas.notice:SetText(routes > 0 and (routes .. L[" destinations"]) or "")
     self.tabs.legacy.notice:SetText(
-        s.prestigeUnlocked and ("+" .. W.Game.PrestigeReward(s) .. " Heritage") or ""
+        s.prestigeUnlocked and ("+" .. W.Game.PrestigeReward(s) .. L[" Heritage"]) or ""
     )
     local nextLesson = W.Tutorial.NextLesson(s)
     local guidance = table.concat({
@@ -367,7 +368,7 @@ function UI:Refresh(redraw)
             U.Tooltip(
                 button,
                 hint and "???" or button.menuLabel,
-                hint or ("Open " .. button.menuLabel)
+                hint or (L["Open "] .. button.menuLabel)
             )
             button.menuHint = hint
         end
@@ -389,16 +390,16 @@ function UI:Refresh(redraw)
             U.Tooltip(
                 control,
                 hint and "???" or control.menuLabel,
-                hint or ("Open " .. control.menuLabel)
+                hint or (L["Open "] .. control.menuLabel)
             )
             control.menuHint = hint
         end
     end
     if s.ui.tab == "workshop" then
-        self.section:SetText("Forge")
+        self.section:SetText(L["Forge"])
     end
     if s.ui.tab == "offline" then
-        self.section:SetText("Return report")
+        self.section:SetText(L["Return report"])
     end
     self.sectionDetail:Hide()
     self.sectionHelp:SetShown(
@@ -414,21 +415,21 @@ function UI:Refresh(redraw)
     )
     self.reportLink:SetShown(s.lastOfflineSummary ~= nil)
     self.sectionDetail:SetText(
-        s.ui.tab == "adventure" and "Your company’s journey through Azeroth"
-            or s.ui.tab == "party" and "Select a companion to manage equipment and growth"
-            or s.ui.tab == "talents" and "Shape a companion’s talents and combat priorities"
-            or s.ui.tab == "crafting" and "Choose a hero, slot and material. Craft for the shown cost, then equip the item in Party.\n\nHeirlooms scale with hero level and survive both resets. Learn their recipes in Heritage."
-            or s.ui.tab == "legacy" and "Permanent rewards, heirlooms and chapter resets"
-            or s.ui.tab == "loot" and "Choose what to keep from future drops"
-            or s.ui.tab == "boosts" and "Permanent abilities for temporary party support"
-            or s.ui.tab == "profiles" and "Save your boost, automation, route preferences and collection effect.\n\nUpdate snapshot overwrites the selected profile. Applying a profile never restores currency, cooldowns or active effects."
-            or s.ui.tab == "routes" and "Plan your next destinations"
-            or s.ui.tab == "collections" and "Permanent discoveries and set bonuses"
-            or s.ui.tab == "workshop" and "Choose a hero and equipped item; compare the preview and cost.\n\nEnchanting replaces an enchantment. Titanforging adds item potential. Heirloom upgrades survive both resets; ordinary gear is lost.\n\nPaid work earns profession points. Reallocate them for free in Specializations."
-            or s.ui.tab == "difficulty" and "Deeper resets and permanent Inheritance"
-            or s.ui.tab == "offline" and "Your latest offline adventure"
-            or s.ui.tab == "development" and "Permanent Essence investment for the whole party"
-            or "Explore destinations and their unlock requirements"
+        s.ui.tab == "adventure" and L["Your company’s journey through Azeroth"]
+            or s.ui.tab == "party" and L["Select a companion to manage equipment and growth"]
+            or s.ui.tab == "talents" and L["Shape a companion’s talents and combat priorities"]
+            or s.ui.tab == "crafting" and L["Choose a hero, slot and material. Craft for the shown cost, then equip the item in Party.\n\nHeirlooms scale with hero level and survive both resets. Learn their recipes in Heritage."]
+            or s.ui.tab == "legacy" and L["Permanent rewards, heirlooms and chapter resets"]
+            or s.ui.tab == "loot" and L["Choose what to keep from future drops"]
+            or s.ui.tab == "boosts" and L["Permanent abilities for temporary party support"]
+            or s.ui.tab == "profiles" and L["Save your boost, automation, route preferences and collection effect.\n\nUpdate snapshot overwrites the selected profile. Applying a profile never restores currency, cooldowns or active effects."]
+            or s.ui.tab == "routes" and L["Plan your next destinations"]
+            or s.ui.tab == "collections" and L["Permanent discoveries and set bonuses"]
+            or s.ui.tab == "workshop" and L["Choose a hero and equipped item; compare the preview and cost.\n\nEnchanting replaces an enchantment. Titanforging adds item potential. Heirloom upgrades survive both resets; ordinary gear is lost.\n\nPaid work earns profession points. Reallocate them for free in Specializations."]
+            or s.ui.tab == "difficulty" and L["Deeper resets and permanent Inheritance"]
+            or s.ui.tab == "offline" and L["Your latest offline adventure"]
+            or s.ui.tab == "development" and L["Permanent Essence investment for the whole party"]
+            or L["Explore destinations and their unlock requirements"]
     )
     self.scene:Refresh(s)
     local featureState
@@ -532,7 +533,7 @@ function UI:Refresh(redraw)
         self.panelFeature = featureState
     end
     local message = self.message and GetTime() < (self.messageUntil or 0) and self.message or nil
-    self.footer:SetText(message or (W.catchup and "Resolving offline progress…" or ""))
+    self.footer:SetText(message or (W.catchup and L["Resolving offline progress…"] or ""))
     self.footer:SetShown(message ~= nil or W.catchup ~= nil)
     W.Panels.RefreshBoosts(self, s, message)
     if self.routeStatus and s.ui.tab == "routes" and not W.catchup then
@@ -583,9 +584,9 @@ function W.CreateUI()
     ui.adventureBar = W.AdventureBar.Create(expanded, 92, 61, 490)
     ui.currencies = {}
     for i, currency in ipairs({
-        { "essence", "ESSENCE" },
-        { "gold", "GOLD" },
-        { "legacy", "HERITAGE" },
+        { "essence", L["ESSENCE"] },
+        { "gold", L["GOLD"] },
+        { "legacy", L["HERITAGE"] },
     }) do
         local x = 810 + (i - 1) * 198
         U.Text(expanded, currency[2], x + 12, 23, 12, T.muted, 160)
@@ -595,13 +596,13 @@ function W.CreateUI()
         help:SetSize(185, 50)
         help:EnableMouse(true)
         local descriptions = {
-            essence = "Earn "
+            essence = L["Earn "]
                 .. C.adventure.essencePerRank
-                .. " Essence per "
+                .. L[" Essence per "]
                 .. C.adventure.xpPerRank
-                .. " Adventure XP from real WoW activities. Spend it in Growth or Commander. Kept through both resets.",
-            gold = "Earned in idle battles. Pays for crafting and equipment upgrades; separate from your WoW gold. Lost on either reset.",
-            legacy = "Earned from chapter resets. Buys heirloom recipes, Commander boosts, automation, routes and collection talents. Kept through both resets.",
+                .. L[" Adventure XP from real WoW activities. Spend it in Growth or Commander. Kept through both resets."],
+            gold = L["Earned in idle battles. Pays for crafting and equipment upgrades; separate from your WoW gold. Lost on either reset."],
+            legacy = L["Earned from chapter resets. Buys heirloom recipes, Commander boosts, automation, routes and collection talents. Kept through both resets."],
         }
         U.Tooltip(help, currency[2], descriptions[currency[1]])
     end
@@ -626,22 +627,22 @@ function W.CreateUI()
     end
     U.Tooltip(
         minimize,
-        "Compact window",
-        "Keep a small, interactive adventure scene beside your game."
+        L["Compact window"],
+        L["Keep a small, interactive adventure scene beside your game."]
     )
-    U.Tooltip(resize, "Window size", "Switch between fullscreen and a resizable window.")
+    U.Tooltip(resize, L["Window size"], L["Switch between fullscreen and a resizable window."])
     U.Tooltip(
         close,
-        "Close",
-        "Your company continues adventuring when this window is closed. Open it again with /afkcraft."
+        L["Close"],
+        L["Your company continues adventuring when this window is closed. Open it again with /afkcraft."]
     )
     local workspace = CreateFrame("Frame", nil, expanded)
     workspace:SetPoint("TOPLEFT", 276, 0)
     workspace:SetSize(1296, 900)
     ui.workspace = workspace
-    ui.section = U.SingleLine(U.Text(workspace, "Adventure", 0, 105, 24, T.gold), 600, 30)
+    ui.section = U.SingleLine(U.Text(workspace, L["Adventure"], 0, 105, 24, T.gold), 600, 30)
     ui.sectionDetail = U.SingleLine(U.Text(workspace, "", 0, 137, 14, T.muted), 780, 20)
-    ui.sectionHelp = U.Help(workspace, "About this panel", 624, 105, function()
+    ui.sectionHelp = U.Help(workspace, L["About this panel"], 624, 105, function()
         return ui.sectionDetail:GetText()
     end)
     ui.battleState = U.SingleLine(U.Text(workspace, "", 790, 113, 14, T.muted), 220, 22, "RIGHT")
@@ -665,7 +666,7 @@ function W.CreateUI()
         tab.menuLabel = entry[2]
         tab.icon = U.Icon(tab.content or tab, tabIcons[id], 12, 10, 20)
         tab.notice = U.SingleLine(U.Text(tab, "", 42, 25, 10, T.gold), 170, 12)
-        U.Tooltip(tab, entry[2], "Open " .. entry[2])
+        U.Tooltip(tab, entry[2], L["Open "] .. entry[2])
         ui.tabs[id] = tab
         y = y + 40
     end
@@ -675,10 +676,10 @@ function W.CreateUI()
     local forgeBorder = U.FrameTreatment(ui.forgeContainer)
     ui.forgeTabs = {}
     for index, entry in ipairs({
-        { "crafting", "Craft equipment" },
-        { "enchanting", "Enchant" },
-        { "titanforging", "Titanforge" },
-        { "research", "Specializations" },
+        { "crafting", L["Craft equipment"] },
+        { "enchanting", L["Enchant"] },
+        { "titanforging", L["Titanforge"] },
+        { "research", L["Specializations"] },
     }) do
         local id = entry[1]
         ui.forgeTabs[id] = U.Tab(
@@ -707,25 +708,25 @@ function W.CreateUI()
         ui.forgeTabs[id].menuLabel = entry[2]
         ui.forgeTabs[id]:SetFrameLevel(forgeBorder:GetFrameLevel() - 1)
     end
-    ui.settingsLink = U.Button(expanded, "Settings", 24, 850, 220, 34, function()
+    ui.settingsLink = U.Button(expanded, L["Settings"], 24, 850, 220, 34, function()
         LibStub("AceConfigDialog-3.0"):Open("WoWIdle")
     end)
-    ui.reportLink = U.Button(expanded, "Return report", 24, 808, 220, 34, function()
+    ui.reportLink = U.Button(expanded, L["Return report"], 24, 808, 220, 34, function()
         ui:SetTab("offline")
     end)
-    ui.destination = U.Button(workspace, "World map", 1028, 105, 148, 34, function()
+    ui.destination = U.Button(workspace, L["World map"], 1028, 105, 148, 34, function()
         ui:SetTab(W.state.ui.tab == "atlas" and "adventure" or "atlas")
     end, false, "primary")
-    ui.retry = U.Button(workspace, "Retry frontier", 1188, 105, 108, 34, function()
+    ui.retry = U.Button(workspace, L["Retry frontier"], 1188, 105, 108, 34, function()
         W.Action(W.Game.Retry)
         ui:Refresh()
     end)
-    ui.retry.text:SetText("Retry")
+    ui.retry.text:SetText(L["Retry"])
     ui.retry.text:SetJustifyH("CENTER")
     U.Tooltip(
         ui.retry,
-        "Retry frontier",
-        "Leave safe farming and try the next unbeaten encounter again."
+        L["Retry frontier"],
+        L["Leave safe farming and try the next unbeaten encounter again."]
     )
     for i = 1, 5 do
         local index = i
@@ -751,19 +752,19 @@ function W.CreateUI()
     ui.compactInfo = U.Text(compact, "", 200, 21, 12, T.gold, 330)
     ui.compactZone = U.Text(compact, "", 12, 50, 13, T.text, 550)
     U.SingleLine(ui.compactZone, 550, 20)
-    ui.compactMap = U.Button(compact, "World map", 12, 235, 98, 32, function()
+    ui.compactMap = U.Button(compact, L["World map"], 12, 235, 98, 32, function()
         ui:SetTab("atlas")
     end)
-    ui.compactExpand = U.Button(compact, "Expand", 122, 235, 125, 32, function()
+    ui.compactExpand = U.Button(compact, L["Expand"], 122, 235, 125, 32, function()
         ui:SaveGeometry()
         W.state.ui.compact = false
         ui:ApplyMode()
     end)
-    ui.compactRetry = U.Button(compact, "Retry", 259, 235, 98, 32, function()
+    ui.compactRetry = U.Button(compact, L["Retry"], 259, 235, 98, 32, function()
         W.Action(W.Game.Retry)
         ui:Refresh()
     end)
-    ui.lock = U.Button(compact, "Lock", 470, 235, 98, 32, function()
+    ui.lock = U.Button(compact, L["Lock"], 470, 235, 98, 32, function()
         W.state.ui.locked = not W.state.ui.locked
         ui:Layout()
         ui:Refresh()
@@ -771,7 +772,7 @@ function W.CreateUI()
     ui.compactHint = U.Text(compact, "", 12, 282, 12, T.muted, 550)
     ui.compactHint:SetHeight(24)
     ui.compactHint:Hide()
-    ui.compactBoost = U.Button(compact, "Commander boosts", 12, 273, 550, 26, function()
+    ui.compactBoost = U.Button(compact, L["Commander boosts"], 12, 273, 550, 26, function()
         if W.Tutorial.MenuHint(W.state, "boosts") then
             return
         end
@@ -788,7 +789,7 @@ function W.CreateUI()
     ui.compactBoost.text:SetPoint("LEFT", 38, 0)
     U.SingleLine(ui.compactBoost.text, 500, 18)
     ui.adventureCompact = W.AdventureBar.Create(compact, 12, 305, 550)
-    U.Text(compact, "Offline earnings: up to 24 hours", 12, 337, 11, T.muted)
+    U.Text(compact, L["Offline earnings: up to 24 hours"], 12, 337, 11, T.muted)
     ui.scene = W.Scene.Create(canvas)
     local drag = CreateFrame("Frame", nil, f)
     ui.drag = drag

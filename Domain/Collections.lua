@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, C = W.Game, W.Content
 local floor, min = math.floor, math.min
 local receiptLimit = 128
@@ -268,19 +269,19 @@ end
 function G.BuyCollectionTalent(state, id)
     local talent = C.collectionTalentByID[id]
     if not talent or not G.ValidateCollectionTalents(state) or not integer(state.legacy) then
-        return false, "Choose a valid collection talent."
+        return false, L["Choose a valid collection talent."]
     end
     local rank = state.collectionTalents[id] or 0
     local cost = C.collectionTalentCosts[rank + 1]
     if not cost then
-        return false, "This collection talent is fully learned."
+        return false, L["This collection talent is fully learned."]
     end
     if state.legacy < cost then
-        return false, "Not enough Heritage."
+        return false, L["Not enough Heritage."]
     end
     state.legacy = state.legacy - cost
     state.collectionTalents[id] = rank + 1
-    G.Log(state, talent.name .. " learned: rank " .. (rank + 1) .. ".", true)
+    G.Log(state, talent.name .. L[" learned: rank "] .. (rank + 1) .. ".", true)
     return true
 end
 
@@ -353,19 +354,19 @@ end
 
 function G.CollectionEffectStatus(state, setID)
     if setID == nil then
-        return true, "No collection effect selected."
+        return true, L["No collection effect selected."]
     end
     local collection = setID and C.collectionByID[setID]
     if not collection then
-        return false, "No collection effect selected."
+        return false, L["No collection effect selected."]
     end
     local progress = G.CollectionProgress(state, setID)
     if not progress or not progress.complete then
-        return false, "Complete " .. collection.name .. " to use its effect."
+        return false, L["Complete "] .. collection.name .. L[" to use its effect."]
     end
     return true,
-        G.ActiveCollectionEffect(state) == setID and "Active collection effect."
-            or "Ready to select."
+        G.ActiveCollectionEffect(state) == setID and L["Active collection effect."]
+            or L["Ready to select."]
 end
 
 function G.SetCollectionEffect(state, setID)
@@ -433,11 +434,11 @@ function G.CollectionKill(state, context)
         or killNPC(context.receipt) ~= context.npcID
         or state.offline
     then
-        return false, "This is not an attributed collection creature kill."
+        return false, L["This is not an attributed collection creature kill."]
     end
     local sources = W.CollectionSources
     if not sources or type(sources.Eligible) ~= "function" then
-        return false, "Collection sources are unavailable."
+        return false, L["Collection sources are unavailable."]
     end
     local eligible, profile = sources.Eligible(context.profile, context.npcID, kind)
     if
@@ -448,17 +449,17 @@ function G.CollectionKill(state, context)
         or profile.verified ~= true
         or type(eligible) ~= "table"
     then
-        return false, "This collection source is not enabled and verified."
+        return false, L["This collection source is not enabled and verified."]
     end
     local book = kind == "dungeon" and state.dungeonCollections or state.outdoorCollections
     if type(book) ~= "table" then
-        return false, "Collections are unavailable."
+        return false, L["Collections are unavailable."]
     end
     local pending, unique = {}, {}
     local receipts = book.receipts[context.profile] or {}
     for _, itemID in ipairs(eligible) do
         if not belongs(itemID, kind) then
-            return false, "The source references an unknown collection piece."
+            return false, L["The source references an unknown collection piece."]
         end
         if not unique[itemID] then
             unique[itemID] = true
@@ -471,7 +472,7 @@ function G.CollectionKill(state, context)
         end
     end
     if #pending == 0 then
-        return false, "No unfinished piece can count this kill."
+        return false, L["No unfinished piece can count this kill."]
     end
     book.receipts[context.profile] = receipts
     local discoveries = {}
@@ -503,10 +504,10 @@ function G.CollectionKill(state, context)
         local item = G.CollectionItem(itemID)
         G.Log(
             state,
-            (item and item.name or tostring(itemID))
-                .. " discovered in the "
+            (item and L[item.name] or tostring(itemID))
+                .. L[" discovered in the "]
                 .. kind
-                .. " collection.",
+                .. L[" collection."],
             true
         )
         G.Emit(state, "collection", { itemID = itemID, setID = C.collectionByItem[itemID] })

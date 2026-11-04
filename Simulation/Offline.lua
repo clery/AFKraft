@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G = W.Game
 local min, max, floor = math.min, math.max, math.floor
 local copy = G.Copy
@@ -106,9 +107,9 @@ function G.FinishCatchup(state, job)
             G.Log(
                 state,
                 hero.name
-                    .. " reached idle level "
+                    .. L[" reached idle level "]
                     .. hero.level
-                    .. " (character maximum) while you were away. Mastery continues in harder encounters.",
+                    .. L[" (character maximum) while you were away. Mastery continues in harder encounters."],
                 nil,
                 "progress"
             )
@@ -151,7 +152,9 @@ function G.FinishCatchup(state, job)
     end
     for zone, amount in pairs(state.professions.components) do
         local gained = amount - ((job.components or {})[zone] or 0)
-        if gained > 0 then summary.components[zone] = gained end
+        if gained > 0 then
+            summary.components[zone] = gained
+        end
     end
     -- Outdoor hunting is live-only; the live ledger is never replaced by this snapshot.
     for index, hero in ipairs(state.heroes) do
@@ -190,24 +193,24 @@ function G.FinishCatchup(state, job)
     -- Offline farming never unlocks destinations or bosses.
     G.Log(
         state,
-        "Welcome back. "
+        L["Welcome back. "]
             .. floor((job.seconds - job.remaining * 0.25) / 60)
-            .. " minutes away · +"
+            .. L[" minutes away · +"]
             .. (state.gold - job.gold)
-            .. " gold · "
+            .. L[" gold · "]
             .. (state.stats.victories - job.victories)
-            .. " victories · "
+            .. L[" victories · "]
             .. summary.boostUses
-            .. " boost uses · "
+            .. L[" boost uses · "]
             .. summary.masteryRanks
-            .. " Mastery ranks (+"
+            .. L[" Mastery ranks (+"]
             .. summary.masteryXP
-            .. " XP) · "
+            .. L[" XP) · "]
             .. summary.salvaged
-            .. " salvaged."
+            .. L[" salvaged."]
             .. " "
             .. summary.routeTransitions
-            .. " offline route transitions.",
+            .. L[" offline route transitions."],
         nil,
         "offline"
     )

@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local C, G, P = W.Content, W.Game, W.CombatPosition
 local min, max, floor = math.min, math.max, math.floor
 
@@ -146,8 +147,15 @@ function G.StartBattle(state)
             end
         end
     end
-    local battle =
-    { heroes = {}, enemies = {}, elapsed = 0, boss = boss, level = level, stage = state.stage, zone = state.zone }
+    local battle = {
+        heroes = {},
+        enemies = {},
+        elapsed = 0,
+        boss = boss,
+        level = level,
+        stage = state.stage,
+        zone = state.zone,
+    }
     for i, hero in ipairs(state.heroes) do
         local stats = G.Stats(state, hero)
         battle.heroes[i] = {
@@ -255,7 +263,7 @@ local function victory(state, battle)
         if not hero then
             state.battle = nil
             state.rest = 2
-            G.Log(state, "The party regrouped before the next encounter.", nil, "regroup")
+            G.Log(state, L["The party regrouped before the next encounter."], nil, "regroup")
             return
         end
         local health = min(
@@ -280,7 +288,7 @@ local function victory(state, battle)
             G.Log(
                 state,
                 result.hero.name
-                    .. " unlocked Mastery. Harder encounters now award permanent talent progress.",
+                    .. L[" unlocked Mastery. Harder encounters now award permanent talent progress."],
                 nil,
                 "progress"
             )
@@ -292,12 +300,12 @@ local function victory(state, battle)
             G.Log(
                 state,
                 result.hero.name
-                    .. " reached Mastery "
+                    .. L[" reached Mastery "]
                     .. result.hero.mastery.rank
                     .. ". +"
                     .. ranks
-                    .. " permanent talent"
-                    .. (ranks == 1 and " point." or " points."),
+                    .. L[" permanent talent"]
+                    .. (ranks == 1 and L[" point."] or L[" points."]),
                 nil,
                 "progress"
             )
@@ -310,9 +318,9 @@ local function victory(state, battle)
             G.Log(
                 state,
                 result.hero.name
-                    .. " reached idle level "
+                    .. L[" reached idle level "]
                     .. result.level
-                    .. " (character maximum). Mastery continues in harder encounters.",
+                    .. L[" (character maximum). Mastery continues in harder encounters."],
                 nil,
                 "progress"
             )
@@ -360,7 +368,7 @@ local function victory(state, battle)
         if discovered then
             G.Log(
                 state,
-                "You found a new companion! Open Party to choose their class and welcome them.",
+                L["You found a new companion! Open Party to choose their class and welcome them."],
                 nil,
                 "party"
             )
@@ -374,11 +382,11 @@ local function victory(state, battle)
         G.Log(
             state,
             z.boss
-                .. " defeated. "
+                .. L[" defeated. "]
                 .. z.name
-                .. " cleared through encounter "
+                .. L[" cleared through encounter "]
                 .. battle.stage
-                .. ". New paths open.",
+                .. L[". New paths open."],
             battle.stage <= previousSafe or state.runBest <= previousBest,
             "progress"
         )
@@ -721,14 +729,14 @@ function G.Step(state, seconds)
         end
         local remaining = enemyMaximum > 0 and math.ceil(enemyHealth / enemyMaximum * 100) or 0
         state.lastDefeat = (
-            wiped and "All companions fell after " .. floor(battle.elapsed) .. " seconds."
-            or "Encounter timed out after 180 seconds with companions still standing."
+            wiped and L["All companions fell after "] .. floor(battle.elapsed) .. L[" seconds."]
+            or L["Encounter timed out after 180 seconds with companions still standing."]
         )
-            .. " Enemies retained "
+            .. L[" Enemies retained "]
             .. remaining
-            .. "% health. "
-            .. (wiped and "Improve survival or recovery. " or "Improve damage or ability priorities. ")
-            .. "Farming encounter "
+            .. L["% health. "]
+            .. (wiped and L["Improve survival or recovery. "] or L["Improve damage or ability priorities. "])
+            .. L["Farming encounter "]
             .. state.stage
             .. "."
         G.Log(state, state.lastDefeat, nil, "combat")

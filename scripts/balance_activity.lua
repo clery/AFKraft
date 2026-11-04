@@ -1,6 +1,7 @@
 -- Run from the repository root: lua scripts/balance_activity.lua
 -- Activity counts include travel and downtime; these are playtest hypotheses.
 local W = {}
+assert(loadfile("Localization.lua"))("WoWIdle", W)
 for _, file in ipairs({
     "Content.lua",
     "Content/Encounters.lua",

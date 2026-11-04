@@ -121,6 +121,7 @@ case("Trivial outdoor collection kills remain separate from Adventure XP eligibi
     local host = { dead = false, denied = false, time = 1 }
     local collected, rewarded = 0, 0
     local ns = {
+        L = W.L,
         Client = {
             Now = function()
                 return host.time

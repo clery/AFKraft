@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local A, G = W.Client, W.Game
 local D = { observed = {}, order = {} }
 W.DungeonRewards = D
@@ -255,7 +256,7 @@ function D.Event(state, event, id)
         instanceID = 0
     end
     local key = "dungeon:" .. identity.guid .. ":" .. instanceID .. ":" .. now
-    if G.ActivityReward(state, key, "dungeon", "Dungeon completed") then
+    if G.ActivityReward(state, key, "dungeon", L["Dungeon completed"]) then
         state.adventure.dungeonReceipt = { character = identity.guid, time = now }
     end
 end

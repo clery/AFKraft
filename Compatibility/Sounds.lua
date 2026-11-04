@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local Audio = {}
 W.Audio = Audio
 
@@ -7,38 +8,38 @@ W.Audio = Audio
 Audio.categories = {
     {
         key = "soundCombat",
-        name = "Sounds: combat and voices",
-        tip = "Weapon impacts, attack voices and wound sounds.",
+        name = L["Sounds: combat and voices"],
+        tip = L["Weapon impacts, attack voices and wound sounds."],
     },
     {
         key = "soundSpells",
-        name = "Sounds: abilities and healing",
-        tip = "Special attacks, healing, and defensive abilities.",
+        name = L["Sounds: abilities and healing"],
+        tip = L["Special attacks, healing, and defensive abilities."],
     },
     {
         key = "soundDeaths",
-        name = "Sounds: deaths",
-        tip = "Enemies falling and companions being defeated.",
+        name = L["Sounds: deaths"],
+        tip = L["Enemies falling and companions being defeated."],
     },
     {
         key = "soundEncounters",
-        name = "Sounds: encounters",
-        tip = "Creature entrance calls, victories, and party defeats.",
+        name = L["Sounds: encounters"],
+        tip = L["Creature entrance calls, victories, and party defeats."],
     },
     {
         key = "soundProgression",
-        name = "Sounds: progression and unlocks",
-        tip = "Hero levels, Adventure ranks, talents, recipes, destinations and resets.",
+        name = L["Sounds: progression and unlocks"],
+        tip = L["Hero levels, Adventure ranks, talents, recipes, destinations and resets."],
     },
     {
         key = "soundEquipment",
-        name = "Sounds: equipment and loot",
-        tip = "Crafting, upgrading, equipping, and rare loot.",
+        name = L["Sounds: equipment and loot"],
+        tip = L["Crafting, upgrading, equipping, and rare loot."],
     },
     {
         key = "soundTravel",
-        name = "Sounds: travel and recruitment",
-        tip = "Changing destinations and recruiting companions.",
+        name = L["Sounds: travel and recruitment"],
+        tip = L["Changing destinations and recruiting companions."],
     },
 }
 

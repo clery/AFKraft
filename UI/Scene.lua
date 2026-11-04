@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local U, T, C, P = W.Widgets, W.Theme, W.Content, W.CombatPosition
 local Scene = { showMissingModelIcons = false }
 W.Scene = Scene
@@ -264,16 +265,16 @@ function Scene:Refresh(s)
         P.Ensure(s, s.battle)
     end
     self.scenery:SetZone(z.id)
-    self.chapter:SetText("AZEROTH  /  " .. string.upper(z.name))
+    self.chapter:SetText(L["AZEROTH  /  "] .. string.upper(z.name))
     self.caption:SetText(z.subtitle)
     self.status:SetText(
-        (s.farming and "FARMING" or "ADVANCING")
-            .. "  /  Encounter "
+        (s.farming and L["FARMING"] or L["ADVANCING"])
+            .. L["  /  Encounter "]
             .. s.stage
-            .. (b and ("  ·  LEVEL " .. b.level .. (b.boss and " BOSS" or " MOBS")) or "")
+            .. (b and (L["  ·  LEVEL "] .. b.level .. (b.boss and L[" BOSS"] or L[" MOBS"])) or "")
     )
     self.note:SetText(
-        "Your company keeps adventuring. Equipment, talents, and destinations can be changed at any time."
+        L["Your company keeps adventuring. Equipment, talents, and destinations can be changed at any time."]
     )
     for i, unit in ipairs(self.units) do
         local hero = i <= 5 and s.heroes[i] or nil
@@ -355,11 +356,11 @@ function Scene:Refresh(s)
                 hp, maxHP =
                     battleHero and battleHero.hp or stats.hp * (hero.health or 1),
                     battleHero and battleHero.maxHP or stats.hp
-                detail = b and not battleHero and "Joins next encounter" or ""
+                detail = b and not battleHero and L["Joins next encounter"] or ""
                 unit.name:SetText(hero.name)
             elseif enemy and b then
                 hp, maxHP = enemy.hp, enemy.maxHP
-                detail = "Lv " .. b.level .. "  ·  " .. U.Number(hp) .. " HP"
+                detail = L["Lv "] .. b.level .. "  ·  " .. U.Number(hp) .. L[" HP"]
                 unit.name:SetText(enemy.name)
             else
                 hp, maxHP, detail = 1, 1, ""
@@ -386,7 +387,7 @@ function Scene:Refresh(s)
                 "Interface\\Icons\\" .. (class and class.icon or "Ability_Creature_Cursed_02")
             )
             unit.name:SetAlpha(hp > 0 and 1 or 0.45)
-            unit.detail:SetText(hp > 0 and detail or "Defeated")
+            unit.detail:SetText(hp > 0 and detail or L["Defeated"])
         end
     end
     if self.travelling and not wasTravelling and b then

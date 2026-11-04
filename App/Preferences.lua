@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 
 -- Account-wide preferences use AceDB; keep gameplay saves and migrations independent.
 function W.BindPreferences(state)
@@ -8,11 +9,11 @@ function W.BindPreferences(state)
     end
     local saved = WoWIdlePreferencesDB
     if type(saved) ~= "table" or (saved.global ~= nil and type(saved.global) ~= "table") then
-        return nil, "The saved preferences are invalid. They have not been reset."
+        return nil, L["The saved preferences are invalid. They have not been reset."]
     end
     for _, key in ipairs({ "ui", "settings" }) do
         if saved.global and saved.global[key] ~= nil and type(saved.global[key]) ~= "table" then
-            return nil, "The saved preferences are invalid. They have not been reset."
+            return nil, L["The saved preferences are invalid. They have not been reset."]
         end
     end
     W.preferences = LibStub("AceDB-3.0"):New("WoWIdlePreferencesDB", {

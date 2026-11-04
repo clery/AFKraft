@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local A, G = W.Client, W.Game
 local K = { units = {}, order = {}, tokens = {} }
 W.KillRewards = K
@@ -107,7 +108,7 @@ function K.Observe(state, unit)
             and not denied
             and (lootCredit or (record and record.participated))
         then
-            G.ActivityReward(state, "kill:" .. guid, "kill", "Non-trivial creature defeated")
+            G.ActivityReward(state, "kill:" .. guid, "kill", L["Non-trivial creature defeated"])
         end
         return
     end

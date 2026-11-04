@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local C = W.Content
 
 C.itemStatOrder = {
@@ -21,23 +22,23 @@ C.itemStatOrder = {
     "shadowResistance",
 }
 C.itemStatNames = {
-    strength = "Strength",
-    agility = "Agility",
-    intellect = "Intellect",
-    stamina = "Stamina",
-    spirit = "Spirit",
-    haste = "Haste",
-    armor = "Armor",
-    weaponDPS = "Weapon DPS",
-    attackPower = "Attack Power",
-    spellPower = "Spell Power",
-    healingPower = "Healing Power",
-    healthRegen = "Health / 5 sec",
-    arcaneResistance = "Arcane Resistance",
-    fireResistance = "Fire Resistance",
-    frostResistance = "Frost Resistance",
-    natureResistance = "Nature Resistance",
-    shadowResistance = "Shadow Resistance",
+    strength = L["Strength"],
+    agility = L["Agility"],
+    intellect = L["Intellect"],
+    stamina = L["Stamina"],
+    spirit = L["Spirit"],
+    haste = L["Haste"],
+    armor = L["Armor"],
+    weaponDPS = L["Weapon DPS"],
+    attackPower = L["Attack Power"],
+    spellPower = L["Spell Power"],
+    healingPower = L["Healing Power"],
+    healthRegen = L["Health / 5 sec"],
+    arcaneResistance = L["Arcane Resistance"],
+    fireResistance = L["Fire Resistance"],
+    frostResistance = L["Frost Resistance"],
+    natureResistance = L["Nature Resistance"],
+    shadowResistance = L["Shadow Resistance"],
 }
 C.primaryStats = {
     WARRIOR = "strength",
@@ -1215,19 +1216,19 @@ item(
 -- Classic weapon proficiencies are idle class rules, independent of the live client.
 -- Training and talent requirements are simplified; each hero has one weapon slot.
 C.weaponNames = {
-    sword = "One-Handed Swords",
-    axe = "One-Handed Axes",
-    mace = "One-Handed Maces",
-    staff = "Staves",
-    twoHandSword = "Two-Handed Swords",
-    twoHandAxe = "Two-Handed Axes",
-    bow = "Bows",
-    crossbow = "Crossbows",
-    dagger = "Daggers",
-    gun = "Guns",
-    wand = "Wands",
-    twoHandMace = "Two-Handed Maces",
-    polearm = "Polearms",
+    sword = L["One-Handed Swords"],
+    axe = L["One-Handed Axes"],
+    mace = L["One-Handed Maces"],
+    staff = L["Staves"],
+    twoHandSword = L["Two-Handed Swords"],
+    twoHandAxe = L["Two-Handed Axes"],
+    bow = L["Bows"],
+    crossbow = L["Crossbows"],
+    dagger = L["Daggers"],
+    gun = L["Guns"],
+    wand = L["Wands"],
+    twoHandMace = L["Two-Handed Maces"],
+    polearm = L["Polearms"],
 }
 C.classWeapons = {
     WARRIOR = {
@@ -1301,7 +1302,7 @@ for weaponType, items in pairs(weaponItems) do
 end
 
 C.armorRanks = { cloth = 1, leather = 2, mail = 3, plate = 4 }
-C.armorNames = { cloth = "Cloth", leather = "Leather", mail = "Mail", plate = "Plate" }
+C.armorNames = { cloth = L["Cloth"], leather = L["Leather"], mail = L["Mail"], plate = L["Plate"] }
 C.classArmor = {
     WARRIOR = { 3, 4 },
     PALADIN = { 3, 4 },

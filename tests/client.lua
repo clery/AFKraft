@@ -11,7 +11,7 @@ local function case(name, fn)
 end
 
 local function adapter(version, overrides)
-    local namespace = { Content = W.Content, Game = W.Game }
+    local namespace = { L = W.L, Content = W.Content, Game = W.Game }
     local secret = {}
     local environment = setmetatable({
         GetBuildInfo = function()

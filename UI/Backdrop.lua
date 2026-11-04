@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local Backdrop = {}
 Backdrop.__index = Backdrop
 W.Backdrop = Backdrop
@@ -36,7 +37,7 @@ function Backdrop:SetZone(zoneID)
     if texture then
         self.lastError = nil
     else
-        self.lastError = "No screenshot is configured for this destination."
+        self.lastError = L["No screenshot is configured for this destination."]
     end
     self.image:SetShown(self.supported)
     self.header:SetShown(self.supported)

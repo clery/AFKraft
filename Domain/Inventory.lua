@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local C, G = W.Content, W.Game
 local copy = G.Copy
 
@@ -13,7 +14,7 @@ end
 
 function G.CanWearArmor(hero, item)
     if not hero or not item or not C.slots[item.slot] then
-        return false, "Choose a hero and equipment item."
+        return false, L["Choose a hero and equipment item."]
     end
     local armorType = G.ItemArmorType(item)
     if not armorType then
@@ -23,9 +24,11 @@ function G.CanWearArmor(hero, item)
     local maximum = proficiency and proficiency[hero.level >= 40 and 2 or 1]
     if not rank or not maximum or rank > maximum then
         if proficiency and rank and rank > proficiency[1] and rank <= proficiency[2] then
-            return false, "This hero needs idle level 40 to wear " .. C.armorNames[armorType] .. "."
+            return false,
+                L["This hero needs idle level 40 to wear "] .. C.armorNames[armorType] .. "."
         end
-        return false, "This class cannot wear " .. (C.armorNames[armorType] or "this armor") .. "."
+        return false,
+            L["This class cannot wear "] .. (C.armorNames[armorType] or L["this armor"]) .. "."
     end
     return true
 end
@@ -40,7 +43,7 @@ end
 
 function G.CanUseWeapon(hero, item)
     if not hero or not item or not C.slots[item.slot] then
-        return false, "Choose a hero and equipment item."
+        return false, L["Choose a hero and equipment item."]
     end
     if item.slot ~= 1 then
         return true
@@ -49,7 +52,7 @@ function G.CanUseWeapon(hero, item)
     local proficiency = C.classWeapons[hero.class]
     if not weaponType or not proficiency or not proficiency[weaponType] then
         return false,
-            "This class cannot use " .. (C.weaponNames[weaponType] or "this weapon") .. "."
+            L["This class cannot use "] .. (C.weaponNames[weaponType] or L["this weapon"]) .. "."
     end
     return true
 end
@@ -64,7 +67,7 @@ function G.CanEquip(hero, item)
         return false, reason
     end
     if not item.heirloom and item.level > hero.level then
-        return false, "This hero needs idle level " .. item.level .. "."
+        return false, L["This hero needs idle level "] .. item.level .. "."
     end
     return true
 end
@@ -218,7 +221,7 @@ end
 function G.Disenchant(state, item, quantity)
     local reward = G.DisenchantReward(item, quantity)
     if not reward then
-        return false, "Heirlooms and protected items cannot be disenchanted."
+        return false, L["Heirlooms and protected items cannot be disenchanted."]
     end
     for index, stored in ipairs(state.inventory) do
         if stored == item then
@@ -234,20 +237,20 @@ function G.Disenchant(state, item, quantity)
             if remaining == 0 and state.guide.craftItem == item.uid then
                 state.guide.craftItem, state.guide.craftHero = nil, nil
             end
-            local message = "Disenchanted "
-                .. item.name
+            local message = L["Disenchanted "]
+                .. L[item.name]
                 .. " x"
                 .. reward.count
                 .. " · +"
                 .. reward.gold
-                .. " gold, +"
+                .. L[" gold, +"]
                 .. reward.relic
-                .. " Relic dust."
+                .. L[" Relic dust."]
             G.Log(state, message, nil, "items")
             return true, message
         end
     end
-    return false, "This item is no longer in the shared inventory."
+    return false, L["This item is no longer in the shared inventory."]
 end
 
 -- Bulk actions intentionally cover the shared inventory, independent of view filters.
@@ -267,7 +270,7 @@ end
 function G.DisenchantAll(state)
     local total = G.DisenchantAllReward(state)
     if total.count == 0 then
-        return false, "No unprotected equipment to disenchant."
+        return false, L["No unprotected equipment to disenchant."]
     end
     for index = #state.inventory, 1, -1 do
         local item = state.inventory[index]
@@ -281,13 +284,13 @@ function G.DisenchantAll(state)
     state.gold = state.gold + total.gold
     state.materials.relic = state.materials.relic + total.relic
     state.stats.salvaged = state.stats.salvaged + total.count
-    local message = "Disenchanted "
+    local message = L["Disenchanted "]
         .. total.count
-        .. " items · +"
+        .. L[" items · +"]
         .. total.gold
-        .. " gold, +"
+        .. L[" gold, +"]
         .. total.relic
-        .. " Relic dust."
+        .. L[" Relic dust."]
     G.Log(state, message, nil, "items")
     return true, message
 end
@@ -334,18 +337,18 @@ end
 function G.SetLootPolicy(state, key, value)
     if key == "class" then
         if value ~= "any" and not C.classByID[value] then
-            return false, "Choose a class."
+            return false, L["Choose a class."]
         end
     elseif key == "slot" then
         if value ~= 0 and not C.slots[value] then
-            return false, "Choose an equipment slot."
+            return false, L["Choose an equipment slot."]
         end
     elseif key == "stat" then
         if value ~= "any" and not C.itemStatNames[value] then
-            return false, "Choose an item stat."
+            return false, L["Choose an item stat."]
         end
     else
-        return false, "Unknown loot policy."
+        return false, L["Unknown loot policy."]
     end
     state.salvage.policy[key] = value
     return true
@@ -408,7 +411,7 @@ end
 function G.EquipBest(state, heroIndex)
     local hero = state.heroes[heroIndex]
     if not hero then
-        return false, "Choose a hero."
+        return false, L["Choose a hero."]
     end
     local equipped = 0
     for _, slot in ipairs(C.equipmentSlots) do
@@ -427,8 +430,8 @@ function G.EquipBest(state, heroIndex)
         end
     end
     return true,
-        equipped > 0 and ("Equipped " .. equipped .. " upgrades on " .. hero.name .. ".")
-            or (hero.name .. " already has the best available power equipment.")
+        equipped > 0 and (L["Equipped "] .. equipped .. L[" upgrades on "] .. hero.name .. ".")
+            or (hero.name .. L[" already has the best available power equipment."])
 end
 
 function G.Cost(state, hero, heirloom)
@@ -448,7 +451,7 @@ end
 -- Preview with a detached identity counter: inspecting recipes never changes the run.
 function G.CraftItem(hero, slot, heirloom, state)
     if not hero or not C.slots[slot] then
-        return nil, "Choose a hero and equipment slot."
+        return nil, L["Choose a hero and equipment slot."]
     end
     local template, bestPower
     for _, candidate in ipairs(C.items) do
@@ -469,11 +472,11 @@ function G.CraftItem(hero, slot, heirloom, state)
         end
     end
     if not template then
-        return nil, "No usable equipment recipe is available for this hero and slot."
+        return nil, L["No usable equipment recipe is available for this hero and slot."]
     end
     local item = G.Item({ nextItem = 0 }, slot, heirloom and 1 or hero.level, 3, heirloom, template)
     if not item then
-        return nil, "This equipment recipe is unavailable."
+        return nil, L["This equipment recipe is unavailable."]
     end
     if state then
         local modifiers = G.ProfessionModifiers(state, "crafting")
@@ -539,14 +542,14 @@ end
 function G.Craft(state, index, slot, material, heirloom)
     local hero = state.heroes[index]
     if not hero or not C.slots[slot] or not C.materials[material] then
-        return false, "Choose a hero, slot, and material."
+        return false, L["Choose a hero, slot, and material."]
     end
     if heirloom and not state.recipes[slot] then
-        return false, "Unlock this heirloom recipe with Heritage first."
+        return false, L["Unlock this heirloom recipe with Heritage first."]
     end
     local cost = G.Cost(state, hero, heirloom)
     if state.gold < cost.gold or state.materials[material] < cost.material then
-        return false, "You need more gold or idle materials."
+        return false, L["You need more gold or idle materials."]
     end
     local item, reason = G.CraftItem(hero, slot, heirloom, state)
     if not item then
@@ -562,7 +565,7 @@ function G.Craft(state, index, slot, material, heirloom)
         state.guide.crafted = true
         state.guide.craftItem, state.guide.craftHero = item.uid, index
     end
-    G.Log(state, "Crafted " .. item.name .. " for " .. hero.name .. ".", nil, "items")
+    G.Log(state, L["Crafted "] .. L[item.name] .. L[" for "] .. hero.name .. ".", nil, "items")
     G.Emit(state, "craft")
     return true
 end
@@ -582,11 +585,11 @@ function G.Upgrade(state, index, slot)
     local hero = state.heroes[index]
     local item = hero and hero.gear[slot]
     if not item then
-        return false, "Equip an item first."
+        return false, L["Equip an item first."]
     end
     local cost = G.UpgradeCost(item, state)
     if state.gold < cost.gold or state.materials.ore < cost.materials.ore then
-        return false, "Need " .. cost.gold .. " gold and " .. cost.materials.ore .. " Ore."
+        return false, L["Need "] .. cost.gold .. L[" gold and "] .. cost.materials.ore .. L[" Ore."]
     end
     state.gold = state.gold - cost.gold
     state.materials.ore = state.materials.ore - cost.materials.ore
@@ -598,14 +601,14 @@ end
 
 function G.UnlockRecipe(state, slot)
     if not C.slots[slot] or state.recipes[slot] then
-        return false, "Recipe already known."
+        return false, L["Recipe already known."]
     end
     local hint = G.FeatureHint(state, "heirlooms")
     if hint then
         return false, hint
     end
     if state.legacy < 1 then
-        return false, "Earn Heritage by beginning a new chapter."
+        return false, L["Earn Heritage by beginning a new chapter."]
     end
     state.legacy = state.legacy - 1
     state.recipes[slot] = true

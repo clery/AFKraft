@@ -1,11 +1,12 @@
 local _, W = ...
+local L = W.L
 local G, C = W.Game, W.Content
 local LIMIT = 10
 local purchases = {
-    rebuilding = { name = "Swift rebuilding", description = "+20% hero XP per rank", max = 5 },
+    rebuilding = { name = L["Swift rebuilding"], description = L["+20% hero XP per rank"], max = 5 },
     supplies = {
-        name = "Steady supplies",
-        description = "+15% gold and zone materials per rank",
+        name = L["Steady supplies"],
+        description = L["+15% gold and zone materials per rank"],
         max = 5,
     },
 }
@@ -17,8 +18,11 @@ end
 
 function G.ValidateDifficulty(state)
     local difficulty = state.difficulty
-    if type(difficulty) == "table" and type(difficulty.cycleComplete) == "boolean"
-        and difficulty.finalBossEncounter == nil then
+    if
+        type(difficulty) == "table"
+        and type(difficulty.cycleComplete) == "boolean"
+        and difficulty.finalBossEncounter == nil
+    then
         -- Old level-60 boss readiness does not prove the final boss was defeated.
         difficulty.finalBossEncounter, difficulty.cycleComplete = 0, false
     end
@@ -129,9 +133,14 @@ function G.DifficultyVictory(state, battle)
         record.safe[zone] = math.max(record.safe[zone] or 0, stage)
     end
     local finalBoss = C.transcendenceBoss
-    if state.offline or not battle.boss or battle.zone ~= finalBoss.zone
-        or battle.level < finalBoss.level or not whole(battle.stage, finalBoss.stage, 1000000000)
-        or battle.stage % 10 ~= 0 then
+    if
+        state.offline
+        or not battle.boss
+        or battle.zone ~= finalBoss.zone
+        or battle.level < finalBoss.level
+        or not whole(battle.stage, finalBoss.stage, 1000000000)
+        or battle.stage % 10 ~= 0
+    then
         return false
     end
     local qualified = false
@@ -148,7 +157,7 @@ function G.DifficultyVictory(state, battle)
     if first then
         G.Log(
             state,
-            "Transcendence ready. Review a new difficulty and permanent Inheritance rewards.",
+            L["Transcendence ready. Review a new difficulty and permanent Inheritance rewards."],
             nil,
             "progress"
         )
@@ -159,35 +168,40 @@ end
 function G.BuyInheritance(state, id)
     local purchase = purchases[id]
     if not purchase then
-        return false, "Unknown Inheritance purchase."
+        return false, L["Unknown Inheritance purchase."]
     end
     local difficulty = state.difficulty
     if not difficulty.unlocked then
-        return false, "Defeat " .. C.transcendenceBoss.name .. " in Blackrock Mountain with a level 60 hero first."
+        return false,
+            L["Defeat "]
+                .. C.transcendenceBoss.name
+                .. L[" in Blackrock Mountain with a level 60 hero first."]
     end
     local rank = difficulty.purchases[id] or 0
     if rank >= purchase.max then
-        return false, "This Inheritance purchase is complete."
+        return false, L["This Inheritance purchase is complete."]
     end
     local cost = rank + 1
     if difficulty.currency < cost then
-        return false, "Not enough Inheritance."
+        return false, L["Not enough Inheritance."]
     end
     difficulty.currency = difficulty.currency - cost
     difficulty.purchases[id] = rank + 1
-    G.Log(state, purchase.name .. " improved permanently.", nil, "progress")
+    G.Log(state, purchase.name .. L[" improved permanently."], nil, "progress")
     return true
 end
 
 function G.PrestigePlusPreview(state, targetTier)
     local difficulty = state.difficulty
-    local eligible, reason = true, "Ready for a deeper reset."
+    local eligible, reason = true, L["Ready for a deeper reset."]
     if not difficulty.unlocked or not difficulty.cycleComplete then
         eligible, reason =
             false,
-            "Defeat " .. C.transcendenceBoss.name .. " in Blackrock Mountain online with a level 60 hero this cycle."
+            L["Defeat "]
+                .. C.transcendenceBoss.name
+                .. L[" in Blackrock Mountain online with a level 60 hero this cycle."]
     elseif not whole(targetTier, 0, difficulty.maxTier) then
-        eligible, reason = false, "Choose an unlocked difficulty tier."
+        eligible, reason = false, L["Choose an unlocked difficulty tier."]
     end
     local record = difficulty.records[state.tier]
     local gain = difficulty.cycleComplete and not (record and record.rewarded) and state.tier + 1
@@ -198,18 +212,18 @@ function G.PrestigePlusPreview(state, targetTier)
         targetTier = targetTier,
         inheritance = gain,
         retained = {
-            "Heroes, talents, earned points and Mastery",
-            "Adventure rank, partial XP, Essence and Heritage",
-            "Heirlooms, collection records and permanent purchases",
-            "Boost ownership, cooldowns, rules, profiles and route templates",
-            "Profession ownership, learned recipes, specializations and allocations",
-            "Unlocked tiers, Inheritance and enabled preferences",
+            L["Heroes, talents, earned points and Mastery"],
+            L["Adventure rank, partial XP, Essence and Heritage"],
+            L["Heirlooms, collection records and permanent purchases"],
+            L["Boost ownership, cooldowns, rules, profiles and route templates"],
+            L["Profession ownership, learned recipes, specializations and allocations"],
+            L["Unlocked tiers, Inheritance and enabled preferences"],
         },
         rebuilt = {
-            "Hero levels, XP, ordinary equipment and inventory",
-            "Gold, zone materials, Runic fragments and profession cycle ranks/XP",
-            "Run destinations, safe encounters and route cursor",
-            "Active boosts end; cooldown deadlines remain",
+            L["Hero levels, XP, ordinary equipment and inventory"],
+            L["Gold, zone materials, Runic fragments and profession cycle ranks/XP"],
+            L["Run destinations, safe encounters and route cursor"],
+            L["Active boosts end; cooldown deadlines remain"],
         },
     }
 end
@@ -238,11 +252,11 @@ function G.PrestigePlus(state, targetTier)
     state.tier = targetTier
     G.Log(
         state,
-        "Transcendence "
+        L["Transcendence "]
             .. targetTier
-            .. " begins. +"
+            .. L[" begins. +"]
             .. preview.inheritance
-            .. " Inheritance. Permanent progress retained.",
+            .. L[" Inheritance. Permanent progress retained."],
         nil,
         "progress"
     )

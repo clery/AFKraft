@@ -1,72 +1,73 @@
 local _, W = ...
+local L = W.L
 local C = W.Content
 C.professions = {
     {
         id = "crafting",
-        name = "Crafting",
+        name = L["Crafting"],
         icon = "Trade_BlackSmithing",
         unlockLevel = 1,
         branches = {
             {
                 id = "efficiency",
-                name = "Resourceful",
-                description = "5% lower crafting costs per rank.",
+                name = L["Resourceful"],
+                description = L["5% lower crafting costs per rank."],
             },
             {
                 id = "quality",
-                name = "Refinement",
-                description = "2% stronger crafted stats per rank; rank 3 adds one quality tier.",
+                name = L["Refinement"],
+                description = L["2% stronger crafted stats per rank; rank 3 adds one quality tier."],
             },
             {
                 id = "precision",
-                name = "Precision",
-                description = "5% stronger crafted stats per rank.",
+                name = L["Precision"],
+                description = L["5% stronger crafted stats per rank."],
             },
         },
     },
     {
         id = "enchanting",
-        name = "Enchanting",
+        name = L["Enchanting"],
         icon = "Trade_Engraving",
         unlockLevel = 30,
         branches = {
             {
                 id = "offense",
-                name = "Offense",
-                description = "10% stronger offense enchantments per rank.",
+                name = L["Offense"],
+                description = L["10% stronger offense enchantments per rank."],
             },
             {
                 id = "defense",
-                name = "Defense",
-                description = "10% stronger defense enchantments per rank.",
+                name = L["Defense"],
+                description = L["10% stronger defense enchantments per rank."],
             },
             {
                 id = "utility",
-                name = "Utility",
-                description = "10% stronger utility enchantments per rank.",
+                name = L["Utility"],
+                description = L["10% stronger utility enchantments per rank."],
             },
         },
     },
     {
         id = "titanforging",
-        name = "Titanforging",
+        name = L["Titanforging"],
         icon = "INV_Hammer_20",
         unlockLevel = 50,
         branches = {
             {
                 id = "efficiency",
-                name = "Efficient forging",
-                description = "5% lower forging costs per rank.",
+                name = L["Efficient forging"],
+                description = L["5% lower forging costs per rank."],
             },
             {
                 id = "potential",
-                name = "Higher potential",
-                description = "Each forge tier adds another 0.5% item power per rank.",
+                name = L["Higher potential"],
+                description = L["Each forge tier adds another 0.5% item power per rank."],
             },
             {
                 id = "heirloom",
-                name = "Lasting investment",
-                description = "5% lower heirloom forging costs per rank. Heirloom upgrades survive both resets.",
+                name = L["Lasting investment"],
+                description = L["5% lower heirloom forging costs per rank. Heirloom upgrades survive both resets."],
             },
         },
     },
@@ -78,26 +79,26 @@ end
 C.enchants = {
     {
         id = "offense",
-        name = "Fury",
+        name = L["Fury"],
         icon = "Ability_Warrior_BattleShout",
         stats = { attackPower = 6, spellPower = 6 },
     },
     {
         id = "defense",
-        name = "Fortitude",
+        name = L["Fortitude"],
         icon = "Ability_Warrior_ShieldWall",
         stats = { stamina = 8, armor = 25 },
     },
     {
         id = "utility",
-        name = "Clarity",
+        name = L["Clarity"],
         icon = "Spell_Holy_MagicalSentry",
         stats = { spirit = 4, haste = 3 },
     },
 }
 C.enchants[#C.enchants + 1] = {
     id = "runicFury",
-    name = "Runic Fury",
+    name = L["Runic Fury"],
     icon = "Ability_Warrior_BattleShout",
     branch = "offense",
     tier = 2,
@@ -106,7 +107,7 @@ C.enchants[#C.enchants + 1] = {
 }
 C.enchants[#C.enchants + 1] = {
     id = "runicFortitude",
-    name = "Runic Fortitude",
+    name = L["Runic Fortitude"],
     icon = "Ability_Warrior_ShieldWall",
     branch = "defense",
     tier = 5,
@@ -115,7 +116,7 @@ C.enchants[#C.enchants + 1] = {
 }
 C.enchants[#C.enchants + 1] = {
     id = "runicClarity",
-    name = "Runic Clarity",
+    name = L["Runic Clarity"],
     icon = "Spell_Holy_MagicalSentry",
     branch = "utility",
     tier = 8,
@@ -131,17 +132,20 @@ C.professionRankCap, C.professionBranchCap, C.forgeCap = 30, 3, 5
 
 -- Convenience follows hands-on progression; tiers use the permanent unlocked record.
 C.featureMilestones = {
-    boosts = { level = 22, hint = "Reach lifetime idle level 22 to learn Commander boosts." },
-    onCooldown = { level = 45, hint = "Reach lifetime idle level 45 to learn automation." },
-    conditional = { level = 60, hint = "Reach lifetime idle level 60 to learn conditional automation." },
-    routes = { tier = 3, hint = "Unlock difficulty tier 3 to learn route planning." },
-    heirlooms = { tier = 4, hint = "Unlock difficulty tier 4 to learn heirloom recipes." },
+    boosts = { level = 22, hint = L["Reach lifetime idle level 22 to learn Commander boosts."] },
+    onCooldown = { level = 45, hint = L["Reach lifetime idle level 45 to learn automation."] },
+    conditional = {
+        level = 60,
+        hint = L["Reach lifetime idle level 60 to learn conditional automation."],
+    },
+    routes = { tier = 3, hint = L["Unlock difficulty tier 3 to learn route planning."] },
+    heirlooms = { tier = 4, hint = L["Unlock difficulty tier 4 to learn heirloom recipes."] },
 }
 
 -- Idle boss trophies use zone IDs, independent of real WoW inventory items.
 C.zoneComponents, C.forgeComponentZones = {}, {}
 for _, zone in ipairs(C.zones) do
-    C.zoneComponents[zone.id] = { name = zone.name .. " trophy", zone = zone.id }
+    C.zoneComponents[zone.id] = { name = zone.name .. L[" trophy"], zone = zone.id }
     if zone.id ~= "blackrock_mountain" then
         C.forgeComponentZones[#C.forgeComponentZones + 1] = zone.id
     end

@@ -85,6 +85,7 @@ case(
         local host = { dead = false, denied = false, time = 1, tapped = true, loot = false }
         local collected, rewarded = 0, 0
         local ns = {
+            L = W.L,
             Client = {
                 Now = function()
                     return host.time

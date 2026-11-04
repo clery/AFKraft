@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G = W.Game
 local LIMIT = 9007199254740991
 local historicalEnchants = { offense = true, defense = true, utility = true }
@@ -109,11 +110,11 @@ function G.MigrateEconomy(state, previousVersion)
     state.economyVersion, state.economyMigration = 1, report
     G.Log(
         state,
-        "Natural hero growth unlocked. Credited "
+        L["Natural hero growth unlocked. Credited "]
             .. credit
-            .. " Essence and "
+            .. L[" Essence and "]
             .. report.trainingGold
-            .. " gold from recorded retired purchases. Unrecorded spending receives no guessed credit.",
+            .. L[" gold from recorded retired purchases. Unrecorded spending receives no guessed credit."],
         nil,
         "rewards"
     )

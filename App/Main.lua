@@ -1,4 +1,5 @@
 local _, W = ...
+local L = W.L
 local G, A = W.Game, W.Client
 local root =
     LibStub("AceAddon-3.0"):NewAddon("WoWIdle", "AceEvent-3.0", "AceConsole-3.0", "AceTimer-3.0")
@@ -27,7 +28,7 @@ end
 
 function W.Action(fn, ...)
     if W.catchup then
-        W.Notify("Your party is returning from its adventure.")
+        W.Notify(L["Your party is returning from its adventure."])
         return
     end
     local ok, message = fn(W.state, ...)
@@ -60,7 +61,7 @@ local function startingHero(state)
             G.AddHero(state, "WARRIOR")
             G.Log(
                 state,
-                "Your adventure begins with one warrior. Defeat milestone bosses to find companions."
+                L["Your adventure begins with one warrior. Defeat milestone bosses to find companions."]
             )
         end
     end
@@ -89,7 +90,7 @@ function W.Initialize()
     W.CreateUI()
     W.Minimap.Create()
     W.RegisterSettings()
-    print("|cffdfbc79AFKcraft|r · /afkcraft to enter your adventure.")
+    print(L["|cffdfbc79AFKcraft|r · /afkcraft to enter your adventure."])
 end
 
 -- Called by the confirmed Settings action. Replace the saved gameplay state
