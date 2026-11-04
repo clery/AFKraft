@@ -386,6 +386,61 @@ case("Power follows stats and class instead of item level or rarity", function()
     item.stats = { intellect = 20 }
     assert(G.ItemPower(item, mage) > G.ItemPower(item, warrior))
 end)
+case("Every class scores its main stat and offensive bonuses by their combat effects", function()
+    for _, class in ipairs(C.classes) do
+        local s = state()
+        local hero = s.heroes[1]
+        hero.class = class.id
+        local base = G.Stats(s, hero)
+        local main = C.primaryStats[class.id]
+        for _, key in ipairs({ "strength", "agility", "intellect", "attackPower", "spellPower" }) do
+            local item = { stats = { [key] = 10 } }
+            hero.gear = { item }
+            local stats = G.Stats(s, hero)
+            if key == main then
+                assert(stats.damage == base.damage + 10, class.id)
+                assert(G.ItemPower(item, hero) >= 15, class.id)
+            elseif key == "attackPower" then
+                assert((stats.damage > base.damage) == (main ~= "intellect"), class.id)
+            elseif key == "spellPower" then
+                assert(
+                    (stats.damage > base.damage) == (main == "intellect" or class.role == "hybrid"),
+                    class.id
+                )
+            else
+                assert(stats.damage == base.damage, class.id)
+                assert(G.ItemPower(item, hero) < G.ItemPower({ stats = { [main] = 10 } }, hero))
+            end
+        end
+    end
+end)
+case("Healing and secondary gear changes its stated effect rather than base damage", function()
+    local s = state()
+    local hero = s.heroes[1]
+    hero.class = "PRIEST"
+    local base = G.Stats(s, hero)
+    for _, key in ipairs({ "spirit", "healingPower", "haste", "armor", "healthRegen", "stamina" }) do
+        local item = { stats = { [key] = 10 } }
+        hero.gear = { item }
+        local stats = G.Stats(s, hero)
+        assert(stats.damage == base.damage and G.ItemPower(item, hero) > 0, key)
+        if key == "spirit" or key == "healingPower" then
+            assert(stats.healing > base.healing, key)
+        elseif key == "haste" then
+            assert(stats.haste == 1.1)
+        elseif key == "armor" then
+            assert(stats.mitigation > base.mitigation)
+        elseif key == "healthRegen" then
+            assert(stats.regen == 2)
+        else
+            assert(stats.hp == base.hp + 100)
+        end
+    end
+    assert(
+        G.ItemPower({ stats = { spirit = 10 } }, hero)
+            > G.ItemPower({ stats = { spirit = 10 } }, s.heroes[2])
+    )
+end)
 case("Ordinary source stats stay fixed and upgrades preview the exact result", function()
     local s = state()
     local hero = s.heroes[1]

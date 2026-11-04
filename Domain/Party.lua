@@ -122,31 +122,40 @@ function G.ItemStats(item, hero, extraUpgrade)
     return stats
 end
 
-local itemWeights = {
-    stamina = 0.6,
-    spirit = 0.4,
-    haste = 0.8,
-    armor = 0.04,
-    weaponDPS = 1.5,
-    attackPower = 0.5,
-    spellPower = 0.8,
-    healingPower = 0.5,
-    healthRegen = 1,
-    arcaneResistance = 0,
-    fireResistance = 0,
-    frostResistance = 0,
-    natureResistance = 0,
-    shadowResistance = 0,
-}
+-- Shared coefficients keep equipment scoring aligned with class combat scaling.
+local function offenseWeights(hero)
+    local primary = hero and C.primaryStats[hero.class]
+    local caster = primary == "intellect"
+    local class = hero and C.classByID[hero.class]
+    local hybrid = class and class.role == "hybrid"
+    return primary, caster and 0 or 0.325, (caster or hybrid) and 0.65 or 0
+end
+
+local function equipmentOutput(stats, hero)
+    local primary, attackPower, spellPower = offenseWeights(hero)
+    local damage = (stats[primary] or 0)
+        + (stats.weaponDPS or 0)
+        + (stats.attackPower or 0) * attackPower
+        + (stats.spellPower or 0) * spellPower
+    local healing = (stats.intellect or 0) * 0.8
+        + (stats.spirit or 0) * 0.6
+        + (stats.healingPower or 0)
+        + (stats.spellPower or 0) * 0.6
+    return damage, healing
+end
 
 function G.ItemPower(item, hero, extraUpgrade)
     local stats = G.ItemStats(item, hero, extraUpgrade)
-    local primary = hero and C.primaryStats[hero.class]
-    local power = 0
-
-    for key, value in pairs(stats) do
-        power = power + value * (itemWeights[key] or (key == primary and 1 or 0))
-    end
+    local damage, healing = equipmentOutput(stats, hero)
+    local class = hero and C.classByID[hero.class]
+    local healingWeight = class and (class.role == "healer" or class.role == "hybrid") and 0.5
+        or 0.1
+    local power = damage * 1.5
+        + healing * healingWeight
+        + (stats.stamina or 0) * 0.6
+        + (stats.haste or 0) * 0.8
+        + (stats.armor or 0) * 0.04
+        + (stats.healthRegen or 0)
     return floor(power * 10 + 0.5) / 10
 end
 
@@ -285,8 +294,7 @@ function G.Stats(state, hero)
             heal = heal + 0.06
         end
     end
-    local primary = total[C.primaryStats[hero.class]] or 0
-    local offense = primary * 0.65 + (total.weaponDPS or 0) + (total.attackPower or 0) * 0.325
+    local offense, healing = equipmentOutput(total, hero)
     local mult = 1 + (state.prestigeStrength or state.prestiges) * 0.04
     local development = G.DevelopmentModifiers(state)
     local stats = G.ApplyTalentStats(hero, {
@@ -294,20 +302,8 @@ function G.Stats(state, hero)
         hp = math.floor(
             (105 + hero.level * 19 + (total.stamina or 0) * 10) * mult * development.health
         ),
-        damage = (9 + hero.level * 3 + offense + (total.spellPower or 0) * 0.65)
-            * mult
-            * development.damage,
-        healing = (
-            15
-            + hero.level * 5
-            + (total.intellect or 0) * 0.8
-            + (total.spirit or 0) * 0.6
-            + (total.healingPower or 0)
-            + (total.spellPower or 0) * 0.6
-        )
-            * (1 + heal)
-            * mult
-            * development.healing,
+        damage = (9 + hero.level * 3 + offense) * mult * development.damage,
+        healing = (15 + hero.level * 5 + healing) * (1 + heal) * mult * development.healing,
         haste = 1 + (total.haste or 0) / 100,
         mitigation = math.min(
             0.6,

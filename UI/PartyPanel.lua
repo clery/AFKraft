@@ -35,7 +35,7 @@ local function statGuide(hero)
         .. C.itemStatNames[C.primaryStats[hero.class]]
         .. "|r\n"
         .. "Strength / Agility / Intellect: your class’s primary stat increases attack damage. Other primary stats do not increase attack damage. Intellect also increases healing for every class.\n\n"
-        .. "Stamina: increases maximum health.\nSpirit: increases healing.\nHaste: speeds up attacks and special ability cooldowns.\nArmor: reduces incoming damage, with diminishing returns.\nWeapon DPS / Attack Power: increase attack damage.\nSpell Power: increases damage and healing.\nHealing Power: increases healing.\nHealth / 5 sec: restores health during combat.\nResistances: currently informational; do not reduce damage.\n\n"
+        .. "Stamina: increases maximum health.\nSpirit: increases healing.\nHaste: speeds up attacks and special ability cooldowns.\nArmor: reduces incoming damage, with diminishing returns.\nWeapon DPS: increases attack damage.\nAttack Power: increases damage for Strength and Agility classes.\nSpell Power: increases damage for Intellect classes and hybrids, and increases healing.\nHealing Power: increases healing.\nHealth / 5 sec: restores health during combat.\nResistances: currently informational; do not reduce damage.\n\n"
         .. "Power estimates an item’s value for this class; it is not a combat stat. Talents and prestige can further modify combat stats."
 end
 
