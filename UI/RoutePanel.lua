@@ -9,7 +9,7 @@ local function button(parent, label, x, y, width, action)
 end
 
 local function draft(ui, route)
-    ui.routeDraft = route and G.Copy(route) or { name = L["New route"], steps = {} }
+    ui.routeDraft = route and G.Copy(route) or { name = L.NEW_ROUTE, steps = {} }
     ui:Refresh()
 end
 
@@ -42,17 +42,11 @@ function R.Draw(ui, parent, state)
     end
     frame:Show()
     U.Begin(frame)
-    U.Text(frame, L["ROUTE PLANNER"], 0, 0, 22, T.gold, 1296)
-    U.Help(
-        frame,
-        L["Routes"],
-        1258,
-        0,
-        L["Add destinations and milestones, then save. Select Use saved route and enable Routes to travel between encounters. Manual travel pauses the route.\n\nOffline travel has a separate option and uses only cleared checkpoints."]
-    )
+    U.Text(frame, L.ROUTE_PLANNER_HEADING, 0, 0, 22, T.gold, 1296)
+    U.Help(frame, L.ROUTES, 1258, 0, L.ADD_DESTINATIONS_AND_MILESTONES_THEN_SAVE_SELECT_USE_SAVED)
     ui.routeBuy = button(
         frame,
-        state.routes.owned and L["Planning learned"] or L["Learn · 1 Heritage"],
+        state.routes.owned and L.PLANNING_LEARNED or L.LEARN_1_HERITAGE,
         0,
         92,
         280,
@@ -66,12 +60,12 @@ function R.Draw(ui, parent, state)
     )
     U.Tooltip(
         ui.routeBuy,
-        L["Route planning"],
-        G.FeatureHint(state, "routes") or L["Spend 1 Heritage to learn route planning permanently."]
+        L.ROUTE_PLANNING,
+        G.FeatureHint(state, "routes") or L.SPEND_1_HERITAGE_TO_LEARN_ROUTE_PLANNING_PERMANENTLY
     )
     ui.routeEnabled = U.Checkbox(
         frame,
-        L["Routes enabled"],
+        L.ROUTES_ENABLED,
         0,
         136,
         280,
@@ -82,7 +76,7 @@ function R.Draw(ui, parent, state)
     )
     ui.routeOffline = U.Checkbox(
         frame,
-        L["Offline cleared routes"],
+        L.OFFLINE_CLEARED_ROUTES,
         0,
         174,
         280,
@@ -93,16 +87,16 @@ function R.Draw(ui, parent, state)
     )
     U.Tooltip(
         ui.routeOffline,
-        L["Offline route travel"],
-        L["While away, visit only checkpoints cleared in this run and tier before departure. Limit: 12 transitions per absence. Paused routes stay paused. No new progression or collection discoveries."]
+        L.OFFLINE_ROUTE_TRAVEL,
+        L.WHILE_AWAY_VISIT_ONLY_CHECKPOINTS_CLEARED_IN_THIS_RUN
     )
-    ui.routeNew = button(frame, L["New template"], 0, 214, 280, function()
+    ui.routeNew = button(frame, L.NEW_TEMPLATE, 0, 214, 280, function()
         draft(ui)
     end)
     ui.routeTemplates = {}
     for index, route in ipairs(state.routes.templates) do
         local saved = route
-        local selected = state.routes.selected == route.id and L[" · selected"] or ""
+        local selected = state.routes.selected == route.id and L.SELECTED_SUFFIX or ""
         ui.routeTemplates[route.id] = U.SelectButton(
             frame,
             route.name .. selected,
@@ -117,11 +111,11 @@ function R.Draw(ui, parent, state)
         )
     end
     if not ui.routeDraft then
-        ui.routeDraft = { name = L["New route"], steps = {} }
+        ui.routeDraft = { name = L.NEW_ROUTE, steps = {} }
     end
     local preview = ui.routeDraft
     ui.routeNameInput:SetText(preview.name)
-    ui.routeSave = button(frame, L["Save template"], 930, 98, 170, function()
+    ui.routeSave = button(frame, L.SAVE_TEMPLATE, 930, 98, 170, function()
         preview.name = ui.routeNameInput:GetText()
         ui.routeNameInput:ClearFocus()
         local ok, value = G.SaveRoute(state, preview.id, preview.name, preview.steps)
@@ -136,18 +130,18 @@ function R.Draw(ui, parent, state)
         end
         ui:Refresh()
     end)
-    ui.routeUse = button(frame, L["Use saved route"], 352, 142, 224, function()
+    ui.routeUse = button(frame, L.USE_SAVED_ROUTE, 352, 142, 224, function()
         W.Action(G.SelectRoute, preview.id)
     end)
     U.Enabled(ui.routeUse, preview.id ~= nil)
-    ui.routeDelete = button(frame, L["Delete"], 596, 142, 140, function()
+    ui.routeDelete = button(frame, L.DELETE, 596, 142, 140, function()
         local ok = G.DeleteRoute(state, preview.id)
         if ok then
             draft(ui)
         end
     end)
     U.Enabled(ui.routeDelete, preview.id ~= nil)
-    ui.routeResume = button(frame, L["Resume route"], 756, 142, 224, function()
+    ui.routeResume = button(frame, L.RESUME_ROUTE, 756, 142, 224, function()
         W.Action(G.ResumeRoute)
     end)
     U.Enabled(ui.routeResume, state.routes.run.paused and state.routes.selected ~= nil)
@@ -159,13 +153,13 @@ function R.Draw(ui, parent, state)
         heroes[#heroes + 1] = { id = index, name = hero.name }
     end
     if #heroes == 0 then
-        heroes[1] = { id = 1, name = L["Party member 1"] }
+        heroes[1] = { id = 1, name = L.PARTY_MEMBER_1 }
     end
     for value = 1, C.heroLevelCap do
-        levels[#levels + 1] = { id = value, name = L["Level "] .. value }
+        levels[#levels + 1] = { id = value, name = L.LEVEL_PREFIX .. value }
     end
     for value = 5, C.heroLevelCap * 5, 5 do
-        bosses[#bosses + 1] = { id = value, name = L["Boss "] .. value }
+        bosses[#bosses + 1] = { id = value, name = L.BOSS_PREFIX .. value }
     end
     local materials, amounts, pieces = {}, {}, {}
     for _, id in ipairs(C.materialOrder) do
@@ -191,15 +185,15 @@ function R.Draw(ui, parent, state)
     end
     for _, collection in ipairs(C.collections) do
         for _, itemID in ipairs(collection.pieces) do
-            pieces[#pieces + 1] = { id = itemID, name = L[G.CollectionItem(itemID).name] }
+            pieces[#pieces + 1] = { id = itemID, name = G.ItemName(G.CollectionItem(itemID)) }
         end
     end
     local kinds = {
-        { id = "boss", name = L["Zone boss"] },
-        { id = "level", name = L["Hero level"] },
-        { id = "unlock", name = L["Unlock zone"] },
-        { id = "material", name = L["Material stock"] },
-        { id = "collection", name = L["Discovery"] },
+        { id = "boss", name = L.ZONE_BOSS },
+        { id = "level", name = L.HERO_LEVEL },
+        { id = "unlock", name = L.UNLOCK_ZONE },
+        { id = "material", name = L.MATERIAL_STOCK },
+        { id = "collection", name = L.DISCOVERY },
     }
     ui.routeSteps = {}
     for index, step in ipairs(preview.steps) do
@@ -221,11 +215,11 @@ function R.Draw(ui, parent, state)
         )
         row.kind = U.Choice(
             frame,
-            trigger.kind == "boss" and L["Zone boss"]
-                or trigger.kind == "level" and L["Hero level"]
-                or trigger.kind == "material" and L["Material stock"]
-                or trigger.kind == "collection" and L["Discovery"]
-                or L["Unlock zone"],
+            trigger.kind == "boss" and L.ZONE_BOSS
+                or trigger.kind == "level" and L.HERO_LEVEL
+                or trigger.kind == "material" and L.MATERIAL_STOCK
+                or trigger.kind == "collection" and L.DISCOVERY
+                or L.UNLOCK_ZONE,
             622,
             y,
             160,
@@ -246,7 +240,7 @@ function R.Draw(ui, parent, state)
         if trigger.kind == "material" then
             row.target = U.Choice(
                 frame,
-                C.materials[trigger.material] or L["Unavailable"],
+                C.materials[trigger.material] or L.UNAVAILABLE,
                 792,
                 y,
                 230,
@@ -272,14 +266,14 @@ function R.Draw(ui, parent, state)
             )
             U.Tooltip(
                 row.value,
-                L["Material stock milestone"],
-                L["Travel after an encounter when you hold this amount. Materials are not spent; earlier purchases can delay travel."]
+                L.MATERIAL_STOCK_MILESTONE,
+                L.TRAVEL_AFTER_AN_ENCOUNTER_WHEN_YOU_HOLD_THIS_AMOUNT
             )
         elseif trigger.kind == "collection" then
             local item = G.CollectionItem(trigger.itemID)
             row.target = U.Choice(
                 frame,
-                item and L[item.name] or L["Unavailable piece"],
+                item and G.ItemName(item) or L.UNAVAILABLE_PIECE,
                 792,
                 y,
                 390,
@@ -292,14 +286,14 @@ function R.Draw(ui, parent, state)
             )
             U.Tooltip(
                 row.target,
-                L["Collection discovery milestone"],
-                L["Travel after this outdoor or dungeon piece is discovered. Routes never move your WoW character or earn discoveries."]
+                L.COLLECTION_DISCOVERY_MILESTONE,
+                L.TRAVEL_AFTER_THIS_OUTDOOR_OR_DUNGEON_PIECE_IS_DISCOVERED
             )
         elseif trigger.kind == "level" then
             row.target = U.Choice(
                 frame,
                 state.heroes[trigger.hero] and state.heroes[trigger.hero].name
-                    or L["Party member "] .. trigger.hero,
+                    or L.PARTY_MEMBER_PREFIX .. trigger.hero,
                 792,
                 y,
                 230,
@@ -312,7 +306,7 @@ function R.Draw(ui, parent, state)
             )
             row.value = U.Choice(
                 frame,
-                L["Level "] .. trigger.level,
+                L.LEVEL_PREFIX .. trigger.level,
                 1032,
                 y,
                 150,
@@ -340,7 +334,7 @@ function R.Draw(ui, parent, state)
             if trigger.kind == "boss" then
                 row.value = U.Choice(
                     frame,
-                    L["Boss "] .. trigger.stage,
+                    L.BOSS_PREFIX .. trigger.stage,
                     1032,
                     y,
                     150,
@@ -359,7 +353,7 @@ function R.Draw(ui, parent, state)
         end)
         ui.routeSteps[index] = row
     end
-    ui.routeAdd = button(frame, L["Add step"], 352, 588, 224, function()
+    ui.routeAdd = button(frame, L.ADD_STEP, 352, 588, 224, function()
         local used = {}
         for _, step in ipairs(preview.steps) do
             used[step.destination] = true

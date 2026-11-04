@@ -48,13 +48,13 @@ end
 
 function G.SetBoostRules(state, id, rules)
     if not C.boostByID[id] or not state.boosts.owned[id] then
-        return false, L["Learn this boost first."]
+        return false, L.LEARN_THIS_BOOST_FIRST
     end
     if not state.boosts.automation.owned.conditional then
-        return false, L["Learn conditional automation first."]
+        return false, L.LEARN_CONDITIONAL_AUTOMATION_FIRST
     end
     if not G.ValidateBoostRules(rules) then
-        return false, L["Use up to four valid ordered activation rules."]
+        return false, L.USE_UP_TO_FOUR_VALID_ORDERED_ACTIVATION_RULES
     end
     state.boosts.automation.abilities[id].rules = G.Copy(rules or {})
     return true
@@ -64,11 +64,11 @@ function G.EvaluateBoostRules(state, id)
     local config = state.boosts.automation.abilities[id]
     local rules = config and config.rules
     if not G.ValidateBoostRules(rules) or not rules or #rules == 0 then
-        return false, L["Waiting: no ordered rules."]
+        return false, L.WAITING_NO_ORDERED_RULES
     end
     local battle = state.battle
     if not battle or (state.rest or 0) > 0 then
-        return false, L["Waiting: combat."]
+        return false, L.WAITING_COMBAT
     end
     local livingEnemy, livingAlly = false, false
     for _, enemy in ipairs(battle.enemies) do
@@ -78,7 +78,7 @@ function G.EvaluateBoostRules(state, id)
         livingAlly = livingAlly or ally.hp > 0
     end
     if not livingEnemy or not livingAlly then
-        return false, L["Waiting: living combatants."]
+        return false, L.WAITING_LIVING_COMBATANTS
     end
     for index, rule in ipairs(rules) do
         local matches = rule.condition == "always"
@@ -99,8 +99,8 @@ function G.EvaluateBoostRules(state, id)
             end
         end
         if matches then
-            return true, L["Rule "] .. index .. L[": ready."], index
+            return true, L.RULE_PREFIX .. index .. L.READY_2, index
         end
     end
-    return false, L["Waiting: no rule matches."]
+    return false, L.WAITING_NO_RULE_MATCHES
 end

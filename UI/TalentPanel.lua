@@ -95,16 +95,16 @@ local function drawNode(tree, talent, hero, index)
     U.Tooltip(
         b,
         talent.name,
-        L["Rank "]
+        L.RANK_PREFIX
             .. (learned and "1/1" or "0/1")
             .. "\n\n"
             .. talent.text
             .. "\n\n"
             .. (
                 not available and reason
-                or learned and L["Click to unlearn and recover the point."]
-                or available and L["Click to spend one talent point."]
-                or L["Reach new level milestones to earn permanent talent points."]
+                or learned and L.CLICK_TO_UNLEARN_AND_RECOVER_THE_POINT
+                or available and L.CLICK_TO_SPEND_ONE_TALENT_POINT
+                or L.REACH_NEW_LEVEL_MILESTONES_TO_EARN_PERMANENT_TALENT_POINTS
             ),
         320
     )
@@ -136,25 +136,33 @@ function P.Draw(ui, parent, hero, index)
     local complete = progress.earned >= #talents
     bar:SetValue(complete and 1 or unlocked and mastery.xp / cost or 0)
     bar.label:SetText(
-        not unlocked and (L["Mastery unlocks at hero level "] .. C.mastery.unlockLevel)
-            or complete and (L["Mastery "] .. mastery.rank .. L[" · All talent points earned"])
-            or (L["Mastery "] .. mastery.rank .. " · " .. mastery.xp .. " / " .. cost .. L[" XP"])
+        not unlocked and (L.MASTERY_UNLOCKS_AT_HERO_LEVEL_PREFIX .. C.mastery.unlockLevel)
+            or complete and (L.MASTERY_PREFIX .. mastery.rank .. L.ALL_TALENT_POINTS_EARNED_SUFFIX)
+            or (
+                L.MASTERY_PREFIX
+                .. mastery.rank
+                .. " · "
+                .. mastery.xp
+                .. " / "
+                .. cost
+                .. L.XP_HEADING_2
+            )
     )
     U.Tooltip(
         bar,
-        L["Permanent Mastery"],
-        L["Unlocks at hero level "]
+        L.PERMANENT_MASTERY,
+        L.UNLOCKS_AT_HERO_LEVEL_PREFIX
             .. C.mastery.unlockLevel
-            .. L[". Each rank grants 1 permanent talent point.\n\nTier "]
+            .. L.EACH_RANK_GRANTS_1_PERMANENT_TALENT_POINT_TIER_PREFIX
             .. W.state.tier
-            .. L[": earn XP from victories at encounter level "]
+            .. L.EARN_XP_FROM_VICTORIES_AT_ENCOUNTER_LEVEL_PREFIX
             .. math.max(1, G.MasteryFrontier(hero, W.state.tier))
-            .. L["+. Bosses award double XP.\n\nMastery survives both resets and continues at hero level "]
+            .. L.BOSSES_AWARD_DOUBLE_XP_MASTERY_SURVIVES_BOTH_RESETS_AND_PREFIX
             .. C.heroLevelCap
             .. ".\n"
             .. (
-                complete and L["All talent points earned."]
-                or (L["Next rank: "] .. cost .. L[" XP."])
+                complete and L.ALL_TALENT_POINTS_EARNED
+                or (L.NEXT_RANK_PREFIX .. cost .. L.XP_HEADING_3)
             ),
         360
     )

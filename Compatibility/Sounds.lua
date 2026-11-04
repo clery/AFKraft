@@ -8,38 +8,38 @@ W.Audio = Audio
 Audio.categories = {
     {
         key = "soundCombat",
-        name = L["Sounds: combat and voices"],
-        tip = L["Weapon impacts, attack voices and wound sounds."],
+        name = L.SOUNDS_COMBAT_AND_VOICES,
+        tip = L.WEAPON_IMPACTS_ATTACK_VOICES_AND_WOUND_SOUNDS,
     },
     {
         key = "soundSpells",
-        name = L["Sounds: abilities and healing"],
-        tip = L["Special attacks, healing, and defensive abilities."],
+        name = L.SOUNDS_ABILITIES_AND_HEALING,
+        tip = L.SPECIAL_ATTACKS_HEALING_AND_DEFENSIVE_ABILITIES,
     },
     {
         key = "soundDeaths",
-        name = L["Sounds: deaths"],
-        tip = L["Enemies falling and companions being defeated."],
+        name = L.SOUNDS_DEATHS,
+        tip = L.ENEMIES_FALLING_AND_COMPANIONS_BEING_DEFEATED,
     },
     {
         key = "soundEncounters",
-        name = L["Sounds: encounters"],
-        tip = L["Creature entrance calls, victories, and party defeats."],
+        name = L.SOUNDS_ENCOUNTERS,
+        tip = L.CREATURE_ENTRANCE_CALLS_VICTORIES_AND_PARTY_DEFEATS,
     },
     {
         key = "soundProgression",
-        name = L["Sounds: progression and unlocks"],
-        tip = L["Hero levels, Adventure ranks, talents, recipes, destinations and resets."],
+        name = L.SOUNDS_PROGRESSION_AND_UNLOCKS,
+        tip = L.HERO_LEVELS_ADVENTURE_RANKS_TALENTS_RECIPES_DESTINATIONS_AND_RESETS,
     },
     {
         key = "soundEquipment",
-        name = L["Sounds: equipment and loot"],
-        tip = L["Crafting, upgrading, equipping, and rare loot."],
+        name = L.SOUNDS_EQUIPMENT_AND_LOOT,
+        tip = L.CRAFTING_UPGRADING_EQUIPPING_AND_RARE_LOOT,
     },
     {
         key = "soundTravel",
-        name = L["Sounds: travel and recruitment"],
-        tip = L["Changing destinations and recruiting companions."],
+        name = L.SOUNDS_TRAVEL_AND_RECRUITMENT,
+        tip = L.CHANGING_DESTINATIONS_AND_RECRUITING_COMPANIONS,
     },
 }
 

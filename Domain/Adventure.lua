@@ -14,12 +14,12 @@ function G.AdventureXP(state, amount, kind, label)
     progress.sources[kind] = source
     state.essence = state.essence + essence
     state.stats.essence = state.stats.essence + essence
-    G.Log(state, "+" .. amount .. L[" Adventure XP · "] .. label, true, "progress")
+    G.Log(state, "+" .. amount .. L.FRAGMENT_ADVENTURE_XP .. label, true, "progress")
     if ranks > 0 then
         G.Emit(state, "levelup")
         G.Log(
             state,
-            L["Adventure rank "] .. progress.rank .. " · +" .. essence .. L[" Essence"],
+            L.ADVENTURE_RANK_PREFIX .. progress.rank .. " · +" .. essence .. L.ESSENCE_SUFFIX,
             nil,
             "progress"
         )

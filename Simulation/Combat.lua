@@ -263,7 +263,7 @@ local function victory(state, battle)
         if not hero then
             state.battle = nil
             state.rest = 2
-            G.Log(state, L["The party regrouped before the next encounter."], nil, "regroup")
+            G.Log(state, L.THE_PARTY_REGROUPED_BEFORE_THE_NEXT_ENCOUNTER, nil, "regroup")
             return
         end
         local health = min(
@@ -288,7 +288,7 @@ local function victory(state, battle)
             G.Log(
                 state,
                 result.hero.name
-                    .. L[" unlocked Mastery. Harder encounters now award permanent talent progress."],
+                    .. L.UNLOCKED_MASTERY_HARDER_ENCOUNTERS_NOW_AWARD_PERMANENT_TALENT_SUFFIX,
                 nil,
                 "progress"
             )
@@ -300,12 +300,12 @@ local function victory(state, battle)
             G.Log(
                 state,
                 result.hero.name
-                    .. L[" reached Mastery "]
+                    .. L.FRAGMENT_REACHED_MASTERY
                     .. result.hero.mastery.rank
                     .. ". +"
                     .. ranks
-                    .. L[" permanent talent"]
-                    .. (ranks == 1 and L[" point."] or L[" points."]),
+                    .. L.PERMANENT_TALENT_SUFFIX
+                    .. (ranks == 1 and L.POINT_SUFFIX or L.POINTS_SUFFIX),
                 nil,
                 "progress"
             )
@@ -318,9 +318,9 @@ local function victory(state, battle)
             G.Log(
                 state,
                 result.hero.name
-                    .. L[" reached idle level "]
+                    .. L.FRAGMENT_REACHED_IDLE_LEVEL
                     .. result.level
-                    .. L[" (character maximum). Mastery continues in harder encounters."],
+                    .. L.CHARACTER_MAXIMUM_MASTERY_CONTINUES_IN_HARDER_ENCOUNTERS_SUFFIX,
                 nil,
                 "progress"
             )
@@ -366,12 +366,7 @@ local function victory(state, battle)
         state.best = max(state.best, state.runBest)
         local discovered = G.CompanionSlots(state) > previousSlots
         if discovered then
-            G.Log(
-                state,
-                L["You found a new companion! Open Party to choose their class and welcome them."],
-                nil,
-                "party"
-            )
+            G.Log(state, L.YOU_FOUND_A_NEW_COMPANION_OPEN_PARTY_TO_CHOOSE, nil, "party")
         end
         if discovered or unlockedDestination then
             G.Emit(state, "unlock")
@@ -382,11 +377,11 @@ local function victory(state, battle)
         G.Log(
             state,
             z.boss
-                .. L[" defeated. "]
+                .. L.FRAGMENT_DEFEATED
                 .. z.name
-                .. L[" cleared through encounter "]
+                .. L.FRAGMENT_CLEARED_THROUGH_ENCOUNTER
                 .. battle.stage
-                .. L[". New paths open."],
+                .. L.NEW_PATHS_OPEN,
             battle.stage <= previousSafe or state.runBest <= previousBest,
             "progress"
         )
@@ -729,14 +724,15 @@ function G.Step(state, seconds)
         end
         local remaining = enemyMaximum > 0 and math.ceil(enemyHealth / enemyMaximum * 100) or 0
         state.lastDefeat = (
-            wiped and L["All companions fell after "] .. floor(battle.elapsed) .. L[" seconds."]
-            or L["Encounter timed out after 180 seconds with companions still standing."]
+            wiped
+                and L.ALL_COMPANIONS_FELL_AFTER_PREFIX .. floor(battle.elapsed) .. L.SECONDS_SUFFIX
+            or L.ENCOUNTER_TIMED_OUT_AFTER_180_SECONDS_WITH_COMPANIONS_STILL
         )
-            .. L[" Enemies retained "]
+            .. L.FRAGMENT_ENEMIES_RETAINED
             .. remaining
-            .. L["% health. "]
-            .. (wiped and L["Improve survival or recovery. "] or L["Improve damage or ability priorities. "])
-            .. L["Farming encounter "]
+            .. L.HEALTH_PREFIX
+            .. (wiped and L.IMPROVE_SURVIVAL_OR_RECOVERY_PREFIX or L.IMPROVE_DAMAGE_OR_ABILITY_PRIORITIES_PREFIX)
+            .. L.FARMING_ENCOUNTER_PREFIX
             .. state.stage
             .. "."
         G.Log(state, state.lastDefeat, nil, "combat")

@@ -28,7 +28,7 @@ end
 
 function W.Action(fn, ...)
     if W.catchup then
-        W.Notify(L["Your party is returning from its adventure."])
+        W.Notify(L.YOUR_PARTY_IS_RETURNING_FROM_ITS_ADVENTURE)
         return
     end
     local ok, message = fn(W.state, ...)
@@ -59,10 +59,7 @@ local function startingHero(state)
             G.AddHero(state, identity.class, identity)
         else
             G.AddHero(state, "WARRIOR")
-            G.Log(
-                state,
-                L["Your adventure begins with one warrior. Defeat milestone bosses to find companions."]
-            )
+            G.Log(state, L.YOUR_ADVENTURE_BEGINS_WITH_ONE_WARRIOR_DEFEAT_MILESTONE_BOSSES)
         end
     end
 end
@@ -90,7 +87,7 @@ function W.Initialize()
     W.CreateUI()
     W.Minimap.Create()
     W.RegisterSettings()
-    print(L["|cffdfbc79AFKcraft|r · /afkcraft to enter your adventure."])
+    print(L.AFKCRAFT_AFKCRAFT_TO_ENTER_YOUR_ADVENTURE)
 end
 
 -- Called by the confirmed Settings action. Replace the saved gameplay state

@@ -3,10 +3,10 @@ local L = W.L
 local G, C = W.Game, W.Content
 local LIMIT = 10
 local purchases = {
-    rebuilding = { name = L["Swift rebuilding"], description = L["+20% hero XP per rank"], max = 5 },
+    rebuilding = { name = L.SWIFT_REBUILDING, description = L.BONUS_20_HERO_XP_PER_RANK, max = 5 },
     supplies = {
-        name = L["Steady supplies"],
-        description = L["+15% gold and zone materials per rank"],
+        name = L.STEADY_SUPPLIES,
+        description = L.BONUS_15_GOLD_AND_ZONE_MATERIALS_PER_RANK,
         max = 5,
     },
 }
@@ -155,12 +155,7 @@ function G.DifficultyVictory(state, battle)
     difficulty.finalBossEncounter = state.encounter
     difficulty.maxTier = math.max(difficulty.maxTier, math.min(LIMIT, state.tier + 1))
     if first then
-        G.Log(
-            state,
-            L["Transcendence ready. Review a new difficulty and permanent Inheritance rewards."],
-            nil,
-            "progress"
-        )
+        G.Log(state, L.TRANSCENDENCE_READY_REVIEW_A_NEW_DIFFICULTY_AND_PERMANENT, nil, "progress")
     end
     return true
 end
@@ -168,40 +163,40 @@ end
 function G.BuyInheritance(state, id)
     local purchase = purchases[id]
     if not purchase then
-        return false, L["Unknown Inheritance purchase."]
+        return false, L.UNKNOWN_INHERITANCE_PURCHASE
     end
     local difficulty = state.difficulty
     if not difficulty.unlocked then
         return false,
-            L["Defeat "]
+            L.DEFEAT_PREFIX
                 .. C.transcendenceBoss.name
-                .. L[" in Blackrock Mountain with a level 60 hero first."]
+                .. L.IN_BLACKROCK_MOUNTAIN_WITH_A_LEVEL_60_HERO_FIRST_SUFFIX
     end
     local rank = difficulty.purchases[id] or 0
     if rank >= purchase.max then
-        return false, L["This Inheritance purchase is complete."]
+        return false, L.THIS_INHERITANCE_PURCHASE_IS_COMPLETE
     end
     local cost = rank + 1
     if difficulty.currency < cost then
-        return false, L["Not enough Inheritance."]
+        return false, L.NOT_ENOUGH_INHERITANCE
     end
     difficulty.currency = difficulty.currency - cost
     difficulty.purchases[id] = rank + 1
-    G.Log(state, purchase.name .. L[" improved permanently."], nil, "progress")
+    G.Log(state, purchase.name .. L.IMPROVED_PERMANENTLY_SUFFIX, nil, "progress")
     return true
 end
 
 function G.PrestigePlusPreview(state, targetTier)
     local difficulty = state.difficulty
-    local eligible, reason = true, L["Ready for a deeper reset."]
+    local eligible, reason = true, L.READY_FOR_A_DEEPER_RESET
     if not difficulty.unlocked or not difficulty.cycleComplete then
         eligible, reason =
             false,
-            L["Defeat "]
+            L.DEFEAT_PREFIX
                 .. C.transcendenceBoss.name
-                .. L[" in Blackrock Mountain online with a level 60 hero this cycle."]
+                .. L.IN_BLACKROCK_MOUNTAIN_ONLINE_WITH_A_LEVEL_60_HERO_SUFFIX
     elseif not whole(targetTier, 0, difficulty.maxTier) then
-        eligible, reason = false, L["Choose an unlocked difficulty tier."]
+        eligible, reason = false, L.CHOOSE_AN_UNLOCKED_DIFFICULTY_TIER
     end
     local record = difficulty.records[state.tier]
     local gain = difficulty.cycleComplete and not (record and record.rewarded) and state.tier + 1
@@ -212,18 +207,18 @@ function G.PrestigePlusPreview(state, targetTier)
         targetTier = targetTier,
         inheritance = gain,
         retained = {
-            L["Heroes, talents, earned points and Mastery"],
-            L["Adventure rank, partial XP, Essence and Heritage"],
-            L["Heirlooms, collection records and permanent purchases"],
-            L["Boost ownership, cooldowns, rules, profiles and route templates"],
-            L["Profession ownership, learned recipes, specializations and allocations"],
-            L["Unlocked tiers, Inheritance and enabled preferences"],
+            L.HEROES_TALENTS_EARNED_POINTS_AND_MASTERY,
+            L.ADVENTURE_RANK_PARTIAL_XP_ESSENCE_AND_HERITAGE,
+            L.HEIRLOOMS_COLLECTION_RECORDS_AND_PERMANENT_PURCHASES,
+            L.BOOST_OWNERSHIP_COOLDOWNS_RULES_PROFILES_AND_ROUTE_TEMPLATES,
+            L.PROFESSION_OWNERSHIP_LEARNED_RECIPES_SPECIALIZATIONS_AND_ALLOCATIONS,
+            L.UNLOCKED_TIERS_INHERITANCE_AND_ENABLED_PREFERENCES,
         },
         rebuilt = {
-            L["Hero levels, XP, ordinary equipment and inventory"],
-            L["Gold, zone materials, Runic fragments and profession cycle ranks/XP"],
-            L["Run destinations, safe encounters and route cursor"],
-            L["Active boosts end; cooldown deadlines remain"],
+            L.HERO_LEVELS_XP_ORDINARY_EQUIPMENT_AND_INVENTORY,
+            L.GOLD_ZONE_MATERIALS_RUNIC_FRAGMENTS_AND_PROFESSION_CYCLE_RANKS,
+            L.RUN_DESTINATIONS_SAFE_ENCOUNTERS_AND_ROUTE_CURSOR,
+            L.ACTIVE_BOOSTS_END_COOLDOWN_DEADLINES_REMAIN,
         },
     }
 end
@@ -252,11 +247,11 @@ function G.PrestigePlus(state, targetTier)
     state.tier = targetTier
     G.Log(
         state,
-        L["Transcendence "]
+        L.TRANSCENDENCE_PREFIX
             .. targetTier
-            .. L[" begins. +"]
+            .. L.BEGINS_SUFFIX
             .. preview.inheritance
-            .. L[" Inheritance. Permanent progress retained."],
+            .. L.INHERITANCE_PERMANENT_PROGRESS_RETAINED_SUFFIX,
         nil,
         "progress"
     )

@@ -12,41 +12,41 @@ function Tutorial.MenuHint(state, id)
     local conditions = {
         routes = {
             not G.FeatureHint(state, "routes"),
-            L["you unlock difficulty tier 3"],
+            L.YOU_UNLOCK_DIFFICULTY_TIER_3,
         },
         boosts = {
             not G.FeatureHint(state, "boosts"),
-            L["a hero reaches idle level 22"],
+            L.A_HERO_REACHES_IDLE_LEVEL_22,
         },
         profiles = {
             automation or next(state.boostProfiles.entries) ~= nil,
-            L["you learn automation"],
+            L.YOU_LEARN_AUTOMATION,
         },
         development = {
             state.essence > 0 or (state.stats.essence or 0) > 0 or state.development.invested > 0,
-            L["you earn Essence"],
+            L.YOU_EARN_ESSENCE,
         },
         collections = {
             state.adventure.rank >= 2 or next(state.outdoorCollections.pieces) ~= nil or next(
                 state.dungeonCollections.pieces
             ) ~= nil or next(state.collectionBook.pieces) ~= nil,
-            L["you reach Adventure rank 2 or find a collection piece"],
+            L.YOU_REACH_ADVENTURE_RANK_2_OR_FIND_A_COLLECTION,
         },
         legacy = {
             state.prestigeUnlocked or state.prestiges > 0 or state.legacy > 0,
-            L["you unlock your first chapter reset"],
+            L.YOU_UNLOCK_YOUR_FIRST_CHAPTER_RESET,
         },
         difficulty = {
             state.difficulty.unlocked,
             string.format(
-                L["a level 60 hero defeats %s in Blackrock Mountain online"],
+                L.A_LEVEL_60_HERO_DEFEATS_IN_BLACKROCK_MOUNTAIN_ONLINE,
                 C.transcendenceBoss.name
             ),
         },
-        enchanting = { professions.enchanting, L["a hero reaches idle level 30"] },
-        titanforging = { professions.titanforging, L["a hero reaches idle level 50"] },
-        research = { professions.research, L["a hero reaches idle level 60"] },
-        crafting = { best >= 1, L["you recruit your first hero"] },
+        enchanting = { professions.enchanting, L.A_HERO_REACHES_IDLE_LEVEL_30 },
+        titanforging = { professions.titanforging, L.A_HERO_REACHES_IDLE_LEVEL_50 },
+        research = { professions.research, L.A_HERO_REACHES_IDLE_LEVEL_60 },
+        crafting = { best >= 1, L.YOU_RECRUIT_YOUR_FIRST_HERO },
     }
     local condition = conditions[id]
     if not condition then
@@ -57,7 +57,7 @@ function Tutorial.MenuHint(state, id)
         state.guide[key] = true
     end
     if state.guide[key] ~= true then
-        return L["Discover this when "] .. condition[2] .. "."
+        return L.DISCOVER_THIS_WHEN_PREFIX .. condition[2] .. "."
     end
 end
 
@@ -111,25 +111,25 @@ function Tutorial.NextLesson(state)
         state,
         "lessonBoost",
         "boosts",
-        L["Choose a Commander boost, learn it and equip it. Activate for temporary party support. Uses are free; cooldowns survive both resets."],
+        L.CHOOSE_A_COMMANDER_BOOST_LEARN_IT_AND_EQUIP_IT,
         not G.FeatureHint(state, "boosts") and affordable and (state.stats.boostUses or 0) == 0
     ) or lesson(
         state,
         "lessonDevelopment",
         "development",
-        L["Spend Essence in Growth for permanent party bonuses. Compare Current and Next rank before buying. Refund ranks for free; hero levels and equipment need no Essence."],
+        L.SPEND_ESSENCE_IN_GROWTH_FOR_PERMANENT_PARTY_BONUSES_COMPARE,
         state.development.invested == 0 and state.essence >= G.DevelopmentQuote(state, "might").cost
     ) or lesson(
         state,
         "lessonLegacy",
         "legacy",
-        L["Review your first chapter reset in Heritage. Check the rewards and losses before confirming. Permanent progress stays with your company."],
+        L.REVIEW_YOUR_FIRST_CHAPTER_RESET_IN_HERITAGE_CHECK_THE,
         state.prestigeUnlocked and state.prestiges == 0 and G.PrestigeReward(state) > 0
     ) or lesson(
         state,
         "lessonAutomation",
         "boosts",
-        L["Learn automation in Commander with Heritage. Turn on Automation and Auto-cast, then choose a trigger. The status explains why it is waiting."],
+        L.LEARN_AUTOMATION_IN_COMMANDER_WITH_HERITAGE_TURN_ON_AUTOMATION,
         owned
             and not automation.enabled
             and not G.FeatureHint(state, "onCooldown")
@@ -138,13 +138,13 @@ function Tutorial.NextLesson(state)
         state,
         "lessonProfiles",
         "profiles",
-        L["Save your boost, automation, route preferences and set effect in a profile. Apply it for free; cooldowns and active effects stay unchanged."],
+        L.SAVE_YOUR_BOOST_AUTOMATION_ROUTE_PREFERENCES_AND_SET_EFFECT,
         next(automation.owned) ~= nil and next(state.boostProfiles.entries) == nil
     ) or lesson(
         state,
         "lessonRoutes",
         "routes",
-        L["Learn route planning, add destinations and milestones, then save and enable the route. Travel happens between encounters. Manual travel pauses it until Resume."],
+        L.LEARN_ROUTE_PLANNING_ADD_DESTINATIONS_AND_MILESTONES_THEN_SAVE,
         not G.FeatureHint(state, "routes")
             and (state.routes.owned or state.legacy >= 1)
             and #state.routes.templates == 0
@@ -152,43 +152,43 @@ function Tutorial.NextLesson(state)
         state,
         "lessonHunt",
         "collections",
-        L["Hover a missing collection piece for its creatures, location and chance. Hunt with your real WoW character; idle battles and offline routes do not count."],
+        L.HOVER_A_MISSING_COLLECTION_PIECE_FOR_ITS_CREATURES_LOCATION,
         huntAvailable and state.adventure.rank >= 2 and next(state.outdoorCollections.pieces) == nil
     ) or lesson(
         state,
         "lessonCollections",
         "collections",
-        L["Browse sets and hover pieces for their sources. Complete a set to select its effect. Only 1 set effect can be active; discoveries survive both resets."],
+        L.BROWSE_SETS_AND_HOVER_PIECES_FOR_THEIR_SOURCES_COMPLETE,
         collection
     ) or lesson(
         state,
         "lessonMastery",
         "talents",
-        L["Mastery unlocks permanently at hero level 20. Win at your current-tier encounter frontier or higher to earn XP. Each Mastery rank adds 1 permanent talent point."],
+        L.MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT,
         mastery
     ) or lesson(
         state,
         "lessonEnchanting",
         "workshop",
-        L["Enchanting is unlocked in Forge. Choose a hero, equipped item and enchantment. Applying replaces the old enchantment; heirloom upgrades survive both resets."],
+        L.ENCHANTING_IS_UNLOCKED_IN_FORGE_CHOOSE_A_HERO_EQUIPPED,
         professions.enchanting and not enchanted
     ) or lesson(
         state,
         "lessonTitanforging",
         "workshop",
-        L["Titanforging is unlocked in Forge. Raise equipped item potential through 5 tiers, separately from enhancement and enchanting. Check the preview and cost before applying."],
+        L.TITANFORGING_IS_UNLOCKED_IN_FORGE_RAISE_EQUIPPED_ITEM_POTENTIAL,
         professions.titanforging and not forged
     ) or lesson(
         state,
         "lessonResearch",
         "workshop",
-        L["Specializations are unlocked in Forge. Paid work earns profession points. Your plan survives Transcendence and reactivates as work ranks rebuild."],
+        L.SPECIALIZATIONS_ARE_UNLOCKED_IN_FORGE_PAID_WORK_EARNS_PROFESSION,
         professions.research and not specialized
     ) or lesson(
         state,
         "lessonPrestigePlus",
         "difficulty",
-        L["Transcendence is unlocked. Review a tier and its reset losses before confirming. Permanent tools remain; profession work resets. Each completed tier pays Inheritance once."],
+        L.TRANSCENDENCE_IS_UNLOCKED_REVIEW_A_TIER_AND_ITS_RESET,
         state.difficulty.unlocked and state.difficulty.ascensions == 0
     )
 end
@@ -284,13 +284,13 @@ function Tutorial.Refresh(ui)
         or "atlas"
     if s.ui.tab ~= tab then
         local messages = {
-            [2] = L["Your company has equipment it can use. Click Party to equip your first reward."],
-            [3] = L["You have an unspent talent point. Click Talents to explore your hero’s three talent trees."],
-            [4] = L["A harder destination is unlocked. Click World map to choose your next frontier."],
-            [5] = L["You can afford to craft an equipment upgrade for "]
+            [2] = L.YOUR_COMPANY_HAS_EQUIPMENT_IT_CAN_USE_CLICK_PARTY,
+            [3] = L.YOU_HAVE_AN_UNSPENT_TALENT_POINT_CLICK_TALENTS_TO,
+            [4] = L.A_HARDER_DESTINATION_IS_UNLOCKED_CLICK_WORLD_MAP_TO,
+            [5] = L.YOU_CAN_AFFORD_TO_CRAFT_AN_EQUIPMENT_UPGRADE_FOR_PREFIX
                 .. s.heroes[hero or ui.selected].name
-                .. L[". Click Forge to make it."],
-            [6] = L["Your crafted upgrade is ready. Click Party to equip it from your shared inventory."],
+                .. L.CLICK_FORGE_TO_MAKE_IT,
+            [6] = L.YOUR_CRAFTED_UPGRADE_IS_READY_CLICK_PARTY_TO_EQUIP,
         }
         show(ui, ui.tabs[tab], messages[step], nil, true)
         return
@@ -299,13 +299,13 @@ function Tutorial.Refresh(ui)
         show(
             ui,
             step == 5 and ui.craftControls and ui.craftControls.hero or ui.cards[hero],
-            (step == 5 and L["Choose "] or L["Click "])
+            (step == 5 and L.CHOOSE_PREFIX or L.CLICK_PREFIX)
                 .. s.heroes[hero].name
-                .. L[" to use their available "]
+                .. L.FRAGMENT_TO_USE_THEIR_AVAILABLE
                 .. (
-                    (step == 2 or step == 6) and L["equipment."]
-                    or step == 5 and L["crafting upgrade."]
-                    or L["talent point."]
+                    (step == 2 or step == 6) and L.EQUIPMENT_2
+                    or step == 5 and L.CRAFTING_UPGRADE
+                    or L.TALENT_POINT
                 )
         )
         return
@@ -317,16 +317,16 @@ function Tutorial.Refresh(ui)
                 ui,
                 target,
                 step == 6
-                        and (L["Click "] .. L[craft.item.name] .. L[" to equip your crafted upgrade. Its stats take effect immediately."])
-                    or L["Click this item to equip it. Green power values show improvements; replaced equipment returns to your shared inventory."]
+                        and (L.CLICK_PREFIX .. G.ItemName(craft.item) .. L.TO_EQUIP_YOUR_CRAFTED_UPGRADE_ITS_STATS_TAKE_EFFECT_SUFFIX)
+                    or L.CLICK_THIS_ITEM_TO_EQUIP_IT_GREEN_POWER_VALUES
             )
         else
             show(
                 ui,
                 ui.guideInventoryTarget,
-                L["Click "]
-                    .. (ui.guideInventoryLabel or L["Clear filters"])
-                    .. L[" to find equipment this hero can use."]
+                L.CLICK_PREFIX
+                    .. (ui.guideInventoryLabel or L.CLEAR_FILTERS)
+                    .. L.TO_FIND_EQUIPMENT_THIS_HERO_CAN_USE_SUFFIX
             )
         end
     elseif step == 3 then
@@ -348,9 +348,9 @@ function Tutorial.Refresh(ui)
                 ui,
                 ui.talentTrees.trees[path],
                 names[path]
-                    .. L[" talent tree"]
+                    .. L.TALENT_TREE_SUFFIX
                     .. example
-                    .. L["\n\nHover icons to compare talents. Green talents can be learned now. Mix trees and respec freely. Talents and earned points survive prestige."],
+                    .. L.HOVER_ICONS_TO_COMPARE_TALENTS_GREEN_TALENTS_CAN_BE_SUFFIX,
                 path + 1
             )
         else
@@ -360,9 +360,9 @@ function Tutorial.Refresh(ui)
                     show(
                         ui,
                         node,
-                        L["Click "]
+                        L.CLICK_PREFIX
                             .. talent.name
-                            .. L[" to spend 1 talent point, or choose another green talent. Click a learned talent to refund it for free."]
+                            .. L.TO_SPEND_1_TALENT_POINT_OR_CHOOSE_ANOTHER_GREEN_SUFFIX
                     )
                     return
                 end
@@ -374,25 +374,25 @@ function Tutorial.Refresh(ui)
             show(
                 ui,
                 craft.heirloom and controls.heirloom or controls.ordinary,
-                L["Click "]
-                    .. (craft.heirloom and L["Heirloom"] or L["Ordinary"])
-                    .. L[" to use an affordable recipe that improves this hero’s equipment."]
+                L.CLICK_PREFIX
+                    .. (craft.heirloom and L.HEIRLOOM or L.ORDINARY)
+                    .. L.TO_USE_AN_AFFORDABLE_RECIPE_THAT_IMPROVES_THIS_HERO_SUFFIX
             )
         elseif (ui.craftSlot or 1) ~= craft.slot then
             show(
                 ui,
                 controls.slots[craft.slot],
-                L["Click "]
+                L.CLICK_PREFIX
                     .. C.slots[craft.slot]
-                    .. L[" to craft an upgrade for this equipment slot."]
+                    .. L.TO_CRAFT_AN_UPGRADE_FOR_THIS_EQUIPMENT_SLOT_SUFFIX
             )
         elseif (ui.craftMaterial or "timber") ~= craft.material then
             show(
                 ui,
                 controls.materials[craft.material],
-                L["Click "]
+                L.CLICK_PREFIX
                     .. C.materials[craft.material]
-                    .. L[". You have enough of this material for the recipe; the full cost is shown beside it."]
+                    .. L.YOU_HAVE_ENOUGH_OF_THIS_MATERIAL_FOR_THE_RECIPE
             )
         else
             local h = s.heroes[hero]
@@ -400,13 +400,13 @@ function Tutorial.Refresh(ui)
             show(
                 ui,
                 controls.craft,
-                L["Click Craft for "]
+                L.CLICK_CRAFT_FOR_PREFIX
                     .. h.name
-                    .. L[" to make "]
-                    .. L[craft.item.name]
+                    .. L.FRAGMENT_TO_MAKE
+                    .. G.ItemName(craft.item)
                     .. " (+"
                     .. gain
-                    .. L[" power). This spends the shown gold and idle materials and puts the item in your shared inventory."],
+                    .. L.POWER_THIS_SPENDS_THE_SHOWN_GOLD_AND_IDLE_MATERIALS_SUFFIX,
                 nil,
                 true
             )
@@ -422,9 +422,9 @@ function Tutorial.Refresh(ui)
                 show(
                     ui,
                     map,
-                    L["Hover "]
+                    L.HOVER_PREFIX
                         .. focus.name
-                        .. L[" for its rewards, then click to travel. Travel abandons the current encounter without rewards."]
+                        .. L.FOR_ITS_REWARDS_THEN_CLICK_TO_TRAVEL_TRAVEL_ABANDONS_SUFFIX
                 )
                 return
             end

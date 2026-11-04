@@ -6,7 +6,7 @@ W.CollectionPanel = P
 
 function P.SourceLabel(source)
     return source
-            and ((source.familyName or L["Eligible creatures"]) .. " · " .. (source.zone or L["Unknown location"]))
+            and ((source.familyName or L.ELIGIBLE_CREATURES) .. " · " .. (source.zone or L.UNKNOWN_LOCATION))
         or ""
 end
 
@@ -51,8 +51,7 @@ end
 
 function P.DropChanceLabel(state, profile)
     local chance, bonus = G.CollectionDropChance(state, profile)
-    local details =
-        string.format(L["%.2f%% chance per eligible kill (base %.2f%%)."], chance, profile.chance)
+    local details = string.format(L.CHANCE_PER_ELIGIBLE_KILL_BASE, chance, profile.chance)
     for _, talent in ipairs(C.collectionTalents) do
         local rank = state.collectionTalents[talent.id] or 0
         if rank > 0 then
@@ -62,12 +61,12 @@ function P.DropChanceLabel(state, profile)
                 .. talent.name
                 .. ": "
                 .. (
-                    active and string.format(L["Active (+%.0f%% of base)"], bonus * 100)
-                    or L["Inactive ("] .. talent.condition .. L[" only)"]
+                    active and string.format(L.ACTIVE_OF_BASE, bonus * 100)
+                    or L.INACTIVE .. talent.condition .. L.ONLY_SUFFIX
                 )
         end
     end
-    return details .. L["\nEach kill rolls independently; no guaranteed drop."]
+    return details .. L.EACH_KILL_ROLLS_INDEPENDENTLY_NO_GUARANTEED_DROP_SUFFIX
 end
 
 function P.Draw(ui, parent, state)
@@ -81,14 +80,8 @@ function P.Draw(ui, parent, state)
     local frame = ui.collectionFrame
     frame:Show()
     U.Begin(frame)
-    U.Text(frame, L["SET CATALOG"], 0, 0, 24, T.gold, 800)
-    U.Help(
-        frame,
-        L["Collections"],
-        1258,
-        0,
-        L["Hover a piece for its source and chance. Gray pieces are missing.\n\nDiscover pieces through eligible real WoW kills. Idle battles and crafting do not count. Discoveries and passive bonuses survive both resets.\n\nComplete a set to select its effect. Only one set effect can be active."]
-    )
+    U.Text(frame, L.SET_CATALOG_HEADING, 0, 0, 24, T.gold, 800)
+    U.Help(frame, L.COLLECTIONS, 1258, 0, L.HOVER_A_PIECE_FOR_ITS_SOURCE_AND_CHANCE_GRAY)
     U.EndBuild(frame)
     U.Begin(frame.catalog)
     ui.collectionRows = {}
@@ -106,7 +99,7 @@ function P.Draw(ui, parent, state)
         U.SingleLine(U.Text(row, entry.name, 58, 9, 14, T.gold), 240, 22)
         row.statusText = U.Text(
             row,
-            status.complete and L["Complete"] or status.found .. "/" .. status.count,
+            status.complete and L.COMPLETE or status.found .. "/" .. status.count,
             58,
             35,
             13,
@@ -133,16 +126,16 @@ function P.Draw(ui, parent, state)
         card.icon:SetParent(card.content or card)
         card.icon:SetDesaturated(not found)
         card.icon:SetAlpha(found and 1 or 0.45)
-        U.Text(card, L[item.name], 74, 25, 15, found and T.gold or T.muted, 210)
+        U.Text(card, G.ItemName(item), 74, 25, 15, found and T.gold or T.muted, 210)
         U.EndBuild(card)
         local details = P.SourceLabel(source)
         if profile and profile.enabled and profile.verified and source and source.verified then
             details = details .. "\n\n" .. P.DropChanceLabel(state, profile)
         else
-            details = L["Hunting unavailable on this client build. Sources are not verified. "]
-                .. L["Discoveries already earned are kept."]
+            details = L.HUNTING_UNAVAILABLE_ON_THIS_CLIENT_BUILD_SOURCES_ARE_NOT_PREFIX
+                .. L.DISCOVERIES_ALREADY_EARNED_ARE_KEPT
         end
-        U.Tooltip(card, L[item.name], details, 400)
+        U.Tooltip(card, G.ItemName(item), details, 400)
     end
     local session = G.HuntSessionSummary(state, W.Client.Now())
     local current = kind == "dungeon" and session and session.dungeon
@@ -154,24 +147,24 @@ function P.Draw(ui, parent, state)
             and (kind == "dungeon" and previous.dungeon or kind == "outdoor" and previous)
     local sessionText = report
             and string.format(
-                L[" | %s%s hunt: %d kills | Finds: %d"],
-                meaningful and L["Session"] or L["Previous"],
-                kind == "dungeon" and L[" dungeon"] or "",
+                L.HUNT_KILLS_FINDS_SUFFIX,
+                meaningful and L.SESSION or L.PREVIOUS,
+                kind == "dungeon" and L.DUNGEON_SUFFIX or "",
                 report.kills,
                 report.discoveries
             )
-        or previous and kind == "dungeon" and L[" | Previous dungeon hunt: Unrecorded"]
+        or previous and kind == "dungeon" and L.PREVIOUS_DUNGEON_HUNT_UNRECORDED_SUFFIX
         or ""
     ui.collectionProgress = U.Text(
         parent,
         progress.found
             .. "/"
             .. progress.count
-            .. L[" pieces · "]
+            .. L.FRAGMENT_PIECES
             .. book.stats.kills
-            .. L[" eligible "]
+            .. L.FRAGMENT_ELIGIBLE
             .. kind
-            .. L[" kills"]
+            .. L.KILLS_SUFFIX
             .. sessionText,
         0,
         330,
@@ -183,7 +176,7 @@ function P.Draw(ui, parent, state)
     local active = effectID == collection.id
     ui.collectionEffect = U.Button(
         parent,
-        active and L["Clear set effect"] or L["Select set effect"],
+        active and L.CLEAR_SET_EFFECT or L.SELECT_SET_EFFECT,
         0,
         272,
         440,
@@ -196,26 +189,23 @@ function P.Draw(ui, parent, state)
     U.Enabled(ui.collectionEffect, progress.complete)
     local effectText = collection.effect.damageTaken
             and string.format(
-                L["%.0f%% less damage from %s"],
+                L.LESS_DAMAGE_FROM,
                 (1 - collection.effect.damageTaken) * 100,
                 collection.effect.family
             )
-        or string.format(
-            L["+%.0f%% basic-attack damage"],
-            (collection.effect.basicAttack or 0) * 100
-        )
+        or string.format(L.BASIC_ATTACK_DAMAGE, (collection.effect.basicAttack or 0) * 100)
     U.Tooltip(
         ui.collectionEffect,
-        L["One active collection effect"],
-        L["Complete the set to select: "]
+        L.ONE_ACTIVE_COLLECTION_EFFECT,
+        L.COMPLETE_THE_SET_TO_SELECT_PREFIX
             .. effectText
-            .. L[". Replaces your current set effect. Passive discovery bonuses stay active."]
+            .. L.REPLACES_YOUR_CURRENT_SET_EFFECT_PASSIVE_DISCOVERY_BONUSES_STAY
     )
-    U.Text(parent, L["SET BONUSES"], 0, 378, 16, T.gold, 930)
+    U.Text(parent, L.SET_BONUSES_HEADING, 0, 378, 16, T.gold, 930)
     ui.collectionMilestones = U.Text(
         parent,
         string.format(
-            L["%d pieces: +%.1f%% basic-attack damage\n%d pieces: +%.1f%% materials\nComplete: %s (selectable)"],
+            L.PIECES_BASIC_ATTACK_DAMAGE_PIECES_MATERIALS_COMPLETE_SELECTABLE,
             collection.milestones.basicAttack.pieces,
             collection.milestones.basicAttack.bonus * 100,
             collection.milestones.materials.pieces,
@@ -230,9 +220,9 @@ function P.Draw(ui, parent, state)
     )
     ui.collectionEffectStatus = U.Text(
         parent,
-        active and L["Active effect: "] .. collection.name
-            or L["Active effect: "]
-                .. (effectID and C.collectionByID[effectID].name or L["None"]),
+        active and L.ACTIVE_EFFECT_PREFIX .. collection.name
+            or L.ACTIVE_EFFECT_PREFIX
+                .. (effectID and C.collectionByID[effectID].name or L.NONE),
         0,
         466,
         14,
@@ -250,15 +240,15 @@ function P.Draw(ui, parent, state)
                 .. record.count
                 .. (
                     record.completedRank
-                        and L[" · legacy completed tier "] .. record.completedRank
-                    or L[" · incomplete"]
+                        and L.FRAGMENT_LEGACY_COMPLETED_TIER .. record.completedRank
+                    or L.INCOMPLETE_SUFFIX
                 )
         end
     end
     local bonus = G.LegacyCollectionBonuses(state, "humanoid")
     ui.collectionLegacyStatus = U.Text(
         parent,
-        #legacy > 0 and L["LEGACY COLLECTIONS · "] .. table.concat(legacy, " | ") or "",
+        #legacy > 0 and L.LEGACY_COLLECTIONS_HEADING .. table.concat(legacy, " | ") or "",
         0,
         500,
         13,
@@ -268,11 +258,11 @@ function P.Draw(ui, parent, state)
     if #legacy > 0 then
         U.Help(
             parent,
-            L["Earlier collection bonuses"],
+            L.EARLIER_COLLECTION_BONUSES,
             900,
             500,
             string.format(
-                L["Earlier discoveries are retained; these retired pieces no longer drop.\n\nBasic-attack damage: +%.2f%%\nMaterials: +%.2f%%\nHumanoid damage taken: -%.2f%%"],
+                L.EARLIER_DISCOVERIES_ARE_RETAINED_THESE_RETIRED_PIECES_NO_LONGER,
                 (bonus.basicAttack - 1) * 100,
                 (bonus.materials - 1) * 100,
                 (1 - bonus.damageTaken) * 100

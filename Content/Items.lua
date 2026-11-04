@@ -22,23 +22,23 @@ C.itemStatOrder = {
     "shadowResistance",
 }
 C.itemStatNames = {
-    strength = L["Strength"],
-    agility = L["Agility"],
-    intellect = L["Intellect"],
-    stamina = L["Stamina"],
-    spirit = L["Spirit"],
-    haste = L["Haste"],
-    armor = L["Armor"],
-    weaponDPS = L["Weapon DPS"],
-    attackPower = L["Attack Power"],
-    spellPower = L["Spell Power"],
-    healingPower = L["Healing Power"],
-    healthRegen = L["Health / 5 sec"],
-    arcaneResistance = L["Arcane Resistance"],
-    fireResistance = L["Fire Resistance"],
-    frostResistance = L["Frost Resistance"],
-    natureResistance = L["Nature Resistance"],
-    shadowResistance = L["Shadow Resistance"],
+    strength = L.STRENGTH,
+    agility = L.AGILITY,
+    intellect = L.INTELLECT,
+    stamina = L.STAMINA,
+    spirit = L.SPIRIT,
+    haste = L.HASTE,
+    armor = L.ARMOR,
+    weaponDPS = L.WEAPON_DPS,
+    attackPower = L.ATTACK_POWER,
+    spellPower = L.SPELL_POWER,
+    healingPower = L.HEALING_POWER,
+    healthRegen = L.HEALTH_5_SEC,
+    arcaneResistance = L.ARCANE_RESISTANCE,
+    fireResistance = L.FIRE_RESISTANCE,
+    frostResistance = L.FROST_RESISTANCE,
+    natureResistance = L.NATURE_RESISTANCE,
+    shadowResistance = L.SHADOW_RESISTANCE,
 }
 C.primaryStats = {
     WARRIOR = "strength",
@@ -53,54 +53,88 @@ C.primaryStats = {
 }
 
 -- Fixed Classic-era tooltip snapshots; see Content/ITEMS.md. No client cache required.
-C.items, C.itemByID = {}, {}
-local function item(id, name, icon, slot, quality, requiredLevel, stats, note)
+C.items, C.itemByID, C.itemNames, C.itemNotes = {}, {}, {}, {}
+local function item(id, nameKey, icon, slot, quality, requiredLevel, stats, noteKey)
     local entry = {
         itemID = id,
-        name = name,
+        name = W.Locales.enUS[nameKey],
         icon = icon,
         slot = slot,
         quality = quality,
         requiredLevel = requiredLevel,
         level = math.max(1, math.ceil(requiredLevel / 4)),
         stats = stats,
-        note = note,
+        note = noteKey and W.Locales.enUS[noteKey],
     }
+    C.itemNames[id] = L[nameKey]
+    C.itemNotes[id] = noteKey and L[noteKey]
     C.items[#C.items + 1], C.itemByID[id] = entry, entry
 end
 
-item(25, "Worn Shortsword", "inv_sword_04", 1, 1, 1, { weaponDPS = 1.05 })
-item(35, "Bent Staff", "inv_staff_08", 1, 1, 1, { weaponDPS = 1.38 })
-item(36, "Worn Mace", "inv_mace_03", 1, 1, 1, { weaponDPS = 1.05 })
-item(37, "Worn Axe", "inv_axe_11", 1, 1, 1, { weaponDPS = 1.0 })
+item(25, "ITEM_WORN_SHORTSWORD", "inv_sword_04", 1, 1, 1, { weaponDPS = 1.05 })
+item(35, "ITEM_BENT_STAFF", "inv_staff_08", 1, 1, 1, { weaponDPS = 1.38 })
+item(36, "ITEM_WORN_MACE", "inv_mace_03", 1, 1, 1, { weaponDPS = 1.05 })
+item(37, "ITEM_WORN_AXE", "inv_axe_11", 1, 1, 1, { weaponDPS = 1.0 })
 item(
     821,
-    "Riverpaw Leather Vest",
+    "ITEM_RIVERPAW_LEATHER_VEST",
     "inv_shirt_07",
     2,
     2,
     8,
     { agility = 1, stamina = 2, armor = 65 }
 )
-item(935, "Night Watch Shortsword", "inv_sword_26", 1, 3, 15, { stamina = 4, weaponDPS = 13.46 })
+item(
+    935,
+    "ITEM_NIGHT_WATCH_SHORTSWORD",
+    "inv_sword_26",
+    1,
+    3,
+    15,
+    { stamina = 4, weaponDPS = 13.46 }
+)
 item(
     1455,
-    "Blackrock Champion's Axe",
+    "ITEM_BLACKROCK_CHAMPION_S_AXE",
     "inv_weapon_halbard_01",
     1,
     2,
     19,
     { strength = 8, weaponDPS = 16.09 }
 )
-item(1539, "Gnarled Hermit's Staff", "inv_staff_17", 1, 2, 14, { spirit = 6, weaponDPS = 12.5 })
-item(5111, "Rathorian's Cape", "inv_helmet_48", 4, 2, 10, { stamina = 2, armor = 14 })
-item(1930, "Stonemason Cloak", "inv_misc_cape_11", 4, 2, 13, { stamina = 3, armor = 16 })
-item(2961, "Burnt Leather Vest", "inv_shirt_09", 2, 2, 6, { spirit = 2, armor = 58 })
-item(2973, "Hunting Tunic", "inv_chest_wolf", 2, 2, 12, { agility = 2, stamina = 4, armor = 73 })
-item(2981, "Seer's Robe", "inv_chest_cloth_08", 2, 2, 16, { intellect = 6, spirit = 3, armor = 35 })
+item(
+    1539,
+    "ITEM_GNARLED_HERMIT_S_STAFF",
+    "inv_staff_17",
+    1,
+    2,
+    14,
+    { spirit = 6, weaponDPS = 12.5 }
+)
+item(5111, "ITEM_RATHORIAN_S_CAPE", "inv_helmet_48", 4, 2, 10, { stamina = 2, armor = 14 })
+item(1930, "ITEM_STONEMASON_CLOAK", "inv_misc_cape_11", 4, 2, 13, { stamina = 3, armor = 16 })
+item(2961, "ITEM_BURNT_LEATHER_VEST", "inv_shirt_09", 2, 2, 6, { spirit = 2, armor = 58 })
+item(
+    2973,
+    "ITEM_HUNTING_TUNIC",
+    "inv_chest_wolf",
+    2,
+    2,
+    12,
+    { agility = 2, stamina = 4, armor = 73 }
+)
+item(
+    2981,
+    "ITEM_SEER_S_ROBE",
+    "inv_chest_cloth_08",
+    2,
+    2,
+    16,
+    { intellect = 6, spirit = 3, armor = 35 }
+)
 item(
     2985,
-    "Inscribed Leather Breastplate",
+    "ITEM_INSCRIBED_LEATHER_BREASTPLATE",
     "inv_chest_leather_09",
     2,
     2,
@@ -109,17 +143,25 @@ item(
 )
 item(
     3055,
-    "Forest Leather Chestpiece",
+    "ITEM_FOREST_LEATHER_CHESTPIECE",
     "inv_chest_leather_08",
     2,
     2,
     21,
     { stamina = 4, spirit = 7, armor = 87 }
 )
-item(3069, "Bright Robe", "inv_chest_cloth_26", 2, 2, 22, { intellect = 4, spirit = 8, armor = 41 })
+item(
+    3069,
+    "ITEM_BRIGHT_ROBE",
+    "inv_chest_cloth_26",
+    2,
+    2,
+    22,
+    { intellect = 4, spirit = 8, armor = 41 }
+)
 item(
     4038,
-    "Nightsky Robe",
+    "ITEM_NIGHTSKY_ROBE",
     "inv_chest_cloth_28",
     2,
     2,
@@ -128,7 +170,7 @@ item(
 )
 item(
     4057,
-    "Insignia Chestguard",
+    "ITEM_INSIGNIA_CHESTGUARD",
     "inv_chest_leather_06",
     2,
     2,
@@ -137,7 +179,7 @@ item(
 )
 item(
     4074,
-    "Mail Combat Armor",
+    "ITEM_MAIL_COMBAT_ARMOR",
     "inv_chest_chain_13",
     2,
     2,
@@ -146,7 +188,7 @@ item(
 )
 item(
     12988,
-    "Starsight Tunic",
+    "ITEM_STARSIGHT_TUNIC",
     "inv_chest_leather_10",
     2,
     3,
@@ -155,14 +197,14 @@ item(
 )
 item(
     13110,
-    "Wolffear Harness",
+    "ITEM_WOLFFEAR_HARNESS",
     "inv_chest_leather_04",
     2,
     3,
     31,
     { agility = 17, stamina = 6, spirit = 3, armor = 113 }
 )
-item(13009, "Cow King's Hide", "inv_chest_leather_06", 2, 3, 46, {
+item(13009, "ITEM_COW_KING_S_HIDE", "inv_chest_leather_06", 2, 3, 46, {
     stamina = 10,
     armor = 148,
     arcaneResistance = 10,
@@ -173,18 +215,34 @@ item(13009, "Cow King's Hide", "inv_chest_leather_06", 2, 3, 46, {
 })
 item(
     13123,
-    "Dreamwalker Armor",
+    "ITEM_DREAMWALKER_ARMOR",
     "inv_chest_chain_06",
     2,
     3,
     57,
     { stamina = 17, intellect = 20, spirit = 20, armor = 365 }
 )
-item(2721, "Holy Shroud", "inv_helmet_16", 3, 3, 27, { spirit = 6, armor = 40, healingPower = 33 })
-item(3020, "Enduring Cap", "inv_helmet_15", 3, 3, 28, { intellect = 16, spirit = 7, armor = 88 })
+item(
+    2721,
+    "ITEM_HOLY_SHROUD",
+    "inv_helmet_16",
+    3,
+    3,
+    27,
+    { spirit = 6, armor = 40, healingPower = 33 }
+)
+item(
+    3020,
+    "ITEM_ENDURING_CAP",
+    "inv_helmet_15",
+    3,
+    3,
+    28,
+    { intellect = 16, spirit = 7, armor = 88 }
+)
 item(
     13102,
-    "Cassandra's Grace",
+    "ITEM_CASSANDRA_S_GRACE",
     "inv_jewelry_ring_03",
     3,
     3,
@@ -193,7 +251,7 @@ item(
 )
 item(
     13113,
-    "Feathermoon Headdress",
+    "ITEM_FEATHERMOON_HEADDRESS",
     "inv_helmet_04",
     3,
     3,
@@ -202,17 +260,25 @@ item(
 )
 item(
     13014,
-    "Axe of Rin'ji",
+    "ITEM_AXE_OF_RIN_JI",
     "inv_axe_21",
     1,
     3,
     48,
     { agility = 5, stamina = 11, weaponDPS = 35.0 }
 )
-item(13015, "Serathil", "inv_axe_08", 1, 3, 56, { strength = 9, armor = 100, weaponDPS = 40.0 })
+item(
+    13015,
+    "ITEM_SERATHIL",
+    "inv_axe_08",
+    1,
+    3,
+    56,
+    { strength = 9, armor = 100, weaponDPS = 40.0 }
+)
 item(
     13022,
-    "Gryphonwing Long Bow",
+    "ITEM_GRYPHONWING_LONG_BOW",
     "inv_weapon_bow_11",
     1,
     3,
@@ -221,7 +287,7 @@ item(
 )
 item(
     13023,
-    "Eaglehorn Long Bow",
+    "ITEM_EAGLEHORN_LONG_BOW",
     "inv_weapon_bow_11",
     1,
     3,
@@ -230,7 +296,7 @@ item(
 )
 item(
     13024,
-    "Beazel's Basher",
+    "ITEM_BEAZEL_S_BASHER",
     "inv_hammer_04",
     1,
     3,
@@ -239,7 +305,7 @@ item(
 )
 item(
     13027,
-    "Bonesnapper",
+    "ITEM_BONESNAPPER",
     "inv_hammer_20",
     1,
     3,
@@ -248,7 +314,7 @@ item(
 )
 item(
     13028,
-    "Bludstone Hammer",
+    "ITEM_BLUDSTONE_HAMMER",
     "inv_hammer_19",
     1,
     3,
@@ -257,7 +323,7 @@ item(
 )
 item(
     13040,
-    "Heartseeking Crossbow",
+    "ITEM_HEARTSEEKING_CROSSBOW",
     "inv_weapon_crossbow_04",
     1,
     3,
@@ -266,7 +332,7 @@ item(
 )
 item(
     13043,
-    "Blade of the Titans",
+    "ITEM_BLADE_OF_THE_TITANS",
     "inv_sword_07",
     1,
     3,
@@ -274,31 +340,47 @@ item(
     { strength = 10, stamina = 24, weaponDPS = 42.58 }
 )
 
-item(2962, "Burnt Leather Breeches", "inv_pants_06", 10, 2, 5, { agility = 1, armor = 48 })
-item(2963, "Burnt Leather Boots", "inv_boots_09", 11, 1, 4, { armor = 34 })
-item(2964, "Burnt Leather Gloves", "inv_gauntlets_18", 8, 1, 5, { armor = 33 })
-item(2965, "Warrior's Tunic", "inv_chest_chain", 2, 2, 6, { strength = 2, armor = 115 })
-item(2966, "Warrior's Pants", "inv_pants_03", 10, 2, 5, { stamina = 1, armor = 94 })
-item(2967, "Warrior's Boots", "inv_boots_plate_08", 11, 1, 5, { armor = 70 })
-item(2968, "Warrior's Gloves", "inv_gauntlets_28", 8, 1, 4, { armor = 59 })
-item(2969, "Spellbinder Vest", "inv_chest_cloth_06", 2, 2, 12, { intellect = 5, armor = 30 })
+item(2962, "ITEM_BURNT_LEATHER_BREECHES", "inv_pants_06", 10, 2, 5, { agility = 1, armor = 48 })
+item(2963, "ITEM_BURNT_LEATHER_BOOTS", "inv_boots_09", 11, 1, 4, { armor = 34 })
+item(2964, "ITEM_BURNT_LEATHER_GLOVES", "inv_gauntlets_18", 8, 1, 5, { armor = 33 })
+item(2965, "ITEM_WARRIOR_S_TUNIC", "inv_chest_chain", 2, 2, 6, { strength = 2, armor = 115 })
+item(2966, "ITEM_WARRIOR_S_PANTS", "inv_pants_03", 10, 2, 5, { stamina = 1, armor = 94 })
+item(2967, "ITEM_WARRIOR_S_BOOTS", "inv_boots_plate_08", 11, 1, 5, { armor = 70 })
+item(2968, "ITEM_WARRIOR_S_GLOVES", "inv_gauntlets_28", 8, 1, 4, { armor = 59 })
+item(2969, "ITEM_SPELLBINDER_VEST", "inv_chest_cloth_06", 2, 2, 12, { intellect = 5, armor = 30 })
 item(
     2970,
-    "Spellbinder Pants",
+    "ITEM_SPELLBINDER_PANTS",
     "inv_pants_10",
     10,
     2,
     11,
     { stamina = 2, intellect = 3, armor = 25 }
 )
-item(2971, "Spellbinder Boots", "inv_boots_09", 11, 1, 9, { armor = 17 })
-item(2972, "Spellbinder Gloves", "inv_gauntlets_21", 8, 1, 9, { armor = 16 })
-item(2974, "Hunting Pants", "inv_pants_wolf", 10, 2, 11, { agility = 3, spirit = 2, armor = 62 })
-item(2975, "Hunting Boots", "inv_boots_wolf", 11, 1, 9, { armor = 45 })
-item(2976, "Hunting Gloves", "inv_gauntlets_05", 8, 2, 10, { agility = 2, stamina = 1, armor = 43 })
+item(2971, "ITEM_SPELLBINDER_BOOTS", "inv_boots_09", 11, 1, 9, { armor = 17 })
+item(2972, "ITEM_SPELLBINDER_GLOVES", "inv_gauntlets_21", 8, 1, 9, { armor = 16 })
+item(
+    2974,
+    "ITEM_HUNTING_PANTS",
+    "inv_pants_wolf",
+    10,
+    2,
+    11,
+    { agility = 3, spirit = 2, armor = 62 }
+)
+item(2975, "ITEM_HUNTING_BOOTS", "inv_boots_wolf", 11, 1, 9, { armor = 45 })
+item(
+    2976,
+    "ITEM_HUNTING_GLOVES",
+    "inv_gauntlets_05",
+    8,
+    2,
+    10,
+    { agility = 2, stamina = 1, armor = 43 }
+)
 item(
     2977,
-    "Veteran Armor",
+    "ITEM_VETERAN_ARMOR",
     "inv_chest_chain_09",
     2,
     2,
@@ -307,21 +389,29 @@ item(
 )
 item(
     2978,
-    "Veteran Leggings",
+    "ITEM_VETERAN_LEGGINGS",
     "inv_pants_09",
     10,
     2,
     10,
     { strength = 2, agility = 2, armor = 126 }
 )
-item(2979, "Veteran Boots", "inv_boots_09", 11, 1, 9, { armor = 89 })
-item(2980, "Veteran Gloves", "inv_gauntlets_05", 8, 2, 10, { strength = 3, armor = 90 })
-item(2982, "Seer's Pants", "inv_pants_01", 10, 2, 15, { stamina = 3, spirit = 5, armor = 29 })
-item(2983, "Seer's Boots", "inv_boots_05", 11, 2, 12, { stamina = 3, intellect = 1, armor = 21 })
-item(2984, "Seer's Gloves", "inv_gauntlets_18", 8, 2, 13, { spirit = 4, armor = 20 })
+item(2979, "ITEM_VETERAN_BOOTS", "inv_boots_09", 11, 1, 9, { armor = 89 })
+item(2980, "ITEM_VETERAN_GLOVES", "inv_gauntlets_05", 8, 2, 10, { strength = 3, armor = 90 })
+item(2982, "ITEM_SEER_S_PANTS", "inv_pants_01", 10, 2, 15, { stamina = 3, spirit = 5, armor = 29 })
+item(
+    2983,
+    "ITEM_SEER_S_BOOTS",
+    "inv_boots_05",
+    11,
+    2,
+    12,
+    { stamina = 3, intellect = 1, armor = 21 }
+)
+item(2984, "ITEM_SEER_S_GLOVES", "inv_gauntlets_18", 8, 2, 13, { spirit = 4, armor = 20 })
 item(
     2986,
-    "Inscribed Leather Pants",
+    "ITEM_INSCRIBED_LEATHER_PANTS",
     "inv_pants_02",
     10,
     2,
@@ -330,7 +420,7 @@ item(
 )
 item(
     2987,
-    "Inscribed Leather Boots",
+    "ITEM_INSCRIBED_LEATHER_BOOTS",
     "inv_boots_05",
     11,
     2,
@@ -339,7 +429,7 @@ item(
 )
 item(
     2988,
-    "Inscribed Leather Gloves",
+    "ITEM_INSCRIBED_LEATHER_GLOVES",
     "inv_gauntlets_18",
     8,
     2,
@@ -348,19 +438,27 @@ item(
 )
 item(
     2989,
-    "Burnished Tunic",
+    "ITEM_BURNISHED_TUNIC",
     "inv_chest_chain_06",
     2,
     2,
     16,
     { strength = 6, stamina = 3, armor = 171 }
 )
-item(3065, "Bright Boots", "inv_boots_07", 11, 2, 18, { stamina = 5, spirit = 2, armor = 25 })
-item(3066, "Bright Gloves", "inv_gauntlets_23", 8, 2, 19, { intellect = 4, spirit = 4, armor = 24 })
-item(3067, "Bright Pants", "inv_pants_02", 10, 2, 21, { stamina = 6, spirit = 6, armor = 35 })
+item(3065, "ITEM_BRIGHT_BOOTS", "inv_boots_07", 11, 2, 18, { stamina = 5, spirit = 2, armor = 25 })
+item(
+    3066,
+    "ITEM_BRIGHT_GLOVES",
+    "inv_gauntlets_23",
+    8,
+    2,
+    19,
+    { intellect = 4, spirit = 4, armor = 24 }
+)
+item(3067, "ITEM_BRIGHT_PANTS", "inv_pants_02", 10, 2, 21, { stamina = 6, spirit = 6, armor = 35 })
 item(
     4035,
-    "Silver-thread Robe",
+    "ITEM_SILVER_THREAD_ROBE",
     "inv_chest_cloth_32",
     2,
     2,
@@ -369,7 +467,7 @@ item(
 )
 item(
     4036,
-    "Silver-thread Cuffs",
+    "ITEM_SILVER_THREAD_CUFFS",
     "inv_bracer_07",
     12,
     2,
@@ -378,38 +476,70 @@ item(
 )
 item(
     4037,
-    "Silver-thread Pants",
+    "ITEM_SILVER_THREAD_PANTS",
     "inv_pants_08",
     10,
     2,
     25,
     { stamina = 4, intellect = 8, spirit = 4, armor = 37 }
 )
-item(4039, "Nightsky Cowl", "inv_helmet_30", 3, 2, 30, { intellect = 12, spirit = 5, armor = 38 })
+item(
+    4039,
+    "ITEM_NIGHTSKY_COWL",
+    "inv_helmet_30",
+    3,
+    2,
+    30,
+    { intellect = 12, spirit = 5, armor = 38 }
+)
 item(
     4040,
-    "Nightsky Gloves",
+    "ITEM_NIGHTSKY_GLOVES",
     "inv_gauntlets_21",
     8,
     2,
     29,
     { stamina = 7, intellect = 6, armor = 29 }
 )
-item(4041, "Aurora Cowl", "inv_helmet_33", 3, 2, 34, { stamina = 10, intellect = 10, armor = 42 })
+item(
+    4041,
+    "ITEM_AURORA_COWL",
+    "inv_helmet_33",
+    3,
+    2,
+    34,
+    { stamina = 10, intellect = 10, armor = 42 }
+)
 item(
     4042,
-    "Aurora Gloves",
+    "ITEM_AURORA_GLOVES",
     "inv_gauntlets_27",
     8,
     2,
     34,
     { agility = 8, intellect = 8, armor = 32 }
 )
-item(4043, "Aurora Bracers", "inv_bracer_07", 12, 2, 33, { stamina = 2, intellect = 8, armor = 22 })
-item(4044, "Aurora Pants", "inv_pants_01", 10, 2, 35, { intellect = 11, spirit = 10, armor = 46 })
+item(
+    4043,
+    "ITEM_AURORA_BRACERS",
+    "inv_bracer_07",
+    12,
+    2,
+    33,
+    { stamina = 2, intellect = 8, armor = 22 }
+)
+item(
+    4044,
+    "ITEM_AURORA_PANTS",
+    "inv_pants_01",
+    10,
+    2,
+    35,
+    { intellect = 11, spirit = 10, armor = 46 }
+)
 item(
     4045,
-    "Mistscape Bracers",
+    "ITEM_MISTSCAPE_BRACERS",
     "inv_bracer_09",
     12,
     2,
@@ -418,7 +548,7 @@ item(
 )
 item(
     4071,
-    "Glimmering Mail Breastplate",
+    "ITEM_GLIMMERING_MAIL_BREASTPLATE",
     "inv_chest_plate16",
     2,
     2,
@@ -427,7 +557,7 @@ item(
 )
 item(
     4072,
-    "Glimmering Mail Gauntlets",
+    "ITEM_GLIMMERING_MAIL_GAUNTLETS",
     "inv_gauntlets_03",
     8,
     2,
@@ -436,18 +566,18 @@ item(
 )
 item(
     4073,
-    "Glimmering Mail Greaves",
+    "ITEM_GLIMMERING_MAIL_GREAVES",
     "inv_boots_plate_03",
     11,
     2,
     26,
     { strength = 6, stamina = 6, armor = 138 }
 )
-item(4694, "Burnished Pauldrons", "inv_shoulder_28", 7, 1, 17, { armor = 124 })
-item(4701, "Inscribed Cloak", "inv_misc_cape_11", 4, 2, 11, { stamina = 2, armor = 15 })
+item(4694, "ITEM_BURNISHED_PAULDRONS", "inv_shoulder_28", 7, 1, 17, { armor = 124 })
+item(4701, "ITEM_INSCRIBED_CLOAK", "inv_misc_cape_11", 4, 2, 11, { stamina = 2, armor = 15 })
 item(
     4713,
-    "Silver-thread Cloak",
+    "ITEM_SILVER_THREAD_CLOAK",
     "inv_misc_cape_02",
     4,
     2,
@@ -456,17 +586,25 @@ item(
 )
 item(
     4714,
-    "Silver-thread Sash",
+    "ITEM_SILVER_THREAD_SASH",
     "inv_belt_03",
     9,
     2,
     22,
     { stamina = 4, intellect = 5, armor = 23 }
 )
-item(4721, "Insignia Mantle", "inv_shoulder_07", 7, 2, 30, { agility = 7, spirit = 7, armor = 76 })
+item(
+    4721,
+    "ITEM_INSIGNIA_MANTLE",
+    "inv_shoulder_07",
+    7,
+    2,
+    30,
+    { agility = 7, spirit = 7, armor = 76 }
+)
 item(
     13115,
-    "Sheepshear Mantle",
+    "ITEM_SHEEPSHEAR_MANTLE",
     "inv_shoulder_19",
     7,
     3,
@@ -475,7 +613,7 @@ item(
 )
 item(
     13116,
-    "Spaulders of the Unseen",
+    "ITEM_SPAULDERS_OF_THE_UNSEEN",
     "inv_shoulder_18",
     7,
     3,
@@ -484,7 +622,7 @@ item(
 )
 item(
     13117,
-    "Ogron's Sash",
+    "ITEM_OGRON_S_SASH",
     "inv_belt_15",
     9,
     3,
@@ -493,7 +631,7 @@ item(
 )
 item(
     13118,
-    "Serpentine Sash",
+    "ITEM_SERPENTINE_SASH",
     "inv_belt_25",
     9,
     3,
@@ -502,7 +640,7 @@ item(
 )
 item(
     13119,
-    "Enchanted Kodo Bracers",
+    "ITEM_ENCHANTED_KODO_BRACERS",
     "inv_bracer_09",
     12,
     3,
@@ -511,7 +649,7 @@ item(
 )
 item(
     13120,
-    "Deepfury Bracers",
+    "ITEM_DEEPFURY_BRACERS",
     "inv_bracer_07",
     12,
     3,
@@ -520,7 +658,7 @@ item(
 )
 item(
     13121,
-    "Wing of the Whelpling",
+    "ITEM_WING_OF_THE_WHELPLING",
     "inv_misc_cape_04",
     4,
     3,
@@ -529,7 +667,7 @@ item(
 )
 item(
     13122,
-    "Dark Phantom Cape",
+    "ITEM_DARK_PHANTOM_CAPE",
     "inv_misc_cape_21",
     4,
     3,
@@ -538,17 +676,25 @@ item(
 )
 item(
     13099,
-    "Moccasins of the White Hare",
+    "ITEM_MOCCASINS_OF_THE_WHITE_HARE",
     "inv_boots_05",
     11,
     3,
     24,
     { agility = 3, spirit = 8, armor = 32 }
 )
-item(13100, "Furen's Boots", "inv_boots_03", 11, 3, 39, { intellect = 7, spirit = 16, armor = 44 })
+item(
+    13100,
+    "ITEM_FUREN_S_BOOTS",
+    "inv_boots_03",
+    11,
+    3,
+    39,
+    { intellect = 7, spirit = 16, armor = 44 }
+)
 item(
     13101,
-    "Wolfrunner Shoes",
+    "ITEM_WOLFRUNNER_SHOES",
     "inv_boots_05",
     11,
     3,
@@ -557,7 +703,7 @@ item(
 )
 item(
     13103,
-    "Pads of the Venom Spider",
+    "ITEM_PADS_OF_THE_VENOM_SPIDER",
     "inv_shoulder_18",
     7,
     3,
@@ -566,7 +712,7 @@ item(
 )
 item(
     13105,
-    "Sutarn's Ring",
+    "ITEM_SUTARN_S_RING",
     "inv_belt_11",
     9,
     3,
@@ -575,7 +721,7 @@ item(
 )
 item(
     13106,
-    "Glowing Magical Bracelets",
+    "ITEM_GLOWING_MAGICAL_BRACELETS",
     "inv_bracer_19",
     12,
     3,
@@ -584,7 +730,7 @@ item(
 )
 item(
     13107,
-    "Magiskull Cuffs",
+    "ITEM_MAGISKULL_CUFFS",
     "inv_bracer_13",
     12,
     3,
@@ -593,7 +739,7 @@ item(
 )
 item(
     13108,
-    "Tigerstrike Mantle",
+    "ITEM_TIGERSTRIKE_MANTLE",
     "inv_misc_pelt_04",
     4,
     3,
@@ -602,7 +748,7 @@ item(
 )
 item(
     13109,
-    "Blackflame Cape",
+    "ITEM_BLACKFLAME_CAPE",
     "inv_misc_cape_20",
     4,
     3,
@@ -611,31 +757,47 @@ item(
 )
 item(
     13111,
-    "Sandals of the Insurgent",
+    "ITEM_SANDALS_OF_THE_INSURGENT",
     "inv_boots_fabric_01",
     11,
     3,
     49,
     { intellect = 8, spirit = 20, armor = 107 }
 )
-item(13112, "Winged Helm", "inv_helmet_19", 3, 3, 43, { intellect = 23, spirit = 10, armor = 115 })
+item(
+    13112,
+    "ITEM_WINGED_HELM",
+    "inv_helmet_19",
+    3,
+    3,
+    43,
+    { intellect = 23, spirit = 10, armor = 115 }
+)
 item(
     13114,
-    "Troll's Bane Leggings",
+    "ITEM_TROLL_S_BANE_LEGGINGS",
     "inv_pants_06",
     10,
     3,
     25,
     { agility = 14, stamina = 4, spirit = 4, armor = 90 }
 )
-item(4666, "Burnt Leather Belt", "inv_belt_04", 9, 1, 4, { armor = 27 })
-item(3200, "Burnt Leather Bracers", "inv_bracer_10", 12, 1, 3, { armor = 20 })
-item(3213, "Veteran Bracers", "inv_bracer_05", 12, 1, 8, { armor = 54 })
-item(14169, "Aboriginal Shoulder Pads", "inv_shoulder_06", 7, 1, 16, { armor = 25 })
-item(1280, "Cloaked Hood", "inv_helmet_30", 3, 2, 33, { agility = 10, stamina = 10, armor = 86 })
+item(4666, "ITEM_BURNT_LEATHER_BELT", "inv_belt_04", 9, 1, 4, { armor = 27 })
+item(3200, "ITEM_BURNT_LEATHER_BRACERS", "inv_bracer_10", 12, 1, 3, { armor = 20 })
+item(3213, "ITEM_VETERAN_BRACERS", "inv_bracer_05", 12, 1, 8, { armor = 54 })
+item(14169, "ITEM_ABORIGINAL_SHOULDER_PADS", "inv_shoulder_06", 7, 1, 16, { armor = 25 })
+item(
+    1280,
+    "ITEM_CLOAKED_HOOD",
+    "inv_helmet_30",
+    3,
+    2,
+    33,
+    { agility = 10, stamina = 10, armor = 86 }
+)
 item(
     12987,
-    "Darkweave Breeches",
+    "ITEM_DARKWEAVE_BREECHES",
     "inv_pants_06",
     10,
     3,
@@ -644,7 +806,7 @@ item(
 )
 item(
     12977,
-    "Magefist Gloves",
+    "ITEM_MAGEFIST_GLOVES",
     "inv_gauntlets_27",
     8,
     3,
@@ -653,7 +815,7 @@ item(
 )
 item(
     13010,
-    "Dreamsinger Legguards",
+    "ITEM_DREAMSINGER_LEGGUARDS",
     "inv_pants_03",
     10,
     3,
@@ -662,7 +824,7 @@ item(
 )
 item(
     13124,
-    "Ravasaur Scale Boots",
+    "ITEM_RAVASAUR_SCALE_BOOTS",
     "inv_boots_01",
     11,
     3,
@@ -671,7 +833,7 @@ item(
 )
 item(
     13125,
-    "Elven Chain Boots",
+    "ITEM_ELVEN_CHAIN_BOOTS",
     "inv_boots_01",
     11,
     3,
@@ -680,7 +842,7 @@ item(
 )
 item(
     13126,
-    "Battlecaller Gauntlets",
+    "ITEM_BATTLECALLER_GAUNTLETS",
     "inv_gauntlets_10",
     8,
     3,
@@ -689,7 +851,7 @@ item(
 )
 item(
     13127,
-    "Frostreaver Crown",
+    "ITEM_FROSTREAVER_CROWN",
     "inv_helmet_24",
     3,
     3,
@@ -698,7 +860,7 @@ item(
 )
 item(
     13128,
-    "High Bergg Helm",
+    "ITEM_HIGH_BERGG_HELM",
     "inv_helmet_18",
     3,
     3,
@@ -707,7 +869,7 @@ item(
 )
 item(
     13129,
-    "Firemane Leggings",
+    "ITEM_FIREMANE_LEGGINGS",
     "inv_pants_03",
     10,
     3,
@@ -716,7 +878,7 @@ item(
 )
 item(
     13130,
-    "Windrunner Legguards",
+    "ITEM_WINDRUNNER_LEGGUARDS",
     "inv_pants_03",
     10,
     3,
@@ -725,7 +887,7 @@ item(
 )
 item(
     13131,
-    "Sparkleshell Mantle",
+    "ITEM_SPARKLESHELL_MANTLE",
     "inv_shoulder_18",
     7,
     3,
@@ -734,7 +896,7 @@ item(
 )
 item(
     13132,
-    "Skeletal Shoulders",
+    "ITEM_SKELETAL_SHOULDERS",
     "inv_shoulder_11",
     7,
     3,
@@ -744,7 +906,7 @@ item(
 
 item(
     13066,
-    "Wyrmslayer Spaulders",
+    "ITEM_WYRMSLAYER_SPAULDERS",
     "inv_shoulder_24",
     7,
     3,
@@ -753,7 +915,7 @@ item(
 )
 item(
     13067,
-    "Hydralick Armor",
+    "ITEM_HYDRALICK_ARMOR",
     "inv_chest_plate06",
     2,
     3,
@@ -762,7 +924,7 @@ item(
 )
 item(
     13068,
-    "Obsidian Greaves",
+    "ITEM_OBSIDIAN_GREAVES",
     "inv_boots_plate_09",
     11,
     3,
@@ -771,7 +933,7 @@ item(
 )
 item(
     13071,
-    "Plated Fist of Hakoo",
+    "ITEM_PLATED_FIST_OF_HAKOO",
     "inv_gauntlets_10",
     8,
     3,
@@ -780,17 +942,17 @@ item(
 )
 item(
     13073,
-    "Mugthol's Helm",
+    "ITEM_MUGTHOL_S_HELM",
     "inv_helmet_25",
     3,
     3,
     47,
     { strength = 10, stamina = 17, spirit = 17, armor = 445 }
 )
-item(13074, "Golem Shard Leggings", "inv_pants_04", 10, 3, 41, { strength = 22, armor = 429 })
+item(13074, "ITEM_GOLEM_SHARD_LEGGINGS", "inv_pants_04", 10, 3, 41, { strength = 22, armor = 429 })
 item(
     13076,
-    "Giantslayer Bracers",
+    "ITEM_GIANTSLAYER_BRACERS",
     "inv_bracer_17",
     12,
     3,
@@ -799,7 +961,7 @@ item(
 )
 item(
     13077,
-    "Girdle of Uther",
+    "ITEM_GIRDLE_OF_UTHER",
     "inv_belt_32",
     9,
     3,
@@ -807,15 +969,15 @@ item(
     { strength = 9, agility = 9, stamina = 10, intellect = 9, spirit = 10, armor = 336 }
 )
 
-item(10046, "Simple Linen Boots", "inv_boots_05", 11, 1, 4, { armor = 11 })
-item(10045, "Simple Linen Pants", "inv_pants_11", 10, 1, 2, { armor = 12 })
-item(2568, "Brown Linen Vest", "inv_shirt_05", 2, 1, 3, { armor = 15 })
+item(10046, "ITEM_SIMPLE_LINEN_BOOTS", "inv_boots_05", 11, 1, 4, { armor = 11 })
+item(10045, "ITEM_SIMPLE_LINEN_PANTS", "inv_pants_11", 10, 1, 2, { armor = 12 })
+item(2568, "ITEM_BROWN_LINEN_VEST", "inv_shirt_05", 2, 1, 3, { armor = 15 })
 
 -- Additional class and role choices use the same fixed source-stat model.
-item(2092, "Worn Dagger", "inv_weapon_shortblade_05", 1, 1, 1, { weaponDPS = 0.94 })
+item(2092, "ITEM_WORN_DAGGER", "inv_weapon_shortblade_05", 1, 1, 1, { weaponDPS = 0.94 })
 item(
     3848,
-    "Big Bronze Knife",
+    "ITEM_BIG_BRONZE_KNIFE",
     "inv_weapon_shortblade_04",
     1,
     2,
@@ -824,17 +986,17 @@ item(
 )
 item(
     1935,
-    "Assassin's Blade",
+    "ITEM_ASSASSIN_S_BLADE",
     "inv_weapon_shortblade_24",
     1,
     3,
     19,
     { strength = 3, agility = 4, weaponDPS = 15.53 }
 )
-item(776, "Vendetta", "inv_weapon_shortblade_02", 1, 3, 26, { agility = 6, weaponDPS = 19.23 })
+item(776, "ITEM_VENDETTA", "inv_weapon_shortblade_02", 1, 3, 26, { agility = 6, weaponDPS = 19.23 })
 item(
     2236,
-    "Blackfang",
+    "ITEM_BLACKFANG",
     "inv_weapon_shortblade_02",
     1,
     3,
@@ -843,31 +1005,31 @@ item(
 )
 item(
     6660,
-    "Julie's Dagger",
+    "ITEM_JULIE_S_DAGGER",
     "inv_weapon_shortblade_07",
     1,
     3,
     50,
     { weaponDPS = 36.54 },
-    "Source healing proc is not simulated."
+    "SOURCE_HEALING_PROC_IS_NOT_SIMULATED"
 )
-item(2504, "Worn Shortbow", "inv_weapon_bow_05", 1, 1, 1, { weaponDPS = 1.52 })
-item(13020, "Skystriker Bow", "inv_weapon_bow_11", 1, 3, 34, { weaponDPS = 20.71 })
+item(2504, "ITEM_WORN_SHORTBOW", "inv_weapon_bow_05", 1, 1, 1, { weaponDPS = 1.52 })
+item(13020, "ITEM_SKYSTRIKER_BOW", "inv_weapon_bow_11", 1, 3, 34, { weaponDPS = 20.71 })
 item(
     13021,
-    "Needle Threader",
+    "ITEM_NEEDLE_THREADER",
     "inv_weapon_bow_08",
     1,
     3,
     42,
     { stamina = 6, spirit = 4, weaponDPS = 24.5 }
 )
-item(2509, "Ornate Blunderbuss", "inv_weapon_rifle_02", 1, 1, 4, { weaponDPS = 2.95 })
-item(4577, "Compact Shotgun", "inv_weapon_rifle_03", 1, 2, 8, { weaponDPS = 5.25 })
-item(13137, "Ironweaver", "inv_weapon_rifle_08", 1, 3, 29, { weaponDPS = 17.31 })
+item(2509, "ITEM_ORNATE_BLUNDERBUSS", "inv_weapon_rifle_02", 1, 1, 4, { weaponDPS = 2.95 })
+item(4577, "ITEM_COMPACT_SHOTGUN", "inv_weapon_rifle_03", 1, 2, 8, { weaponDPS = 5.25 })
+item(13137, "ITEM_IRONWEAVER", "inv_weapon_rifle_08", 1, 3, 29, { weaponDPS = 17.31 })
 item(
     13138,
-    "The Silencer",
+    "ITEM_THE_SILENCER",
     "inv_weapon_rifle_08",
     1,
     3,
@@ -876,18 +1038,18 @@ item(
 )
 item(
     13139,
-    "Guttbuster",
+    "ITEM_GUTTBUSTER",
     "inv_weapon_rifle_08",
     1,
     3,
     45,
     { strength = 3, agility = 8, weaponDPS = 26.11 }
 )
-item(11287, "Lesser Magic Wand", "inv_staff_02", 1, 2, 5, { weaponDPS = 11.33 })
-item(13062, "Thunderwood", "inv_staff_02", 1, 3, 22, { weaponDPS = 27.11 })
+item(11287, "ITEM_LESSER_MAGIC_WAND", "inv_staff_02", 1, 2, 5, { weaponDPS = 11.33 })
+item(13062, "ITEM_THUNDERWOOD", "inv_staff_02", 1, 3, 22, { weaponDPS = 27.11 })
 item(
     13064,
-    "Jaina's Firestarter",
+    "ITEM_JAINA_S_FIRESTARTER",
     "inv_wand_09",
     1,
     3,
@@ -896,17 +1058,25 @@ item(
 )
 item(
     13065,
-    "Wand of Allistarj",
+    "ITEM_WAND_OF_ALLISTARJ",
     "inv_wand_09",
     1,
     3,
     45,
     { arcaneResistance = 9, weaponDPS = 48.42 }
 )
-item(13004, "Torch of Austen", "inv_wand_11", 1, 3, 53, { fireResistance = 10, weaponDPS = 56.79 })
+item(
+    13004,
+    "ITEM_TORCH_OF_AUSTEN",
+    "inv_wand_11",
+    1,
+    3,
+    53,
+    { fireResistance = 10, weaponDPS = 56.79 }
+)
 item(
     890,
-    "Twisted Chanter's Staff",
+    "ITEM_TWISTED_CHANTER_S_STAFF",
     "inv_staff_04",
     1,
     3,
@@ -915,7 +1085,7 @@ item(
 )
 item(
     791,
-    "Gnarled Ash Staff",
+    "ITEM_GNARLED_ASH_STAFF",
     "inv_staff_02",
     1,
     3,
@@ -924,7 +1094,7 @@ item(
 )
 item(
     1607,
-    "Soulkeeper",
+    "ITEM_SOULKEEPER",
     "spell_shadow_haunting",
     1,
     3,
@@ -933,7 +1103,7 @@ item(
 )
 item(
     13000,
-    "Staff of Hale Magefire",
+    "ITEM_STAFF_OF_HALE_MAGEFIRE",
     "inv_staff_23",
     1,
     3,
@@ -942,7 +1112,7 @@ item(
 )
 item(
     13033,
-    "Zealot Blade",
+    "ITEM_ZEALOT_BLADE",
     "inv_sword_15",
     1,
     3,
@@ -951,17 +1121,25 @@ item(
 )
 item(
     13034,
-    "Speedsteel Rapier",
+    "ITEM_SPEEDSTEEL_RAPIER",
     "inv_sword_30",
     1,
     3,
     36,
     { agility = 8, stamina = 3, weaponDPS = 28.06 }
 )
-item(13038, "Swiftwind", "inv_weapon_crossbow_04", 1, 3, 35, { agility = 7, weaponDPS = 21.25 })
+item(
+    13038,
+    "ITEM_SWIFTWIND",
+    "inv_weapon_crossbow_04",
+    1,
+    3,
+    35,
+    { agility = 7, weaponDPS = 21.25 }
+)
 item(
     13039,
-    "Skull Splitting Crossbow",
+    "ITEM_SKULL_SPLITTING_CROSSBOW",
     "inv_weapon_crossbow_04",
     1,
     3,
@@ -970,7 +1148,7 @@ item(
 )
 item(
     13045,
-    "Viscous Hammer",
+    "ITEM_VISCOUS_HAMMER",
     "inv_mace_13",
     1,
     3,
@@ -979,7 +1157,7 @@ item(
 )
 item(
     13046,
-    "Blanchard's Stout",
+    "ITEM_BLANCHARD_S_STOUT",
     "inv_hammer_04",
     1,
     3,
@@ -988,7 +1166,7 @@ item(
 )
 item(
     13047,
-    "Twig of the World Tree",
+    "ITEM_TWIG_OF_THE_WORLD_TREE",
     "inv_mace_13",
     1,
     3,
@@ -997,7 +1175,7 @@ item(
 )
 item(
     12989,
-    "Gargoyle's Bite",
+    "ITEM_GARGOYLE_S_BITE",
     "inv_spear_05",
     1,
     3,
@@ -1006,7 +1184,7 @@ item(
 )
 item(
     13055,
-    "Bonechewer",
+    "ITEM_BONECHEWER",
     "inv_spear_06",
     1,
     3,
@@ -1015,7 +1193,7 @@ item(
 )
 item(
     13059,
-    "Stoneraven",
+    "ITEM_STONERAVEN",
     "inv_spear_07",
     1,
     3,
@@ -1024,7 +1202,7 @@ item(
 )
 item(
     12998,
-    "Magician's Mantle",
+    "ITEM_MAGICIAN_S_MANTLE",
     "inv_shoulder_13",
     7,
     3,
@@ -1033,7 +1211,7 @@ item(
 )
 item(
     13008,
-    "Dalewind Trousers",
+    "ITEM_DALEWIND_TROUSERS",
     "inv_pants_06",
     10,
     3,
@@ -1042,7 +1220,7 @@ item(
 )
 item(
     13013,
-    "Elder Wizard's Mantle",
+    "ITEM_ELDER_WIZARD_S_MANTLE",
     "inv_shoulder_14",
     7,
     3,
@@ -1051,7 +1229,7 @@ item(
 )
 item(
     12994,
-    "Thorbia's Gauntlets",
+    "ITEM_THORBIA_S_GAUNTLETS",
     "inv_gauntlets_11",
     8,
     3,
@@ -1060,47 +1238,47 @@ item(
 )
 item(
     15048,
-    "Blue Dragonscale Breastplate",
+    "ITEM_BLUE_DRAGONSCALE_BREASTPLATE",
     "inv_chest_chain_04",
     2,
     3,
     52,
     { intellect = 28, spirit = 8, armor = 338, arcaneResistance = 8 },
-    "Source set bonuses are not simulated."
+    "SOURCE_SET_BONUSES_ARE_NOT_SIMULATED"
 )
 item(
     15049,
-    "Blue Dragonscale Shoulders",
+    "ITEM_BLUE_DRAGONSCALE_SHOULDERS",
     "inv_shoulder_18",
     7,
     3,
     54,
     { intellect = 21, spirit = 6, armor = 262, arcaneResistance = 6 },
-    "Source set bonuses are not simulated."
+    "SOURCE_SET_BONUSES_ARE_NOT_SIMULATED"
 )
 item(
     15050,
-    "Black Dragonscale Breastplate",
+    "ITEM_BLACK_DRAGONSCALE_BREASTPLATE",
     "inv_chest_plate06",
     2,
     3,
     53,
     { stamina = 8, armor = 344, fireResistance = 12, attackPower = 50 },
-    "Source set bonuses are not simulated."
+    "SOURCE_SET_BONUSES_ARE_NOT_SIMULATED"
 )
 item(
     15052,
-    "Black Dragonscale Leggings",
+    "ITEM_BLACK_DRAGONSCALE_LEGGINGS",
     "inv_pants_03",
     10,
     3,
     57,
     { stamina = 8, armor = 320, fireResistance = 13, attackPower = 54 },
-    "Source set bonuses are not simulated."
+    "SOURCE_SET_BONUSES_ARE_NOT_SIMULATED"
 )
 item(
     15059,
-    "Living Breastplate",
+    "ITEM_LIVING_BREASTPLATE",
     "inv_chest_plate07",
     2,
     3,
@@ -1109,7 +1287,7 @@ item(
 )
 item(
     15060,
-    "Living Leggings",
+    "ITEM_LIVING_LEGGINGS",
     "inv_pants_05",
     10,
     3,
@@ -1118,7 +1296,7 @@ item(
 )
 item(
     15061,
-    "Living Shoulders",
+    "ITEM_LIVING_SHOULDERS",
     "inv_shoulder_18",
     7,
     3,
@@ -1127,48 +1305,48 @@ item(
 )
 item(
     15062,
-    "Devilsaur Leggings",
+    "ITEM_DEVILSAUR_LEGGINGS",
     "inv_pants_wolf",
     10,
     3,
     55,
     { stamina = 12, armor = 148, attackPower = 46 },
-    "Source critical strike and set bonuses are not simulated."
+    "SOURCE_CRITICAL_STRIKE_AND_SET_BONUSES_ARE_NOT_SIMULATED"
 )
 item(
     15063,
-    "Devilsaur Gauntlets",
+    "ITEM_DEVILSAUR_GAUNTLETS",
     "inv_gauntlets_26",
     8,
     3,
     53,
     { stamina = 9, armor = 103, attackPower = 28 },
-    "Source critical strike and set bonuses are not simulated."
+    "SOURCE_CRITICAL_STRIKE_AND_SET_BONUSES_ARE_NOT_SIMULATED"
 )
 item(
     15066,
-    "Ironfeather Breastplate",
+    "ITEM_IRONFEATHER_BREASTPLATE",
     "inv_chest_leather_06",
     2,
     3,
     53,
     { intellect = 12, spirit = 28, armor = 165 },
-    "Source set bonuses are not simulated."
+    "SOURCE_SET_BONUSES_ARE_NOT_SIMULATED"
 )
 item(
     15067,
-    "Ironfeather Shoulders",
+    "ITEM_IRONFEATHER_SHOULDERS",
     "inv_shoulder_06",
     7,
     3,
     49,
     { intellect = 20, spirit = 8, armor = 117 },
-    "Source set bonuses are not simulated."
+    "SOURCE_SET_BONUSES_ARE_NOT_SIMULATED"
 )
 
 item(
     1483,
-    "Face Smasher",
+    "ITEM_FACE_SMASHER",
     "inv_hammer_08",
     1,
     3,
@@ -1177,7 +1355,7 @@ item(
 )
 item(
     1716,
-    "Robe of the Magi",
+    "ITEM_ROBE_OF_THE_MAGI",
     "inv_chest_cloth_17",
     2,
     3,
@@ -1186,7 +1364,7 @@ item(
 )
 item(
     7728,
-    "Beguiler Robes",
+    "ITEM_BEGUILER_ROBES",
     "inv_chest_cloth_25",
     2,
     3,
@@ -1195,17 +1373,25 @@ item(
 )
 item(
     17050,
-    "Chan's Imperial Robes",
+    "ITEM_CHAN_S_IMPERIAL_ROBES",
     "inv_chest_cloth_04",
     2,
     3,
     47,
     { stamina = 20, intellect = 10, spirit = 10, armor = 75, natureResistance = 5 }
 )
-item(12999, "Drakewing Bands", "inv_bracer_09", 12, 3, 20, { stamina = 3, spirit = 6, armor = 41 })
+item(
+    12999,
+    "ITEM_DRAKEWING_BANDS",
+    "inv_bracer_09",
+    12,
+    3,
+    20,
+    { stamina = 3, spirit = 6, armor = 41 }
+)
 item(
     13135,
-    "Lordly Armguards",
+    "ITEM_LORDLY_ARMGUARDS",
     "inv_bracer_17",
     12,
     3,
@@ -1216,19 +1402,19 @@ item(
 -- Classic weapon proficiencies are idle class rules, independent of the live client.
 -- Training and talent requirements are simplified; each hero has one weapon slot.
 C.weaponNames = {
-    sword = L["One-Handed Swords"],
-    axe = L["One-Handed Axes"],
-    mace = L["One-Handed Maces"],
-    staff = L["Staves"],
-    twoHandSword = L["Two-Handed Swords"],
-    twoHandAxe = L["Two-Handed Axes"],
-    bow = L["Bows"],
-    crossbow = L["Crossbows"],
-    dagger = L["Daggers"],
-    gun = L["Guns"],
-    wand = L["Wands"],
-    twoHandMace = L["Two-Handed Maces"],
-    polearm = L["Polearms"],
+    sword = L.ONE_HANDED_SWORDS,
+    axe = L.ONE_HANDED_AXES,
+    mace = L.ONE_HANDED_MACES,
+    staff = L.STAVES,
+    twoHandSword = L.TWO_HANDED_SWORDS,
+    twoHandAxe = L.TWO_HANDED_AXES,
+    bow = L.BOWS,
+    crossbow = L.CROSSBOWS,
+    dagger = L.DAGGERS,
+    gun = L.GUNS,
+    wand = L.WANDS,
+    twoHandMace = L.TWO_HANDED_MACES,
+    polearm = L.POLEARMS,
 }
 C.classWeapons = {
     WARRIOR = {
@@ -1302,7 +1488,7 @@ for weaponType, items in pairs(weaponItems) do
 end
 
 C.armorRanks = { cloth = 1, leather = 2, mail = 3, plate = 4 }
-C.armorNames = { cloth = L["Cloth"], leather = L["Leather"], mail = L["Mail"], plate = L["Plate"] }
+C.armorNames = { cloth = L.CLOTH, leather = L.LEATHER, mail = L.MAIL, plate = L.PLATE }
 C.classArmor = {
     WARRIOR = { 3, 4 },
     PALADIN = { 3, 4 },

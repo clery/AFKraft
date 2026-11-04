@@ -19,22 +19,21 @@ local function signature(text)
 end
 
 case("Localized catalogs have matching keys, placeholders and line breaks", function()
-    local reference = W.Locales.frFR
+    local reference = W.Locales.enUS
     assert(next(reference))
+    assert(reference.MATERIAL_HIDE == "Animal hide" and reference.ACTION_HIDE == "Hide")
     for locale, catalog in pairs(W.Locales) do
-        for source in pairs(reference) do
-            assert(
-                type(catalog[source]) == "string" and catalog[source] ~= "",
-                locale .. ": " .. source
-            )
-            assert(signature(catalog[source]) == signature(source), locale .. " format: " .. source)
-            local _, sourceLines = source:gsub("\n", "")
-            local _, translatedLines = catalog[source]:gsub("\n", "")
-            assert(sourceLines == translatedLines, locale .. " lines: " .. source)
-            assert(not catalog[source]:find("ZXQ", 1, true))
+        for key, english in pairs(reference) do
+            assert(key:match("^[A-Z][A-Z0-9_]*$"), key)
+            assert(type(catalog[key]) == "string" and catalog[key] ~= "", locale .. ": " .. key)
+            assert(signature(catalog[key]) == signature(english), locale .. " format: " .. key)
+            local _, sourceLines = english:gsub("\n", "")
+            local _, translatedLines = catalog[key]:gsub("\n", "")
+            assert(sourceLines == translatedLines, locale .. " lines: " .. key)
+            assert(not catalog[key]:find("ZXQ", 1, true))
         end
-        for source in pairs(catalog) do
-            assert(reference[source], locale .. " extra: " .. source)
+        for key in pairs(catalog) do
+            assert(reference[key], locale .. " extra: " .. key)
         end
     end
 end)
@@ -61,8 +60,34 @@ case("Client language, Spanish variants and explicit overrides resolve safely", 
         setfenv(chunk, environment)("WoWIdle", namespace)
         namespace.Locales = W.Locales
         assert(namespace.locale == example[3])
-        assert(namespace.L["Player-created name"] == "Player-created name")
-        assert(namespace.L["Heritage"] ~= namespace.L["Inheritance"])
+        assert(namespace.L.HERITAGE == W.Locales[example[3]].HERITAGE)
+        assert(namespace.L.HERITAGE ~= namespace.L.INHERITANCE)
+    end
+end)
+
+case("Named keys fall back to the explicit English catalog", function()
+    local namespace = {}
+    assert(loadfile("Localization.lua"))("WoWIdle", namespace)
+    namespace.Locales = { enUS = W.Locales.enUS, frFR = { CLOSE = "Fermer" } }
+    namespace.locale = "frFR"
+    assert(namespace.L.CLOSE == "Fermer")
+    assert(namespace.L.RESET_ADVENTURE_DESCRIPTION == W.Locales.enUS.RESET_ADVENTURE_DESCRIPTION)
+    namespace.locale = "enUS"
+    assert(namespace.L.CLOSE == "Close")
+end)
+
+case("Runtime lookups use defined named keys instead of English prose", function()
+    for line in io.lines("WoWIdle.toc") do
+        local file = line:gsub("\\", "/")
+        if file:match("%.lua$") and not file:match("^Libs/") then
+            local handle = assert(io.open(file))
+            local source = handle:read("*a")
+            handle:close()
+            assert(not source:find('L%[%s*"'), file .. " uses an English-text key")
+            for key in source:gmatch("%f[%w]L%.([A-Z][A-Z0-9_]*)") do
+                assert(W.Locales.enUS[key], file .. " references undefined key " .. key)
+            end
+        end
     end
 end)
 
@@ -70,12 +95,9 @@ case("Every language loads content with stable IDs and translated talent sentenc
     for _, locale in ipairs({ "enUS", "frFR", "deDE", "esES" }) do
         local namespace = { locale = locale, Locales = W.Locales }
         namespace.L = setmetatable({}, {
-            __index = function(_, source)
-                if locale == "enUS" then
-                    return source
-                end
-                local translated = namespace.Locales[locale][source]
-                assert(translated, locale .. " missing: " .. source)
+            __index = function(_, key)
+                local translated = namespace.Locales[locale][key]
+                assert(translated, locale .. " missing: " .. key)
                 return translated
             end,
         })
@@ -104,6 +126,22 @@ case("Every language loads content with stable IDs and translated talent sentenc
         end
     end
     WoWIdle = W
+end)
+
+case("Item display names follow the locale without changing saved names", function()
+    local G, C = W.Game, W.Content
+    local item = { itemID = 25, name = "Worn Shortsword", uid = 7 }
+    local original = C.itemNames[25]
+    local ok, message = pcall(function()
+        for _, locale in ipairs({ "enUS", "frFR", "deDE", "esES" }) do
+            C.itemNames[25] = W.Locales[locale].ITEM_WORN_SHORTSWORD
+            assert(G.ItemName(item) == C.itemNames[25])
+            assert(item.name == "Worn Shortsword" and item.uid == 7)
+        end
+        assert(G.ItemName({ name = "Custom name" }) == "Custom name")
+    end)
+    C.itemNames[25] = original
+    assert(ok, message)
 end)
 
 return cases

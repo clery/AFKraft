@@ -12,7 +12,7 @@ test("Localized button labels fit and pooled font sizes recover for short labels
         local catalog = W.Locales[locale]
         local button = W.Widgets.Button(
             parent,
-            catalog["Equip best power"],
+            catalog.EQUIP_BEST_POWER,
             0,
             0,
             168,
@@ -20,7 +20,7 @@ test("Localized button labels fit and pooled font sizes recover for short labels
             function() end
         )
         assert(button.text:GetUnboundedStringWidth() <= button.text:GetWidth() + 1, locale)
-        button.text:SetText(catalog["Close"])
+        button.text:SetText(catalog.CLOSE)
         local _, size = button.text:GetFont()
         assert(size == 13)
         button:Hide()

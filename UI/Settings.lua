@@ -41,33 +41,33 @@ function W.RegisterSettings()
     local entries = {
         {
             "fullscreen",
-            L["Fullscreen"],
-            L["Use fullscreen for expanded views. Saved for the next login."],
+            L.FULLSCREEN,
+            L.FULLSCREEN_DESCRIPTION,
         },
         {
             "compact",
-            L["Compact view"],
-            L["Use the small adventure window. Saved for the next login."],
+            L.COMPACT_VIEW,
+            L.COMPACT_VIEW_DESCRIPTION,
         },
         {
             "locked",
-            L["Lock window"],
-            L["Prevent moving or resizing the window. Compact mode keeps an Unlock button."],
+            L.LOCK_WINDOW,
+            L.LOCK_WINDOW_DESCRIPTION,
         },
         {
             "chatAnnouncements",
-            L["Chat announcements"],
-            L["Print adventure events in your chat window."],
+            L.CHAT_ANNOUNCEMENTS,
+            L.CHAT_ANNOUNCEMENTS_DESCRIPTION,
         },
         {
             "combatText",
-            L["Floating combat text"],
-            L["Show damage and healing numbers above companions and enemies."],
+            L.FLOATING_COMBAT_TEXT,
+            L.FLOATING_COMBAT_TEXT_DESCRIPTION,
         },
         {
             "soundEnabled",
-            L["Minigame sounds"],
-            L["Play while the adventure is visible, using WoW sound-effects volume. Offline progress stays silent."],
+            L.MINIGAME_SOUNDS,
+            L.MINIGAME_SOUNDS_DESCRIPTION,
         },
     }
     for _, entry in ipairs(W.Audio.categories) do
@@ -84,22 +84,22 @@ function W.RegisterSettings()
     end
     options.args.adventure = {
         type = "group",
-        name = L["New adventure"],
+        name = L.NEW_ADVENTURE,
         order = 90,
         args = {
             description = {
                 type = "description",
-                name = L["Start over with one hero and the starter guide. This erases the shared adventure for every character on your account. Display and audio preferences are kept."],
+                name = L.NEW_ADVENTURE_DESCRIPTION,
                 order = 1,
             },
             reset = {
                 type = "execute",
-                name = L["Reset all adventure progress…"],
-                desc = L["Permanently erase heroes, equipment, currencies, Adventure XP, Heritage, recipes, discoveries and destination progress. This is a full reset, not a new chapter."],
+                name = L.RESET_ADVENTURE,
+                desc = L.RESET_ADVENTURE_DESCRIPTION,
                 order = 2,
                 width = "full",
                 confirm = true,
-                confirmText = L["Erase ALL account-wide AFKcraft progress? Heroes, equipment, gold, materials, Essence, Adventure XP, Heritage, heirlooms, recipes and discoveries will be lost. This cannot be undone. Display and audio preferences are kept."],
+                confirmText = L.RESET_ADVENTURE_CONFIRMATION,
                 func = function()
                     W.ResetAdventure()
                 end,
@@ -108,11 +108,11 @@ function W.RegisterSettings()
     }
     options.args.locale = {
         type = "select",
-        name = L["Language"],
-        desc = L["Choose the addon language. Reload the UI to apply this change."],
+        name = L.LANGUAGE,
+        desc = L.LANGUAGE_DESCRIPTION,
         order = 80,
         values = {
-            auto = L["Game language"],
+            auto = L.GAME_LANGUAGE,
             enUS = "English",
             frFR = "Français",
             deDE = "Deutsch",
@@ -125,7 +125,7 @@ function W.RegisterSettings()
         set = function(_, value)
             if options.args.locale.values[value] then
                 W.preferences.global.locale = value
-                W.Notify(L["Language saved. Use /reload to apply it."])
+                W.Notify(L.LANGUAGE_RELOAD_NOTICE)
             end
         end,
         width = "full",

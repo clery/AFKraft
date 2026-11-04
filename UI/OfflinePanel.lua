@@ -13,10 +13,10 @@ end
 
 local function duration(seconds)
     if type(seconds) ~= "number" or seconds < 0 or seconds >= math.huge or seconds ~= seconds then
-        return L["Time not recorded"]
+        return L.TIME_NOT_RECORDED
     end
     local minutes = math.floor(seconds / 60)
-    return minutes >= 60 and string.format(L["%dh %02dm"], math.floor(minutes / 60), minutes % 60)
+    return minutes >= 60 and string.format(L.H_M, math.floor(minutes / 60), minutes % 60)
         or minutes > 0 and (minutes .. "m")
         or (math.floor(seconds) .. "s")
 end
@@ -39,17 +39,17 @@ local function card(parent, title, icon, x, y, headline, detail, tooltip)
 end
 
 function P.Draw(ui, parent, state)
-    U.Text(parent, L["EARNINGS SUMMARY"], 0, 0, 24, T.gold, 1250)
+    U.Text(parent, L.EARNINGS_SUMMARY_HEADING, 0, 0, 24, T.gold, 1250)
     ui.offlineCards = {}
     local report = state.lastOfflineSummary
     if type(report) ~= "table" then
-        U.Text(parent, L["No offline adventure to report yet."], 0, 56, 17, T.text, 1250)
+        U.Text(parent, L.NO_OFFLINE_ADVENTURE_TO_REPORT_YET, 0, 56, 17, T.text, 1250)
     else
-        U.Text(parent, L["Safe farming · "] .. duration(report.seconds), 0, 44, 16, T.text, 1250)
+        U.Text(parent, L.SAFE_FARMING_PREFIX .. duration(report.seconds), 0, 44, 16, T.text, 1250)
         if report.interrupted then
             U.Text(
                 parent,
-                duration(report.remainingSeconds) .. L[" left to resolve"],
+                duration(report.remainingSeconds) .. L.LEFT_TO_RESOLVE_SUFFIX,
                 0,
                 78,
                 14,
@@ -60,37 +60,37 @@ function P.Draw(ui, parent, state)
         local cards = ui.offlineCards
         cards.earnings = card(
             parent,
-            L["Earnings"],
+            L.EARNINGS,
             "INV_Misc_Map_01",
             0,
             100,
-            number(report.gold) .. L[" gold"],
+            number(report.gold) .. L.GOLD_SUFFIX_3,
             count(report.victories, "victory", "victories"),
-            L["Earned from offline battles. No Adventure XP or Essence is awarded offline."]
+            L.EARNED_FROM_OFFLINE_BATTLES_NO_ADVENTURE_XP_OR_ESSENCE
         )
         cards.progress = card(
             parent,
-            L["Hero progress"],
+            L.HERO_PROGRESS,
             "INV_Misc_Book_09",
             440,
             100,
-            number(report.heroXP) .. L[" hero XP"],
-            count(report.heroLevels, L["level gained"], L["levels gained"])
+            number(report.heroXP) .. L.HERO_XP_SUFFIX,
+            count(report.heroLevels, L.LEVEL_GAINED, L.LEVELS_GAINED)
                 .. "\n"
                 .. number(report.masteryXP)
-                .. L[" Mastery XP · "]
+                .. L.FRAGMENT_MASTERY_XP
                 .. count(report.masteryRanks, "rank", "ranks"),
-            L["XP retained across the party. Includes level and Mastery gains; excludes XP lost at a cap."]
+            L.XP_RETAINED_ACROSS_THE_PARTY_INCLUDES_LEVEL_AND_MASTERY
         )
         cards.equipment = card(
             parent,
-            L["Equipment"],
+            L.EQUIPMENT,
             "INV_Misc_Bag_10",
             880,
             100,
-            count(report.itemsKept, L["item kept"], L["items kept"]),
-            number(report.salvaged) .. L[" automatically salvaged"],
-            L["Items added to your shared inventory, including stacked copies. Loot rules and inventory space determine what is kept."]
+            count(report.itemsKept, L.ITEM_KEPT, L.ITEMS_KEPT),
+            number(report.salvaged) .. L.AUTOMATICALLY_SALVAGED_SUFFIX,
+            L.ITEMS_ADDED_TO_YOUR_SHARED_INVENTORY_INCLUDING_STACKED_COPIES
         )
         local materials = {}
         for _, id in ipairs(C.materialOrder) do
@@ -112,46 +112,40 @@ function P.Draw(ui, parent, state)
         end
         cards.materials = card(
             parent,
-            L["Materials"],
+            L.MATERIALS,
             "Trade_BlackSmithing",
             0,
             314,
-            trophies > 0 and (L["Boss trophies +"] .. number(trophies))
-                or report.fragments and report.fragments > 0 and (L["Runic fragments +"] .. number(
+            trophies > 0 and (L.BOSS_TROPHIES .. number(trophies))
+                or report.fragments and report.fragments > 0 and (L.RUNIC_FRAGMENTS .. number(
                     report.fragments
                 ))
-                or L["Zone supplies"],
+                or L.ZONE_SUPPLIES,
             table.concat(materials, "\n"),
-            L["Materials gained, including salvage. Fractional bonuses carry forward. Runic fragments require eligible tier bosses and a learned recipe."]
+            L.MATERIALS_GAINED_INCLUDING_SALVAGE_FRACTIONAL_BONUSES_CARRY_FORWARD
                 .. "\n\n"
                 .. table.concat(trophyDetails, "\n")
         )
         cards.automation = card(
             parent,
-            L["Automation"],
+            L.AUTOMATION,
             "INV_Misc_Book_09",
             440,
             314,
-            count(report.boostUses, L["boost use"], L["boost uses"]),
+            count(report.boostUses, L.BOOST_USE, L.BOOST_USES),
             number(report.routeTransitions)
-                .. L[" route transitions\n"]
+                .. L.FRAGMENT_ROUTE_TRANSITIONS
                 .. (
                     report.routeStatus
-                    or report.routesWaiting and L["Routes waited during offline farming"]
-                    or report.routesWaiting == false and L["Routes were disabled"]
-                    or L["Route state not recorded"]
+                    or report.routesWaiting and L.ROUTES_WAITED_DURING_OFFLINE_FARMING
+                    or report.routesWaiting == false and L.ROUTES_WERE_DISABLED
+                    or L.ROUTE_STATE_NOT_RECORDED
                 ),
-            L["Enabled boosts use normal cooldowns. Optional offline routes visit departure-cleared checkpoints, up to 12 transitions. New progression and resets wait for you."]
+            L.ENABLED_BOOSTS_USE_NORMAL_COOLDOWNS_OPTIONAL_OFFLINE_ROUTES_VISIT
         )
     end
-    U.Help(
-        parent,
-        L["Offline progress"],
-        1258,
-        0,
-        L["Rewards are already applied. Offline farming is capped at 24 hours.\n\nA dash means the older report did not record that total."]
-    )
-    ui.offlineBack = U.Button(parent, L["Back to adventure"], 0, 552, 280, 34, function()
+    U.Help(parent, L.OFFLINE_PROGRESS, 1258, 0, L.OFFLINE_PROGRESS_DESCRIPTION)
+    ui.offlineBack = U.Button(parent, L.BACK_TO_ADVENTURE, 0, 552, 280, 34, function()
         ui:SetTab("adventure")
     end)
 end

@@ -252,68 +252,89 @@ local traits = {
     },
 }
 
-local conditions = {
-    group = "while at least two enemies are alive",
-    solo = "while only one enemy is alive",
-    boss = "during boss encounters",
-    opening = "during the first 6 seconds of combat",
-    late = "after 12 seconds of combat",
-    healthy = "while above 80% health",
-    wounded = "while below half health",
-    critical = "while below 30% health",
-    execute = "against enemies below 35% health",
-    bleed = "while the target is bleeding or poisoned",
-    armored = "while your health percentage exceeds the enemy's",
-    shielded = "while protected by an absorb shield",
-    ally = "when healing another hero",
-    patient = "after you have used three offensive abilities this encounter",
-    quick = "from your third basic attack onward this encounter",
-    unhurt = "while at full health",
-    burning = "while the target has a magical damage-over-time effect",
-    rescue = "while the recipient is below 20% health",
-    protect = "while another living ally is below 30% health",
-    outnumbered = "while living enemies outnumber living heroes",
+local descriptions = {
+    basic = {
+        group = L.TRAIT_BASIC_GROUP,
+        solo = L.TRAIT_BASIC_SOLO,
+        boss = L.TRAIT_BASIC_BOSS,
+        opening = L.TRAIT_BASIC_OPENING,
+        late = L.TRAIT_BASIC_LATE,
+        healthy = L.TRAIT_BASIC_HEALTHY,
+        wounded = L.TRAIT_BASIC_WOUNDED,
+        execute = L.TRAIT_BASIC_EXECUTE,
+        bleed = L.TRAIT_BASIC_BLEED,
+        armored = L.TRAIT_BASIC_ARMORED,
+        shielded = L.TRAIT_BASIC_SHIELDED,
+        patient = L.TRAIT_BASIC_PATIENT,
+        quick = L.TRAIT_BASIC_QUICK,
+        burning = L.TRAIT_BASIC_BURNING,
+        outnumbered = L.TRAIT_BASIC_OUTNUMBERED,
+    },
+    strike = {
+        group = L.TRAIT_STRIKE_GROUP,
+        solo = L.TRAIT_STRIKE_SOLO,
+        boss = L.TRAIT_STRIKE_BOSS,
+        opening = L.TRAIT_STRIKE_OPENING,
+        late = L.TRAIT_STRIKE_LATE,
+        healthy = L.TRAIT_STRIKE_HEALTHY,
+        wounded = L.TRAIT_STRIKE_WOUNDED,
+        execute = L.TRAIT_STRIKE_EXECUTE,
+        bleed = L.TRAIT_STRIKE_BLEED,
+        armored = L.TRAIT_STRIKE_ARMORED,
+        shielded = L.TRAIT_STRIKE_SHIELDED,
+        patient = L.TRAIT_STRIKE_PATIENT,
+        quick = L.TRAIT_STRIKE_QUICK,
+        unhurt = L.TRAIT_STRIKE_UNHURT,
+        burning = L.TRAIT_STRIKE_BURNING,
+        protect = L.TRAIT_STRIKE_PROTECT,
+    },
+    healing = {
+        group = L.TRAIT_HEALING_GROUP,
+        solo = L.TRAIT_HEALING_SOLO,
+        boss = L.TRAIT_HEALING_BOSS,
+        opening = L.TRAIT_HEALING_OPENING,
+        late = L.TRAIT_HEALING_LATE,
+        healthy = L.TRAIT_HEALING_HEALTHY,
+        wounded = L.TRAIT_HEALING_WOUNDED,
+        critical = L.TRAIT_HEALING_CRITICAL,
+        execute = L.TRAIT_HEALING_EXECUTE,
+        bleed = L.TRAIT_HEALING_BLEED,
+        shielded = L.TRAIT_HEALING_SHIELDED,
+        ally = L.TRAIT_HEALING_ALLY,
+        patient = L.TRAIT_HEALING_PATIENT,
+        quick = L.TRAIT_HEALING_QUICK,
+        burning = L.TRAIT_HEALING_BURNING,
+        rescue = L.TRAIT_HEALING_RESCUE,
+        protect = L.TRAIT_HEALING_PROTECT,
+    },
+    defense = {
+        group = L.TRAIT_DEFENSE_GROUP,
+        solo = L.TRAIT_DEFENSE_SOLO,
+        boss = L.TRAIT_DEFENSE_BOSS,
+        opening = L.TRAIT_DEFENSE_OPENING,
+        late = L.TRAIT_DEFENSE_LATE,
+        healthy = L.TRAIT_DEFENSE_HEALTHY,
+        wounded = L.TRAIT_DEFENSE_WOUNDED,
+        critical = L.TRAIT_DEFENSE_CRITICAL,
+        bleed = L.TRAIT_DEFENSE_BLEED,
+        armored = L.TRAIT_DEFENSE_ARMORED,
+        shielded = L.TRAIT_DEFENSE_SHIELDED,
+        patient = L.TRAIT_DEFENSE_PATIENT,
+        quick = L.TRAIT_DEFENSE_QUICK,
+        unhurt = L.TRAIT_DEFENSE_UNHURT,
+        burning = L.TRAIT_DEFENSE_BURNING,
+        protect = L.TRAIT_DEFENSE_PROTECT,
+        outnumbered = L.TRAIT_DEFENSE_OUTNUMBERED,
+    },
 }
 
 function C.ApplyTalentTrait(node, entry)
     node.icon = entry[1]
     if entry[2] then
         node.trait = { kind = entry[2], condition = entry[3], amount = entry[4] / 100 }
-        local subject = entry[2] == "healing" and "Direct healing restores"
-            or entry[2] == "basic" and "Basic attacks deal"
-            or entry[2] == "strike" and "Offensive abilities deal"
-            or "Take"
-        local change = entry[2] == "defense" and "% less damage "
-            or entry[2] == "healing" and "% more health "
-            or "% more damage "
-        local condition = conditions[entry[3]]
-        if entry[2] == "healing" then
-            if entry[3] == "healthy" or entry[3] == "wounded" or entry[3] == "critical" then
-                condition = condition:gsub("while ", "while the recipient is ")
-            elseif entry[3] == "shielded" then
-                condition = "while the recipient has an absorb shield"
-            elseif entry[3] == "execute" then
-                condition = "while a living enemy is below 35% health"
-            elseif entry[3] == "bleed" then
-                condition = "while a living enemy is bleeding or poisoned"
-            elseif entry[3] == "burning" then
-                condition = "while a living enemy has a magical damage-over-time effect"
-            elseif entry[3] == "unhurt" then
-                condition = "while the recipient is at full health"
-            end
-        elseif entry[2] == "defense" and entry[3] == "bleed" then
-            condition = "while the attacker is bleeding or poisoned"
-        elseif entry[2] == "defense" and entry[3] == "burning" then
-            condition = "while the attacker has a magical damage-over-time effect"
-        end
-        node.text = node.text
-            .. "\n"
-            .. string.format(
-                L[subject .. " %d" .. change:gsub("%%", "%%%%") .. condition:gsub("%%", "%%%%") .. "."],
-                entry[4]
-            )
+        node.text = node.text .. "\n" .. string.format(descriptions[entry[2]][entry[3]], entry[4])
         if entry[2] == "defense" then
-            node.text = node.text .. L[" Situational damage reduction is capped at 60%."]
+            node.text = node.text .. L.SITUATIONAL_DAMAGE_REDUCTION_IS_CAPPED_AT_60_SUFFIX
         end
     end
 end

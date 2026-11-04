@@ -249,7 +249,7 @@ case(
                 seen[mechanic[1]], count = true, count + 1
                 local found
                 for _, node in ipairs(C.talentsByClass[class.id]) do
-                    if node.name == name then
+                    if node.name == W.L[name] then
                         assert(node.effect == mechanic[1] and node.text == mechanic[2])
                         found = true
                     end

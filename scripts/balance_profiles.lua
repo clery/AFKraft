@@ -2,6 +2,7 @@
 -- Fixed-seed feasibility checks, not a substitute for supported-client playtests.
 local W = {}
 assert(loadfile("Localization.lua"))("WoWIdle", W)
+assert(loadfile("Locales/enUS.lua"))("WoWIdle", W)
 for _, file in ipairs({
     "Content.lua",
     "Content/Encounters.lua",

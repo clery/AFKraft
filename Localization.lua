@@ -10,10 +10,10 @@ if client == "esMX" then
 end
 W.locale = supported[selected] and selected or supported[client] and client or "enUS"
 
--- English source strings are stable catalog keys; saved IDs and player names are untouched.
+-- Stable keys share an explicit English fallback; saved IDs and player names are untouched.
 W.L = setmetatable({}, {
-    __index = function(_, source)
+    __index = function(_, key)
         local catalog = W.Locales[W.locale]
-        return catalog and catalog[source] or source
+        return catalog and catalog[key] or W.Locales.enUS[key]
     end,
 })

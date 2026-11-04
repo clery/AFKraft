@@ -4,9 +4,9 @@ local M = {}
 W.Minimap = M
 
 local notices = {
-    { "combat", L["Party regrouped after combat."] },
-    { "party", L["New companion available."] },
-    { "progress", L["Adventure progress unlocked."] },
+    { "combat", L.PARTY_REGROUPED_AFTER_COMBAT },
+    { "party", L.NEW_COMPANION_AVAILABLE },
+    { "progress", L.ADVENTURE_PROGRESS_UNLOCKED },
 }
 
 local function pending()
@@ -91,9 +91,9 @@ function M.Create()
         end,
         OnTooltipShow = function(tooltip)
             tooltip:AddLine("AFKraft : WoW Idle Game", 1, 0.82, 0)
-            tooltip:AddLine(L["Click to open the expanded adventure."], 1, 1, 1)
+            tooltip:AddLine(L.CLICK_TO_OPEN_THE_EXPANDED_ADVENTURE, 1, 1, 1)
             if not W.state.ui.minimap or not W.state.ui.minimap.lock then
-                tooltip:AddLine(L["Drag to move the minimap button."], 0.7, 0.7, 0.7)
+                tooltip:AddLine(L.DRAG_TO_MOVE_THE_MINIMAP_BUTTON, 0.7, 0.7, 0.7)
             end
             local notice = W.state.ui.minimapNotice
             if type(notice) == "string" then
@@ -105,7 +105,7 @@ function M.Create()
                     end
                 end
                 if not shown then
-                    tooltip:AddLine(L["New adventure updates."], 1, 0.7, 0.3, true)
+                    tooltip:AddLine(L.NEW_ADVENTURE_UPDATES, 1, 0.7, 0.3, true)
                 end
             end
         end,

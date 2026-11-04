@@ -48,10 +48,10 @@ end
 function G.BuyBoost(state, id, currency)
     local boost = C.boostByID[id]
     if not boost then
-        return false, L["Unknown commander boost."]
+        return false, L.UNKNOWN_COMMANDER_BOOST
     end
     if state.boosts.owned[id] then
-        return false, L["This boost is already learned."]
+        return false, L.THIS_BOOST_IS_ALREADY_LEARNED
     end
     local hint = G.FeatureHint(state, "boosts")
     if hint then
@@ -60,24 +60,24 @@ function G.BuyBoost(state, id, currency)
     currency = currency or "essence"
     local cost = currency == "essence" and boost.cost or currency == "legacy" and boost.legacyCost
     if not cost then
-        return false, L["Choose Essence or Heritage to learn this boost."]
+        return false, L.CHOOSE_ESSENCE_OR_HERITAGE_TO_LEARN_THIS_BOOST
     end
     if state[currency] < cost then
         return false,
-            L["Not enough "]
-                .. (currency == "essence" and L["Essence"] or L["Heritage"])
-                .. L[" to learn this boost."]
+            L.NOT_ENOUGH_PREFIX
+                .. (currency == "essence" and L.ESSENCE or L.HERITAGE)
+                .. L.TO_LEARN_THIS_BOOST_SUFFIX
     end
     state[currency] = state[currency] - cost
     state.boosts.owned[id] = true
     state.boosts.equipped = state.boosts.equipped or id
-    G.Log(state, boost.name .. L[" learned permanently. Equip it in Commander."], nil, "progress")
+    G.Log(state, boost.name .. L.LEARNED_PERMANENTLY_EQUIP_IT_IN_COMMANDER_SUFFIX, nil, "progress")
     return true
 end
 
 function G.EquipBoost(state, id)
     if not C.boostByID[id] or not state.boosts.owned[id] then
-        return false, L["Learn this boost first."]
+        return false, L.LEARN_THIS_BOOST_FIRST
     end
     state.boosts.equipped = id
     return true
@@ -90,21 +90,21 @@ end
 
 function G.CanActivateBoost(state, id)
     if not C.boostByID[id] or not state.boosts.owned[id] then
-        return false, L["Learn this boost first."]
+        return false, L.LEARN_THIS_BOOST_FIRST
     end
     if state.boosts.equipped ~= id then
-        return false, L["Equip this boost first."]
+        return false, L.EQUIP_THIS_BOOST_FIRST
     end
     local active, cooldown = G.BoostRemaining(state, id)
     if active > 0 then
-        return false, L["Already active."]
+        return false, L.ALREADY_ACTIVE
     end
     if cooldown > 0 then
-        return false, L["Cooling down."]
+        return false, L.COOLING_DOWN
     end
     for activeID in pairs(state.boosts.activeUntil) do
         if G.BoostRemaining(state, activeID) > 0 then
-            return false, L["Another boost is still active."]
+            return false, L.ANOTHER_BOOST_IS_STILL_ACTIVE
         end
     end
     local eligible = false
@@ -118,9 +118,9 @@ function G.CanActivateBoost(state, id)
         end
     end
     if not eligible then
-        return false, L["No living party members."]
+        return false, L.NO_LIVING_PARTY_MEMBERS
     end
-    return true, L["Ready."]
+    return true, L.READY
 end
 
 function G.ActivateBoost(state, id, quiet)
@@ -132,7 +132,7 @@ function G.ActivateBoost(state, id, quiet)
     state.boosts.activeUntil[id] = state.clock + boost.duration
     state.boosts.readyAt[id] = state.clock + boost.cooldown
     state.stats.boostUses = (state.stats.boostUses or 0) + 1
-    G.Log(state, boost.name .. L[" active for five adventure minutes."], quiet, "boost")
+    G.Log(state, boost.name .. L.ACTIVE_FOR_FIVE_ADVENTURE_MINUTES_SUFFIX, quiet, "boost")
     return true
 end
 
@@ -210,26 +210,26 @@ function G.BuyBoostAutomation(state, capability)
     local unlock = C.boostAutomation[capability]
     local automation = state.boosts.automation
     if not unlock then
-        return false, L["Unknown automation capability."]
+        return false, L.UNKNOWN_AUTOMATION_CAPABILITY
     end
     if automation.owned[capability] then
-        return false, L["This automation capability is already learned."]
+        return false, L.THIS_AUTOMATION_CAPABILITY_IS_ALREADY_LEARNED
     end
     local hint = G.FeatureHint(state, capability)
     if hint then
         return false, hint
     end
     if capability == "conditional" and not automation.owned.onCooldown then
-        return false, L["Learn on-cooldown automation first."]
+        return false, L.LEARN_ON_COOLDOWN_AUTOMATION_FIRST
     end
     if state[unlock.currency] < unlock.cost then
-        return false, L["Not enough Heritage to learn this automation capability."]
+        return false, L.NOT_ENOUGH_HERITAGE_TO_LEARN_THIS_AUTOMATION_CAPABILITY
     end
     state[unlock.currency] = state[unlock.currency] - unlock.cost
     automation.owned[capability] = true
     G.Log(
         state,
-        unlock.name .. L[" boost automation learned permanently. Configure it in Commander."],
+        unlock.name .. L.BOOST_AUTOMATION_LEARNED_PERMANENTLY_CONFIGURE_IT_IN_COMMANDER_SUFFIX,
         nil,
         "progress"
     )
@@ -238,11 +238,11 @@ end
 
 function G.SetBoostAutomationEnabled(state, enabled)
     if type(enabled) ~= "boolean" then
-        return false, L["Choose whether boost automation is enabled."]
+        return false, L.CHOOSE_WHETHER_BOOST_AUTOMATION_IS_ENABLED
     end
     local automation = state.boosts.automation
     if enabled and not automation.owned.onCooldown then
-        return false, L["Learn on-cooldown automation first."]
+        return false, L.LEARN_ON_COOLDOWN_AUTOMATION_FIRST
     end
     automation.enabled = enabled
     return true
@@ -251,29 +251,29 @@ end
 function G.ConfigureBoostAutomation(state, id, key, value)
     local automation = state.boosts.automation
     if not C.boostByID[id] or not state.boosts.owned[id] then
-        return false, L["Learn this boost first."]
+        return false, L.LEARN_THIS_BOOST_FIRST
     end
     if key == "enabled" then
         if type(value) ~= "boolean" then
-            return false, L["Choose whether this boost is automated."]
+            return false, L.CHOOSE_WHETHER_THIS_BOOST_IS_AUTOMATED
         end
         if value and not automation.owned.onCooldown then
-            return false, L["Learn on-cooldown automation first."]
+            return false, L.LEARN_ON_COOLDOWN_AUTOMATION_FIRST
         end
     elseif key == "mode" then
         local mode = C.boostAutomationModeByID[value]
         if not mode then
-            return false, L["Unknown automation mode."]
+            return false, L.UNKNOWN_AUTOMATION_MODE
         end
         if mode.capability and not automation.owned[mode.capability] then
-            return false, L["Learn the matching automation capability first."]
+            return false, L.LEARN_THE_MATCHING_AUTOMATION_CAPABILITY_FIRST
         end
     elseif key == "healthBelow" then
         if type(value) ~= "number" or value < 10 or value > 90 or value ~= math.floor(value) then
-            return false, L["Choose a whole health threshold from 10 to 90 percent."]
+            return false, L.CHOOSE_A_WHOLE_HEALTH_THRESHOLD_FROM_10_TO_90
         end
     else
-        return false, L["Unknown automation setting."]
+        return false, L.UNKNOWN_AUTOMATION_SETTING
     end
     automation.abilities[id][key] = value
     if key == "enabled" and value and automation.abilities[id].mode == "manual" then
@@ -287,19 +287,19 @@ function G.BoostAutomationStatus(state, id)
     local automation = state.boosts.automation
     local config = automation.abilities[id]
     if not config or not state.boosts.owned[id] then
-        return false, L["Learn this boost first."]
+        return false, L.LEARN_THIS_BOOST_FIRST
     end
     if not automation.owned.onCooldown then
-        return false, L["Automation not learned."]
+        return false, L.AUTOMATION_NOT_LEARNED
     end
     if not automation.enabled then
-        return false, L["Automation paused."]
+        return false, L.AUTOMATION_PAUSED
     end
     if not config.enabled then
-        return false, L["Disabled for this boost."]
+        return false, L.DISABLED_FOR_THIS_BOOST
     end
     if config.mode == "manual" and (not config.rules or #config.rules == 0) then
-        return false, L["Manual mode."]
+        return false, L.MANUAL_MODE
     end
     local ready, reason = G.CanActivateBoost(state, id)
     if not ready then
@@ -313,17 +313,17 @@ function G.BoostAutomationStatus(state, id)
         end
     end
     if not livingEnemy or (state.rest or 0) > 0 then
-        return false, L["Waiting for combat."]
+        return false, L.WAITING_FOR_COMBAT
     end
     if config.rules and #config.rules > 0 then
         return G.EvaluateBoostRules(state, id)
     end
     if config.mode == "boss" and not battle.boss then
-        return false, L["Waiting for a boss encounter."]
+        return false, L.WAITING_FOR_A_BOSS_ENCOUNTER
     elseif config.mode == "farming" and not state.farming then
-        return false, L["Waiting for safe farming."]
+        return false, L.WAITING_FOR_SAFE_FARMING
     elseif config.mode == "pushing" and state.farming then
-        return false, L["Waiting for frontier pushing."]
+        return false, L.WAITING_FOR_FRONTIER_PUSHING
     elseif config.mode == "lowHealth" then
         local belowThreshold = false
         for _, unit in ipairs(battle.heroes) do
@@ -337,11 +337,10 @@ function G.BoostAutomationStatus(state, id)
             end
         end
         if not belowThreshold then
-            return false,
-                L["Waiting for a living ally below "] .. config.healthBelow .. L["% health."]
+            return false, L.WAITING_FOR_A_LIVING_ALLY_BELOW_PREFIX .. config.healthBelow .. L.HEALTH
         end
     end
-    return true, L["Ready to activate automatically."]
+    return true, L.READY_TO_ACTIVATE_AUTOMATICALLY
 end
 
 function G.AutomateBoost(state)

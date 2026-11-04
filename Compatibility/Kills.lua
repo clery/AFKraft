@@ -108,7 +108,7 @@ function K.Observe(state, unit)
             and not denied
             and (lootCredit or (record and record.participated))
         then
-            G.ActivityReward(state, "kill:" .. guid, "kill", L["Non-trivial creature defeated"])
+            G.ActivityReward(state, "kill:" .. guid, "kill", L.NON_TRIVIAL_CREATURE_DEFEATED)
         end
         return
     end

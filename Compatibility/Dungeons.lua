@@ -256,7 +256,7 @@ function D.Event(state, event, id)
         instanceID = 0
     end
     local key = "dungeon:" .. identity.guid .. ":" .. instanceID .. ":" .. now
-    if G.ActivityReward(state, key, "dungeon", L["Dungeon completed"]) then
+    if G.ActivityReward(state, key, "dungeon", L.DUNGEON_COMPLETED) then
         state.adventure.dungeonReceipt = { character = identity.guid, time = now }
     end
 end

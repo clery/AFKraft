@@ -10,14 +10,14 @@ end
 
 local function routeName(state, route)
     if not route or not route.selected then
-        return L["No route selected"]
+        return L.NO_ROUTE_SELECTED
     end
     for _, template in ipairs(state.routes and state.routes.templates or {}) do
         if template.id == route.selected then
             return template.name
         end
     end
-    return L["Unavailable route"]
+    return L.UNAVAILABLE_ROUTE
 end
 
 function P.Draw(ui, parent, state)
@@ -49,7 +49,7 @@ function P.Draw(ui, parent, state)
         ui.profileName:SetText(profile and profile.name or "")
         ui.profileNameSelection = ui.selectedProfile or false
     end
-    U.Text(frame, L["Saved profiles · "] .. #entries .. "/8", 0, 0, 20, T.gold, 420)
+    U.Text(frame, L.SAVED_PROFILES_PREFIX .. #entries .. "/8", 0, 0, 20, T.gold, 420)
     ui.profileControls = { rows = {} }
     for index, entry in ipairs(entries) do
         local row = U.SelectButton(frame, "", 0, 48 + (index - 1) * 66, 416, 56, function()
@@ -62,26 +62,18 @@ function P.Draw(ui, parent, state)
             :SetParent(row.content or row)
         U.SingleLine(U.Text(row, entry.name, 64, 8, 15, T.gold, 334), 334, 22)
         U.SingleLine(
-            U.Text(row, boost and boost.name or L["No equipped boost"], 64, 31, 12, T.muted, 334),
+            U.Text(row, boost and boost.name or L.NO_EQUIPPED_BOOST, 64, 31, 12, T.muted, 334),
             334,
             18
         )
         U.EndBuild(row)
         ui.profileControls.rows[entry.id] = row
     end
-    ui.profileControls.new = button(frame, L["New profile"], 0, 594, 200, function()
+    ui.profileControls.new = button(frame, L.NEW_PROFILE, 0, 594, 200, function()
         ui.selectedProfile, ui.profileNameSelection = nil, nil
         ui:Refresh()
     end)
-    U.Text(
-        frame,
-        profile and L["Profile name"] or L["Name your current setup"],
-        470,
-        0,
-        17,
-        T.gold,
-        720
-    )
+    U.Text(frame, profile and L.PROFILE_NAME or L.NAME_YOUR_CURRENT_SETUP, 470, 0, 17, T.gold, 720)
     local snapshot = profile
         or {
             equipped = state.boosts.equipped,
@@ -97,8 +89,8 @@ function P.Draw(ui, parent, state)
     U.Text(
         frame,
         equipped and equipped.name
-            or snapshot.equipped and L["Unavailable boost"]
-            or L["No boost equipped"],
+            or snapshot.equipped and L.UNAVAILABLE_BOOST
+            or L.NO_BOOST_EQUIPPED,
         470,
         102,
         21,
@@ -107,7 +99,7 @@ function P.Draw(ui, parent, state)
     )
     U.Text(
         frame,
-        snapshot.automation.enabled and L["Automation enabled"] or L["Automation paused"],
+        snapshot.automation.enabled and L.AUTOMATION_ENABLED or L.AUTOMATION_PAUSED_2,
         470,
         140,
         14,
@@ -123,9 +115,9 @@ function P.Draw(ui, parent, state)
             local mode = C.boostAutomationModeByID[config.mode]
             U.Text(
                 frame,
-                config.rules and #config.rules > 0 and (#config.rules .. L[" ordered rules"])
-                    or config.enabled and (config.mode == "lowHealth" and (L["Below "] .. config.healthBelow .. "%") or mode and mode.name or L["Unavailable"])
-                    or L["Manual"],
+                config.rules and #config.rules > 0 and (#config.rules .. L.ORDERED_RULES_SUFFIX)
+                    or config.enabled and (config.mode == "lowHealth" and (L.BELOW_PREFIX .. config.healthBelow .. "%") or mode and mode.name or L.UNAVAILABLE)
+                    or L.MANUAL,
                 x,
                 y + 48,
                 12,
@@ -138,12 +130,12 @@ function P.Draw(ui, parent, state)
     U.Text(frame, routeName(state, snapshot.route), 470, 360, 16, T.gold, 720)
     U.Text(
         frame,
-        (snapshot.route and snapshot.route.enabled and L["Route enabled"] or L["Route paused"])
+        (snapshot.route and snapshot.route.enabled and L.ROUTE_ENABLED or L.ROUTE_PAUSED)
             .. (
                 snapshot.route
                     and snapshot.route.offlineEnabled
-                    and L[" | Offline cleared routes on"]
-                or L[" | Offline routes off"]
+                    and L.OFFLINE_CLEARED_ROUTES_ON_SUFFIX
+                or L.OFFLINE_ROUTES_OFF_SUFFIX
             ),
         470,
         390,
@@ -154,9 +146,9 @@ function P.Draw(ui, parent, state)
     local effect = snapshot.collection and C.collectionByID[snapshot.collection.effect]
     U.Text(
         frame,
-        effect and (L["Collection effect: "] .. effect.name)
-            or snapshot.collection and L["No collection effect"]
-            or L["Collection effect unchanged"],
+        effect and (L.COLLECTION_EFFECT_PREFIX .. effect.name)
+            or snapshot.collection and L.NO_COLLECTION_EFFECT
+            or L.COLLECTION_EFFECT_UNCHANGED,
         470,
         418,
         13,
@@ -165,7 +157,7 @@ function P.Draw(ui, parent, state)
     )
     ui.profileControls.save = button(
         frame,
-        profile and L["Update snapshot"] or L["Save new profile"],
+        profile and L.UPDATE_SNAPSHOT or L.SAVE_NEW_PROFILE,
         470,
         446,
         236,
@@ -184,17 +176,17 @@ function P.Draw(ui, parent, state)
     )
     U.Tooltip(
         ui.profileControls.save,
-        L["Save current setup"],
-        L["Save your boost, automation, route preferences and collection effect. Applying a profile does not restore currency, cooldowns or active effects."]
+        L.SAVE_CURRENT_SETUP,
+        L.SAVE_YOUR_BOOST_AUTOMATION_ROUTE_PREFERENCES_AND_COLLECTION_EFFECT_2
     )
-    ui.profileControls.apply = button(frame, L["Apply profile"], 726, 446, 236, function()
+    ui.profileControls.apply = button(frame, L.APPLY_PROFILE, 726, 446, 236, function()
         W.Action(G.ApplyBoostProfile, ui.selectedProfile)
     end)
-    ui.profileControls.rename = button(frame, L["Rename"], 470, 496, 236, function()
+    ui.profileControls.rename = button(frame, L.RENAME, 470, 496, 236, function()
         ui.profileName:ClearFocus()
         W.Action(G.RenameBoostProfile, ui.selectedProfile, ui.profileName:GetText())
     end)
-    ui.profileControls.delete = button(frame, L["Delete profile"], 726, 496, 236, function()
+    ui.profileControls.delete = button(frame, L.DELETE_PROFILE, 726, 496, 236, function()
         W.Action(G.DeleteBoostProfile, ui.selectedProfile)
     end)
     for _, control in ipairs({

@@ -269,19 +269,19 @@ end
 function G.BuyCollectionTalent(state, id)
     local talent = C.collectionTalentByID[id]
     if not talent or not G.ValidateCollectionTalents(state) or not integer(state.legacy) then
-        return false, L["Choose a valid collection talent."]
+        return false, L.CHOOSE_A_VALID_COLLECTION_TALENT
     end
     local rank = state.collectionTalents[id] or 0
     local cost = C.collectionTalentCosts[rank + 1]
     if not cost then
-        return false, L["This collection talent is fully learned."]
+        return false, L.THIS_COLLECTION_TALENT_IS_FULLY_LEARNED
     end
     if state.legacy < cost then
-        return false, L["Not enough Heritage."]
+        return false, L.NOT_ENOUGH_HERITAGE
     end
     state.legacy = state.legacy - cost
     state.collectionTalents[id] = rank + 1
-    G.Log(state, talent.name .. L[" learned: rank "] .. (rank + 1) .. ".", true)
+    G.Log(state, talent.name .. L.FRAGMENT_LEARNED_RANK .. (rank + 1) .. ".", true)
     return true
 end
 
@@ -354,19 +354,18 @@ end
 
 function G.CollectionEffectStatus(state, setID)
     if setID == nil then
-        return true, L["No collection effect selected."]
+        return true, L.NO_COLLECTION_EFFECT_SELECTED
     end
     local collection = setID and C.collectionByID[setID]
     if not collection then
-        return false, L["No collection effect selected."]
+        return false, L.NO_COLLECTION_EFFECT_SELECTED
     end
     local progress = G.CollectionProgress(state, setID)
     if not progress or not progress.complete then
-        return false, L["Complete "] .. collection.name .. L[" to use its effect."]
+        return false, L.COMPLETE_PREFIX .. collection.name .. L.TO_USE_ITS_EFFECT_SUFFIX
     end
     return true,
-        G.ActiveCollectionEffect(state) == setID and L["Active collection effect."]
-            or L["Ready to select."]
+        G.ActiveCollectionEffect(state) == setID and L.ACTIVE_COLLECTION_EFFECT or L.READY_TO_SELECT
 end
 
 function G.SetCollectionEffect(state, setID)
@@ -434,11 +433,11 @@ function G.CollectionKill(state, context)
         or killNPC(context.receipt) ~= context.npcID
         or state.offline
     then
-        return false, L["This is not an attributed collection creature kill."]
+        return false, L.THIS_IS_NOT_AN_ATTRIBUTED_COLLECTION_CREATURE_KILL
     end
     local sources = W.CollectionSources
     if not sources or type(sources.Eligible) ~= "function" then
-        return false, L["Collection sources are unavailable."]
+        return false, L.COLLECTION_SOURCES_ARE_UNAVAILABLE
     end
     local eligible, profile = sources.Eligible(context.profile, context.npcID, kind)
     if
@@ -449,17 +448,17 @@ function G.CollectionKill(state, context)
         or profile.verified ~= true
         or type(eligible) ~= "table"
     then
-        return false, L["This collection source is not enabled and verified."]
+        return false, L.THIS_COLLECTION_SOURCE_IS_NOT_ENABLED_AND_VERIFIED
     end
     local book = kind == "dungeon" and state.dungeonCollections or state.outdoorCollections
     if type(book) ~= "table" then
-        return false, L["Collections are unavailable."]
+        return false, L.COLLECTIONS_ARE_UNAVAILABLE
     end
     local pending, unique = {}, {}
     local receipts = book.receipts[context.profile] or {}
     for _, itemID in ipairs(eligible) do
         if not belongs(itemID, kind) then
-            return false, L["The source references an unknown collection piece."]
+            return false, L.THE_SOURCE_REFERENCES_AN_UNKNOWN_COLLECTION_PIECE
         end
         if not unique[itemID] then
             unique[itemID] = true
@@ -472,7 +471,7 @@ function G.CollectionKill(state, context)
         end
     end
     if #pending == 0 then
-        return false, L["No unfinished piece can count this kill."]
+        return false, L.NO_UNFINISHED_PIECE_CAN_COUNT_THIS_KILL
     end
     book.receipts[context.profile] = receipts
     local discoveries = {}
@@ -504,10 +503,10 @@ function G.CollectionKill(state, context)
         local item = G.CollectionItem(itemID)
         G.Log(
             state,
-            (item and L[item.name] or tostring(itemID))
-                .. L[" discovered in the "]
+            (item and G.ItemName(item) or tostring(itemID))
+                .. L.FRAGMENT_DISCOVERED_IN_THE
                 .. kind
-                .. L[" collection."],
+                .. L.COLLECTION_SUFFIX,
             true
         )
         G.Emit(state, "collection", { itemID = itemID, setID = C.collectionByItem[itemID] })

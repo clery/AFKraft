@@ -121,66 +121,65 @@ function P.adventure(ui, p, s)
     local points, talentHero, _, destinations = P.Opportunities(s)
     if #s.heroes < G.CompanionSlots(s) then
         title, detail, label, tab =
-            L["You found a companion!"],
-            L["A new companion is ready to join. Choose their class in Party; they join the next encounter."],
-            L["Recruit companions"],
+            L.YOU_FOUND_A_COMPANION,
+            L.A_NEW_COMPANION_IS_READY_TO_JOIN_CHOOSE_THEIR,
+            L.RECRUIT_COMPANIONS,
             "party"
     else
         title, detail, label, tab =
-            L["Your company is advancing"],
-            L["Idle battles earn hero experience, gold, equipment and local materials. WoW activities earn Adventure XP and Essence."],
-            L["Manage party"],
+            L.YOUR_COMPANY_IS_ADVANCING,
+            L.IDLE_BATTLES_EARN_HERO_EXPERIENCE_GOLD_EQUIPMENT_AND_LOCAL,
+            L.MANAGE_PARTY,
             "party"
     end
-    if label ~= L["Recruit companions"] then
+    if label ~= L.RECRUIT_COMPANIONS then
         if step == 2 or step == 6 then
             title, detail, label =
-                L["Equipment ready to use"],
-                L["Your shared inventory has equipment for a companion. Compare it with their current gear in Party."],
-                L["Review equipment"]
+                L.EQUIPMENT_READY_TO_USE,
+                L.YOUR_SHARED_INVENTORY_HAS_EQUIPMENT_FOR_A_COMPANION_COMPARE,
+                L.REVIEW_EQUIPMENT
         elseif points > 0 then
             title, detail, label, tab =
-                L["Shape your next victory"],
-                points
-                    .. L[" unspent talent points across your company. Earned points survive chapter resets; changing your build is free."],
-                L["Spend talent points"],
+                L.SHAPE_YOUR_NEXT_VICTORY,
+                points .. L.UNSPENT_TALENT_POINTS_ACROSS_YOUR_COMPANY_EARNED_POINTS_SURVIVE_SUFFIX,
+                L.SPEND_TALENT_POINTS,
                 "talents"
             heroIndex = talentHero
         elseif destinations > 0 and not s.farming then
             title, detail, label, tab =
-                L["Your next destination awaits"],
+                L.YOUR_NEXT_DESTINATION_AWAITS,
                 destinations
-                    .. L[" higher-level destinations are available. Inspect their rewards and choose where to adventure."],
-                L["Explore destinations"],
+                    .. L.HIGHER_LEVEL_DESTINATIONS_ARE_AVAILABLE_INSPECT_THEIR_REWARDS_AND_SUFFIX,
+                L.EXPLORE_DESTINATIONS,
                 "atlas"
         end
     end
-    if s.farming and s.lastDefeat and label ~= L["Recruit companions"] then
-        title = L["Build strength, then push forward"]
+    if s.farming and s.lastDefeat and label ~= L.RECRUIT_COMPANIONS then
+        title = L.BUILD_STRENGTH_THEN_PUSH_FORWARD
         if s.prestigeUnlocked and G.PrestigeReward(s) > 0 and points == 0 then
-            title, label, tab = L["Begin a stronger chapter"], L["Review prestige"], "legacy"
+            title, label, tab = L.BEGIN_A_STRONGER_CHAPTER, L.REVIEW_PRESTIGE, "legacy"
         end
     end
-    text(p, L["NEXT STEP"], 0, 0, 12, T.gold)
+    text(p, L.NEXT_STEP_HEADING, 0, 0, 12, T.gold)
     text(p, title, 0, 27, 23, T.text, 640)
     if s.farming then
-        detail = (s.lastDefeat or L["Your party is farming a safe encounter."])
+        detail = (s.lastDefeat or L.YOUR_PARTY_IS_FARMING_A_SAFE_ENCOUNTER)
             .. (
                 s.prestigeUnlocked
                     and G.PrestigeReward(s) > 0
-                    and L[" Improve your heroes and Retry, or prestige now for permanent party power. Level 60 is not required."]
-                or L[" Improve your heroes, then use Retry."]
+                    and L.IMPROVE_YOUR_HEROES_AND_RETRY_OR_PRESTIGE_NOW_FOR_SUFFIX
+                or L.IMPROVE_YOUR_HEROES_THEN_USE_RETRY_SUFFIX
             )
     end
     U.Help(p, title, 652, 0, detail)
     ui.adventureNext = button(p, label, 0, 128, 240, function()
-        ui.recruiting = label == L["Recruit companions"]
+        ui.recruiting = label == L.RECRUIT_COMPANIONS
         if heroIndex and not ui.recruiting then
             ui.selected = heroIndex
         end
         ui:SetTab(tab)
     end, false, "primary")
-    ui.boostQuick = button(p, L["Commander boosts"], 260, 128, 400, function()
+    ui.boostQuick = button(p, L.COMMANDER_BOOSTS, 260, 128, 400, function()
         if W.Tutorial.MenuHint(s, "boosts") then
             return
         end
@@ -193,24 +192,24 @@ function P.adventure(ui, p, s)
     end)
     local branch, quote = P.DevelopmentOpportunity(s)
     local upgradeTitle, upgradeDetail =
-        L["Growth complete"], L["All three branches are at their rank cap."]
+        L.GROWTH_COMPLETE, L.ALL_THREE_BRANCHES_ARE_AT_THEIR_RANK_CAP
     if branch and quote then
         upgradeTitle = branch.name
-            .. L[" rank "]
+            .. L.FRAGMENT_RANK
             .. quote.nextRank
             .. " | "
             .. (
-                s.essence >= quote.cost and (quote.cost .. L[" Essence"])
-                or (L["Save "] .. (quote.cost - s.essence) .. L[" Essence"])
+                s.essence >= quote.cost and (quote.cost .. L.ESSENCE_SUFFIX)
+                or (L.SAVE_PREFIX .. (quote.cost - s.essence) .. L.ESSENCE_SUFFIX)
             )
-        local field, caption = "damage", L["Damage"]
+        local field, caption = "damage", L.DAMAGE
         if branch.id == "resolve" then
-            field, caption = "health", L["Maximum health"]
+            field, caption = "health", L.MAXIMUM_HEALTH
         elseif branch.id == "provisioning" then
-            field, caption = "materials", L["Zone materials"]
+            field, caption = "materials", L.ZONE_MATERIALS
         end
         upgradeDetail = string.format(
-            L["%s: %+.1f%% -> %+.1f%% | Review upgrade"],
+            L.REVIEW_UPGRADE,
             caption,
             (quote.current[field] - 1) * 100,
             (quote.next[field] - 1) * 100
@@ -225,8 +224,8 @@ function P.adventure(ui, p, s)
         developmentHint and "???" or upgradeTitle,
         developmentHint and "" or upgradeDetail,
         developmentHint
-            or (branch and branch.description or L["Your permanent development board is complete."])
-                .. L["\nOpen Growth to compare every benefit before buying. Rank redistribution is free; learned abilities stay owned."],
+            or (branch and branch.description or L.YOUR_PERMANENT_DEVELOPMENT_BOARD_IS_COMPLETE)
+                .. L.OPEN_GROWTH_TO_COMPARE_EVERY_BENEFIT_BEFORE_BUYING_RANK_SUFFIX,
         function()
             if not developmentHint then
                 ui:SetTab("development")
@@ -237,10 +236,7 @@ function P.adventure(ui, p, s)
     local legacyLink = button(
         p,
         legacyHint and "|TInterface\\Icons\\INV_Misc_QuestionMark:18|t ???"
-            or (
-                s.prestigeUnlocked and L["Heritage +"] .. G.PrestigeReward(s)
-                or L["Explore Heritage"]
-            ),
+            or (s.prestigeUnlocked and L.HERITAGE_2 .. G.PrestigeReward(s) or L.EXPLORE_HERITAGE),
         710,
         173,
         160,
@@ -252,21 +248,14 @@ function P.adventure(ui, p, s)
     )
     U.Tooltip(
         legacyLink,
-        legacyHint and "???" or L["Heritage"],
-        legacyHint or L["Review chapter rewards."]
+        legacyHint and "???" or L.HERITAGE,
+        legacyHint or L.REVIEW_CHAPTER_REWARDS
     )
     if P.GuideStep(s, ui.selected) or (W.Tutorial and W.Tutorial.NextLesson(s)) then
-        button(
-            p,
-            s.guide.dismissed and L["Show guide"] or L["Hide guide"],
-            888,
-            173,
-            154,
-            function()
-                s.guide.dismissed = not s.guide.dismissed
-                ui:Refresh()
-            end
-        )
+        button(p, s.guide.dismissed and L.SHOW_GUIDE or L.HIDE_GUIDE, 888, 173, 154, function()
+            s.guide.dismissed = not s.guide.dismissed
+            ui:Refresh()
+        end)
     end
     local session = G.HuntSessionSummary(s, W.Client.Now())
     local report = G.HasSessionProgress(session) and session or s.lastHuntSummary
@@ -275,12 +264,12 @@ function P.adventure(ui, p, s)
         ui.adventureSession = U.SingleLine(
             text(
                 p,
-                (report == session and L["Session"] or L["Previous session"])
+                (report == session and L.SESSION or L.PREVIOUS_SESSION)
                     .. " | "
-                    .. (report.adventureXP ~= nil and tostring(report.adventureXP) or L["Unrecorded"])
-                    .. L[" Adventure XP | "]
-                    .. (report.essence ~= nil and tostring(report.essence) or L["Unrecorded"])
-                    .. L[" Essence"],
+                    .. (report.adventureXP ~= nil and tostring(report.adventureXP) or L.UNRECORDED)
+                    .. L.FRAGMENT_ADVENTURE_XP_3
+                    .. (report.essence ~= nil and tostring(report.essence) or L.UNRECORDED)
+                    .. L.ESSENCE_SUFFIX,
                 0,
                 169,
                 11,
@@ -291,10 +280,10 @@ function P.adventure(ui, p, s)
             16
         )
     end
-    text(p, L["ADVENTURE JOURNAL"], 0, 187, 11, T.gold)
+    text(p, L.ADVENTURE_JOURNAL_HEADING, 0, 187, 11, T.gold)
     ui.offlineReport = nil
     if s.lastOfflineSummary then
-        ui.offlineReport = button(p, L["Return report"], 1060, 173, 236, function()
+        ui.offlineReport = button(p, L.RETURN_REPORT, 1060, 173, 236, function()
             ui:SetTab("offline")
         end)
     end
@@ -353,16 +342,15 @@ function P.boosts(ui, p, s)
         U.EndBuild(control)
         U.Tooltip(
             control,
-            spec.name .. L[" automation"],
-            capability == "onCooldown"
-                    and L["Auto-cast the equipped boost when ready in combat. Permanent unlock: 1 Heritage."]
-                or L["Unlock boss, ally-health, farming, pushing and ordered rules. Requires On cooldown. Permanent unlock: 2 Heritage."]
+            spec.name .. L.AUTOMATION_SUFFIX,
+            capability == "onCooldown" and L.AUTO_CAST_THE_EQUIPPED_BOOST_WHEN_READY_IN_COMBAT
+                or L.UNLOCK_BOSS_ALLY_HEALTH_FARMING_PUSHING_AND_ORDERED_RULES
         )
         ui.boostAutomationPurchases[capability] = control
     end
     ui.boostAutomationEnabled = U.Checkbox(
         p,
-        L["Automation"],
+        L.AUTOMATION,
         650,
         0,
         330,
@@ -373,8 +361,8 @@ function P.boosts(ui, p, s)
     )
     U.Tooltip(
         ui.boostAutomationEnabled,
-        L["Run / pause automation"],
-        L["Pause automatic activations without changing saved rules. Manual activation remains available."]
+        L.RUN_PAUSE_AUTOMATION,
+        L.PAUSE_AUTOMATIC_ACTIVATIONS_WITHOUT_CHANGING_SAVED_RULES_MANUAL
     )
     ui.boostTiles, ui.boostControls = {}, {}
     for index, boost in ipairs(C.boosts) do
@@ -394,15 +382,15 @@ function P.boosts(ui, p, s)
             tile,
             boost.name,
             boost.description
-                .. L["\n\nLearn once: "]
+                .. L.FRAGMENT_LEARN_ONCE
                 .. boost.cost
-                .. L[" Essence or "]
+                .. L.FRAGMENT_ESSENCE_OR
                 .. boost.legacyCost
-                .. L[" Heritage.\n"]
+                .. L.FRAGMENT_HERITAGE
                 .. math.floor(boost.duration / 60)
-                .. L[" minutes active; "]
+                .. L.FRAGMENT_MINUTES_ACTIVE
                 .. math.floor(boost.cooldown / 60)
-                .. L[" minutes cooldown from activation. Equip 1 boost; uses are free."],
+                .. L.MINUTES_COOLDOWN_FROM_ACTIVATION_EQUIP_1_BOOST_USES_ARE_SUFFIX,
             320
         )
         ui.boostTiles[id] = { button = tile, state = state, icon = icon }
@@ -418,7 +406,7 @@ function P.boosts(ui, p, s)
     end)
     local alternate = button(
         p,
-        L["Learn · "] .. boost.legacyCost .. L[" Heritage"],
+        L.LEARN_PREFIX .. boost.legacyCost .. L.HERITAGE_SUFFIX,
         190,
         detailY + 84,
         160,
@@ -428,27 +416,27 @@ function P.boosts(ui, p, s)
     )
     U.Tooltip(
         purchase,
-        L["Permanent boost"],
-        L["Learn permanently with Essence or Heritage. Uses are free. Both resets keep ownership and cooldowns, but end active effects."]
+        L.PERMANENT_BOOST,
+        L.LEARN_PERMANENTLY_WITH_ESSENCE_OR_HERITAGE_USES_ARE_FREE
     )
-    local equip = button(p, L["Equip"], 370, detailY + 84, 170, function()
+    local equip = button(p, L.EQUIP, 370, detailY + 84, 170, function()
         W.Action(G.EquipBoost, id)
     end)
-    local activate = button(p, L["Activate"], 560, detailY + 84, 260, function()
+    local activate = button(p, L.ACTIVATE, 560, detailY + 84, 260, function()
         W.Action(G.ActivateBoost, id)
     end, false, "primary")
     U.Tooltip(
         activate,
-        L["Activate boost"],
+        L.ACTIVATE_BOOST,
         math.floor(boost.duration / 60)
-            .. L[" adventure minutes active; "]
+            .. L.FRAGMENT_ADVENTURE_MINUTES_ACTIVE
             .. math.floor(boost.cooldown / 60)
-            .. L[" minutes cooldown from activation. Uses are free. Only 1 boost effect can be active. Timers advance in combat and eligible offline farming."]
+            .. L.MINUTES_COOLDOWN_FROM_ACTIVATION_USES_ARE_FREE_ONLY_1_SUFFIX
     )
     local status = text(p, "", 850, detailY + 92, 14, T.muted, 420)
     local enabled = U.Checkbox(
         p,
-        L["Auto-cast"],
+        L.AUTO_CAST,
         0,
         detailY + 146,
         200,
@@ -457,7 +445,7 @@ function P.boosts(ui, p, s)
             W.Action(G.ConfigureBoostAutomation, id, "enabled", checked)
         end
     )
-    local modes, modeName = {}, L["Manual"]
+    local modes, modeName = {}, L.MANUAL
     for _, mode in ipairs(C.boostAutomationModes) do
         if mode.id == rule.mode then
             modeName = mode.name
@@ -476,17 +464,17 @@ function P.boosts(ui, p, s)
     mode:SetEnabled(true)
     U.Tooltip(
         mode,
-        L["Automatic trigger"],
-        L["Auto-casts only the equipped boost during combat. Automation and Auto-cast must both be on."]
+        L.AUTOMATIC_TRIGGER,
+        L.AUTO_CASTS_ONLY_THE_EQUIPPED_BOOST_DURING_COMBAT_AUTOMATION
     )
     local thresholds = {}
     for _, value in ipairs({ 35, 50, 65, 80 }) do
         thresholds[#thresholds + 1] =
-            { id = value, name = L["Ally below "] .. value .. L["% health"] }
+            { id = value, name = L.ALLY_BELOW_PREFIX .. value .. L.HEALTH_2 }
     end
     local threshold = U.Choice(
         p,
-        L["Ally below "] .. rule.healthBelow .. L["% health"],
+        L.ALLY_BELOW_PREFIX .. rule.healthBelow .. L.HEALTH_2,
         740,
         detailY + 146,
         400,
@@ -498,11 +486,7 @@ function P.boosts(ui, p, s)
     )
     threshold:SetEnabled(rule.mode == "lowHealth" and automation.owned.conditional == true)
     threshold:SetShown(rule.mode == "lowHealth")
-    U.Tooltip(
-        threshold,
-        L["Low health trigger"],
-        L["Activate when a living ally is below this health percentage."]
-    )
+    U.Tooltip(threshold, L.LOW_HEALTH_TRIGGER, L.ACTIVATE_WHEN_A_LIVING_ALLY_IS_BELOW_THIS_HEALTH)
     local automaticStatus = text(p, "", 0, detailY + 198, 14, T.muted, 1240)
     ui.boostControls[id] = {
         purchase = purchase,
@@ -517,7 +501,7 @@ function P.boosts(ui, p, s)
     }
     ui.boostRulesToggle = button(
         p,
-        (ui.boostRulesExpanded and L["Hide"] or L["Edit"]) .. L[" ordered rules"],
+        (ui.boostRulesExpanded and L.ACTION_HIDE or L.EDIT) .. L.ORDERED_RULES_SUFFIX,
         960,
         detailY + 192,
         284,
@@ -545,9 +529,9 @@ function P.RefreshBoosts(ui, s, message)
     local function status(id)
         local active, cooldown = G.BoostRemaining(s, id)
         if active > 0 then
-            return L["Active "] .. timer(active) .. L[" / Ready "] .. timer(cooldown)
+            return L.ACTIVE_PREFIX .. timer(active) .. L.FRAGMENT_READY .. timer(cooldown)
         elseif cooldown > 0 then
-            return L["Ready in "] .. timer(cooldown)
+            return L.READY_IN_PREFIX .. timer(cooldown)
         end
         local _, reason = G.CanActivateBoost(s, id)
         return reason
@@ -556,12 +540,12 @@ function P.RefreshBoosts(ui, s, message)
         if control then
             local hint = W.Tutorial.MenuHint(s, "boosts")
             local name = hint and "|TInterface\\Icons\\INV_Misc_QuestionMark:18|t ???"
-                or (equipped and C.boostByID[equipped].name or L["Commander boosts"])
+                or (equipped and C.boostByID[equipped].name or L.COMMANDER_BOOSTS)
             if control == ui.boostQuick then
                 U.Tooltip(
                     control,
-                    hint and "???" or L["Commander boosts"],
-                    hint or L["Activate your equipped boost or open Commander."]
+                    hint and "???" or L.COMMANDER_BOOSTS,
+                    hint or L.ACTIVATE_YOUR_EQUIPPED_BOOST_OR_OPEN_COMMANDER
                 )
             end
             control.text:SetText(name .. (equipped and " · " .. status(equipped) or ""))
@@ -582,8 +566,8 @@ function P.RefreshBoosts(ui, s, message)
     if ui.compactBoost.menuHint ~= hint then
         U.Tooltip(
             ui.compactBoost,
-            hint and "???" or L["Commander boosts"],
-            hint or L["Activate your equipped boost or open Commander."]
+            hint and "???" or L.COMMANDER_BOOSTS,
+            hint or L.ACTIVATE_YOUR_EQUIPPED_BOOST_OR_OPEN_COMMANDER
         )
         ui.compactBoost.menuHint = hint
     end
@@ -595,12 +579,12 @@ function P.RefreshBoosts(ui, s, message)
             local unlockHint = G.FeatureHint(s, capability)
             U.Tooltip(
                 control,
-                spec.name .. L[" automation"],
-                unlockHint or L["Learn this capability permanently with Heritage."]
+                spec.name .. L.AUTOMATION_SUFFIX,
+                unlockHint or L.LEARN_THIS_CAPABILITY_PERMANENTLY_WITH_HERITAGE
             )
             control.text:SetText(
-                owned and (spec.name .. L[" · Learned"])
-                    or (L["Learn "] .. spec.name .. " · " .. spec.cost .. L[" Heritage"])
+                owned and (spec.name .. L.LEARNED_SUFFIX)
+                    or (L.LEARN_PREFIX_2 .. spec.name .. " · " .. spec.cost .. L.HERITAGE_SUFFIX)
             )
             U.Enabled(
                 control,
@@ -616,11 +600,11 @@ function P.RefreshBoosts(ui, s, message)
         for id, tile in pairs(ui.boostTiles or {}) do
             local active, cooldown = G.BoostRemaining(s, id)
             local owned = s.boosts.owned[id]
-            local label = not owned and (C.boostByID[id].cost .. L[" Essence"])
-                or active > 0 and (L["Active "] .. timer(active))
-                or cooldown > 0 and (L["Cooldown "] .. timer(cooldown))
-                or equipped == id and L["Equipped · Ready"]
-                or L["Learned"]
+            local label = not owned and (C.boostByID[id].cost .. L.ESSENCE_SUFFIX)
+                or active > 0 and (L.ACTIVE_PREFIX .. timer(active))
+                or cooldown > 0 and (L.COOLDOWN_PREFIX .. timer(cooldown))
+                or equipped == id and L.EQUIPPED_READY
+                or L.LEARNED
             tile.state:SetText(label)
             tile.icon:SetDesaturated(not owned)
             tile.icon:SetAlpha(owned and 1 or 0.45)
@@ -631,7 +615,7 @@ function P.RefreshBoosts(ui, s, message)
             controls.automationEnabled:SetChecked(automation.abilities[id].enabled)
             local owned = s.boosts.owned[id]
             controls.purchase.text:SetText(
-                owned and L["Learned"] or L["Learn · "] .. C.boostByID[id].cost .. L[" Essence"]
+                owned and L.LEARNED or L.LEARN_PREFIX .. C.boostByID[id].cost .. L.ESSENCE_SUFFIX
             )
             U.Enabled(
                 controls.purchase,
@@ -639,8 +623,8 @@ function P.RefreshBoosts(ui, s, message)
             )
             U.Tooltip(
                 controls.purchase,
-                L["Learn boost"],
-                G.FeatureHint(s, "boosts") or L["Spend Essence to learn this boost permanently."]
+                L.LEARN_BOOST,
+                G.FeatureHint(s, "boosts") or L.SPEND_ESSENCE_TO_LEARN_THIS_BOOST_PERMANENTLY
             )
             controls.alternate:SetShown(not owned)
             U.Enabled(
@@ -651,13 +635,13 @@ function P.RefreshBoosts(ui, s, message)
             )
             U.Tooltip(
                 controls.alternate,
-                L["Learn boost"],
-                G.FeatureHint(s, "boosts") or L["Spend Heritage to learn this boost permanently."]
+                L.LEARN_BOOST,
+                G.FeatureHint(s, "boosts") or L.SPEND_HERITAGE_TO_LEARN_THIS_BOOST_PERMANENTLY
             )
-            controls.equip.text:SetText(equipped == id and L["Equipped"] or L["Equip"])
+            controls.equip.text:SetText(equipped == id and L.EQUIPPED or L.EQUIP)
             U.Enabled(controls.equip, owned and equipped ~= id)
             U.Enabled(controls.activate, G.CanActivateBoost(s, id))
-            controls.status:SetText(owned and status(id) or L["Not learned"])
+            controls.status:SetText(owned and status(id) or L.NOT_LEARNED)
         end
     end
 end
@@ -665,36 +649,36 @@ end
 function P.talents(ui, p, s)
     local h, index = selected(ui, s)
     U.SingleLine(
-        text(p, h.name .. "  /  " .. G.Points(h) .. L[" unspent talent points"], 0, 0, 21, T.gold),
+        text(
+            p,
+            h.name .. "  /  " .. G.Points(h) .. L.UNSPENT_TALENT_POINTS_SUFFIX,
+            0,
+            0,
+            21,
+            T.gold
+        ),
         720,
         28
     )
     local progress = G.TalentProgress(h)
     local nextLevel = G.NextTalentLevel(h)
-    local hint = nextLevel and (L["Next level point: "] .. nextLevel .. ". ") or ""
+    local hint = nextLevel and (L.NEXT_LEVEL_POINT_PREFIX .. nextLevel .. ". ") or ""
     if progress.earned >= #G.TalentList(h) then
-        hint = L["All permanent talent points earned."]
+        hint = L.ALL_PERMANENT_TALENT_POINTS_EARNED
     elseif G.MasteryUnlocked(h) then
         hint = hint
-            .. L["Mastery XP: tier "]
+            .. L.MASTERY_XP_TIER_PREFIX
             .. s.tier
-            .. L[", encounter level "]
+            .. L.ENCOUNTER_LEVEL_PREFIX
             .. math.max(1, G.MasteryFrontier(h, s.tier))
             .. "+."
     else
-        hint = hint .. L["Mastery unlocks at hero level "] .. C.mastery.unlockLevel .. "."
+        hint = hint .. L.MASTERY_UNLOCKS_AT_HERO_LEVEL_PREFIX .. C.mastery.unlockLevel .. "."
     end
-    U.Help(
-        p,
-        L["Talents"],
-        688,
-        0,
-        L["Earn points from new hero level records and Mastery. Click a talent to learn or refund it for free. Points and choices survive both resets.\n\n"]
-            .. hint
-    )
+    U.Help(p, L.TALENTS, 688, 0, L.TALENT_POINTS_DESCRIPTION .. hint)
     W.TalentPanel.Draw(ui, p, h, index)
-    text(p, L["COMBAT PRIORITIES"], 0, 490, 12, T.gold)
-    U.Choice(p, L["Class presets"], 0, 510, 180, G.PriorityPresets(h), nil, function(id)
+    text(p, L.COMBAT_PRIORITIES_HEADING, 0, 490, 12, T.gold)
+    U.Choice(p, L.CLASS_PRESETS, 0, 510, 180, G.PriorityPresets(h), nil, function(id)
         W.Action(G.ConfigurePreset, index, id)
     end)
     local priorities, thresholds = {}, {}
@@ -702,7 +686,7 @@ function P.talents(ui, p, s)
         priorities[#priorities + 1] = { id = id, name = C.priorityNames[id] }
     end
     for n = 35, 85, 10 do
-        thresholds[#thresholds + 1] = { id = n, name = L["Recover below "] .. n .. "%" }
+        thresholds[#thresholds + 1] = { id = n, name = L.RECOVER_BELOW_PREFIX .. n .. "%" }
     end
     local priority = U.Choice(
         p,
@@ -718,7 +702,7 @@ function P.talents(ui, p, s)
     )
     local threshold = U.Choice(
         p,
-        L["Recover below "] .. h.healBelow .. "%",
+        L.RECOVER_BELOW_PREFIX .. h.healBelow .. "%",
         508,
         510,
         300,
@@ -730,14 +714,14 @@ function P.talents(ui, p, s)
     )
     local special = U.Choice(
         p,
-        L["Special at "] .. h.specialCount .. L["+ enemies"],
+        L.SPECIAL_AT_PREFIX .. h.specialCount .. L.ENEMIES,
         828,
         510,
         300,
         {
-            { id = 1, name = L["Special at 1+ enemies"] },
-            { id = 2, name = L["Special at 2+ enemies"] },
-            { id = 3, name = L["Special at 3+ enemies"] },
+            { id = 1, name = L.SPECIAL_AT_1_ENEMIES },
+            { id = 2, name = L.SPECIAL_AT_2_ENEMIES },
+            { id = 3, name = L.SPECIAL_AT_3_ENEMIES },
         },
         h.specialCount,
         function(n)
@@ -747,11 +731,11 @@ function P.talents(ui, p, s)
     for _, dropdown in ipairs({ priority, threshold, special }) do
         dropdown:SetEnabled(true)
     end
-    text(p, L["ENEMY TARGET"], 0, 564, 12, T.gold)
+    text(p, L.ENEMY_TARGET_HEADING, 0, 564, 12, T.gold)
     local targetMode = h.targetMode or "front"
     ui.heroTargetChoice = U.Choice(
         p,
-        L["Target: "] .. C.targetModeByID[targetMode].name,
+        L.TARGET_PREFIX .. C.targetModeByID[targetMode].name,
         208,
         556,
         440,
@@ -763,8 +747,8 @@ function P.talents(ui, p, s)
     )
     U.Tooltip(
         ui.heroTargetChoice,
-        L["Enemy target priority"],
-        L["Choose the primary target for movement, strikes and basic attacks. Health compares percentages; ties use encounter order. Area attacks still hit enemies in range."]
+        L.ENEMY_TARGET_PRIORITY,
+        L.CHOOSE_THE_PRIMARY_TARGET_FOR_MOVEMENT_STRIKES_AND_BASIC
     )
     local profile, value = G.HeroResource(h, s.battle and s.battle.heroes[index])
     if profile then
@@ -772,13 +756,13 @@ function P.talents(ui, p, s)
         for _, percent in ipairs({ 0, 25, 50, 75, 100 }) do
             choices[#choices + 1] = {
                 id = percent,
-                name = profile.name .. L[" abilities >= "] .. percent .. "%",
+                name = profile.name .. L.FRAGMENT_ABILITIES .. percent .. "%",
             }
         end
         local percent = h.resourceThreshold or 0
         ui.heroResourceChoice = U.Choice(
             p,
-            profile.name .. L[" abilities >= "] .. percent .. "%",
+            profile.name .. L.FRAGMENT_ABILITIES .. percent .. "%",
             668,
             556,
             460,
@@ -792,13 +776,13 @@ function P.talents(ui, p, s)
             ui.heroResourceChoice,
             profile.name .. ": " .. math.floor(value) .. "/" .. profile.maximum,
             profile.description
-                .. L["\n\nAbility costs: strike "]
+                .. L.FRAGMENT_ABILITY_COSTS_STRIKE
                 .. profile.costs.attack
-                .. L["; recovery "]
+                .. L.RECOVERY_PREFIX
                 .. profile.costs.heal
-                .. L["; special "]
+                .. L.SPECIAL_PREFIX
                 .. profile.costs.special
-                .. L[".\nThe threshold is checked before spending. Basic attacks continue while waiting. These resources belong to the minigame."]
+                .. L.THE_THRESHOLD_IS_CHECKED_BEFORE_SPENDING_BASIC_ATTACKS_CONTINUE
         )
     end
 end
@@ -819,7 +803,7 @@ function P.crafting(ui, p, s)
         ui.selected, ui.professionHero = value, value
         ui:Refresh()
     end)
-    text(p, L["EQUIPMENT SLOT"], 0, 39, 13, T.gold)
+    text(p, L.EQUIPMENT_SLOT_HEADING, 0, 39, 13, T.gold)
     for position, i in ipairs(C.equipmentSlots) do
         local name, id = C.slots[i], i
         ui.craftControls.slots[i] = U.SelectButton(
@@ -836,7 +820,7 @@ function P.crafting(ui, p, s)
             slot == i
         )
     end
-    text(p, L["MATERIAL"], 480, 0, 11, T.gold)
+    text(p, L.MATERIAL_HEADING, 480, 0, 11, T.gold)
     for i, id in ipairs(C.materialOrder) do
         ui.craftControls.materials[id] = U.SelectButton(
             p,
@@ -852,25 +836,29 @@ function P.crafting(ui, p, s)
             material == id
         )
     end
-    text(p, preview and L[preview.name] or L["Recipe unavailable"], 850, 0, 23, T.text, 450)
+    text(p, preview and G.ItemName(preview) or L.RECIPE_UNAVAILABLE, 850, 0, 23, T.text, 450)
     local description = unavailable
     if preview then
-        local quality = heirloom and L["Heirloom"] or C.qualityNames[preview.quality]
-        local requirement = heirloom and L["Scales with your hero. Survives chapter resets."]
-            or L["Idle level "] .. preview.level
-        description = quality .. " · " .. G.ItemPower(preview, h) .. L[" power\n"] .. requirement
+        local quality = heirloom and L.HEIRLOOM or C.qualityNames[preview.quality]
+        local requirement = heirloom and L.SCALES_WITH_YOUR_HERO_SURVIVES_CHAPTER_RESETS
+            or L.IDLE_LEVEL_PREFIX .. preview.level
+        description = quality
+            .. " · "
+            .. G.ItemPower(preview, h)
+            .. L.FRAGMENT_POWER
+            .. requirement
     end
     text(p, description, 850, 58, 14, T.muted, 450)
     text(
         p,
-        cost.gold .. L[" gold\n"] .. cost.material .. " " .. C.materials[material],
+        cost.gold .. L.FRAGMENT_GOLD_4 .. cost.material .. " " .. C.materials[material],
         850,
         141,
         16,
         T.gold,
         450
     )
-    local craft = button(p, L["Craft for "] .. h.name, 850, 233, 446, function()
+    local craft = button(p, L.CRAFT_FOR_PREFIX .. h.name, 850, 233, 446, function()
         W.Action(G.Craft, index, slot, material, heirloom)
     end, false, "primary")
     ui.craftControls.craft = craft
@@ -883,23 +871,23 @@ function P.crafting(ui, p, s)
     )
     U.Tooltip(
         craft,
-        L["Craft targeted equipment"],
+        L.CRAFT_TARGETED_EQUIPMENT,
         (preview and G.ItemDescription(preview, h) .. "\n\n" or "")
-            .. L["Gold and idle materials pay the full cost shown above. Heirloom recipes must first be unlocked in Heritage."]
+            .. L.GOLD_AND_IDLE_MATERIALS_PAY_THE_FULL_COST_SHOWN
     )
     if heirloom and not s.recipes[slot] then
-        text(p, L["Recipe locked"], 850, 285, 13, T.gold, 446)
+        text(p, L.RECIPE_LOCKED, 850, 285, 13, T.gold, 446)
     end
-    ui.craftControls.ordinary = U.SelectButton(p, L["Ordinary"], 0, 309, 205, 32, function()
+    ui.craftControls.ordinary = U.SelectButton(p, L.ORDINARY, 0, 309, 205, 32, function()
         ui.craftHeirloom = false
         ui:Refresh()
     end, not heirloom)
-    ui.craftControls.heirloom = U.SelectButton(p, L["Heirloom"], 220, 309, 205, 32, function()
+    ui.craftControls.heirloom = U.SelectButton(p, L.HEIRLOOM, 220, 309, 205, 32, function()
         ui.craftHeirloom = true
         ui:Refresh()
     end, heirloom)
     if heirloom and not s.recipes[slot] then
-        button(p, L["View recipe in Heritage"], 850, 325, 446, function()
+        button(p, L.VIEW_RECIPE_IN_HERITAGE, 850, 325, 446, function()
             ui.legacySlot = slot
             ui:SetTab("legacy")
         end)
@@ -916,7 +904,7 @@ function P.legacy(ui, p, s)
     local nextBonus = currentBonus + reward * 2
     text(
         p,
-        ui.confirmPrestige and L["REVIEW YOUR NEW CHAPTER"] or L["CHAPTER REWARDS"],
+        ui.confirmPrestige and L.REVIEW_YOUR_NEW_CHAPTER_HEADING or L.CHAPTER_REWARDS_HEADING,
         0,
         0,
         24,
@@ -924,7 +912,7 @@ function P.legacy(ui, p, s)
     )
     text(
         p,
-        s.legacy .. L[" Heritage available  ·  "] .. s.prestiges .. L[" rewarded chapters"],
+        s.legacy .. L.FRAGMENT_HERITAGE_AVAILABLE .. s.prestiges .. L.REWARDED_CHAPTERS_SUFFIX,
         0,
         44,
         16,
@@ -933,7 +921,7 @@ function P.legacy(ui, p, s)
     )
     text(
         p,
-        L["Permanent party bonus: +"] .. currentBonus .. L["% health, damage and healing."],
+        L.PERMANENT_PARTY_BONUS .. currentBonus .. L.HEALTH_DAMAGE_AND_HEALING,
         0,
         77,
         16,
@@ -941,16 +929,16 @@ function P.legacy(ui, p, s)
         1296
     )
     if ui.confirmPrestige then
-        text(p, L["GAIN"], 0, 138, 14, T.gold)
+        text(p, L.GAIN_HEADING, 0, 138, 14, T.gold)
         text(
             p,
             "+"
                 .. reward
-                .. L[" Heritage  ·  Balance after reset: "]
+                .. L.FRAGMENT_HERITAGE_BALANCE_AFTER_RESET
                 .. (s.legacy + reward)
-                .. L["\nPermanent party bonus: +"]
+                .. L.PERMANENT_PARTY_BONUS_SUFFIX
                 .. currentBonus
-                .. L["% to +"]
+                .. L.TO
                 .. nextBonus
                 .. "%",
             0,
@@ -959,41 +947,17 @@ function P.legacy(ui, p, s)
             T.green,
             1296
         )
-        text(p, L["KEEP"], 0, 254, 14, T.gold)
-        text(
-            p,
-            L["Heroes and classes\nTalents, earned points and Mastery\nGrowth, boosts, automation, profiles and routes\nHeirlooms, recipes, collections and Heritage\nAdventure rank, partial XP and unspent Essence\nProfession work and permanent difficulty progress"],
-            0,
-            287,
-            17,
-            T.text,
-            610
-        )
-        text(p, L["RESET"], 670, 254, 14, T.gold)
-        text(
-            p,
-            L["Hero levels and XP\nOrdinary equipped and stored gear\nGold, zone materials and Runic fragments\nDestination and encounter progress\nActive boosts end; cooldowns are kept"],
-            670,
-            287,
-            17,
-            T.text,
-            610
-        )
-        text(
-            p,
-            L["Spent Essence is not refunded. This reset cannot be undone."],
-            0,
-            470,
-            16,
-            T.gold,
-            1220
-        )
-        button(p, L["Keep adventuring"], 0, 540, 260, function()
+        text(p, L.KEEP_HEADING, 0, 254, 14, T.gold)
+        text(p, L.NEW_CHAPTER_RETAINED_PROGRESS, 0, 287, 17, T.text, 610)
+        text(p, L.RESET_HEADING, 670, 254, 14, T.gold)
+        text(p, L.NEW_CHAPTER_RESET_PROGRESS, 670, 287, 17, T.text, 610)
+        text(p, L.SPENT_ESSENCE_IS_NOT_REFUNDED_THIS_RESET_CANNOT_BE, 0, 470, 16, T.gold, 1220)
+        button(p, L.KEEP_ADVENTURING, 0, 540, 260, function()
             ui.confirmPrestige = false
             ui:Refresh()
         end)
         -- Keep the final action away from the review button's position.
-        local confirm = button(p, L["Reset adventure and begin chapter"], 760, 540, 536, function()
+        local confirm = button(p, L.RESET_ADVENTURE_AND_BEGIN_CHAPTER, 760, 540, 536, function()
             if not ui.confirmPrestige or not s.prestigeUnlocked then
                 return
             end
@@ -1007,20 +971,14 @@ function P.legacy(ui, p, s)
         U.Enabled(confirm, s.prestigeUnlocked == true)
         return
     end
-    text(p, L["NEW CHAPTER"], 0, 142, 14, T.gold)
-    U.Help(
-        p,
-        L["New chapter"],
-        624,
-        138,
-        L["Reset the run to earn Heritage. Each Heritage earned adds 2 percentage points to permanent party health, damage and healing.\n\nReview rewards and losses before confirming. Opening the review does not reset anything."]
-    )
+    text(p, L.NEW_CHAPTER_HEADING, 0, 142, 14, T.gold)
+    U.Help(p, L.NEW_CHAPTER, 624, 138, L.NEW_CHAPTER_DESCRIPTION)
 
     text(
         p,
         s.prestigeUnlocked
-                and (L["Available now: +"] .. reward .. L[" Heritage  ·  Party bonus +"] .. currentBonus .. L["% to +"] .. nextBonus .. "%")
-            or L["Unlock: defeat a level 8 milestone boss."],
+                and (L.AVAILABLE_NOW .. reward .. L.HERITAGE_PARTY_BONUS_SUFFIX .. currentBonus .. L.TO .. nextBonus .. "%")
+            or L.UNLOCK_DEFEAT_A_LEVEL_8_MILESTONE_BOSS,
         0,
         190,
         16,
@@ -1028,17 +986,9 @@ function P.legacy(ui, p, s)
         620
     )
     if s.prestigeUnlocked and reward == 0 then
-        text(
-            p,
-            L["No Heritage or bonus increase this run. Defeat harder milestone bosses to earn a reward."],
-            0,
-            235,
-            15,
-            T.muted,
-            620
-        )
+        text(p, L.NO_HERITAGE_OR_BONUS_INCREASE_THIS_RUN_DEFEAT_HARDER, 0, 235, 15, T.muted, 620)
     end
-    local review = button(p, L["Review new chapter…"], 0, 270, 360, function()
+    local review = button(p, L.REVIEW_NEW_CHAPTER, 0, 270, 360, function()
         if s.prestigeUnlocked then
             ui.confirmPrestige = true
             ui:Refresh()
@@ -1046,23 +996,17 @@ function P.legacy(ui, p, s)
     end, false, "primary")
     U.Enabled(review, s.prestigeUnlocked == true)
 
-    text(p, L["HEIRLOOM RECIPES"], 710, 142, 14, T.gold)
-    U.Help(
-        p,
-        L["Heirlooms"],
-        1258,
-        138,
-        L["Heirlooms unlock at difficulty tier 4, scale with hero level and survive both resets.\n\nUnlock a recipe for 1 Heritage, then craft it in Forge with gold and materials. Learning a recipe does not reset your run."]
-    )
+    text(p, L.HEIRLOOM_RECIPES_HEADING, 710, 142, 14, T.gold)
+    U.Help(p, L.HEIRLOOMS, 1258, 138, L.HEIRLOOM_RECIPES_DESCRIPTION)
 
     for position, i in ipairs(C.equipmentSlots) do
         local name, slot = C.slots[i], i
         local known = s.recipes[i]
         local recipe = button(
             p,
-            (known and L["Craft · "] or L["Unlock · "])
+            (known and L.CRAFT_PREFIX or L.UNLOCK_PREFIX)
                 .. name
-                .. (known and "" or L[" · 1 Heritage"]),
+                .. (known and "" or L.TEXT_1_HERITAGE_SUFFIX),
             710 + (position - 1) % 2 * 302,
             190 + math.floor((position - 1) / 2) * 40,
             285,
@@ -1076,15 +1020,15 @@ function P.legacy(ui, p, s)
         )
         U.Tooltip(
             recipe,
-            name .. L[" heirloom recipe"],
-            known and L["Open Crafting to make this heirloom for the selected hero."]
+            name .. L.HEIRLOOM_RECIPE_SUFFIX,
+            known and L.OPEN_CRAFTING_TO_MAKE_THIS_HEIRLOOM_FOR_THE_SELECTED
                 or G.FeatureHint(s, "heirlooms")
-                or L["Spend 1 Heritage to permanently unlock this recipe, then open Crafting."]
+                or L.SPEND_1_HERITAGE_TO_PERMANENTLY_UNLOCK_THIS_RECIPE_THEN
         )
         U.Enabled(recipe, known or (not G.FeatureHint(s, "heirlooms") and s.legacy >= 1))
     end
-    text(p, L["COLLECTION TALENTS"], 0, 350, 14, T.gold)
-    text(p, L["Permanent ranks · survive both resets"], 0, 378, 13, T.muted, 640)
+    text(p, L.COLLECTION_TALENTS_HEADING, 0, 350, 14, T.gold)
+    text(p, L.PERMANENT_RANKS_SURVIVE_BOTH_RESETS, 0, 378, 13, T.muted, 640)
     ui.collectionTalentButtons = {}
     for index, talent in ipairs(C.collectionTalents) do
         local rank = s.collectionTalents[talent.id] or 0
@@ -1104,7 +1048,7 @@ function P.legacy(ui, p, s)
             talent.condition
                 .. " · +"
                 .. math.floor(C.collectionTalentBonus * 100 + 0.5)
-                .. L["% of base chance per rank"],
+                .. L.OF_BASE_CHANCE_PER_RANK,
             0,
             y + 26,
             13,
@@ -1113,7 +1057,7 @@ function P.legacy(ui, p, s)
         )
         local learn = button(
             p,
-            cost and L["Learn · "] .. cost .. L[" Heritage"] or L["Fully learned"],
+            cost and L.LEARN_PREFIX .. cost .. L.HERITAGE_SUFFIX or L.FULLY_LEARNED,
             420,
             y,
             220,
@@ -1127,30 +1071,24 @@ function P.legacy(ui, p, s)
             learn,
             talent.name,
             talent.condition
-                .. L[" only. Each rank increases collection-piece drop chances by "]
+                .. L.FRAGMENT_ONLY_EACH_RANK_INCREASES_COLLECTION_PIECE_DROP_CHANCES_BY
                 .. math.floor(C.collectionTalentBonus * 100 + 0.5)
-                .. L["% of the base chance, not percentage points. Equipment loot is unchanged.\n\nRanks survive both resets. Each kill rolls independently; no guaranteed discovery."]
+                .. L.OF_THE_BASE_CHANCE_NOT_PERCENTAGE_POINTS_EQUIPMENT_LOOT
         )
     end
 end
 
 function P.loot(ui, p, s)
-    text(p, L["KEEP RULES"], 0, 0, 19, T.gold)
-    U.Help(
-        p,
-        L["Loot rules"],
-        1258,
-        0,
-        L["Salvage future drops below the selected quality unless a keep rule applies. Heirlooms and protected items are safe.\n\nMatching-loot rules require every selected filter to match. Stored items are unchanged; disenchant them in Party."]
-    )
+    text(p, L.KEEP_RULES_HEADING, 0, 0, 19, T.gold)
+    U.Help(p, L.LOOT_RULES, 1258, 0, L.LOOT_RULES_DESCRIPTION)
     local qualities = {}
     for quality = 1, 4 do
         qualities[#qualities + 1] =
-            { id = quality, name = L["Keep "] .. C.qualityNames[quality] .. "+" }
+            { id = quality, name = L.KEEP_PREFIX .. C.qualityNames[quality] .. "+" }
     end
     U.Choice(
         p,
-        L["Keep "] .. C.qualityNames[s.salvage.minQuality] .. "+",
+        L.KEEP_PREFIX .. C.qualityNames[s.salvage.minQuality] .. "+",
         0,
         79,
         310,
@@ -1161,21 +1099,13 @@ function P.loot(ui, p, s)
             ui:Refresh()
         end
     )
+    U.Checkbox(p, L.KEEP_POTENTIAL_UPGRADES, 340, 79, 310, s.salvage.keepUpgrades, function(checked)
+        s.salvage.keepUpgrades = checked
+        ui:Refresh()
+    end)
     U.Checkbox(
         p,
-        L["Keep potential upgrades"],
-        340,
-        79,
-        310,
-        s.salvage.keepUpgrades,
-        function(checked)
-            s.salvage.keepUpgrades = checked
-            ui:Refresh()
-        end
-    )
-    U.Checkbox(
-        p,
-        L["Keep undiscovered effects"],
+        L.KEEP_UNDISCOVERED_EFFECTS,
         680,
         79,
         350,
@@ -1185,12 +1115,12 @@ function P.loot(ui, p, s)
             ui:Refresh()
         end
     )
-    text(p, L["Salvaged "] .. s.stats.salvaged .. L[" items"], 0, 132, 14, T.muted)
-    text(p, L["ALSO KEEP MATCHING LOOT"], 0, 204, 15, T.gold)
+    text(p, L.SALVAGED_PREFIX .. s.stats.salvaged .. L.ITEMS_SUFFIX_2, 0, 132, 14, T.muted)
+    text(p, L.ALSO_KEEP_MATCHING_LOOT_HEADING, 0, 204, 15, T.gold)
     local classes, slots, stats =
-        { { id = "any", name = L["Any class"] } },
-        { { id = 0, name = L["Any slot"] } },
-        { { id = "any", name = L["Any stat"] } }
+        { { id = "any", name = L.ANY_CLASS } },
+        { { id = 0, name = L.ANY_SLOT } },
+        { { id = "any", name = L.ANY_STAT } }
     for _, class in ipairs(C.classes) do
         classes[#classes + 1] = { id = class.id, name = class.name }
     end
@@ -1205,17 +1135,17 @@ function P.loot(ui, p, s)
         {
             key = "class",
             options = classes,
-            label = policy.class == "any" and L["Any class"] or C.classByID[policy.class].name,
+            label = policy.class == "any" and L.ANY_CLASS or C.classByID[policy.class].name,
         },
         {
             key = "slot",
             options = slots,
-            label = policy.slot == 0 and L["Any slot"] or C.slots[policy.slot],
+            label = policy.slot == 0 and L.ANY_SLOT or C.slots[policy.slot],
         },
         {
             key = "stat",
             options = stats,
-            label = policy.stat == "any" and L["Any stat"] or C.itemStatNames[policy.stat],
+            label = policy.stat == "any" and L.ANY_STAT or C.itemStatNames[policy.stat],
         },
     }
     ui.lootPolicyControls = {}
@@ -1235,8 +1165,8 @@ function P.loot(ui, p, s)
         )
         U.Tooltip(
             control,
-            L["Keep matching loot"],
-            L["Keep future drops matching every selected filter. Class uses maximum armor and weapon proficiency, regardless of current hero level. Other keep rules still apply."],
+            L.KEEP_MATCHING_LOOT,
+            L.KEEP_FUTURE_DROPS_MATCHING_EVERY_SELECTED_FILTER_CLASS_USES,
             380
         )
         ui.lootPolicyControls[key] = control
@@ -1269,8 +1199,8 @@ function P.Draw(ui)
     ui.boostAutomationPurchases, ui.boostAutomationEnabled = nil, nil
     U.Begin(p)
     if W.catchup then
-        text(p, L["YOUR PARTY IS RETURNING"], 0, 0, 22, T.gold)
-        text(p, L["Resolving your offline adventure…"], 0, 43, 16, T.muted)
+        text(p, L.YOUR_PARTY_IS_RETURNING_HEADING, 0, 0, 22, T.gold)
+        text(p, L.RESOLVING_YOUR_OFFLINE_ADVENTURE, 0, 43, 16, T.muted)
     else
         local tab = s.ui.tab or "adventure"
         (P[tab] or P.adventure)(ui, p, s)

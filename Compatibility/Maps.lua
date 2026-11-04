@@ -1,7 +1,7 @@
 local _, W = ...
 local L = W.L
 local A = W.Client
-local continents = { kalimdor = L["Kalimdor"], eastern = L["Eastern Kingdoms"] }
+local continents = { kalimdor = L.KALIMDOR, eastern = L.EASTERN_KINGDOMS }
 function A.MapTileTexture(continentID, index, original, info)
     -- The unlabeled flight-map tiles share this Retail artwork's exact grid.
     -- Replace only the title area, retaining the sea names and corner artwork.
@@ -185,10 +185,10 @@ function A.ExportMapGeometry(onDone, width, height)
         or not C_Map.GetMapArtLayers
         or not C_Map.GetMapArtLayerTextures
     then
-        return nil, L["Native map queries are unavailable in this client."]
+        return nil, L.NATIVE_MAP_QUERIES_ARE_UNAVAILABLE_IN_THIS_CLIENT
     end
     if onDone ~= nil and type(onDone) ~= "function" then
-        return nil, L["The export callback must be a function."]
+        return nil, L.THE_EXPORT_CALLBACK_MUST_BE_A_FUNCTION
     end
     width, height = width or 1200, height or 800
     if
@@ -201,7 +201,7 @@ function A.ExportMapGeometry(onDone, width, height)
         or width > 1200
         or height > 800
     then
-        return nil, L["Export dimensions must be integers between 16 and 1200 by 800."]
+        return nil, L.EXPORT_DIMENSIONS_MUST_BE_INTEGERS_BETWEEN_16_AND_1200
     end
     local export = { version = 1, profile = A.flavor, build = GetBuildInfo(), continents = {} }
     local mapZones, tasks = {}, {}
@@ -216,11 +216,11 @@ function A.ExportMapGeometry(onDone, width, height)
         local layers = mapID and C_Map.GetMapArtLayers(mapID)
         local info = layers and layers[1]
         if not info then
-            return nil, L["Continent artwork metadata is unavailable."]
+            return nil, L.CONTINENT_ARTWORK_METADATA_IS_UNAVAILABLE
         end
         local textures = C_Map.GetMapArtLayerTextures(mapID, 1)
         if not textures or type(textures[1]) ~= "number" then
-            return nil, L["Continent texture metadata is unavailable."]
+            return nil, L.CONTINENT_TEXTURE_METADATA_IS_UNAVAILABLE
         end
         local task = {
             mapID = mapID,
@@ -242,12 +242,12 @@ function A.ExportMapGeometry(onDone, width, height)
     if not onDone then
         local gui = LibStub("AceGUI-3.0")
         window = gui:Create("Frame")
-        window:SetTitle(L["Map geometry export"])
+        window:SetTitle(L.MAP_GEOMETRY_EXPORT)
         window:SetWidth(800)
         window:SetHeight(600)
         window:SetLayout("Fill")
         edit = gui:Create("MultiLineEditBox")
-        edit:SetLabel(L["Sampling native map regions. Close to cancel."])
+        edit:SetLabel(L.SAMPLING_NATIVE_MAP_REGIONS_CLOSE_TO_CANCEL)
         edit:SetNumLines(24)
         edit:SetFullWidth(true)
         edit:DisableButton(true)
@@ -319,7 +319,7 @@ function A.ExportMapGeometry(onDone, width, height)
                 if onDone then
                     onDone(export)
                 else
-                    edit:SetLabel(L["Copy this JSON to a file outside the addon, then close."])
+                    edit:SetLabel(L.COPY_THIS_JSON_TO_A_FILE_OUTSIDE_THE_ADDON)
                     edit:SetText(encode(export))
                 end
                 return
@@ -346,9 +346,9 @@ function A.ExportMapGeometry(onDone, width, height)
             row = row + 1
             if window then
                 window:SetStatusText(
-                    L["Sampling continent "]
+                    L.SAMPLING_CONTINENT_PREFIX
                         .. taskIndex
-                        .. L[" / 2 · row "]
+                        .. L.FRAGMENT_2_ROW
                         .. row
                         .. " / "
                         .. height

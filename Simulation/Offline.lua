@@ -107,9 +107,9 @@ function G.FinishCatchup(state, job)
             G.Log(
                 state,
                 hero.name
-                    .. L[" reached idle level "]
+                    .. L.FRAGMENT_REACHED_IDLE_LEVEL
                     .. hero.level
-                    .. L[" (character maximum) while you were away. Mastery continues in harder encounters."],
+                    .. L.CHARACTER_MAXIMUM_WHILE_YOU_WERE_AWAY_MASTERY_CONTINUES_IN_SUFFIX,
                 nil,
                 "progress"
             )
@@ -193,24 +193,24 @@ function G.FinishCatchup(state, job)
     -- Offline farming never unlocks destinations or bosses.
     G.Log(
         state,
-        L["Welcome back. "]
+        L.WELCOME_BACK_PREFIX
             .. floor((job.seconds - job.remaining * 0.25) / 60)
-            .. L[" minutes away · +"]
+            .. L.MINUTES_AWAY_SUFFIX
             .. (state.gold - job.gold)
-            .. L[" gold · "]
+            .. L.FRAGMENT_GOLD
             .. (state.stats.victories - job.victories)
-            .. L[" victories · "]
+            .. L.FRAGMENT_VICTORIES
             .. summary.boostUses
-            .. L[" boost uses · "]
+            .. L.FRAGMENT_BOOST_USES
             .. summary.masteryRanks
-            .. L[" Mastery ranks (+"]
+            .. L.MASTERY_RANKS_SUFFIX
             .. summary.masteryXP
-            .. L[" XP) · "]
+            .. L.XP_HEADING
             .. summary.salvaged
-            .. L[" salvaged."]
+            .. L.SALVAGED_SUFFIX
             .. " "
             .. summary.routeTransitions
-            .. L[" offline route transitions."],
+            .. L.OFFLINE_ROUTE_TRANSITIONS_SUFFIX,
         nil,
         "offline"
     )

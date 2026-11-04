@@ -2,6 +2,7 @@
 -- Synthetic retained-work snapshots; no elapsed acquisition-time estimates.
 local W = {}
 assert(loadfile("Localization.lua"))("WoWIdle", W)
+assert(loadfile("Locales/enUS.lua"))("WoWIdle", W)
 for _, file in ipairs({
     "Content.lua",
     "Content/Encounters.lua",

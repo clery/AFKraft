@@ -43,8 +43,8 @@ function G.Recruit(state, classID)
         local level = G.NextCompanionMilestone(state)
         return false,
             level
-                    and (L["Find another companion by defeating a level "] .. level .. L[" milestone boss."])
-                or L["Your company is complete."]
+                    and (L.FIND_ANOTHER_COMPANION_BY_DEFEATING_A_LEVEL_PREFIX .. level .. L.MILESTONE_BOSS_SUFFIX)
+                or L.YOUR_COMPANY_IS_COMPLETE
     end
     return G.AddHero(state, classID)
 end
@@ -52,7 +52,7 @@ end
 function G.AddHero(state, classID, identity)
     local class = C.classByID[classID]
     if not class or #state.heroes >= 5 then
-        return false, L["The party is full or this class is unavailable."]
+        return false, L.THE_PARTY_IS_FULL_OR_THIS_CLASS_IS_UNAVAILABLE
     end
     local appearances = C.appearances[classID]
     local hero = {
@@ -82,7 +82,7 @@ function G.AddHero(state, classID, identity)
     G.Log(
         state,
         hero.name
-            .. (state.battle and L[" joins the next encounter."] or L[" joined the adventure."]),
+            .. (state.battle and L.JOINS_THE_NEXT_ENCOUNTER_SUFFIX or L.JOINED_THE_ADVENTURE_SUFFIX),
         nil,
         "recruit"
     )
@@ -92,11 +92,11 @@ end
 function G.Replace(state, index, identity)
     local hero = state.heroes[index]
     if not hero or not hero.generated or hero.class ~= identity.class then
-        return false, L["Choose a generated hero of the same class."]
+        return false, L.CHOOSE_A_GENERATED_HERO_OF_THE_SAME_CLASS
     end
     for _, existingHero in ipairs(state.heroes) do
         if existingHero.guid == identity.guid then
-            return false, L["This character is already in the party."]
+            return false, L.THIS_CHARACTER_IS_ALREADY_IN_THE_PARTY
         end
     end
     hero.name, hero.guid, hero.generated = identity.name, identity.guid, false
@@ -165,7 +165,7 @@ end
 
 function G.ItemDescription(item, hero, compare)
     if not item then
-        return L["Empty slot"]
+        return L.EMPTY_SLOT
     end
     local lines = {}
     local stats = G.ItemStats(item, hero)
@@ -187,12 +187,12 @@ function G.ItemDescription(item, hero, compare)
         end
     end
     if #lost > 0 then
-        lines[#lines + 1] = L["\n|cffffffffLost on equip:|r"]
+        lines[#lines + 1] = L.LOST_ON_EQUIP_SUFFIX
         lines[#lines + 1] = table.concat(lost, "\n")
     end
     local armorType = G.ItemArmorType(item)
     if armorType then
-        lines[#lines + 1] = C.armorNames[armorType] or L["Unknown armor"]
+        lines[#lines + 1] = C.armorNames[armorType] or L.UNKNOWN_ARMOR
         if hero and not compare then
             local allowed, reason = G.CanWearArmor(hero, item)
             if not allowed then
@@ -201,7 +201,7 @@ function G.ItemDescription(item, hero, compare)
         end
     end
     if item.slot == 1 then
-        lines[#lines + 1] = C.weaponNames[G.ItemWeaponType(item)] or L["Unknown weapon"]
+        lines[#lines + 1] = C.weaponNames[G.ItemWeaponType(item)] or L.UNKNOWN_WEAPON
         if hero and not compare then
             local allowed, reason = G.CanUseWeapon(hero, item)
             if not allowed then
@@ -210,34 +210,34 @@ function G.ItemDescription(item, hero, compare)
         end
     end
     if item.heirloom then
-        lines[#lines + 1] = L["Idle heirloom: stats scale with hero level."]
+        lines[#lines + 1] = L.IDLE_HEIRLOOM_STATS_SCALE_WITH_HERO_LEVEL
     end
     if (item.upgrade or 0) > 0 then
-        lines[#lines + 1] = L["Idle enhancement: +"] .. item.upgrade * 10 .. L["% stats."]
+        lines[#lines + 1] = L.IDLE_ENHANCEMENT .. item.upgrade * 10 .. L.STATS
     end
     if item.enchant then
         local enchant = C.enchantByID[item.enchant.id]
-        lines[#lines + 1] = L["Enchantment: "] .. (enchant and enchant.name or L["Unknown"]) .. "."
+        lines[#lines + 1] = L.ENCHANTMENT_PREFIX .. (enchant and enchant.name or L.UNKNOWN) .. "."
     end
     if (item.forge or 0) > 0 then
-        lines[#lines + 1] = L["Titanforge "]
+        lines[#lines + 1] = L.TITANFORGE_PREFIX
             .. item.forge
             .. ": +"
             .. math.floor((G.ForgeMultiplier(item) - 1) * 100 + 0.5)
-            .. L["% base potential."]
+            .. L.BASE_POTENTIAL
     end
     local template = C.itemByID[item.itemID]
     if template and template.note then
-        lines[#lines + 1] = L[template.note]
+        lines[#lines + 1] = C.itemNotes[item.itemID] or template.note
     end
     if item.itemID == 13074 then
-        lines[#lines + 1] = L["Source bonus: +6 Defense (not simulated)."]
+        lines[#lines + 1] = L.SOURCE_BONUS_6_DEFENSE_NOT_SIMULATED
     end
     if item.itemID == 13040 then
-        lines[#lines + 1] = L["Shadowbolt proc is not simulated."]
+        lines[#lines + 1] = L.SHADOWBOLT_PROC_IS_NOT_SIMULATED
     end
     if item.itemID == 13009 then
-        lines[#lines + 1] = L["Resistances are informational until damage schools are supported."]
+        lines[#lines + 1] = L.RESISTANCES_ARE_INFORMATIONAL_UNTIL_DAMAGE_SCHOOLS_ARE_SUPPORTED
     end
     return table.concat(lines, "\n")
 end
@@ -331,8 +331,7 @@ function G.TalentProgress(hero)
         spent = spent + 1
     end
     if not positiveInteger(hero.level) or limit == 0 then
-        return nil,
-            L["The saved hero level or class is invalid. Your adventure has not been reset."]
+        return nil, L.THE_SAVED_HERO_LEVEL_OR_CLASS_IS_INVALID_YOUR
     end
     local progress = hero.talentProgress
     if progress == nil then
@@ -348,7 +347,7 @@ function G.TalentProgress(hero)
         or not positiveInteger(progress.earned)
         or progress.earned > limit
     then
-        return nil, L["The saved talent progression is invalid. Your adventure has not been reset."]
+        return nil, L.THE_SAVED_TALENT_PROGRESSION_IS_INVALID_YOUR_ADVENTURE_HAS
     end
     local recordedBest = min(progress.bestLevel, C.heroLevelCap)
     local previous = 1 + floor((recordedBest - 1) / C.talentProgression.levelsPerPoint)
@@ -361,14 +360,13 @@ function G.TalentProgress(hero)
         or levelPoints ~= previous
         or levelPoints > progress.earned
     then
-        return nil, L["The saved talent progression is invalid. Your adventure has not been reset."]
+        return nil, L.THE_SAVED_TALENT_PROGRESSION_IS_INVALID_YOUR_ADVENTURE_HAS
     end
     local bestLevel = max(min(hero.level, C.heroLevelCap), recordedBest)
     local current = 1 + floor((bestLevel - 1) / C.talentProgression.levelsPerPoint)
     local earned = min(limit, progress.earned + current - levelPoints)
     if spent > earned then
-        return nil,
-            L["The saved talent selections exceed earned points. Your adventure has not been reset."]
+        return nil, L.THE_SAVED_TALENT_SELECTIONS_EXCEED_EARNED_POINTS_YOUR_ADVENTURE
     end
     progress.bestLevel, progress.earned, progress.levelPoints = bestLevel, earned, current
     hero.talentProgress = progress
@@ -399,10 +397,9 @@ end
 function G.Train(state, index)
     local hero = state.heroes[index]
     if not hero then
-        return false, L["Choose a hero."]
+        return false, L.CHOOSE_A_HERO
     end
-    return false,
-        L["Training is retired. Heroes grow naturally to level 60; Mastery unlocks at level 20."]
+    return false, L.TRAINING_IS_RETIRED_HEROES_GROW_NATURALLY_TO_LEVEL_60
 end
 
 function G.PriorityPresets(hero)
@@ -410,21 +407,21 @@ function G.PriorityPresets(hero)
     return {
         {
             id = "balanced",
-            name = L["Balanced"],
+            name = L.BALANCED,
             priority = "heal",
             healBelow = 65,
             specialCount = 2,
         },
         {
             id = "offense",
-            name = L["Offensive"],
+            name = L.OFFENSIVE,
             priority = "attack",
             healBelow = 35,
             specialCount = 1,
         },
         {
             id = "support",
-            name = role == "healer" and L["Healing"] or L["Defensive"],
+            name = role == "healer" and L.HEALING or L.DEFENSIVE,
             priority = "heal",
             healBelow = 85,
             specialCount = 3,
@@ -435,7 +432,7 @@ end
 function G.ConfigurePreset(state, index, presetID)
     local hero = state.heroes[index]
     if not hero then
-        return false, L["Choose a hero."]
+        return false, L.CHOOSE_A_HERO
     end
     for _, preset in ipairs(G.PriorityPresets(hero)) do
         if preset.id == presetID then
@@ -444,7 +441,7 @@ function G.ConfigurePreset(state, index, presetID)
             return true
         end
     end
-    return false, L["Choose a class priority preset."]
+    return false, L.CHOOSE_A_CLASS_PRIORITY_PRESET
 end
 
 function G.Configure(state, index, key, value)
@@ -500,13 +497,12 @@ function G.CanTalent(hero, talent)
     end
     if hero.talents[talent.id] then
         if peers == 1 and nextRow then
-            return false, L["Unlearn talents in the next row first."]
+            return false, L.UNLEARN_TALENTS_IN_THE_NEXT_ROW_FIRST
         end
         return true
     end
     if talent.row > 1 and not previous then
-        return false,
-            L["Spend at least one point in the previous row of this specialization first."]
+        return false, L.SPEND_AT_LEAST_ONE_POINT_IN_THE_PREVIOUS_ROW
     end
     local progress, spent = G.TalentProgress(hero)
     if not progress then
@@ -515,11 +511,12 @@ function G.CanTalent(hero, talent)
     if progress.earned <= spent then
         local level = G.NextTalentLevel(hero)
         return false,
-            level and (L["Reach idle level "] .. level .. L[" for another permanent talent point."])
+            level
+                    and (L.REACH_IDLE_LEVEL_PREFIX .. level .. L.FOR_ANOTHER_PERMANENT_TALENT_POINT_SUFFIX)
                 or (
                     progress.earned < #G.TalentList(hero)
-                        and L["Earn Mastery XP from harder encounters for another permanent talent point."]
-                    or L["All permanent talent points have been earned."]
+                        and L.EARN_MASTERY_XP_FROM_HARDER_ENCOUNTERS_FOR_ANOTHER_PERMANENT
+                    or L.ALL_PERMANENT_TALENT_POINTS_HAVE_BEEN_EARNED
                 )
     end
     return true
@@ -559,7 +556,7 @@ end
 function G.Travel(state, zone, automatic)
     local z = C.zoneByID[zone]
     if not z or not G.IsUnlocked(state, z) then
-        return false, L["Defeat harder encounters to unlock this destination."]
+        return false, L.DEFEAT_HARDER_ENCOUNTERS_TO_UNLOCK_THIS_DESTINATION
     end
     if not automatic and state.routes.enabled and state.routes.selected then
         state.routes.run.paused = true
@@ -577,7 +574,7 @@ function G.Travel(state, zone, automatic)
     state.guide.traveled = true
     G.Emit(state, "travel")
     state.farming = false
-    G.Log(state, L["Traveling to "] .. z.name .. ".", nil, "travel")
+    G.Log(state, L.TRAVELING_TO_PREFIX .. z.name .. ".", nil, "travel")
     return true
 end
 
@@ -585,7 +582,7 @@ end
 function G.FarmZoneBoss(state, zone)
     local checkpoint = math.floor((state.safe[zone] or 0) / 5) * 5
     if checkpoint < 5 then
-        return false, L["Clear a boss in this zone first."]
+        return false, L.CLEAR_A_BOSS_IN_THIS_ZONE_FIRST
     end
     local ok, reason = G.Travel(state, zone)
     if not ok then
@@ -631,7 +628,7 @@ end
 
 function G.Retry(state)
     if not state.farming then
-        return false, L["Your company is already advancing."]
+        return false, L.YOUR_COMPANY_IS_ALREADY_ADVANCING
     end
     if state.battle then
         for _, unit in ipairs(state.battle.heroes) do

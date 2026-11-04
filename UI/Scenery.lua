@@ -47,7 +47,7 @@ function Scenery:SetZone(zoneID)
                 end
                 if not actor.SetModelByFileID then
                     self.supported = false
-                    self.lastError = L["Scenery actor loading is unavailable in this renderer."]
+                    self.lastError = L.SCENERY_ACTOR_LOADING_IS_UNAVAILABLE_IN_THIS_RENDERER
                     return
                 end
                 actor:SetModelByFileID(id)

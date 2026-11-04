@@ -4,9 +4,9 @@ local A, G = W.Client, W.Game
 local R = {}
 W.GatheringRewards = R
 local professions = {
-    { id = 186, spell = 2575, name = L["Mining"] },
-    { id = 182, spell = 2366, name = L["Herbalism"] },
-    { id = 393, spell = 8613, name = L["Skinning"] },
+    { id = 186, spell = 2575, name = L.MINING },
+    { id = 182, spell = 2366, name = L.HERBALISM },
+    { id = 393, spell = 8613, name = L.SKINNING },
 }
 
 local function readable(value)
@@ -74,7 +74,7 @@ local function inspectTooltip(data)
         if readable(text) and type(text) == "string" then
             for _, profession in ipairs(professions) do
                 local name = professionName(profession)
-                local skin = profession.id == 393 and (SKINNABLE or L["Skinnable"]) or nil
+                local skin = profession.id == 393 and (SKINNABLE or L.SKINNABLE) or nil
                 if text:find(name, 1, true) or (skin and text:find(skin, 1, true)) then
                     return {
                         profession = profession.id,
@@ -108,7 +108,7 @@ local function grant(state, pending)
             state,
             "gather:" .. pending.guid,
             pending.profession.id == 393 and "skinning" or "gather",
-            pending.profession.name .. L[" gathering"]
+            pending.profession.name .. L.GATHERING_SUFFIX
         )
     end
 end

@@ -37,7 +37,7 @@ function Backdrop:SetZone(zoneID)
     if texture then
         self.lastError = nil
     else
-        self.lastError = L["No screenshot is configured for this destination."]
+        self.lastError = L.NO_SCREENSHOT_IS_CONFIGURED_FOR_THIS_DESTINATION
     end
     self.image:SetShown(self.supported)
     self.header:SetShown(self.supported)

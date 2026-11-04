@@ -24,20 +24,17 @@ function G.MasteryProgress(hero)
         or G.MasteryCost(mastery.rank) >= math.huge
         or mastery.xp >= G.MasteryCost(mastery.rank)
     then
-        return nil,
-            L["The saved Mastery progression is invalid. Your adventure has not been reset."]
+        return nil, L.THE_SAVED_MASTERY_PROGRESSION_IS_INVALID_YOUR_ADVENTURE_HAS
     end
     hero.mastery = mastery
     if mastery.frontiers == nil then
         mastery.frontiers = { [0] = mastery.frontier }
     elseif type(mastery.frontiers) ~= "table" then
-        return nil,
-            L["The saved tier Mastery frontiers are invalid. Your adventure has not been reset."]
+        return nil, L.THE_SAVED_TIER_MASTERY_FRONTIERS_ARE_INVALID_YOUR_ADVENTURE
     end
     for tier, frontier in pairs(mastery.frontiers) do
         if not whole(tier) or tier > 10 or not whole(frontier) then
-            return nil,
-                L["The saved tier Mastery frontiers are invalid. Your adventure has not been reset."]
+            return nil, L.THE_SAVED_TIER_MASTERY_FRONTIERS_ARE_INVALID_YOUR_ADVENTURE
         end
     end
     mastery.frontiers[0] = max(mastery.frontiers[0] or 0, mastery.frontier)

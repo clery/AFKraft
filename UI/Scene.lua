@@ -265,17 +265,19 @@ function Scene:Refresh(s)
         P.Ensure(s, s.battle)
     end
     self.scenery:SetZone(z.id)
-    self.chapter:SetText(L["AZEROTH  /  "] .. string.upper(z.name))
+    self.chapter:SetText(L.AZEROTH_HEADING .. string.upper(z.name))
     self.caption:SetText(z.subtitle)
     self.status:SetText(
-        (s.farming and L["FARMING"] or L["ADVANCING"])
-            .. L["  /  Encounter "]
+        (s.farming and L.FARMING_HEADING or L.ADVANCING_HEADING)
+            .. L.FRAGMENT_ENCOUNTER
             .. s.stage
-            .. (b and (L["  ·  LEVEL "] .. b.level .. (b.boss and L[" BOSS"] or L[" MOBS"])) or "")
+            .. (
+                b
+                    and (L.LEVEL_HEADING .. b.level .. (b.boss and L.BOSS_HEADING or L.MOBS_HEADING))
+                or ""
+            )
     )
-    self.note:SetText(
-        L["Your company keeps adventuring. Equipment, talents, and destinations can be changed at any time."]
-    )
+    self.note:SetText(L.ADVENTURE_SCENE_DESCRIPTION)
     for i, unit in ipairs(self.units) do
         local hero = i <= 5 and s.heroes[i] or nil
         local enemy = i > 5 and b and b.enemies[i - 5] or nil
@@ -356,11 +358,11 @@ function Scene:Refresh(s)
                 hp, maxHP =
                     battleHero and battleHero.hp or stats.hp * (hero.health or 1),
                     battleHero and battleHero.maxHP or stats.hp
-                detail = b and not battleHero and L["Joins next encounter"] or ""
+                detail = b and not battleHero and L.JOINS_NEXT_ENCOUNTER or ""
                 unit.name:SetText(hero.name)
             elseif enemy and b then
                 hp, maxHP = enemy.hp, enemy.maxHP
-                detail = L["Lv "] .. b.level .. "  ·  " .. U.Number(hp) .. L[" HP"]
+                detail = L.LV_PREFIX .. b.level .. "  ·  " .. U.Number(hp) .. L.HP_HEADING
                 unit.name:SetText(enemy.name)
             else
                 hp, maxHP, detail = 1, 1, ""
@@ -387,7 +389,7 @@ function Scene:Refresh(s)
                 "Interface\\Icons\\" .. (class and class.icon or "Ability_Creature_Cursed_02")
             )
             unit.name:SetAlpha(hp > 0 and 1 or 0.45)
-            unit.detail:SetText(hp > 0 and detail or L["Defeated"])
+            unit.detail:SetText(hp > 0 and detail or L.DEFEATED)
         end
     end
     if self.travelling and not wasTravelling and b then

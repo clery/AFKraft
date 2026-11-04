@@ -171,7 +171,7 @@ function G.ProfessionBossRewards(state, battle)
                 G.Log(
                     state,
                     recipe.name
-                        .. L[" recipe learned permanently. Runic fragments come from idle tier 2+ level-20+ bosses."],
+                        .. L.RECIPE_LEARNED_PERMANENTLY_RUNIC_FRAGMENTS_COME_FROM_IDLE_TIER_SUFFIX,
                     true
                 )
                 G.Emit(state, "unlock")
@@ -251,7 +251,7 @@ end
 function G.AllocateProfession(state, kind, branchID)
     local profession = C.professionByID[kind]
     if not profession or not G.ProfessionUnlocks(state).research then
-        return false, L["Reach lifetime idle level 60 to specialize professions."]
+        return false, L.REACH_LIFETIME_IDLE_LEVEL_60_TO_SPECIALIZE_PROFESSIONS
     end
     local known = false
     for _, branch in ipairs(profession.branches) do
@@ -260,12 +260,12 @@ function G.AllocateProfession(state, kind, branchID)
         end
     end
     if not known then
-        return false, L["Choose a profession specialization."]
+        return false, L.CHOOSE_A_PROFESSION_SPECIALIZATION
     end
     local p = state.professions
     local nextRank = (p.allocations[kind][branchID] or 0) + 1
     if nextRank > C.professionBranchCap then
-        return false, L["This specialization is complete."]
+        return false, L.THIS_SPECIALIZATION_IS_COMPLETE
     end
     local available = G.ProfessionPoints(state, kind)
     local desired = 0
@@ -273,7 +273,7 @@ function G.AllocateProfession(state, kind, branchID)
         desired = desired + rank
     end
     if available < 1 or desired >= p.ranks[kind] or p.ranks[kind] < 1 + (nextRank - 1) * 3 then
-        return false, L["Earn a profession point and the required work rank first."]
+        return false, L.EARN_A_PROFESSION_POINT_AND_THE_REQUIRED_WORK_RANK
     end
     p.allocations[kind][branchID] = nextRank
     return true
@@ -281,7 +281,7 @@ end
 
 function G.ResetProfessionAllocations(state, kind)
     if not C.professionByID[kind] then
-        return false, L["Choose a profession."]
+        return false, L.CHOOSE_A_PROFESSION
     end
     state.professions.allocations[kind] = {}
     return true
@@ -310,17 +310,17 @@ local function equipped(state, heroIndex, slot, profession)
     if not G.ProfessionUnlocks(state)[profession] then
         return nil,
             nil,
-            L["Reach lifetime idle level "]
+            L.REACH_LIFETIME_IDLE_LEVEL_PREFIX
                 .. C.professionByID[profession].unlockLevel
-                .. L[" to unlock this profession."]
+                .. L.TO_UNLOCK_THIS_PROFESSION_SUFFIX
     end
     local hero = state.heroes[heroIndex]
     local item = hero and hero.gear[slot]
     if not item then
-        return nil, nil, L["Equip an item in this slot first."]
+        return nil, nil, L.EQUIP_AN_ITEM_IN_THIS_SLOT_FIRST
     end
     if (item.count or 1) ~= 1 then
-        return nil, nil, L["Equip a single item before modifying it."]
+        return nil, nil, L.EQUIP_A_SINGLE_ITEM_BEFORE_MODIFYING_IT
     end
     local allowed, reason = G.CanEquip(hero, item)
     if not allowed then
@@ -373,14 +373,14 @@ end
 function G.EnchantQuote(state, heroIndex, slot, enchantID)
     local enchant = C.enchantByID[enchantID]
     if not enchant then
-        return nil, nil, L["Choose an enchantment."]
+        return nil, nil, L.CHOOSE_AN_ENCHANTMENT
     end
     if enchant.tier and not state.professions.recipes[enchantID] then
         return nil,
             nil,
-            L["Defeat an idle level-20+ boss at tier "]
+            L.DEFEAT_AN_IDLE_LEVEL_20_BOSS_AT_TIER_PREFIX
                 .. enchant.tier
-                .. L["+ while online to learn this recipe."]
+                .. L.WHILE_ONLINE_TO_LEARN_THIS_RECIPE
     end
     local item, hero, reason = equipped(state, heroIndex, slot, "enchanting")
     if not item or not hero then
@@ -404,7 +404,7 @@ function G.EnchantQuote(state, heroIndex, slot, enchantID)
         end
     end
     if same then
-        return nil, nil, L["This item already has this enchantment at the current strength."]
+        return nil, nil, L.THIS_ITEM_ALREADY_HAS_THIS_ENCHANTMENT_AT_THE_CURRENT
     end
     local cost = costFor(state, "enchanting", item, hero, 1)
     cost.fragments = enchant.fragments or 0
@@ -457,7 +457,7 @@ function G.ForgeQuote(state, heroIndex, slot)
         return nil, nil, reason
     end
     if not whole(item.forge or 0, 0, C.forgeCap - 1) then
-        return nil, nil, L["This item has reached its titanforge cap."]
+        return nil, nil, L.THIS_ITEM_HAS_REACHED_ITS_TITANFORGE_CAP
     end
     local preview = G.Copy(item)
     preview.forge = (item.forge or 0) + 1
@@ -507,17 +507,16 @@ local function modify(state, heroIndex, slot, kind, enchantID)
     if not G.HasComponents(state, cost) then
         local zone = next(cost.components or {})
         return false,
-            L["Defeat idle bosses in "]
+            L.DEFEAT_IDLE_BOSSES_IN_PREFIX
                 .. C.zoneByID[zone].name
-                .. L[" for "]
+                .. L.FRAGMENT_FOR
                 .. C.zoneComponents[zone].name
                 .. "."
     end
     if not pay(state, cost) then
         return false,
-            (cost.fragments or 0) > 0
-                    and L["Not enough gold, idle materials or Runic fragments for this modification."]
-                or L["Not enough gold or idle materials for this modification."]
+            (cost.fragments or 0) > 0 and L.NOT_ENOUGH_GOLD_IDLE_MATERIALS_OR_RUNIC_FRAGMENTS_FOR
+                or L.NOT_ENOUGH_GOLD_OR_IDLE_MATERIALS_FOR_THIS_MODIFICATION
     end
     local item = state.heroes[heroIndex].gear[slot]
     if kind == "enchanting" then

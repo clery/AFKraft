@@ -2,6 +2,7 @@
 local W = {}
 local files = {
     "Localization.lua",
+    "Locales/enUS.lua",
     "Locales/frFR.lua",
     "Locales/deDE.lua",
     "Locales/esES.lua",

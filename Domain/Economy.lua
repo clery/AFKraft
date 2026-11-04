@@ -110,11 +110,11 @@ function G.MigrateEconomy(state, previousVersion)
     state.economyVersion, state.economyMigration = 1, report
     G.Log(
         state,
-        L["Natural hero growth unlocked. Credited "]
+        L.NATURAL_HERO_GROWTH_UNLOCKED_CREDITED_PREFIX
             .. credit
-            .. L[" Essence and "]
+            .. L.FRAGMENT_ESSENCE_AND
             .. report.trainingGold
-            .. L[" gold from recorded retired purchases. Unrecorded spending receives no guessed credit."],
+            .. L.GOLD_FROM_RECORDED_RETIRED_PURCHASES_UNRECORDED_SPENDING_RECEIVES_NO_SUFFIX,
         nil,
         "rewards"
     )

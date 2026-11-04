@@ -5,16 +5,16 @@ local P = {}
 W.DevelopmentPanel = P
 
 local rows = {
-    might = { { L["Damage"], "damage" }, { L["Healing"], "healing" } },
+    might = { { L.DAMAGE, "damage" }, { L.HEALING, "healing" } },
     resolve = {
-        { L["Health"], "health" },
-        { L["Damage taken"], "damageTaken" },
-        { L["Victory recovery"], "recovery" },
+        { L.HEALTH_3, "health" },
+        { L.DAMAGE_TAKEN, "damageTaken" },
+        { L.VICTORY_RECOVERY, "recovery" },
     },
     provisioning = {
-        { L["Zone materials"], "materials" },
-        { L["Equipment costs"], "costMultiplier" },
-        { L["Hero XP"], "heroXP" },
+        { L.ZONE_MATERIALS, "materials" },
+        { L.EQUIPMENT_COSTS, "costMultiplier" },
+        { L.HERO_XP, "heroXP" },
     },
 }
 
@@ -28,19 +28,19 @@ end
 
 function P.Draw(ui, parent, state)
     local board = state.development
-    U.Text(parent, L["Invested "] .. board.invested .. L[" Essence"], 0, 4, 20, T.gold, 850)
+    U.Text(parent, L.INVESTED_PREFIX .. board.invested .. L.ESSENCE_SUFFIX, 0, 4, 20, T.gold, 850)
     ui.developmentControls = { branches = {} }
-    local reset = U.Button(parent, L["Redistribute all · Free"], 940, 0, 330, 34, function()
+    local reset = U.Button(parent, L.REDISTRIBUTE_ALL_FREE, 940, 0, 330, 34, function()
         W.Action(G.ResetDevelopment)
     end)
     ui.developmentControls.reset = reset
     U.Enabled(reset, board.invested > 0)
     U.Tooltip(
         reset,
-        L["Refund every development rank"],
-        L["Recover exactly "]
+        L.REFUND_EVERY_DEVELOPMENT_RANK,
+        L.RECOVER_EXACTLY_PREFIX
             .. board.invested
-            .. L[" invested Essence. Milestone choices stay saved and reactivate at rank 3. Learned abilities and equipment are kept."],
+            .. L.INVESTED_ESSENCE_MILESTONE_CHOICES_STAY_SAVED_AND_REACTIVATE_AT_SUFFIX,
         380
     )
     for index, branch in ipairs(C.development) do
@@ -51,22 +51,22 @@ function P.Draw(ui, parent, state)
         U.Text(parent, branch.name, x + 84, 86, 24, T.gold, 306)
         U.Text(
             parent,
-            L["Rank "] .. quote.rank .. "/" .. C.developmentRankCap,
+            L.RANK_PREFIX .. quote.rank .. "/" .. C.developmentRankCap,
             x + 84,
             122,
             15,
             T.muted,
             300
         )
-        U.Text(parent, L["Current"], x + 192, 180, 13, T.muted, 90)
-        U.Text(parent, L["Next rank"], x + 294, 180, 13, T.gold, 100)
+        U.Text(parent, L.CURRENT, x + 192, 180, 13, T.muted, 90)
+        U.Text(parent, L.NEXT_RANK, x + 294, 180, 13, T.gold, 100)
         for rowIndex, row in ipairs(rows[branch.id]) do
             local y = 220 + (rowIndex - 1) * 36
             U.Text(parent, row[1], x + 16, y, 14, T.text, 174)
             U.Text(parent, bonus(quote.current[row[2]], row[2]), x + 192, y, 15, T.text, 96)
             U.Text(
                 parent,
-                quote.maximum and L["Complete"] or bonus(quote.next[row[2]], row[2]),
+                quote.maximum and L.COMPLETE or bonus(quote.next[row[2]], row[2]),
                 x + 294,
                 y,
                 15,
@@ -76,7 +76,8 @@ function P.Draw(ui, parent, state)
         end
         local buy = U.Button(
             parent,
-            quote.maximum and L["Rank cap reached"] or (L["Invest "] .. quote.cost .. L[" Essence"]),
+            quote.maximum and L.RANK_CAP_REACHED
+                or (L.INVEST_PREFIX .. quote.cost .. L.ESSENCE_SUFFIX),
             x + 16,
             350,
             378,
@@ -90,14 +91,14 @@ function P.Draw(ui, parent, state)
         U.Enabled(buy, not quote.maximum and state.essence >= quote.cost)
         U.Tooltip(
             buy,
-            branch.name .. L[" development"],
+            branch.name .. L.DEVELOPMENT_SUFFIX,
             branch.description
-                .. L["\n\nPermanent through both resets. Refund ranks freely for their exact Essence cost."],
+                .. L.PERMANENT_THROUGH_BOTH_RESETS_REFUND_RANKS_FREELY_FOR_THEIR_SUFFIX,
             350
         )
         local refund = U.Button(
             parent,
-            L["Refund rank · "] .. quote.refund .. L[" Essence"],
+            L.REFUND_RANK_PREFIX .. quote.refund .. L.ESSENCE_SUFFIX,
             x + 16,
             402,
             378,
@@ -107,7 +108,7 @@ function P.Draw(ui, parent, state)
             end
         )
         U.Enabled(refund, quote.rank > 0)
-        U.Text(parent, L["Rank 3 milestone"], x + 16, 474, 17, T.gold, 378)
+        U.Text(parent, L.RANK_3_MILESTONE, x + 16, 474, 17, T.gold, 378)
         local controls = { buy = buy, refund = refund, choices = {} }
         for choiceIndex, choice in ipairs(branch.choices) do
             local chosen = quote.choice == choice.id
@@ -143,9 +144,9 @@ function P.Draw(ui, parent, state)
             )
             U.Text(
                 control,
-                quote.rank < 3 and (chosen and L["Saved · inactive"] or L["Rank 3 required"])
-                    or chosen and L["Selected"]
-                    or L["Choose · Free"],
+                quote.rank < 3 and (chosen and L.SAVED_INACTIVE or L.RANK_3_REQUIRED)
+                    or chosen and L.SELECTED
+                    or L.CHOOSE_FREE,
                 56,
                 33,
                 11,
@@ -157,8 +158,7 @@ function P.Draw(ui, parent, state)
             U.Tooltip(
                 control,
                 choice.name,
-                choice.description
-                    .. L["\n\nSwitch for free. Your choice stays saved below rank 3 and reactivates when the branch reaches rank 3."],
+                choice.description .. L.SWITCH_FOR_FREE_YOUR_CHOICE_STAYS_SAVED_BELOW_RANK_SUFFIX,
                 350
             )
             controls.choices[choice.id] = control
@@ -170,14 +170,14 @@ function P.Draw(ui, parent, state)
     if migration then
         U.Help(
             parent,
-            L["Previous investments"],
+            L.PREVIOUS_INVESTMENTS,
             1258,
             660,
-            L["Recorded purchases from the old economy were refunded once.\n\nEssence: "]
+            L.RECORDED_PURCHASES_FROM_THE_OLD_ECONOMY_WERE_REFUNDED_ONCE_PREFIX
                 .. (migration.trainingEssence + migration.equipmentEssence)
-                .. L["\nGold: "]
+                .. L.FRAGMENT_GOLD_3
                 .. migration.trainingGold
-                .. L["\n\nUnrecorded spending was not estimated."]
+                .. L.UNRECORDED_SPENDING_WAS_NOT_ESTIMATED_SUFFIX
         )
     end
 end

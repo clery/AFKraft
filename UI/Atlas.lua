@@ -5,9 +5,9 @@ local Atlas = {}
 W.Atlas = Atlas
 
 local function unlockText(zone)
-    return L["Unlock: defeat a level "]
+    return L.UNLOCK_DEFEAT_A_LEVEL_PREFIX
         .. math.max(1, zone.level - 1)
-        .. L[" or higher milestone boss."]
+        .. L.OR_HIGHER_MILESTONE_BOSS_SUFFIX
 end
 
 local function familySpoils(zone)
@@ -32,14 +32,14 @@ local function describe(self, zone)
     self.title:SetText(zone.name)
     GameTooltip:AddLine(
         C.zoneComponents[zone.id].name
-            .. L[" · Owned: "]
+            .. L.FRAGMENT_OWNED
             .. (W.state.professions.components[zone.id] or 0),
         1,
         0.82,
         0
     )
     GameTooltip:AddLine(
-        L["Idle bosses guarantee 1 trophy for enchanting or titanforging. Kept through both resets."],
+        L.IDLE_BOSSES_GUARANTEE_1_TROPHY_FOR_ENCHANTING_OR_TITANFORGING,
         0.8,
         0.8,
         0.7,
@@ -48,18 +48,18 @@ local function describe(self, zone)
     local spoils = familySpoils(zone)
     self.detail:SetText(
         C.materials[zone.material]
-            .. L["  ·  Frontier "]
+            .. L.FRAGMENT_FRONTIER
             .. zone.level
             .. "  ·  "
-            .. (G.IsUnlocked(W.state, zone) and L["Available"] or unlockText(zone))
-            .. (spoils and (L["\nSecondary spoils: "] .. spoils .. L[" (up to 25%)."]) or "")
+            .. (G.IsUnlocked(W.state, zone) and L.AVAILABLE or unlockText(zone))
+            .. (spoils and (L.FRAGMENT_SECONDARY_SPOILS .. spoils .. L.UP_TO_25_SUFFIX) or "")
     )
 end
 
 local function travel(self, zone)
     if zone and W.Action(G.Travel, zone.id) then
         describe(self, zone)
-        W.Notify(L["Your company is traveling through "] .. zone.name .. ".")
+        W.Notify(L.YOUR_COMPANY_IS_TRAVELING_THROUGH_PREFIX .. zone.name .. ".")
         W.UI:SetTab("adventure")
     end
 end
@@ -68,13 +68,13 @@ local function zoneTooltip(map, zone)
     GameTooltip:SetOwner(map, "ANCHOR_CURSOR")
     GameTooltip:SetText(zone.name, unpack(T.gold))
     GameTooltip:AddLine(
-        C.materials[zone.material] .. L[" · Frontier "] .. zone.level,
+        C.materials[zone.material] .. L.FRAGMENT_FRONTIER_2 .. zone.level,
         0.8,
         0.8,
         0.7
     )
     GameTooltip:AddLine(
-        #zone.enemies .. L[" creature encounters; new opponents at frontiers 20, 40 and 60."],
+        #zone.enemies .. L.CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX,
         0.8,
         0.8,
         0.7,
@@ -82,14 +82,14 @@ local function zoneTooltip(map, zone)
     )
     GameTooltip:AddLine(
         C.zoneComponents[zone.id].name
-            .. L[" · Owned: "]
+            .. L.FRAGMENT_OWNED
             .. (W.state.professions.components[zone.id] or 0),
         1,
         0.82,
         0
     )
     GameTooltip:AddLine(
-        L["Idle bosses guarantee 1 trophy for enchanting or titanforging. Kept through both resets."],
+        L.IDLE_BOSSES_GUARANTEE_1_TROPHY_FOR_ENCHANTING_OR_TITANFORGING,
         0.8,
         0.8,
         0.7,
@@ -97,9 +97,9 @@ local function zoneTooltip(map, zone)
     )
     local spoils = familySpoils(zone)
     if spoils then
-        GameTooltip:AddLine(L["Family spoils: "] .. spoils, 0.8, 0.8, 0.7)
+        GameTooltip:AddLine(L.FAMILY_SPOILS_PREFIX .. spoils, 0.8, 0.8, 0.7)
         GameTooltip:AddLine(
-            L["Up to 25% additional idle materials, shared across the encounter's enemies."],
+            L.UP_TO_25_ADDITIONAL_IDLE_MATERIALS_SHARED_ACROSS_THE,
             0.7,
             0.7,
             0.7,
@@ -107,7 +107,7 @@ local function zoneTooltip(map, zone)
         )
     end
     GameTooltip:AddLine(
-        G.IsUnlocked(W.state, zone) and L["Click to travel"] or unlockText(zone),
+        G.IsUnlocked(W.state, zone) and L.CLICK_TO_TRAVEL or unlockText(zone),
         0.8,
         0.8,
         0.7
@@ -242,7 +242,7 @@ local function paintMap(map)
         tile:Hide()
     end
     local textures, info = A.MapTiles(map.id)
-    map.message:SetText(textures and "" or L["Continent artwork is unavailable in this client."])
+    map.message:SetText(textures and "" or L.CONTINENT_ARTWORK_IS_UNAVAILABLE_IN_THIS_CLIENT)
     if not textures or not info then
         return
     end
@@ -339,17 +339,17 @@ function Atlas.Draw(ui)
         self = { frame = CreateFrame("Frame", nil, ui.panel) }
         ui.atlas = self
         self.frame:SetAllPoints()
-        U.Text(self.frame, L["DESTINATIONS"], 0, 0, 24, T.gold)
+        U.Text(self.frame, L.DESTINATIONS_HEADING, 0, 0, 24, T.gold)
         U.Help(
             self.frame,
-            L["World map"],
+            L.WORLD_MAP,
             1258,
             0,
-            L["Hover a region to inspect its rewards and requirements. Click an unlocked region to travel. Gray regions are locked.\n\nTravel abandons the current encounter without rewards and preserves current health. Your idle destination is independent of your WoW character."]
+            L.HOVER_A_REGION_TO_INSPECT_ITS_REWARDS_AND_REQUIREMENTS
         )
         self.maps = {
-            createMap(self, self.frame, "kalimdor", L["Kalimdor"], 0),
-            createMap(self, self.frame, "eastern", L["Eastern Kingdoms"], 664),
+            createMap(self, self.frame, "kalimdor", L.KALIMDOR, 0),
+            createMap(self, self.frame, "eastern", L.EASTERN_KINGDOMS, 664),
         }
         self.title = U.Text(self.frame, "", 0, 599, 22, T.gold, 900)
         self.detail = U.Text(self.frame, "", 0, 634, 13, T.muted, 920)

@@ -9,11 +9,11 @@ function W.BindPreferences(state)
     end
     local saved = WoWIdlePreferencesDB
     if type(saved) ~= "table" or (saved.global ~= nil and type(saved.global) ~= "table") then
-        return nil, L["The saved preferences are invalid. They have not been reset."]
+        return nil, L.THE_SAVED_PREFERENCES_ARE_INVALID_THEY_HAVE_NOT_BEEN
     end
     for _, key in ipairs({ "ui", "settings" }) do
         if saved.global and saved.global[key] ~= nil and type(saved.global[key]) ~= "table" then
-            return nil, L["The saved preferences are invalid. They have not been reset."]
+            return nil, L.THE_SAVED_PREFERENCES_ARE_INVALID_THEY_HAVE_NOT_BEEN
         end
     end
     W.preferences = LibStub("AceDB-3.0"):New("WoWIdlePreferencesDB", {
