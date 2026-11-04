@@ -213,6 +213,9 @@ function U.Tab(parent, text, x, y, w, h, fn, selected)
         local ok, button = pcall(CreateFrame, "Button", nil, parent, "TabSystemTopButtonTemplate")
         if ok and button.SetTabSelected and button.Text then
             button:HandleRotation()
+            for _, texture in ipairs(button.RotatedTextures) do
+                texture:SetVertexColor(0.70, 0.58, 0.40)
+            end
             button.nativeTab = true
             button.text = button.Text
             return button

@@ -609,7 +609,6 @@ function W.CreateUI()
     workspace:SetPoint("TOPLEFT", 276, 0)
     workspace:SetSize(1296, 900)
     ui.workspace = workspace
-    U.Rect(expanded, 16, 104, 236, 752, T.panel)
     ui.section = U.SingleLine(U.Text(workspace, "Adventure", 0, 105, 24, T.gold), 600, 30)
     ui.sectionDetail = U.SingleLine(U.Text(workspace, "", 0, 137, 14, T.muted), 780, 20)
     ui.sectionHelp = U.Help(workspace, "About this panel", 624, 105, function()
@@ -669,7 +668,7 @@ function W.CreateUI()
                 end
             end
         )
-        ui.forgeTabs[id]:SetFrameLevel(forgeBorder:GetFrameLevel() + 1)
+        ui.forgeTabs[id]:SetFrameLevel(forgeBorder:GetFrameLevel() - 1)
     end
     ui.settingsLink = U.Button(expanded, "Settings", 24, 850, 220, 34, function()
         LibStub("AceConfigDialog-3.0"):Open("WoWIdle")
