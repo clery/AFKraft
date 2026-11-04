@@ -27,13 +27,13 @@ test("Commander controls buy once, equip, activate, and refresh timers without r
     assertFalse(controls.purchase:IsEnabled())
     click(controls.activate)
     controls = ui.boostControls.battleOrders
-    assertTrue(controls.status:GetText():find("Active 5:00 / Ready 10:00", 1, true) ~= nil)
-    s.clock = 300
+    assertTrue(controls.status:GetText():find("Active 15:00 / Ready 30:00", 1, true) ~= nil)
+    s.clock = 900
     ui:Refresh(false)
     assertTrue(ui.boostControls.battleOrders == controls)
-    assertEquals("Ready in 5:00", controls.status:GetText())
+    assertEquals("Ready in 15:00", controls.status:GetText())
     assertFalse(controls.activate:IsEnabled())
-    s.clock = 600
+    s.clock = 1800
     ui:Refresh(false)
     assertEquals("Ready.", controls.status:GetText())
     assertTrue(controls.activate:IsEnabled())

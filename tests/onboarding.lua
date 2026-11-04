@@ -158,13 +158,13 @@ test(
     function()
         local W, s, ui = opening()
         assertEquals(1, #s.heroes)
-        assertEquals("Milestone boss level 1", ui.cards[2].detail:GetText())
+        assertEquals("Milestone boss level " .. W.Content.companionMilestones[2], ui.cards[2].detail:GetText())
         assertTrue(ui.tabs.party.notice:GetText() ~= "Recruit")
         click(ui.cards[2])
         assertNotNil(find(ui, "Back to equipment"))
         assertTrue(find(ui, "Priest") == nil)
         assertEquals(1, #s.heroes)
-        s.best = 2
+        s.best = W.Content.companionMilestones[2] + 1
         ui:SetTab("adventure")
         assertEquals("Recruit", ui.tabs.party.notice:GetText())
         click(find(ui, "Recruit companions"))
@@ -173,7 +173,7 @@ test(
         assertEquals("PRIEST", s.heroes[2].class)
         assertFalse(ui.recruiting)
         assertFalse(W.Game.Recruit(s, "MAGE"))
-        assertEquals("Milestone boss level 3", ui.cards[3].detail:GetText())
+        assertEquals("Milestone boss level " .. W.Content.companionMilestones[3], ui.cards[3].detail:GetText())
     end
 )
 
@@ -198,7 +198,7 @@ test("Starter guide can be dismissed and reopened without losing completed lesso
     assertEquals(3, W.Panels.GuideStep(s))
     assertTrue(W.Game.Talent(s, 1, W.Game.TalentList(s.heroes[1])[1].id))
     assertTrue(W.Panels.GuideStep(s) == nil)
-    s.runBest = 4
+    s.runBest = W.Content.zoneByID.westfall.unlockLevel
     assertEquals(4, W.Panels.GuideStep(s))
     assertTrue(W.Game.Travel(s, "durotar"))
     ui:SetTab("adventure")
@@ -242,7 +242,7 @@ test("Starter lessons skip unavailable actions and point at live controls", func
     assertEquals(ui.guideEquipTarget, ui.guideTarget)
     ui.guideEquipTarget:GetScript("OnClick")()
     assertTrue(s.guide.equipped)
-    s.runBest = 4
+    s.runBest = W.Content.zoneByID.westfall.unlockLevel
     ui:SetTab("atlas")
     assertEquals(4, W.Panels.GuideStep(s))
     local targetMap

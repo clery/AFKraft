@@ -32,7 +32,7 @@ case("Every starting class can reach the first companion by fighting and equippi
     for _, class in ipairs(C.classes) do
         local s = G.New(1000)
         G.AddHero(s, class.id)
-        for _ = 1, 2400 do
+        for _ = 1, 7200 do
             G.Step(s, 0.25)
             G.EquipBest(s, 1)
             if s.farming then
@@ -53,7 +53,8 @@ end)
 case("Repeated bosses and offline farming cannot discover extra companions", function()
     local s = G.New(1000)
     G.AddHero(s, "MAGE")
-    s.stage = 5
+    local boss = (C.companionMilestones[2] - C.zoneByID.elwynn.level + 1) * 5
+    s.stage = boss
     G.StartBattle(s)
     for _, enemy in ipairs(s.battle.enemies) do
         enemy.hp = 0
@@ -61,7 +62,7 @@ case("Repeated bosses and offline farming cannot discover extra companions", fun
     G.Step(s, 0.25)
     assert(G.CompanionSlots(s) == 2)
     assert(G.Recruit(s, "PRIEST"))
-    s.safe.elwynn, s.lastTime = 5, 1000
+    s.safe.elwynn, s.lastTime = boss, 1000
     local job = assert(G.BeginCatchup(s, 1300))
     while not G.CatchupBatch(job, 1600) do
     end
@@ -128,6 +129,56 @@ case("Encounters grow with the company and the first victory always supplies a r
     G.Step(s, 0.25)
     assert(#s.inventory > 0)
     assert(s.stats.victories == 1)
+end)
+
+case("Slower discoveries preserve old access and do not expire before recruitment", function()
+    local old = G.New(1000)
+    assert(G.AddHero(old, "WARRIOR"))
+    old.best, old.runBest, old.unlocks = 8, 18, nil
+    local loaded = assert(G.Load(old, 1000))
+    assert(G.CompanionSlots(loaded) == 5)
+    for _, zone in ipairs(C.zones) do assert(G.IsUnlocked(loaded, zone)) end
+    loaded.prestigeUnlocked = true
+    assert(G.Prestige(loaded))
+    assert(G.CompanionSlots(loaded) == 5)
+    assert(not G.IsUnlocked(loaded, C.zoneByID.winterspring))
+    assert(G.Recruit(loaded, "PRIEST"))
+    local fresh = G.New(1000)
+    assert(G.AddHero(fresh, "WARRIOR"))
+    fresh.best = 8
+    assert(G.CompanionSlots(fresh) == 2)
+    fresh.best = C.companionMilestones[3] + 1
+    assert(G.CompanionSlots(fresh) == 3)
+    fresh.prestigeUnlocked, fresh.runBest = true, 9
+    assert(G.Prestige(fresh) and G.CompanionSlots(fresh) == 3)
+    assert(G.Load(G.Copy(fresh), 100000))
+end)
+
+case("Zone discovery uses spaced frontier waves independently of local enemy level", function()
+    local s = G.New(1000)
+    for _, zone in ipairs(C.zones) do
+        assert(zone.unlockLevel >= zone.level)
+        assert(zone.level == 1 or zone.unlockLevel > zone.level)
+        if zone.unlockLevel > 1 then
+            s.runBest = zone.unlockLevel - 1
+            assert(not G.IsUnlocked(s, zone))
+        end
+        s.runBest = zone.unlockLevel
+        assert(G.IsUnlocked(s, zone))
+    end
+end)
+
+case("Unlock receipts reject malformed state rather than granting discoveries", function()
+    for _, corrupt in ipairs({
+        function(s) s.unlocks.companions = 6 end,
+        function(s) s.unlocks.companions = 1.5 end,
+        function(s) s.unlocks.zones.missing_zone = true end,
+        function(s) s.unlocks.zones.westfall = false end,
+    }) do
+        local s = G.New(1000)
+        corrupt(s)
+        assert(not G.Load(s, 1000))
+    end
 end)
 
 return cases

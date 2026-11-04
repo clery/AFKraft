@@ -9,8 +9,8 @@ W.Content.boosts = {
         icon = "Ability_Warrior_BattleShout",
         description = L.BONUS_25_BASIC_ATTACK_SPEED_SPELL_AND_HEALING_COOLDOWNS_ARE,
         cost = 30,
-        duration = 300,
-        cooldown = 600,
+        duration = 900,
+        cooldown = 1800,
         attackSpeed = 1.25,
     },
     {
@@ -19,8 +19,8 @@ W.Content.boosts = {
         icon = "Ability_Warrior_ShieldWall",
         description = L.UP_TO_20_LESS_INCOMING_DAMAGE_LIMITED_BY_90,
         cost = 30,
-        duration = 300,
-        cooldown = 600,
+        duration = 900,
+        cooldown = 1800,
         damageTaken = 0.8,
     },
     {
@@ -29,8 +29,8 @@ W.Content.boosts = {
         icon = "Ability_Warrior_SavageBlow",
         description = L.BONUS_20_PARTY_DAMAGE_INCLUDING_STRIKES_AND_ONGOING_EFFECTS,
         cost = 60,
-        duration = 300,
-        cooldown = 600,
+        duration = 900,
+        cooldown = 1800,
         damage = 1.2,
     },
     {
@@ -39,8 +39,8 @@ W.Content.boosts = {
         icon = "Spell_Holy_FlashHeal",
         description = L.BONUS_25_HEALING_FROM_SPELLS_CANNOT_REVIVE_FALLEN_ALLIES,
         cost = 60,
-        duration = 300,
-        cooldown = 600,
+        duration = 900,
+        cooldown = 1800,
         healing = 1.25,
     },
 }

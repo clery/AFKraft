@@ -47,6 +47,7 @@ function G.ResetAdventure(state, deep)
     state.materials = { timber = 0, hide = 0, ore = 0, relic = 0 }
     state.materialRemainders = {}
     state.runBest, state.stage, state.zone, state.safe, state.farming = 1, 1, "elwynn", {}, false
+    state.unlocks.zones = {}
     G.ResetRouteRun(state)
     if state.difficulty then
         state.difficulty.cycleComplete = false

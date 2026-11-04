@@ -1,18 +1,20 @@
--- Earned progression: lua scripts/balance_journey.lua [hours=24] [policy=invest] [seed=17]
+-- Earned progression: lua scripts/balance_journey.lua [hours=24] [policy=invest] [seed=17] [checkinSeconds=1800]
 -- No starting funds/items/points. Activity rates include assumed travel and downtime.
 local B = dofile("scripts/balance_common.lua")
 local G, C = B.G, B.C
 local hours, policy, seed = tonumber(arg[1]) or 24, arg[2] or "invest", tonumber(arg[3]) or 17
 local plans = {
     passive = { cadence = 3600, activity = false, spend = false },
-    builder = { cadence = 900, activity = false, spend = true, reset = 12, ascend = true, adaptive = true },
-    invest = { cadence = 900, activity = true, spend = true },
-    short = { cadence = 900, activity = true, spend = true, reset = 20 },
-    deep = { cadence = 900, activity = true, spend = true, reset = 12, ascend = true, adaptive = true },
+    builder = { cadence = 1800, activity = false, spend = true, reset = 12, ascend = true, adaptive = true },
+    invest = { cadence = 1800, activity = true, spend = true },
+    short = { cadence = 1800, activity = true, spend = true, reset = 20 },
+    deep = { cadence = 1800, activity = true, spend = true, reset = 12, ascend = true, adaptive = true },
     casual = { cadence = 3600, activity = true, spend = true, reset = 12, ascend = true, adaptive = true },
     returning = { cadence = 3600, activity = true, spend = true, reset = 12, ascend = true, adaptive = true, offline = true },
 }
 local plan = assert(plans[policy], "Unknown policy")
+plan.cadence = tonumber(arg[4]) or plan.cadence
+assert(plan.cadence >= 60 and plan.cadence <= 86400 and plan.cadence == math.floor(plan.cadence))
 assert(hours >= 1 and hours <= 100 and hours == math.floor(hours))
 io.stdout:setvbuf("line")
 local s = G.New(0)
@@ -130,6 +132,14 @@ local discovered = {}
 local function milestones(second)
     G.ProfessionUnlocks(s)
     local available = {
+        SecondHero = G.CompanionSlots(s) >= 2,
+        ThirdHero = G.CompanionSlots(s) >= 3,
+        FourthHero = G.CompanionSlots(s) >= 4,
+        FifthHero = G.CompanionSlots(s) >= 5,
+        EarlyZones = s.runBest >= 6,
+        MidZones = s.runBest >= 18,
+        LateZones = s.runBest >= 39,
+        FinalZones = s.runBest >= 51,
         Mastery = s.professions.bestLevel >= 20,
         Commander = not G.FeatureHint(s, "boosts"),
         Enchanting = s.professions.owned.enchanting,
@@ -140,7 +150,7 @@ local function milestones(second)
         Routes = not G.FeatureHint(s, "routes"),
         Heirlooms = not G.FeatureHint(s, "heirlooms"),
     }
-    for _, name in ipairs({ "Mastery", "Commander", "Enchanting", "Automation", "Titanforging", "Specializations", "Conditional", "Routes", "Heirlooms" }) do
+    for _, name in ipairs({ "SecondHero", "ThirdHero", "FourthHero", "FifthHero", "EarlyZones", "MidZones", "LateZones", "FinalZones", "Mastery", "Commander", "Enchanting", "Automation", "Titanforging", "Specializations", "Conditional", "Routes", "Heirlooms" }) do
         if available[name] and not discovered[name] then
             discovered[name] = true
             print(string.format("UNLOCK | %.2fh | %s", second / 3600, name))
@@ -180,7 +190,9 @@ local function checkin(second)
             G.ConfigurePreset(s, index, hero.class == "PRIEST" and "support" or "offense")
         end
         G.EquipBest(s, index)
-        if plan.spend then buyWork(index) end
+        if plan.spend then
+            for _ = 1, math.max(1, math.floor(plan.cadence / 600)) do buyWork(index) end
+        end
     end
     metrics.goldSpent = metrics.goldSpent + gold - s.gold
     if plan.spend then

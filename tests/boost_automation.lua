@@ -82,11 +82,11 @@ case("Automation is opt-in and never spends a ready boost outside a living encou
     assert(s.battle and not next(s.boosts.readyAt))
     local start = s.clock
     G.Step(s, 0.25)
-    assert(s.boosts.readyAt.battleOrders == start + 600)
-    assert(s.boosts.activeUntil.battleOrders == start + 300)
+    assert(s.boosts.readyAt.battleOrders == start + 1800)
+    assert(s.boosts.activeUntil.battleOrders == start + 900)
     assert(s.essence == 0 and s.legacy == 0)
     assert(G.SetBoostAutomationEnabled(s, false))
-    s.clock = start + 600
+    s.clock = start + 1800
     local readyAt = s.boosts.readyAt.battleOrders
     G.Step(s, 0.25)
     assert(s.boosts.readyAt.battleOrders == readyAt)
@@ -100,9 +100,9 @@ case("Paused and individually disabled automation never block manual activation"
     assert(not G.AutomateBoost(s))
     assert(G.ActivateBoost(s, "battleOrders"))
     local active, cooldown = G.BoostRemaining(s, "battleOrders")
-    assert(active == 300 and cooldown == 600)
+    assert(active == 900 and cooldown == 1800)
     assert(G.SetBoostAutomationEnabled(s, true))
-    s.clock = 600
+    s.clock = 1800
     assert(not G.AutomateBoost(s))
     assert(G.ConfigureBoostAutomation(s, "battleOrders", "enabled", true))
     assert(G.ConfigureBoostAutomation(s, "battleOrders", "mode", "manual"))
@@ -119,7 +119,7 @@ case(
         local journalSize = #s.log
         assert(not G.AutomateBoost(s))
         G.Step(s, 0.25)
-        assert(s.boosts.readyAt.battleOrders == 600 and s.boosts.activeUntil.battleOrders == 300)
+        assert(s.boosts.readyAt.battleOrders == 1800 and s.boosts.activeUntil.battleOrders == 900)
         assert(#s.log == journalSize)
     end
 )
@@ -135,15 +135,15 @@ case(
         assert(G.EquipBoost(s, "ironResolve"))
         assert(not G.AutomateBoost(s))
         assert(not s.boosts.readyAt.ironResolve)
-        s.clock = 300
+        s.clock = 900
         assert(G.AutomateBoost(s))
-        assert(s.boosts.readyAt.ironResolve == 900)
+        assert(s.boosts.readyAt.ironResolve == 2700)
         assert(G.EquipBoost(s, "battleOrders"))
-        s.clock = 599.75
+        s.clock = 1799.75
         assert(not G.AutomateBoost(s))
-        s.clock = 600
+        s.clock = 1800
         assert(G.AutomateBoost(s))
-        assert(s.boosts.readyAt.battleOrders == 1200)
+        assert(s.boosts.readyAt.battleOrders == 3600)
     end
 )
 
@@ -232,7 +232,7 @@ case("Pre-automation saves migrate without spending currency or changing boost t
     assert(s.boosts.owned.battleOrders and s.boosts.equipped == "battleOrders")
     assert(not next(s.boosts.automation.owned) and not s.boosts.automation.enabled)
     local active, cooldown = G.BoostRemaining(s, "battleOrders")
-    assert(active == 200 and cooldown == 500 and s.legacy == 3)
+    assert(active == 800 and cooldown == 1700 and s.legacy == 3)
 end)
 
 case(

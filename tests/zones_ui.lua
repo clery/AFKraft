@@ -7,7 +7,7 @@ test("Every outdoor destination supports continent-map travel in both window siz
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
-    state.runBest, state.best, state.guide.dismissed = 18, 18, true
+    state.runBest, state.best, state.guide.dismissed = 60, 60, true
     W.state = state
     W.UI.frame:Show()
     local original, fullscreen = GetCursorPosition, W.UI.fullscreen
@@ -153,7 +153,7 @@ test("Eastern Kingdoms hover and travel use the visible zone masks", function()
     local W = WoWIdle
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
-    state.runBest, state.best, state.guide.dismissed = 18, 18, true
+    state.runBest, state.best, state.guide.dismissed = 60, 60, true
     W.Game.AddHero(state, "WARRIOR")
     W.state = state
     W.UI.frame:Show()

@@ -76,7 +76,7 @@ case("Classic outdoor roster supports travel, combat, loot and saved destination
     end
     for _, zone in ipairs(C.zones) do
         local state = party()
-        state.runBest = 18
+        state.runBest = zone.unlockLevel
         assert(G.Travel(state, zone.id))
         equal(state.zone, zone.id)
         assert(G.ZoneLoot(state, zone.level))
@@ -436,7 +436,7 @@ case("Locked destinations cannot be selected", function()
     local s = party()
     assert(not G.Travel(s, "winterspring"))
     equal(s.zone, "elwynn")
-    s.runBest = 18
+    s.runBest = C.zoneByID.winterspring.unlockLevel
     assert(G.Travel(s, "winterspring"))
     equal(s.zone, "winterspring")
 end)
@@ -629,20 +629,20 @@ case("Milestone logs notify once while routine XP stays quiet", function()
         G.Step(s, 0.25)
         equal(#notices, 1)
         assert(notices[1]:find("maximum", 1, true))
-        s.rest, s.stage = 0, 5
+        s.rest, s.stage = 0, 25
         G.StartBattle(s)
         s.battle.enemies[1].hp = 0
         G.Step(s, 0.25)
         equal(#notices, 2)
         assert(notices[2]:find(C.zoneByID[s.zone].name, 1, true))
-        s.rest, s.stage, s.farming = 0, 5, true
+        s.rest, s.stage, s.farming = 0, 25, true
         G.StartBattle(s)
         s.battle.enemies[1].hp = 0
         G.Step(s, 0.25)
         equal(#notices, 2)
         -- A previously unvisited destination can have an already surpassed boss milestone.
         s.zone, s.rest, s.stage, s.farming = "durotar", 0, 5, false
-        s.runBest = 3
+        s.runBest = 7
         G.StartBattle(s)
         s.battle.enemies[1].hp = 0
         local victories, gold = s.stats.victories, s.gold
@@ -651,7 +651,7 @@ case("Milestone logs notify once while routine XP stays quiet", function()
         equal(s.stats.victories, victories + 1)
         assert(s.gold > gold)
         equal(s.safe.durotar, 5)
-        s.rest, s.stage = 0, 15
+        s.rest, s.stage = 0, 55
         G.StartBattle(s)
         s.battle.enemies[1].hp = 0
         G.Step(s, 0.25)

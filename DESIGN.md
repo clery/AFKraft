@@ -8,7 +8,7 @@ An account-wide idle party RPG inside World of Warcraft: Forever. Five heroes ad
 
 The addon should feel like a polished minigame, with visible characters, attacks, spells, enemies, and discoveries. Management supports the adventure scene rather than replacing it.
 
-Target meaningful check-ins every 15–30 minutes and first prestige access in roughly 45–60 minutes. Access is optional, not a forced reset. This replaces the earlier 4–6-hour hypothesis; observed player pacing is still untested. Dungeons are optional accelerators.
+Target useful management visits about every 30 minutes, with substantial new systems spread over hours. Check-in cadence and feature-unlock cadence are separate targets, not required timers. Safe resources and discoveries wait for the player; observed pacing is still untested. Dungeons are optional accelerators.
 
 ## Design principles
 
@@ -55,7 +55,7 @@ Audit date: 2026-11-04. **Implemented** means present in source; **partial** mea
 - Unrestricted composition, including duplicate classes.
 - Support every Forever launch class with recognizable abilities adapted for idle combat.
 - The current character supplies the first hero's identity and class. Idle progression is independent of actual character power, gear, and talents.
-- Discover companion slots after defeating milestone bosses at levels 1, 3, 5 and 7. Let the player choose each companion’s class; generate names and appearances. Discoveries and existing parties persist across chapters.
+- Discover companion slots after defeating milestone bosses at levels 2, 24, 36 and 52. Let the player choose each companion’s class; generate names and appearances. Discoveries and existing parties persist across chapters.
 - Register alts when the addon is loaded on them. An alt may replace a generated hero of the same class, retaining its idle level, build, equipment, and progression.
 - Additional simultaneous parties and parties combining into raids are future features.
 
@@ -95,7 +95,7 @@ These examples describe intended check-ins; their pacing and onboarding are not 
 
 ## Commander abilities
 
-The manual prototype implements all four abilities below. Battle Orders and Iron Resolve each cost 30 Essence; Focused Assault and Restorative Focus each cost 60 Essence. Each also offers an alternative 1-Legacy permanent purchase, without paying twice through another path. One boost is equipped and one effect can be active. All last 300 adventure seconds with a 600-second cooldown from activation. Battle Orders accelerates only basic-attack cooldown progress by 25%; quarter-second action resolution determines realized throughput. Iron Resolve reduces incoming damage by up to 20% before shields, stopping added mitigation at 90% total reduction without weakening stronger existing defenses. Focused Assault increases party damage by 20%, including ongoing effects; Restorative Focus increases healing-spell output by 25% without reviving defeated heroes. Values are provisional. Both reset types retain ownership/loadout/cooldown deadlines and end effects. Eligible offline farming advances the same simulation clock; ineligible absence does not advance boost time.
+The manual prototype implements all four abilities below. Battle Orders and Iron Resolve each cost 30 Essence; Focused Assault and Restorative Focus each cost 60 Essence. Each also offers an alternative 1-Legacy permanent purchase, without paying twice through another path. One boost is equipped and one effect can be active. All last 900 adventure seconds with an 1800-second cooldown from activation. Battle Orders accelerates only basic-attack cooldown progress by 25%; quarter-second action resolution determines realized throughput. Iron Resolve reduces incoming damage by up to 20% before shields, stopping added mitigation at 90% total reduction without weakening stronger existing defenses. Focused Assault increases party damage by 20%, including ongoing effects; Restorative Focus increases healing-spell output by 25% without reviving defeated heroes. Values are provisional. Both reset types retain ownership/loadout/cooldown deadlines and end effects. Eligible offline farming advances the same simulation clock; ineligible absence does not advance boost time.
 
 ### Permanent ownership and acquisition
 
@@ -431,7 +431,7 @@ Steps 1–4 are implemented in source and covered by domain/simulator checks, in
 2. Add the three-branch permanent Essence development board with free rank redistribution, explicit benefit/cost previews, and reset retention.
 3. Audit and implement one verified outdoor collection with real-source attribution, individual-piece discovery, independent per-piece rolls, modest discovery rewards, and one selectable completion effect saved in profiles.
 4. Update full/windowed/compact feedback and automatic return/session summaries before expanding the catalog.
-5. Compare idle-only, ordinary mixed-play, and focused-hunt profiles; tune only after migrations and source attribution work. The reproducible `scripts/balance_profiles.lua` comparison now covers three fixed seeds and 15-minute/one-hour/six-hour horizons with paid equipment and Development decisions. Its hunting sources are synthetic only; verified-client hunting and final tuning remain incomplete. See BALANCE.md for current assumptions, the revised 45–60-minute access target and recorded simulations.
+5. Compare idle-only, ordinary mixed-play, and focused-hunt profiles; tune only after migrations and source attribution work. The reproducible `scripts/balance_profiles.lua` comparison now covers three fixed seeds and 15-minute/one-hour/six-hour horizons with paid equipment and Development decisions. Its hunting sources are synthetic only; verified-client hunting and final tuning remain incomplete. See BALANCE.md for current assumptions, the 30-minute management target and historical simulations.
 
 The implemented economy migration uses `economyVersion = 1`. It credits current-cycle training from saved ranks, retained enhancement ranks, and one retained historical enchantment application. Crafts with unknown discounts, forging, earlier replaced/discarded investments and unidentified items receive a documented zero fallback; existing equipment and modifiers remain. Credits are recorded once and visible in Development. Outdoor migration imports only identical discovered piece IDs, preserves the original archive and ranks, and retains the stronger legacy benefit on each affected axis rather than stacking duplicate benefits. The old cloak does not grant its replacement identity.
 
@@ -452,7 +452,7 @@ Use a versioned, idempotent migration. Preserve hero XP/levels, Adventure XP/ran
 - Save migrations, duplicated activity events, negative time, repeated reloads, and the 24-hour cap.
 - Screenshot checks at fullscreen, expanded, and compact sizes; readable text, unclipped controls, correct layering, and unlocked access from locked mode.
 - In-client model animation, spell feedback, combat-lockdown compatibility, and performance checks.
-- First prestige access around 45–60 minutes with 15–30-minute check-ins, without requiring dungeons; measure the chosen reset time separately.
+- First prestige access during the opening sessions with 30-minute check-ins, without requiring dungeons; measure the chosen reset time separately.
 
 ## Balancing plan — after the behavior is implemented
 
@@ -481,7 +481,7 @@ Begin with fixed seeds and a small reproducible scenario set: new account, first
 - Evaluate reset rewards against total rebuilding plus pushing time. A large displayed reward can still be a poor loop, and a tiny repeatable reward can dominate if automation makes resets nearly free.
 - Keep guaranteed progression and useful fallback choices. Extra currencies, talent nodes, and rare rolls must create decisions rather than disguise a wait or a mathematically inferior option.
 - Prevent complete damage immunity, unbounded haste, infinite resource conversion, and multiplicative reward feedback loops before testing high-tier content.
-- Treat 15–30-minute check-ins and 45–60-minute first-prestige access as provisional targets. Timed playtests must establish actual pacing and the best reset moment.
+- Treat 30-minute check-ins as a provisional target; first-prestige access is measured rather than forced. Timed playtests must establish actual pacing and the best reset moment.
 
 ## Research basis and limits
 

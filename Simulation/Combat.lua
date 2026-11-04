@@ -358,7 +358,7 @@ local function victory(state, battle)
         state.runBest = max(state.runBest, battle.level + 1)
         local unlockedDestination = false
         for _, destination in ipairs(C.zones) do
-            if destination.level > previousBest and destination.level <= state.runBest then
+            if destination.unlockLevel > previousBest and destination.unlockLevel <= state.runBest then
                 unlockedDestination = true
                 break
             end
@@ -368,21 +368,21 @@ local function victory(state, battle)
         if discovered then
             G.Log(state, L.YOU_FOUND_A_NEW_COMPANION_OPEN_PARTY_TO_CHOOSE, nil, "party")
         end
-        if discovered or unlockedDestination then
+        local firstPrestige = battle.level >= 8 and not state.prestigeUnlocked
+        if battle.level >= 8 then state.prestigeUnlocked = true end
+        if discovered or unlockedDestination or firstPrestige then
             G.Emit(state, "unlock")
-        end
-        if battle.level >= 8 then
-            state.prestigeUnlocked = true
         end
         G.Log(
             state,
             z.boss
-                .. L.FRAGMENT_DEFEATED
-                .. z.name
-                .. L.FRAGMENT_CLEARED_THROUGH_ENCOUNTER
-                .. battle.stage
-                .. L.NEW_PATHS_OPEN,
-            battle.stage <= previousSafe or state.runBest <= previousBest,
+            .. L.FRAGMENT_DEFEATED
+            .. z.name
+            .. L.FRAGMENT_CLEARED_THROUGH_ENCOUNTER
+            .. battle.stage
+            .. L.NEW_PATHS_OPEN,
+            battle.stage <= previousSafe or state.runBest <= previousBest
+            or not (unlockedDestination or firstPrestige),
             "progress"
         )
     end

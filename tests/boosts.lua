@@ -45,11 +45,11 @@ case("Boost activation validates loadout, living party, cooldown, and capacity",
     assert(not G.ActivateBoost(s, "battleOrders"))
     assert(G.EquipBoost(s, "ironResolve"))
     assert(not G.ActivateBoost(s, "ironResolve"))
-    s.clock = 300
+    s.clock = 900
     assert(G.ActivateBoost(s, "ironResolve"))
     assert(G.EquipBoost(s, "battleOrders"))
     assert(not G.ActivateBoost(s, "battleOrders"))
-    s.clock = 600
+    s.clock = 1800
     assert(G.ActivateBoost(s, "battleOrders"))
 end)
 
@@ -62,7 +62,7 @@ case("Battle Orders accelerates only basic cooldowns and expires without a free 
     G.Step(s, 0.25)
     assert(unit.attackCD == 2 - 0.25 * unit.haste * 1.25)
     assert(unit.cd == 4 - 0.25 * unit.haste)
-    s.clock = 300
+    s.clock = 900
     unit.attackCD, unit.cd = 2, 4
     G.Step(s, 0.25)
     assert(unit.attackCD == 2 - 0.25 * unit.haste)
@@ -114,7 +114,7 @@ case("Partial boost expiry preserves proportional attack progress and ability ti
     local s = party()
     G.StartBattle(s)
     assert(G.ActivateBoost(s, "battleOrders"))
-    s.clock = 299.875
+    s.clock = 899.875
     local unit = s.battle.heroes[1]
     unit.attackCD, unit.cd = 2, 4
     G.Step(s, 0.25)
@@ -131,12 +131,12 @@ case("Load and prestige retain cooldowns while reset ends active effects", funct
     s.clock = 100
     s = assert(G.Load(G.Copy(s), 9999))
     local active, cooldown = G.BoostRemaining(s, "battleOrders")
-    assert(active == 200 and cooldown == 500)
+    assert(active == 800 and cooldown == 1700)
     s.prestigeUnlocked, s.runBest = true, 9
     assert(G.Prestige(s))
     assert(s.boosts.owned.battleOrders and s.boosts.owned.ironResolve)
     active, cooldown = G.BoostRemaining(s, "battleOrders")
-    assert(active == 0 and cooldown == 500)
+    assert(active == 0 and cooldown == 1700)
     assert(not G.ActivateBoost(s, "battleOrders"))
 end)
 
@@ -169,7 +169,7 @@ case("Offline timer reconciliation matches online steps and preserves live Essen
     end
     G.FinishCatchup(s, job)
     local active, cooldown = G.BoostRemaining(s, "battleOrders")
-    assert(active == 0 and cooldown == 200 and s.clock == online.clock)
+    assert(active == 500 and cooldown == 1400 and s.clock == online.clock)
     assert(s.gold == online.gold and s.stats.victories == online.stats.victories)
     assert(s.heroes[1].xp == online.heroes[1].xp)
     assert(s.essence == 60)
@@ -187,9 +187,22 @@ case("Interrupted offline catch-up advances only processed boost time", function
     G.FinishCatchup(s, job)
     assert(s.clock == 100)
     local active, cooldown = G.BoostRemaining(s, "battleOrders")
-    assert(active == 200 and cooldown == 500)
+    assert(active == 800 and cooldown == 1700)
     job = assert(G.BeginCatchup(s, 90000))
     assert(job.seconds == 86300)
+end)
+
+case("Half-hour boost cycles preserve earlier saved deadlines and maximum uptime", function()
+    for _, boost in ipairs(W.Content.boosts) do
+        assert(boost.duration == 900 and boost.cooldown == 1800)
+        assert(boost.duration / boost.cooldown == 0.5)
+    end
+    local s = party()
+    s.boosts.activeUntil.battleOrders, s.boosts.readyAt.battleOrders = 300, 600
+    s.clock = 100
+    s = assert(G.Load(G.Copy(s), 0))
+    local active, cooldown = G.BoostRemaining(s, "battleOrders")
+    assert(active == 200 and cooldown == 500)
 end)
 
 return cases

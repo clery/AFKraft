@@ -4,7 +4,7 @@ WoWIdle = W
 W.Content = {}
 local C = W.Content
 -- Additional companions are discovered by defeating these milestone boss levels.
-C.companionMilestones = { 0, 1, 3, 5, 7 }
+C.companionMilestones = { 0, 2, 24, 36, 52 }
 -- Removed slot IDs stay reserved so existing wearable gear and recipes keep their identity.
 C.slots = {
     L.WEAPON,
@@ -646,6 +646,7 @@ C.zones = {
 }
 C.zoneByID = {}
 for _, zone in ipairs(C.zones) do
+    zone.unlockLevel = zone.level == 1 and 1 or zone.level * 3 - 3
     C.zoneByID[zone.id] = zone
 end
 C.biomes = {

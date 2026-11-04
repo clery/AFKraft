@@ -6,7 +6,7 @@ W.Atlas = Atlas
 
 local function unlockText(zone)
     return L.UNLOCK_DEFEAT_A_LEVEL_PREFIX
-        .. math.max(1, zone.level - 1)
+        .. math.max(1, (zone.unlockLevel or zone.level) - 1)
         .. L.OR_HIGHER_MILESTONE_BOSS_SUFFIX
 end
 

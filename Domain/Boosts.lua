@@ -132,7 +132,7 @@ function G.ActivateBoost(state, id, quiet)
     state.boosts.activeUntil[id] = state.clock + boost.duration
     state.boosts.readyAt[id] = state.clock + boost.cooldown
     state.stats.boostUses = (state.stats.boostUses or 0) + 1
-    G.Log(state, boost.name .. L.ACTIVE_FOR_FIVE_ADVENTURE_MINUTES_SUFFIX, quiet, "boost")
+    G.Log(state, boost.name .. L.ACTIVE_FOR_FIFTEEN_ADVENTURE_MINUTES_SUFFIX, quiet, "boost")
     return true
 end
 

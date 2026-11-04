@@ -32,7 +32,7 @@ test(
         assertTrue(G.EquipBoost(state, "ironResolve"))
         click(ui.profileControls.apply)
         assertEquals("battleOrders", state.boosts.equipped)
-        assertEquals(600, state.boosts.readyAt.battleOrders)
+        assertEquals(1800, state.boosts.readyAt.battleOrders)
         ui:SetTab("adventure")
         assertFalse(ui.profileFrame:IsShown())
         ui:SetTab("profiles")

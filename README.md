@@ -22,7 +22,7 @@ Libraries are bundled. Your characters share one saved adventure; idle hero leve
 
 ## Party and battles
 
-Start with one hero. Defeat milestone bosses at encounter levels **1, 3, 5 and 7** to discover companions, then choose their classes in **Party**. All nine original classes are available, including duplicates. Companion discoveries and recruited heroes survive resets. Loading the addon on an alt lets that character replace a generated companion of the same class.
+Start with one hero. Defeat milestone bosses at encounter levels **2, 24, 36 and 52** to discover companions, then choose their classes in **Party**. All nine original classes are available, including duplicates. Companion discoveries and recruited heroes survive resets. Later companions arrive over several hours rather than all joining in the opening session. Loading the addon on an alt lets that character replace a generated companion of the same class.
 
 Combat is automatic. Equipment, talents, targeting and ability priorities shape each hero's role. Change them during battle without resetting health proportions or cooldowns. Heroes gain levels naturally to **60**; no Essence or paid training is required. Each class has three **18-talent** trees, with free respecs and permanent earned points.
 
@@ -60,7 +60,7 @@ Empty torso, leg and foot slots use cosmetic clothing with no stats. Exact offli
 
 ## Commander, routes and collections
 
-At lifetime idle level **22**, learn one of four party boosts permanently with Essence or **1 Heritage**. Equip one at a time: effects last **5 adventure minutes**, with a **10-minute cooldown from activation**. Uses are free. At lifetime idle level **45**, learn on-cooldown automation for **1 Heritage**; level **60** opens conditional automation for **2 Heritage**. Enable both **Automation** and **Auto-cast** to use it.
+At lifetime idle level **22**, learn one of four party boosts permanently with Essence or **1 Heritage**. Equip one at a time: effects last **15 adventure minutes**, with a **30-minute cooldown from activation**. Uses are free. At lifetime idle level **45**, learn on-cooldown automation for **1 Heritage**; level **60** opens conditional automation for **2 Heritage**. Enable both **Automation** and **Auto-cast** to use it.
 
 Unlock difficulty tier **3** to learn route planning for **1 Heritage**. Save destinations and milestones, then enable the route to travel between encounters. Manual travel pauses it until Resume. Profiles save your boost, automation, route preferences and selected collection effect without restoring currencies or cooldowns.
 
@@ -70,7 +70,7 @@ Collection acquisition is enabled only for the verified Forever source profiles 
 
 ## Resets and permanent progress
 
-Defeat a **level 8 milestone boss** to unlock ordinary prestige in **Heritage**. Review the exact reward and losses before confirming. Current tuning aims for first access in **45–60 minutes**; this is a simulation target, not a required reset time or playtested promise.
+Defeat a **level 8 milestone boss** to unlock ordinary prestige in **Heritage**. Review the exact reward and losses before confirming. Plan around **30-minute management visits**. Safe farming continues between visits; discoveries and resources do not expire. First prestige access depends on your party and investments.
 
 | Progress | New chapter | Transcendence |
 | --- | --- | --- |

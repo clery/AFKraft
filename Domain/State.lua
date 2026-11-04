@@ -136,6 +136,7 @@ function G.New(now)
         discoveries = {},
         recipes = {},
         best = 1,
+        unlocks = { companions = 1, zones = {} },
         runBest = 1,
         zone = "elwynn",
         stage = 1,
@@ -204,6 +205,7 @@ function G.Load(db, now)
     local previousEconomy = db.economyVersion
     if
         previousEconomy == nil
+        or db.unlocks == nil
         or db.outdoorCollections == nil
         or db.dungeonCollections == nil
         or (type(db.routes) == "table" and db.routes.offlineEnabled == nil)
@@ -224,6 +226,7 @@ function G.Load(db, now)
         -- Existing rewarded chapters retain their full advertised party bonus.
         db.prestigeStrength = db.prestiges or 0
     end
+    local legacyUnlocks = db.unlocks == nil
     local defaults = G.New(now)
     for k, v in pairs(defaults) do
         if db[k] == nil then
@@ -280,6 +283,9 @@ function G.Load(db, now)
     end
     if not C.zoneByID[db.zone] then
         return nil, L.THE_SAVED_DESTINATION_IS_UNKNOWN_YOUR_ADVENTURE_HAS_NOT
+    end
+    if not G.ValidateUnlocks(db, legacyUnlocks) then
+        return nil, L.THE_SAVED_ADVENTURE_HAS_AN_INVALID_PREFIX .. "unlocks" .. L.FIELD_IT_HAS_NOT_BEEN_RESET_SUFFIX
     end
     local progress = db.adventure
     local function whole(value)

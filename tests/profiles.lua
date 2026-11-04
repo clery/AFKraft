@@ -154,7 +154,7 @@ case("Profiles survive ordinary prestige without restoring active effects", func
     assert(G.Prestige(s))
     assert(s.boostProfiles.entries[id].name == "Permanent")
     assert(G.ApplyBoostProfile(s, id))
-    assert(next(s.boosts.activeUntil) == nil and s.boosts.readyAt.battleOrders == 600)
+    assert(next(s.boosts.activeUntil) == nil and s.boosts.readyAt.battleOrders == 1800)
     assert(G.Load(G.Copy(s), 10))
 end)
 

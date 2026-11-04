@@ -23,13 +23,42 @@ function G.AppearanceSeed(hero)
 end
 
 function G.CompanionSlots(state)
-    local slots = math.max(1, #state.heroes)
+    local slots = math.max(1, #state.heroes, state.unlocks and state.unlocks.companions or 1)
     for i = 2, #C.companionMilestones do
         if state.best > C.companionMilestones[i] then
             slots = math.max(slots, i)
         end
     end
-    return math.min(5, slots)
+    slots = math.min(5, slots)
+    if state.unlocks then state.unlocks.companions = slots end
+    return slots
+end
+
+function G.ValidateUnlocks(state, legacy)
+    local unlocked = state.unlocks
+    local function whole(value, low, high)
+        return type(value) == "number" and value >= low and value <= high and value == math.floor(value)
+    end
+    if type(unlocked) ~= "table" or type(unlocked.zones) ~= "table"
+        or not whole(unlocked.companions, 1, 5)
+        or not whole(state.best, 1, 1000000000) or not whole(state.runBest, 1, 1000000000) then
+        return false
+    end
+    for zone, known in pairs(unlocked.zones) do
+        if not C.zoneByID[zone] or known ~= true then return false end
+    end
+    if legacy then
+        -- Preserve discoveries earned under the earlier opening curve.
+        for index, level in ipairs({ 0, 1, 3, 5, 7 }) do
+            if state.best > level then unlocked.companions = math.max(unlocked.companions, index) end
+        end
+        for _, zone in ipairs(C.zones) do
+            if zone.level <= state.runBest then unlocked.zones[zone.id] = true end
+        end
+        unlocked.zones[state.zone] = true
+    end
+    G.CompanionSlots(state)
+    return true
 end
 
 function G.NextCompanionMilestone(state)
@@ -550,7 +579,8 @@ function G.Talent(state, index, id)
 end
 
 function G.IsUnlocked(state, z)
-    return z.level <= state.runBest
+    return (state.unlocks and state.unlocks.zones[z.id]) == true
+        or (z.unlockLevel or z.level) <= state.runBest
 end
 
 function G.Travel(state, zone, automatic)
