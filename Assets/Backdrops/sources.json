@@ -84,6 +84,209 @@
       "source_page": "https://www.wowhead.com/winterspring",
       "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/693092-winterspring.jpg",
       "focal_y": 0.55
+    },
+    {
+      "id": "dun_morogh",
+      "name": "Dun Morogh",
+      "source_page": "https://www.wowfan.cz/clanek/dun-morogh",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/dunmorogh.png",
+      "focal_y": 0.38
+    },
+    {
+      "id": "teldrassil",
+      "name": "Teldrassil",
+      "source_page": "https://www.wowfan.cz/clanek/teldrassil",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/teldrassil.jpg",
+      "focal_y": 0.5
+    },
+    {
+      "id": "mulgore",
+      "name": "Mulgore",
+      "source_page": "https://www.wowfan.cz/clanek/mulgore",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/mulgore4.jpg",
+      "focal_y": 0.42
+    },
+    {
+      "id": "tirisfal",
+      "name": "Tirisfal Glades",
+      "source_page": "https://www.wowfan.cz/clanek/tirisfal-glades",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/tirisfal.jpg",
+      "focal_y": 0.44
+    },
+    {
+      "id": "loch_modan",
+      "name": "Loch Modan",
+      "source_page": "https://www.wowfan.cz/clanek/loch-modan",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/lochmodan4.jpg",
+      "focal_y": 0.48
+    },
+    {
+      "id": "darkshore",
+      "name": "Darkshore",
+      "source_page": "https://www.wowfan.cz/clanek/darkshore",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/darkshore.jpg",
+      "focal_y": 0.48
+    },
+    {
+      "id": "silverpine",
+      "name": "Silverpine Forest",
+      "source_page": "https://www.wowfan.cz/clanek/silverpine-forest",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/silverpine.jpg",
+      "focal_y": 0.5
+    },
+    {
+      "id": "stonetalon",
+      "name": "Stonetalon Mountains",
+      "source_page": "https://www.wowfan.cz/clanek/stonetalon-mountains",
+      "source_image": "https://www.wowfan.cz/pic/lokace/stonetalon/01.jpg",
+      "focal_y": 0.48
+    },
+    {
+      "id": "hillsbrad",
+      "name": "Hillsbrad Foothills",
+      "source_page": "https://www.wowfan.cz/clanek/hillsbrad-foothills",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/hillsbrad.jpg",
+      "focal_y": 0.45
+    },
+    {
+      "id": "thousand_needles",
+      "name": "Thousand Needles",
+      "source_page": "https://www.wowfan.cz/clanek/thousand-needles",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/thousand.jpg",
+      "focal_y": 0.48
+    },
+    {
+      "id": "alterac",
+      "name": "Alterac Mountains",
+      "source_page": "https://www.wowfan.cz/clanek/alterac-mountains",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/alterac4.jpg",
+      "focal_y": 0.42
+    },
+    {
+      "id": "arathi",
+      "name": "Arathi Highlands",
+      "source_page": "https://www.wowfan.cz/clanek/arathi-highlands",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/arathi2.jpg",
+      "focal_y": 0.5
+    },
+    {
+      "id": "badlands",
+      "name": "Badlands",
+      "source_page": "https://www.wowfan.cz/clanek/badlands",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/badlands4.jpg",
+      "focal_y": 0.45
+    },
+    {
+      "id": "swamp_sorrows",
+      "name": "Swamp of Sorrows",
+      "source_page": "https://www.wowfan.cz/clanek/swamp-of-sorrows",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/swamp5.jpg",
+      "focal_y": 0.47
+    },
+    {
+      "id": "dustwallow",
+      "name": "Dustwallow Marsh",
+      "source_page": "https://www.wowfan.cz/clanek/dustwallow-marsh",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/dustwallowmarsh.jpg",
+      "focal_y": 0.43
+    },
+    {
+      "id": "feralas",
+      "name": "Feralas",
+      "source_page": "https://www.wowfan.cz/clanek/feralas",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/feralas.jpg",
+      "focal_y": 0.5
+    },
+    {
+      "id": "hinterlands",
+      "name": "The Hinterlands",
+      "source_page": "https://www.wowfan.cz/clanek/the-hinterlands",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/hinterlands.jpg",
+      "focal_y": 0.47
+    },
+    {
+      "id": "searing_gorge",
+      "name": "Searing Gorge",
+      "source_page": "https://www.wowfan.cz/clanek/searing-gorge",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/searinggorge3.jpg",
+      "focal_y": 0.46
+    },
+    {
+      "id": "blasted_lands",
+      "name": "Blasted Lands",
+      "source_page": "https://www.wowfan.cz/clanek/blasted-lands",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/blastedlands2.jpg",
+      "focal_y": 0.46
+    },
+    {
+      "id": "felwood",
+      "name": "Felwood",
+      "source_page": "https://www.wowfan.cz/clanek/felwood",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/felwood.jpg",
+      "focal_y": 0.47
+    },
+    {
+      "id": "ungoro",
+      "name": "Un'Goro Crater",
+      "source_page": "https://www.wowfan.cz/clanek/ungoro-crater",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/ungoro4.jpg",
+      "focal_y": 0.42
+    },
+    {
+      "id": "burning_steppes",
+      "name": "Burning Steppes",
+      "source_page": "https://www.wowfan.cz/clanek/burning-steppes",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/burningsteppes.jpg",
+      "focal_y": 0.46
+    },
+    {
+      "id": "western_plaguelands",
+      "name": "Western Plaguelands",
+      "source_page": "https://www.wowfan.cz/clanek/western-plaguelands",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/wplague3.jpg",
+      "focal_y": 0.48
+    },
+    {
+      "id": "deadwind",
+      "name": "Deadwind Pass",
+      "source_page": "https://www.wowfan.cz/clanek/deadwind-pass",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/deadwindpass5.jpg",
+      "focal_y": 0.47
+    },
+    {
+      "id": "eastern_plaguelands",
+      "name": "Eastern Plaguelands",
+      "source_page": "https://www.wowfan.cz/clanek/eastern-plaguelands",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/eplague.jpg",
+      "focal_y": 0.48
+    },
+    {
+      "id": "silithus",
+      "name": "Silithus",
+      "source_page": "https://www.wowfan.cz/clanek/silithus",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/silithus4.jpg",
+      "focal_y": 0.48
+    },
+    {
+      "id": "moonglade",
+      "name": "Moonglade",
+      "source_page": "https://www.wowfan.cz/clanek/moonglade",
+      "source_image": "https://www.wowfan.cz/pic/gameinfo/lokace/moonglade.jpg",
+      "focal_y": 0.49
+    },
+    {
+      "id": "azshara",
+      "name": "Azshara",
+      "source_page": "https://www.wowhead.com/classic/zone=16/azshara",
+      "source_image": "https://wow.zamimg.com/uploads/screenshots/normal/926187-azshara.jpg",
+      "focal_y": 0.53
+    },
+    {
+      "id": "blackrock_mountain",
+      "name": "Blackrock Mountain",
+      "source_page": "https://www.wowhead.com/classic/news/season-of-discovery-phase-4-ptr-development-notes-blackrock-eruption-class-343192",
+      "source_image": "https://wow.zamimg.com/uploads/blog/images/42238-season-of-discovery-phase-4-ptr-development-notes-blackrock-eruption-class.jpg",
+      "focal_y": 0.55
     }
   ]
 }

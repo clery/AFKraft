@@ -28,7 +28,7 @@ Your heroes' levels, equipment, and combat belong to the minigame. Their growth 
 
 ## Adventure through Azeroth
 
-Choose destinations on clickable maps of **Kalimdor** and the **Eastern Kingdoms**. The outdoor roster covers 41 Classic destinations, including all six starting regions, the leveling and endgame zones, Moonglade, Deadwind Pass, and the Blackrock Mountain hub. Cities, dungeons, and raids are not destinations. Each region has enemies, a milestone boss, local resources, and a curated loot pool. New regions temporarily share existing landscape backdrops and loot pools from a similar progression band; frontier levels and rewards remain provisional. Your idle destination is independent of your real character's location.
+Choose destinations on clickable maps of **Kalimdor** and the **Eastern Kingdoms**. The outdoor roster covers 41 Classic destinations, including all six starting regions, the leveling and endgame zones, Moonglade, Deadwind Pass, and the Blackrock Mountain hub. Cities, dungeons, and raids are not destinations. Each region has its own landscape backdrop, enemies, a milestone boss, local resources, and a curated loot pool. New regions temporarily share loot pools from a similar progression band; frontier levels and rewards remain provisional. Your idle destination is independent of your real character's location.
 
 Battles earn hero experience, gold, equipment, and crafting materials. Push forward when your party is ready, or keep farming to improve its gear. After a defeat, the party falls back to a safe encounter. Traveling abandons the current encounter without its rewards and preserves your heroes' current health.
 

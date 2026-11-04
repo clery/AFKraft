@@ -28,7 +28,10 @@ case("Content uses unique stable IDs and valid references", function()
         ids[z.id] = true
         assert(C.materials[z.material])
         assert(C.biomes[z.biome])
-        assert(C.backdrops[z.id], "Missing zone screenshot: " .. z.id)
+        equal(
+            C.backdrops[z.id],
+            "Interface\\AddOns\\WoWIdle\\Assets\\Backdrops\\" .. z.id .. ".tga"
+        )
         assert(#z.enemies > 0)
     end
     equal(C.slots[5], false)
