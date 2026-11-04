@@ -255,7 +255,7 @@ local function victory(state, battle)
         if not hero then
             state.battle = nil
             state.rest = 2
-            G.Log(state, "The party regrouped before the next encounter.")
+            G.Log(state, "The party regrouped before the next encounter.", nil, "regroup")
             return
         end
         local health = min(
@@ -280,7 +280,9 @@ local function victory(state, battle)
             G.Log(
                 state,
                 result.hero.name
-                    .. " unlocked Mastery. Harder encounters now award permanent talent progress."
+                    .. " unlocked Mastery. Harder encounters now award permanent talent progress.",
+                nil,
+                "progress"
             )
             G.Emit(state, "unlock", { target = result.id, masteryUnlocked = true })
         end
@@ -295,7 +297,9 @@ local function victory(state, battle)
                     .. ". +"
                     .. ranks
                     .. " permanent talent"
-                    .. (ranks == 1 and " point." or " points.")
+                    .. (ranks == 1 and " point." or " points."),
+                nil,
+                "progress"
             )
             G.Emit(state, "unlock", { target = result.id, mastery = ranks })
         end
@@ -308,7 +312,9 @@ local function victory(state, battle)
                 result.hero.name
                     .. " reached idle level "
                     .. result.level
-                    .. " (character maximum). Mastery continues in harder encounters."
+                    .. " (character maximum). Mastery continues in harder encounters.",
+                nil,
+                "progress"
             )
         end
     end
@@ -354,7 +360,9 @@ local function victory(state, battle)
         if discovered then
             G.Log(
                 state,
-                "You found a new companion! Open Party to choose their class and welcome them."
+                "You found a new companion! Open Party to choose their class and welcome them.",
+                nil,
+                "party"
             )
         end
         if discovered or unlockedDestination then
@@ -371,7 +379,8 @@ local function victory(state, battle)
                 .. " cleared through encounter "
                 .. battle.stage
                 .. ". New paths open.",
-            battle.stage <= previousSafe or state.runBest <= previousBest
+            battle.stage <= previousSafe or state.runBest <= previousBest,
+            "progress"
         )
     end
     G.ProfessionUnlocks(state)
@@ -722,7 +731,7 @@ function G.Step(state, seconds)
             .. "Farming encounter "
             .. state.stage
             .. "."
-        G.Log(state, state.lastDefeat)
+        G.Log(state, state.lastDefeat, nil, "combat")
         G.Emit(state, "defeat")
         G.RouteBoundary(state)
     end

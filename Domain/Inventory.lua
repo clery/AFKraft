@@ -243,7 +243,7 @@ function G.Disenchant(state, item, quantity)
                 .. " gold, +"
                 .. reward.relic
                 .. " Relic dust."
-            G.Log(state, message)
+            G.Log(state, message, nil, "items")
             return true, message
         end
     end
@@ -288,7 +288,7 @@ function G.DisenchantAll(state)
         .. " gold, +"
         .. total.relic
         .. " Relic dust."
-    G.Log(state, message)
+    G.Log(state, message, nil, "items")
     return true, message
 end
 
@@ -562,7 +562,7 @@ function G.Craft(state, index, slot, material, heirloom)
         state.guide.crafted = true
         state.guide.craftItem, state.guide.craftHero = item.uid, index
     end
-    G.Log(state, "Crafted " .. item.name .. " for " .. hero.name .. ".")
+    G.Log(state, "Crafted " .. item.name .. " for " .. hero.name .. ".", nil, "items")
     G.Emit(state, "craft")
     return true
 end

@@ -80,7 +80,10 @@ function G.AddHero(state, classID, identity)
     G.Emit(state, "recruit")
     G.Log(
         state,
-        hero.name .. (state.battle and " joins the next encounter." or " joined the adventure.")
+        hero.name
+            .. (state.battle and " joins the next encounter." or " joined the adventure."),
+        nil,
+        "recruit"
     )
     return true
 end
@@ -565,7 +568,7 @@ function G.Travel(state, zone, automatic)
     state.guide.traveled = true
     G.Emit(state, "travel")
     state.farming = false
-    G.Log(state, "Traveling to " .. z.name .. ".")
+    G.Log(state, "Traveling to " .. z.name .. ".", nil, "travel")
     return true
 end
 

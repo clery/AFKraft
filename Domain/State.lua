@@ -175,13 +175,13 @@ function G.New(now)
     }
 end
 
-function G.Log(state, message, quiet)
+function G.Log(state, message, quiet, noticeType)
     state.log[#state.log + 1] = message
     if #state.log > 24 then
         table.remove(state.log, 1)
     end
     if not quiet and W.OnLog then
-        W.OnLog(state, message)
+        W.OnLog(state, message, noticeType)
     end
 end
 
@@ -355,7 +355,12 @@ function G.Load(db, now)
         return nil, "The saved boost usage count is invalid. Your adventure has not been reset."
     end
     if migrated then
-        G.Log(db, "Adventure XP unlocked. Existing Essence and hero progression retained.")
+        G.Log(
+            db,
+            "Adventure XP unlocked. Existing Essence and hero progression retained.",
+            nil,
+            "updates"
+        )
     end
     -- A terminal encounter cannot normally be saved: Step resolves it in the
     -- same call. Older versions could throw after partially applying victory
@@ -371,7 +376,7 @@ function G.Load(db, now)
         if finished then
             db.battle = nil
             db.rest = 0
-            G.Log(db, "The party regrouped and is ready to continue.")
+            G.Log(db, "The party regrouped and is ready to continue.", nil, "updates")
         end
     end
     -- Purge excluded equipment from older saves, including protected stacks and heirlooms.

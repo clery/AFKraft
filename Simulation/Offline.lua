@@ -107,7 +107,9 @@ function G.FinishCatchup(state, job)
                 hero.name
                     .. " reached idle level "
                     .. hero.level
-                    .. " (character maximum) while you were away. Mastery continues in harder encounters."
+                    .. " (character maximum) while you were away. Mastery continues in harder encounters.",
+                nil,
+                "progress"
             )
         end
     end
@@ -199,7 +201,9 @@ function G.FinishCatchup(state, job)
             .. " salvaged."
             .. " "
             .. summary.routeTransitions
-            .. " offline route transitions."
+            .. " offline route transitions.",
+        nil,
+        "offline"
     )
     job.finished = true
     return true

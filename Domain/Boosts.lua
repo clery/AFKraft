@@ -70,7 +70,7 @@ function G.BuyBoost(state, id, currency)
     state[currency] = state[currency] - cost
     state.boosts.owned[id] = true
     state.boosts.equipped = state.boosts.equipped or id
-    G.Log(state, boost.name .. " learned permanently. Equip it in Commander.")
+    G.Log(state, boost.name .. " learned permanently. Equip it in Commander.", nil, "progress")
     return true
 end
 
@@ -131,7 +131,7 @@ function G.ActivateBoost(state, id, quiet)
     state.boosts.activeUntil[id] = state.clock + boost.duration
     state.boosts.readyAt[id] = state.clock + boost.cooldown
     state.stats.boostUses = (state.stats.boostUses or 0) + 1
-    G.Log(state, boost.name .. " active for five adventure minutes.", quiet)
+    G.Log(state, boost.name .. " active for five adventure minutes.", quiet, "boost")
     return true
 end
 
@@ -226,7 +226,12 @@ function G.BuyBoostAutomation(state, capability)
     end
     state[unlock.currency] = state[unlock.currency] - unlock.cost
     automation.owned[capability] = true
-    G.Log(state, unlock.name .. " boost automation learned permanently. Configure it in Commander.")
+    G.Log(
+        state,
+        unlock.name .. " boost automation learned permanently. Configure it in Commander.",
+        nil,
+        "progress"
+    )
     return true
 end
 

@@ -2,16 +2,39 @@ local _, W = ...
 local M = {}
 W.Minimap = M
 
+local notices = {
+    { "combat", "Party regrouped after combat." },
+    { "party", "New companion available." },
+    { "progress", "Adventure progress unlocked." },
+}
+
+local function pending()
+    local saved = W.state.ui.minimapNotices
+    return type(saved) == "table" and saved or {}
+end
+
 function M.Refresh()
     if M.bubble then
         M.bubble:SetShown(type(W.state.ui.minimapNotice) == "string")
     end
 end
 
-function M.Record(message)
+function M.Record(message, noticeType)
     if W.UI and W.UI.frame:IsShown() and not W.state.ui.compact then
         return
     end
+    local saved, known = pending(), false
+    for _, notice in ipairs(notices) do
+        if notice[1] == noticeType then
+            known = true
+            break
+        end
+    end
+    if not known then
+        return
+    end
+    saved[noticeType] = true
+    W.state.ui.minimapNotices = saved
     W.state.ui.minimapNotice = message
     M.Refresh()
 end
@@ -33,6 +56,7 @@ function M.Open()
         W.Notify(notice)
     end
     W.state.ui.minimapNotice = nil
+    W.state.ui.minimapNotices = nil
     M.Refresh()
 end
 
@@ -67,10 +91,21 @@ function M.Create()
         OnTooltipShow = function(tooltip)
             tooltip:AddLine("WoWIdle", 1, 0.82, 0)
             tooltip:AddLine("Click to open the expanded adventure.", 1, 1, 1)
-            tooltip:AddLine("Drag to move the minimap button.", 0.7, 0.7, 0.7)
+            if not W.state.ui.minimap or not W.state.ui.minimap.lock then
+                tooltip:AddLine("Drag to move the minimap button.", 0.7, 0.7, 0.7)
+            end
             local notice = W.state.ui.minimapNotice
             if type(notice) == "string" then
-                tooltip:AddLine(notice, 1, 0.35, 0.35, true)
+                local unread, shown = pending(), false
+                for _, summary in ipairs(notices) do
+                    if unread[summary[1]] == true then
+                        tooltip:AddLine(summary[2], 1, 0.7, 0.3, true)
+                        shown = true
+                    end
+                end
+                if not shown then
+                    tooltip:AddLine("New adventure updates.", 1, 0.7, 0.3, true)
+                end
             end
         end,
     })

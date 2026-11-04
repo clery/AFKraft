@@ -19,7 +19,7 @@ function G.Reward(state, key, amount, label)
     end
     state.essence = state.essence + amount
     state.stats.essence = state.stats.essence + amount
-    G.Log(state, "+" .. amount .. " Essence · " .. label)
+    G.Log(state, "+" .. amount .. " Essence · " .. label, nil, "rewards")
     return true
 end
 

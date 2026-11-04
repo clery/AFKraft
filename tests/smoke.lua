@@ -410,7 +410,7 @@ test("Minimap notices ignore snapshots and open the expanded adventure", functio
     W.UI.frame:Hide()
     W.OnLog(W.Game.Copy(state), "Snapshot event")
     assertTrue(state.ui.minimapNotice == nil)
-    W.OnLog(state, "A destination unlocked.")
+    W.OnLog(state, "A destination unlocked.", "progress")
     assertTrue(W.Minimap.bubble:IsShown())
     assertEquals("A destination unlocked.", state.ui.minimapNotice)
     state.ui.compact, state.ui.locked, state.ui.tab = true, true, "party"
@@ -424,10 +424,72 @@ test("Minimap notices ignore snapshots and open the expanded adventure", functio
     W.OnLog(state, "Already visible event")
     assertTrue(state.ui.minimapNotice == nil)
     state.ui.compact = true
-    W.OnLog(state, "Train your companion.")
+    W.OnLog(state, "Train your companion.", "party")
     assertEquals("Train your companion.", state.ui.minimapNotice)
     W.Minimap.Open()
     state.ui.locked = false
+end)
+
+test("Minimap tooltips bound and deduplicate notifications and reflect the drag lock", function()
+    local W = WoWIdle
+    W.Initialize()
+    W.state = W.Game.New(W.Client.Now())
+    W.UI.frame:Hide()
+    local lines = {}
+    local tooltip = {
+        AddLine = function(_, text)
+            lines[#lines + 1] = text
+        end,
+    }
+    local kinds =
+        { "combat", "party", "travel", "progress", "rewards", "items", "offline", "unknown" }
+    for _ = 1, 100 do
+        for _, kind in ipairs(kinds) do
+            W.Game.Log(W.state, string.rep("Very long specific event. ", 100), false, kind)
+        end
+    end
+    local notice = W.state.ui.minimapNotice
+    for _, kind in ipairs({
+        "travel",
+        "rewards",
+        "items",
+        "offline",
+        "boost",
+        "recruit",
+        "regroup",
+        "unknown",
+    }) do
+        W.Game.Log(W.state, "Routine event", false, kind)
+    end
+    assertEquals(notice, W.state.ui.minimapNotice)
+    W.Minimap.launcher.OnTooltipShow(tooltip)
+    assertEquals(6, #lines)
+    local seen = {}
+    for _, line in ipairs(lines) do
+        assertTrue(#line < 100)
+        assertFalse(seen[line] == true)
+        seen[line] = true
+    end
+    W.state.ui.minimap = { lock = true }
+    lines = {}
+    W.Minimap.launcher.OnTooltipShow(tooltip)
+    assertEquals(5, #lines)
+    W.Minimap.Open()
+    assertTrue(W.state.ui.minimapNotices == nil)
+    W.UI.frame:Hide()
+    W.Game.Log(W.state, "Routine reward", false, "rewards")
+    assertTrue(W.state.ui.minimapNotice == nil)
+    assertFalse(W.Minimap.bubble:IsShown())
+    lines = {}
+    W.Minimap.launcher.OnTooltipShow(tooltip)
+    assertEquals(2, #lines)
+    W.UI.frame:Hide()
+    W.state.ui.minimapNotice = string.rep("Legacy notice. ", 100)
+    lines = {}
+    W.Minimap.launcher.OnTooltipShow(tooltip)
+    assertEquals(3, #lines)
+    assertEquals("New adventure updates.", lines[3])
+    W.Minimap.Open()
 end)
 
 test("Minimap launcher uses shared libraries and persists its display settings", function()

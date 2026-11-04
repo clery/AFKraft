@@ -7,11 +7,11 @@ W.Controller = root
 local elapsed = 0
 
 -- Only the live account state announces events; offline snapshots stay silent.
-function W.OnLog(state, message)
+function W.OnLog(state, message, noticeType)
     if state ~= W.state then
         return
     end
-    W.Minimap.Record(message)
+    W.Minimap.Record(message, noticeType)
     if state.settings.chatAnnouncements then
         print("|cffdfbc79WoWIdle:|r " .. message)
     end
@@ -138,6 +138,7 @@ function W.ResetAdventure()
         unit.floating:SetAlpha(0)
     end
     state.ui.minimapNotice = nil
+    state.ui.minimapNotices = nil
     W.Minimap.Refresh()
     ui:ApplyMode()
     ui.frame:Show()

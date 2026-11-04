@@ -182,7 +182,7 @@ function G.BuyRoutes(state)
     end
     state.legacy = state.legacy - 1
     state.routes.owned = true
-    G.Log(state, "Route planning learned permanently.")
+    G.Log(state, "Route planning learned permanently.", nil, "progress")
     return true
 end
 

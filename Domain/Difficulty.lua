@@ -148,7 +148,9 @@ function G.DifficultyVictory(state, battle)
     if first then
         G.Log(
             state,
-            "Transcendence ready. Review a new difficulty and permanent Inheritance rewards."
+            "Transcendence ready. Review a new difficulty and permanent Inheritance rewards.",
+            nil,
+            "progress"
         )
     end
     return true
@@ -173,7 +175,7 @@ function G.BuyInheritance(state, id)
     end
     difficulty.currency = difficulty.currency - cost
     difficulty.purchases[id] = rank + 1
-    G.Log(state, purchase.name .. " improved permanently.")
+    G.Log(state, purchase.name .. " improved permanently.", nil, "progress")
     return true
 end
 
@@ -240,7 +242,9 @@ function G.PrestigePlus(state, targetTier)
             .. targetTier
             .. " begins. +"
             .. preview.inheritance
-            .. " Inheritance. Permanent progress retained."
+            .. " Inheritance. Permanent progress retained.",
+        nil,
+        "progress"
     )
     G.Emit(state, "prestige")
     return true

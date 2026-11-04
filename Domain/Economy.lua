@@ -113,7 +113,9 @@ function G.MigrateEconomy(state, previousVersion)
             .. credit
             .. " Essence and "
             .. report.trainingGold
-            .. " gold from recorded retired purchases. Unrecorded spending receives no guessed credit."
+            .. " gold from recorded retired purchases. Unrecorded spending receives no guessed credit.",
+        nil,
+        "rewards"
     )
     return true
 end

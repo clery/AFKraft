@@ -76,7 +76,9 @@ function G.Prestige(state)
     end
     G.Log(
         state,
-        "A new chapter begins. Earned " .. reward .. " Heritage. Unspent Essence retained."
+        "A new chapter begins. Earned " .. reward .. " Heritage. Unspent Essence retained.",
+        nil,
+        "progress"
     )
     G.Emit(state, "prestige")
     return true
