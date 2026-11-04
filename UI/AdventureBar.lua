@@ -98,9 +98,10 @@ function Bar.Create(parent, x, y, width)
         GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
         GameTooltip:SetText("Adventure XP · Account-wide", unpack(T.gold))
         GameTooltip:AddLine(
-            "Fill the bar to earn "
+            rules.xpPerRank
+                .. " Adventure XP = "
                 .. rules.essencePerRank
-                .. " Essence. Your rank and partial XP survive prestige.",
+                .. " Essence. Rank and partial XP survive both resets.",
             0.85,
             0.85,
             0.8,
@@ -109,11 +110,11 @@ function Bar.Create(parent, x, y, width)
         GameTooltip:AddLine(" ")
         for _, kind in ipairs(C.activityOrder) do
             local reward = C.activityRewards[kind]
-            GameTooltip:AddLine(reward.name, 0.85, 0.85, 0.8)
+            GameTooltip:AddLine(reward.name .. " · " .. reward.xp .. " XP", 0.85, 0.85, 0.8)
         end
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(
-            "Bosses must be within your XP range. Dungeon completion adds a bonus when confirmed by the client. Heroes earn their own experience through idle combat.",
+            "No gray or legacy rewards. Gathering must be skill-up eligible. Idle battles earn hero XP instead.",
             0.65,
             0.65,
             0.6,

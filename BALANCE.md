@@ -6,6 +6,20 @@ WoWIdle is a companion idle RPG: short management visits should produce useful d
 
 This pass follows the production/cost comparison and reset-loop modeling described in Anthony Pecorella’s [The Math of Idle Games, Part I](https://www.kongregate.com/en/pages/the-math-of-idle-games-part-i) and [Part III](https://www.kongregate.com/en/pages/the-math-of-idle-games-part-iii). These sources explain modeling methods, not universal timings. The targets below are this project's design choices. All reported results are simulations or analytical models, not observed player behavior or in-client validation.
 
+## Evidence freshness
+
+The long-horizon journey, matrix and intervention figures below record the balance pass before the later class-stat scoring correction. They remain useful scenario evidence, but are not current-code or live-client guarantees. Rerun the relevant scenario before tuning from those figures; the 100-hour journey and tier-nine/ten acquisition have not been revalidated in this text pass.
+
+Current-code rechecks on 2026-11-04:
+
+| Scenario | Result |
+| --- | --- |
+| `balance_builds.lua` | 96 cases, each replayed: 80 wins, 16 timeouts, no wipes. |
+| `balance_profiles.lua` | Nine six-hour no-reset profiles. First prestige access at 43–46 minutes; hero levels 27–31 and frontiers 37–42 after six hours. Mixed-play access is slightly earlier than the provisional 45–60-minute target. Hunt sources are synthetic. |
+| `balance_rebuild.lua` | Six actual-reset cases, each replayed. At two hours, ordinary/tier-zero-deep/tier-one-deep frontiers are 50/48/47; none regains the prior frontier of 60. Each case buys 10 crafts and 2 forge steps, with 38 deferred modification quotes under its initial-zone policy. |
+
+These results replace the older handoff's 64-case build matrix and faster rebuild timings. Different reset rewards and retained power remain explicit; the reset fixture does not prove a dominant loop or globally unaffordable upgrades.
+
 ## Feature roles and targets
 
 | System | Role and balance decision |
@@ -29,7 +43,7 @@ All prices and chances used in previews still come from the same domain/content 
 
 ## Challenge curve and recurring prestige
 
-The first eight encounter levels are unchanged, preserving recruitment and the level-eight prestige unlock. After eight, health grows by **1.14 per encounter level** and damage by **1.065**, replacing 1.055/1.025. Prestige is intended during the climb, not just after reaching 60. First prestige access remains around 46–47 minutes; the regular-reset model first chooses it at 75 minutes, then completes six chapters by hour six. This is a policy observation, not a forced schedule or unlock delay.
+The first eight encounter levels are unchanged, preserving recruitment and the level-eight prestige unlock. After eight, health grows by **1.14 per encounter level** and damage by **1.065**, replacing 1.055/1.025. Prestige is intended during the climb, not just after reaching 60. The original balance pass recorded first prestige access around 46–47 minutes; the current-code recheck above records 43–46 minutes. In that original pass, the regular-reset model first chose it at 75 minutes, then completed six chapters by hour six. This is a policy observation, not a forced schedule or unlock delay.
 
 A naked same-level party fails at 20/40/60. At 20, crafted gear plus legal talents clears in 49.75 seconds, while either alone fails. At 40 and 60, crafted gear plus the level-earned talent budget also fails: retained talents, Mastery, heirlooms, Development, modifications and ordinary-prestige power become necessary investments. No new level-training fee, timer gate, combat restriction or reset loss is added.
 
@@ -101,7 +115,7 @@ Policies compare unmanaged play, investment without resets, early resets, regula
 
 The 100-hour policy still accumulates substantial gold (981,140 in seed 17; 918,631 in seed 91) because its purchases stop at enhancement five/forge two and it does not optimize every material route. Seed 91 independently reaches tier eight with 33 ordinary prestiges/eight ascensions and 517 Legacy/36 Inheritance earned. A separate endpoint intervention spends that **same account's** available stock toward enhancement twenty/forge five: 900 paid modifications consume 862,278 gold and turn its failed tier-eight level-60 encounter (180-second timeout) into a 102-second victory. This establishes an earned, non-waiting escape from that wall. It does not establish acceptable management effort: 900 modifications would be substantial player input, and the model does not simulate a human performing them. The 24-hour no-prestige account has no affordable modification at its wall despite surplus gold, identifying a material-route bottleneck instead. Neither accumulation nor one intervention proves every endgame sink is balanced. Commands count successful domain calls, including repeated configuration, rather than observed clicks. Real management burden and the best reset moment remain playtest questions.
 
-The older no-reset `balance_profiles.lua` policy now reaches hero levels 25–28 and frontiers 33–38 after six hours, across idle-only/mixed/hunting profiles and three seeds. Its easy-talent ordering and infrequent purchases are deliberately distinct from the integrated strategy. Earlier results reaching level 60 in six hours used the flatter curve and no longer describe this build.
+The current no-reset `balance_profiles.lua` policy reaches hero levels 27–31 and frontiers 37–42 after six hours, across idle-only/mixed/hunting profiles and three seeds. Its easy-talent ordering and infrequent purchases are deliberately distinct from the integrated strategy. Earlier results reaching level 60 in six hours used the flatter curve and no longer describe this build.
 
 ## Class, profession, Commander and destination comparisons
 

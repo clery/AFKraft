@@ -2,117 +2,97 @@
 
 **Your adventures. Their growing legend.**
 
-WoWIdle is an idle party RPG inside World of Warcraft. Build a company of five heroes, watch them battle through Azeroth, and help them grow while you play your own character. Collect equipment, craft upgrades, experiment with builds, and start new adventures with a lasting inheritance.
+An account-wide idle party RPG inside World of Warcraft. Build a company of five heroes, fight through Azeroth, and improve their equipment and builds while playing your own character.
 
-**Early playable prototype.** Retail is the current development and testing client. WoW Forever is the intended content target, but its release build still needs integration verification.
+**Early playable prototype.** Retail is the current development and simulator client. Forever is the intended content target; its maps, visuals and live activity signals still need integration and testing.
 
 ## Getting started
 
-1. Place the addon folder, named `WoWIdle`, in your client's `Interface/AddOns` directory. The folder should contain `WoWIdle.toc` directly.
-2. Enable **WoWIdle** in the character selection AddOns list, then log in. If you installed it while the game was running, restart the client.
-3. Enter `/wowidle` or `/wi` to open the adventure.
-4. Begin with one hero. Follow the dismissible starter guide to learn battles, equipment, talents and travel. Open **Party** to manage the selected hero.
-5. Let your heroes fight, collect their rewards, and choose new destinations from the **World map** as they unlock.
+1. Put the `WoWIdle` folder in your client's `Interface/AddOns` directory, with `WoWIdle.toc` directly inside it.
+2. Enable the addon and log in. Restart WoW if you installed it while the game was running.
+3. Enter `/wowidle` or `/wi` to open the adventure. Follow the dismissible starter guide.
 
-Required libraries are included; you do not need to install them separately.
+Libraries are bundled. Your characters share one saved adventure; idle hero levels, equipment and currencies are separate from your real WoW character.
 
-## A party of your own
+## Party and battles
 
-Your adventure starts with one hero and grows to five. Defeat milestone bosses at levels **1, 3, 5 and 7** to discover companions, then select their empty cards in **Party** to choose a class. You can choose from nine original class identities, including duplicates. Discovered slots and recruited heroes carry across chapters; existing parties are preserved.
+Start with one hero. Defeat milestone bosses at encounter levels **1, 3, 5 and 7** to discover companions, then choose their classes in **Party**. All nine original classes are available, including duplicates. Companion discoveries and recruited heroes survive resets. Loading the addon on an alt lets that character replace a generated companion of the same class.
 
-Enemy groups grow with your company, early bosses suit smaller parties, and your first victory guarantees an equipment drop. Combine damage, healing, and survival as your company grows to tackle harder encounters.
+Combat is automatic. Equipment, talents, targeting and ability priorities shape each hero's role. Change them during battle without resetting health proportions or cooldowns. Heroes gain levels naturally to **60**; no Essence or paid training is required. Each class has three **18-talent** trees, with free respecs and permanent earned points.
 
-Combat runs automatically. Heroes use their abilities according to configurable priorities, while talents and equipment shape their strengths. You can equip items, train, and adjust talents or priorities during a battle. Equipment changes preserve current health proportions and cooldowns.
+**Mastery** unlocks permanently at hero level **20**. Victories at or above that hero's hardest completed encounter in the current difficulty earn Mastery XP; bosses award double. Each rank adds a permanent talent point, up to the tree's 54-point total. Easier rebuild encounters cannot farm Mastery points. The Talents bar shows current XP and the next rank cost.
 
-Your heroes' levels, equipment, and combat belong to the minigame. Their growth is separate from your real character's power, gear, and talents. Minigame gold, materials, and equipment are used within WoWIdle.
+Choose among **41 outdoor destinations** on the Kalimdor and Eastern Kingdoms maps. Destinations differ in scenery, enemies, equipment pools and materials. Cities, dungeons and raids are not idle destinations. Travel abandons the current encounter without rewards and preserves health. After a defeat, the party farms a safe encounter; improve its build and use **Retry frontier** to push again.
 
-## Adventure through Azeroth
+## Real WoW activity and Essence
 
-Choose destinations on clickable maps of **Kalimdor** and the **Eastern Kingdoms**. The outdoor roster covers 41 Classic destinations, including all six starting regions, the leveling and endgame zones, Moonglade, Deadwind Pass, and the Blackrock Mountain hub. Cities, dungeons, and raids are not destinations. Each region has its own landscape backdrop, enemies, a milestone boss, local resources, and a curated loot pool. New regions temporarily share loot pools from a similar progression band; frontier levels and rewards remain provisional. Your idle destination is independent of your real character's location.
+Every **100 Adventure XP** awards **60 Essence**. Spend Essence on permanent party bonuses in **Growth** or learn abilities in **Commander**. Growth ranks can be refunded for their exact Essence cost.
 
-Battles earn hero experience, gold, equipment, and crafting materials. Push forward when your party is ready, or keep farming to improve its gear. After a defeat, the party falls back to a safe encounter. Traveling abandons the current encounter without its rewards and preserves your heroes' current health.
-
-Close the window with Escape when you want to return to WoW; the adventure continues while the addon is running.
-
-## Your WoW adventures fuel theirs
-
-Eligible activities on your real character fill a shared, account-wide **Adventure XP** bar. Every **100 Adventure XP** awards **60 Essence**, which funds permanent party development and learned Commander abilities. Hero levels and routine equipment require no Essence.
-
-| Activity | Adventure XP |
+| Eligible activity | Adventure XP |
 | --- | ---: |
-| Eligible enemy kill | 1 |
-| Eligible herb or ore gather | 4 |
-| Eligible skinning | 0.25 |
+| Creature kill | 1 |
+| Herb or ore node | 4 |
+| Skinning | 0.25 |
 | Quest completion | 20 |
-| Eligible boss | 25 |
-| Confirmed eligible dungeon completion | 40 bonus |
+| Boss | 25 |
+| Confirmed dungeon completion | 40 bonus |
 | Character level gained | 5 bonus |
 
-Hover the Adventure bar for activity rewards. Hero experience comes from idle battles; Adventure XP supplies Essence for their upgrades.
+Kills and bosses must be within your XP range; gathering must be skill-up eligible. Gray kills, legacy boss farming and unconfirmed completions award no XP. Credit depends on client evidence and still needs live validation. Hero XP comes from idle battles instead.
 
-Ordinary questing, combat, and gathering can support progression; dungeons are optional. Gray enemies and legacy boss farming do not qualify. Gathering must have a skill-up-eligible difficulty, and dungeon completion bonuses require an explicit client completion signal. Eligible bosses can still reward XP during manual dungeon runs.
+## Equipment and Forge
 
-Credit depends on information available from the client. Some kills or gathers cannot be confirmed and will not award XP. Reward detection and balance are still being tested.
+Each hero has **10 wearable slots**. Drops have fixed Classic item stats; class proficiencies and idle level requirements apply. **Power** estimates item value for the selected class, not damage per second. Compare items, equip individual upgrades, or use **Equip best power** in Party.
 
-Each of the 41 destinations has an expanded regional creature roster. Further opponents join at encounter frontiers 20, 40, and 60; higher-frontier milestone bosses alternate with regional champions. These are authored idle encounters, with family-based material spoils. Existing destination unlocks are unchanged.
+**Forge** crafts targeted equipment with gold and idle materials. Enhancement adds **10% of base stats per purchase**. Enchanting unlocks when a hero first reaches **30**, titanforging at **40**, and profession specializations at **50**. Enchanting replaces the current enchantment; titanforging has five potential tiers. Previews show outcomes and costs before purchase. Heirloom investments survive both resets.
 
-## Equipment, crafting, and loot
+Identical ordinary items stack. Loot rules salvage unwanted future drops; **Disenchant** destroys stored equipment for gold and Relic dust. Equipped gear, heirlooms and protected items are kept. **Disenchant all** includes unprotected upgrades across every page and filter.
 
-Every hero, including your main character, starts with cosmetic clothing covering the torso, legs, and feet. It adds no stats and is replaced visually as you equip armor. Empty slots regain this clothing automatically.
+Empty torso, leg and foot slots use cosmetic clothing with no stats. Exact offline alt appearances and matching equipment visuals remain unfinished. See [item rules and sources](Content/ITEMS.md) for formulas and unsupported item effects.
 
-Each hero has ten wearable equipment slots: weapon, armor, head, back, shoulders, hands, waist, legs, feet, and wrists. Rings, necklaces, and trinkets are excluded entirely and removed from older saves on load. Use the shared inventory to compare drops and equip upgrades. Drops use real Classic-era WoW item names, icons, rarity, and fixed stat snapshots in curated pools for each destination. Power is calculated from the item’s stats for the selected hero’s class; ordinary drops do not gain raw power from encounter level. Strength, agility, and intellect support offense, stamina raises health, armor reduces incoming damage, and spirit supports healing. Haste support is ready for future items. Hover equipment to see its stats and compare the equipped item. Identical ordinary items stack, and inventory is sorted by effective power, strongest first.
+## Commander, routes and collections
 
-Each purchased enhancement adds 10% of the item’s base stats. Its gold price rises quadratically with prior enhancements, making the first few upgrades inexpensive while leaving room for enchanting and titanforging. Heirlooms use the same item identities with separate idle level scaling. WoW item requirements are mapped to idle requirements. Armor follows original class proficiencies, including lighter armor and plate for warriors/paladins or mail for hunters/shamans unlocking at idle level 40. Heirlooms still require the right armor proficiency. Incompatible equipped armor returns to shared inventory on load or prestige. Weapon proficiencies remain simplified. Loot pools and drop rates are adapted for the minigame. See [item sources and stat rules](Content/ITEMS.md) for the catalog, calculations, and currently unsupported item effects.
+Learn one of four party boosts permanently with Essence or **1 Heritage**. Equip one at a time: effects last **5 adventure minutes**, with a **10-minute cooldown from activation**. Uses are free. Learn on-cooldown automation for **1 Heritage**, then conditional automation for **2 Heritage**. Enable both **Automation** and **Auto-cast** to use it.
 
-In **Party**, select an equipment slot to compare items and preview the cost of an upgrade. Choose **Upgrade** to purchase it. Heroes gain levels naturally through idle combat up to 60; Mastery unlocks at 20. Enemy growth steepens after encounter eight, so prestige is useful repeatedly during the climb to 60. Open Growth to invest Essence in permanent Might, Resolve and Provisioning ranks, with free redistribution.
+Learn route planning for **1 Heritage**. Save destinations and milestones, then enable the route to travel between encounters. Manual travel pauses it until Resume. Profiles save your boost, automation, route preferences and selected collection effect without restoring currencies or cooldowns.
 
-Crafting turns gold and idle materials into targeted equipment. Enhancement, enchantment and titanforging also use gold/materials rather than Essence. Configure salvage rules in the minigame to handle unwanted loot and protect items you want to keep. Talents and conditional ability priorities let you refine each hero's role as your party develops.
+**Collections** come from eligible kills by your real WoW character. Hover a piece for its creature families, locations and chance. Each kill rolls independently; no discovery is guaranteed. Passive discovery bonuses survive both resets, and a completed set unlocks a selectable effect. Only one set effect can be active. Fieldcraft and Relic Hunter improve outdoor and dungeon chances respectively; each has three permanent ranks costing **1, 2 and 3 Heritage**.
 
-Talent selections and earned points survive prestige, and respecs stay free. Hero levels stop at 60. Personal level records award a point every two levels, starting at level 1; repeating those levels never awards points twice. At level 20, permanent **Mastery** unlocks: victories at or above that hero's hardest completed encounter level grant Mastery XP, with double XP for bosses. Every Mastery rank grants another permanent talent point, up to the tree's 54-point total. The first rank costs 100 XP, with 50 XP added per rank through rank eight; later ranks also add `100 * (rank - 8)^2` XP. Mastery continues when character levels are capped. The Talents view shows both tracks.
+Collection acquisition is enabled only for the verified Forever source profiles and still needs live-client testing. Retail hunting remains disabled. Idle battles, crafting and offline farming never discover collection pieces.
 
-In **Heritage**, learn permanent collection talents: **Fieldcraft** improves collection-piece chances from eligible outdoor kills, and **Relic Hunter** improves them inside eligible dungeons. Each has three ranks, costing 1, 2, then 3 Heritage. Each rank adds 20% of the base chance (5% becomes 8% at rank three), rather than twenty percentage points. They affect collection pieces only, survive both resets, and never accumulate failed-roll progress or guarantee a discovery. Verified piece tooltips show the effective chance and active/inactive talent conditions. See [balance targets and measured scenarios](BALANCE.md).
+## Resets and permanent progress
 
-## Prestige and heirlooms
+Defeat a **level 8 milestone boss** to unlock ordinary prestige in **Heritage**. Review the exact reward and losses before confirming. Current tuning aims for first access in **45–60 minutes**; this is a simulation target, not a required reset time or playtested promise.
 
-Defeat a **level 8 milestone boss** to unlock prestige. Open **Heritage** to preview the rewards and reset consequences before confirming.
+| Progress | New chapter | Transcendence |
+| --- | --- | --- |
+| Hero levels/XP, ordinary gear, gold, materials and run progress | Reset | Reset |
+| Profession work ranks/XP | Kept | Reset; allocation plan kept |
+| Heroes, talents, earned points, Mastery and Growth | Kept | Kept |
+| Adventure rank/XP, Essence, Heritage, heirlooms and recipes | Kept | Kept |
+| Boost ownership, cooldowns, automation, profiles, routes and collections | Kept | Kept |
+| Active boost effects | End | End |
 
-Prestige starts a new run: hero levels reset, ordinary equipment and purchased run upgrades are lost, and gold, zone materials, and destination progress start over. Your heroes keep their identities, classes, talents, earned talent points, and Mastery. Lower-level encounters after a reset do not grant Mastery XP.
+New chapters award Heritage and permanent party strength. Each Heritage earned adds **2 percentage points** to party health, damage and healing. Spent Essence is not refunded.
 
-Adventure rank, partial Adventure XP, unspent Essence, discoveries, unlocked recipes, Heritage currency, and heirlooms carry forward. Spent Essence is not refunded. Heirlooms scale with a hero's current idle level, giving future runs a useful foundation.
+**Transcendence** requires a current level-60 hero and an online victory over an encounter-level-60+ boss in that cycle. Choose an unlocked tier and review the deeper reset. Each completed tier pays Inheritance once, funding permanent rebuilding bonuses. Both reset types remain manual.
 
-## Coming back later
+## Returning and window controls
 
-Progress is saved account-wide, so your characters share one adventure. When you return, WoWIdle calculates up to **24 hours** of offline farming from your last safe encounter and presents a summary. New bosses and destination choices wait for you to return.
+The adventure continues while its window is closed. On the next login, up to **24 hours** of safe offline farming is calculated and applied automatically. No code runs while WoW is closed. Offline routes default off; when enabled, they visit only checkpoints cleared in the current run and tier before departure, with at most **12 transitions**. New progression and resets wait for you.
 
-No addon code runs while WoW is closed; catch-up rewards are calculated when the addon next loads.
+Switch between fullscreen, windowed and compact views using the top-right controls. Drag the top edge to move a window and the bottom-right grip to resize it. Compact mode has a lock and an accessible unlock control; management opens a larger view. Menus reveal their names and icons as features are discovered.
 
-## Window controls and options
+**Settings → AddOns → WoWIdle** controls display, locking, chat and sound. Audio uses WoW sound-effects volume and plays only while the adventure is visible. **Reset all adventure progress** permanently erases the shared account adventure, including Heritage and heirlooms; display and audio preferences are kept.
 
-The labeled navigation groups features into **Journey**, **Company**, **Strategy**, and **Progression**. Adventure suggests a next step from your party’s current needs. Management pages give equipment, builds, and planning their own workspace; talent trees scroll independently and inventory fills the available height. **Forge** groups crafting, enchanting, titanforging, and profession specializations. Help icons and control tooltips explain each system without filling the panels with instructions; the dismissible guide introduces new features. Settings and the latest return report are accessible from the navigation.
+## Development status
 
-Use the top-right controls to switch between **compact**, **windowed**, and **fullscreen** views. Drag a window's top edge to move it and its bottom-right grip to resize it. Compact mode has an optional lock; management opens a larger view for equipment and builds.
+The accepted gameplay systems are implemented. Remaining work is Forever integration, live reward/save/visual checks, pacing and management-effort playtests, then broader UI polish. Collection timing and high-tier affordability remain provisional.
 
-Open **Settings → AddOns → WoWIdle** to adjust display preferences, window locking, the minimap button, chat announcements, floating combat text, and audio. Preferences are saved account-wide and apply immediately. Loot rules remain in the minigame.
-
-To test a fresh start, open **Settings → AddOns → WoWIdle → New adventure** and choose **Reset all adventure progress**. Confirming permanently erases the account-wide adventure, including Heritage and heirlooms, and starts with one hero and the starter guide. Display and audio preferences are kept.
-
-Audio can be muted entirely or by category, including combat, encounters, progression, loot, and travel. Sounds play only while the adventure window is visible, use WoW's sound-effects volume, and stay silent during offline catch-up.
-
-| Command | Action |
-| --- | --- |
-| `/wowidle` | Toggle the adventure window |
-| `/wi` | Toggle the adventure window |
-
-## Current development
-
-The prototype already includes automatic party combat, zone travel, equipment, crafting, salvage, talents, ability priorities, offline catch-up, prestige, and scaling heirlooms.
-
-Full class-specific talent trees, final dungeon-completion mappings, and prestige pacing are still in development. Each class has three 18-talent specialization trees (54 talents per class), mixing shared foundations with signature mechanics and situational bonuses for its combat style. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
-
-For design details and contribution guidance, see [the game design](DESIGN.md), [balance notes](BALANCE.md), [architecture](ARCHITECTURE.md), and [development tooling](TOOLING.md) and [map maintenance and porting](MAPS.md).
+See [design](DESIGN.md), [balance evidence](BALANCE.md), [architecture](ARCHITECTURE.md), [tooling](TOOLING.md), [map maintenance](MAPS.md), and [remaining work](HANDOFF.md).
 
 ## License and credits
 
-WoWIdle uses an **All Rights Reserved** notice, matching ArtisanFinder. See [LICENSE](LICENSE).
+WoWIdle uses an **All Rights Reserved** notice. See [LICENSE](LICENSE).
 
 Bundled third-party libraries retain their own licenses and notices; see [embedded libraries](Libs/README.md). Landscape artwork sources and credits are listed in [backdrop credits](Assets/Backdrops/SOURCES.md). The project notice does not replace those third-party terms.

@@ -40,6 +40,19 @@ python3 scripts/prepare_backdrops.py --check
 
 The first command downloads the recorded originals and rebuilds the packaged textures. Omit `--download` to use existing originals named after their destination IDs. The second checks texture dimensions and color format without downloading anything. Run StyLua afterward if the texture descriptor changes.
 
+## Source checks
+
+From the repository root, run:
+
+```sh
+lua scripts/test.lua
+wow-sim-retail --addons-path "$ADDON_ROOT" --no-saved-vars run-tests WoWIdle
+stylua --check .
+lua-language-server --check=. --checklevel=Hint --logpath="$LUALS_LOG_DIR" --metapath="$LUALS_META_DIR"
+```
+
+Use an isolated addon root and keep diagnostic output outside the repository. LuaLS must report zero diagnostics, including hints. Balance scenarios and their assumptions are listed in [BALANCE.md](BALANCE.md); recorded results are not live playtest evidence.
+
 ## Visual checks
 
 Check fullscreen, expanded, and compact sizes; text clipping; map tiles; tab changes; party composition; locked-window access; and offline progress summaries. Repeat checks after UI changes. Do not commit game assets or environment logs.

@@ -66,7 +66,7 @@ C.professions = {
             {
                 id = "heirloom",
                 name = "Lasting investment",
-                description = "5% lower heirloom forging costs per rank. Item investments survive resets.",
+                description = "5% lower heirloom forging costs per rank. Heirloom upgrades survive both resets.",
             },
         },
     },

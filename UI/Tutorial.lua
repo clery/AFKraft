@@ -108,25 +108,25 @@ function Tutorial.NextLesson(state)
         state,
         "lessonBoost",
         "boosts",
-        "Commander boosts are permanent purchases with temporary effects. Choose an icon, learn and equip it, then activate when the party needs support. Uses are free; cooldowns persist through resets.",
+        "Choose a Commander boost, learn it and equip it. Activate for temporary party support. Uses are free; cooldowns survive both resets.",
         affordable and (state.stats.boostUses or 0) == 0
     ) or lesson(
         state,
         "lessonDevelopment",
         "development",
-        "Essence develops the whole party through Might, Resolve and Provisioning. Compare current and next benefits before buying; rank investment can be redistributed freely without losing learned abilities. Hero levels and equipment do not require Essence.",
+        "Spend Essence in Growth for permanent party bonuses. Compare Current and Next rank before buying. Refund ranks for free; hero levels and equipment need no Essence.",
         state.development.invested == 0 and state.essence >= G.DevelopmentQuote(state, "might").cost
     ) or lesson(
         state,
         "lessonLegacy",
         "legacy",
-        "Heritage is ready. Review the reset preview before beginning a new chapter. Talents, Mastery, owned tools and unspent Essence stay with your company.",
+        "Review your first chapter reset in Heritage. Check the rewards and losses before confirming. Permanent progress stays with your company.",
         state.prestigeUnlocked and state.prestiges == 0 and G.PrestigeReward(state) > 0
     ) or lesson(
         state,
         "lessonAutomation",
         "boosts",
-        "Spend Heritage in Commander to learn automation once. Enable the global toggle and this boost's Auto-cast, then choose On cooldown or a condition. The waiting reason explains each decision.",
+        "Learn automation in Commander with Heritage. Turn on Automation and Auto-cast, then choose a trigger. The status explains why it is waiting.",
         owned
             and not automation.enabled
             and (automation.owned.onCooldown or state.legacy >= C.boostAutomation.onCooldown.cost)
@@ -134,56 +134,56 @@ function Tutorial.NextLesson(state)
         state,
         "lessonProfiles",
         "profiles",
-        "Profiles save your equipped boost, rules, route preferences and selected collection effect. Save a named setup, then apply it freely. Applying never activates a boost or refreshes its cooldown.",
+        "Save your boost, automation, route preferences and set effect in a profile. Apply it for free; cooldowns and active effects stay unchanged.",
         next(automation.owned) ~= nil and next(state.boostProfiles.entries) == nil
     ) or lesson(
         state,
         "lessonRoutes",
         "routes",
-        "Routes change idle destinations after an encounter. Learn planning, add milestones and save a template; select it and enable Routes. Manual travel pauses it until you resume.",
+        "Learn route planning, add destinations and milestones, then save and enable the route. Travel happens between encounters. Manual travel pauses it until Resume.",
         (state.routes.owned or (state.prestigeUnlocked and state.legacy >= 1))
             and #state.routes.templates == 0
     ) or lesson(
         state,
         "lessonHunt",
         "collections",
-        "Browse outdoor collections and hover over a missing piece to see its creatures and location. Your real WoW character earns discoveries from eligible kills; idle battles and offline routes do not count.",
+        "Hover a missing collection piece for its creatures, location and chance. Hunt with your real WoW character; idle battles and offline routes do not count.",
         huntAvailable and state.adventure.rank >= 2 and next(state.outdoorCollections.pieces) == nil
     ) or lesson(
         state,
         "lessonCollections",
         "collections",
-        "Browse outdoor or dungeon sets, hover over pieces for their sources, and select one completed-set effect. Discoveries persist through resets. Earlier collection records remain in legacy history.",
+        "Browse sets and hover pieces for their sources. Complete a set to select its effect. Only 1 set effect can be active; discoveries survive both resets.",
         collection
     ) or lesson(
         state,
         "lessonMastery",
         "talents",
-        "Mastery is permanently unlocked at idle level 20. Victories at your encounter frontier earn separate XP and permanent talent points, even at a character level cap. Each difficulty has its own frontier.",
+        "Mastery unlocks permanently at hero level 20. Win at your current-tier encounter frontier or higher to earn XP. Each Mastery rank adds 1 permanent talent point.",
         mastery
     ) or lesson(
         state,
         "lessonEnchanting",
         "workshop",
-        "Enchanting is unlocked. In Forge, choose a hero, equipped item and enchantment. Compare the preview and cost before replacing its current enchantment. Heirloom investments survive resets.",
+        "Enchanting is unlocked in Forge. Choose a hero, equipped item and enchantment. Applying replaces the old enchantment; heirloom upgrades survive both resets.",
         professions.enchanting and not enchanted
     ) or lesson(
         state,
         "lessonTitanforging",
         "workshop",
-        "Titanforging is unlocked. The Forge Titanforge tab raises an equipped item's base potential separately from enhancement and enchantment. Each investment has a guaranteed preview and cost.",
+        "Titanforging is unlocked in Forge. Raise equipped item potential through 5 tiers, separately from enhancement and enchanting. Check the preview and cost before applying.",
         professions.titanforging and not forged
     ) or lesson(
         state,
         "lessonResearch",
         "workshop",
-        "Profession specializations are unlocked. Successful paid work earns separate profession points. Your saved allocation plan survives Transcendence and reactivates as work ranks rebuild.",
+        "Specializations are unlocked in Forge. Paid work earns profession points. Your plan survives Transcendence and reactivates as work ranks rebuild.",
         professions.research and not specialized
     ) or lesson(
         state,
         "lessonPrestigePlus",
         "difficulty",
-        "Transcendence is ready. Review a deeper reset and an unlocked difficulty. Permanent tools remain; levels, ordinary gear, resources and profession work rebuild. Inheritance rewards each completed tier once.",
+        "Transcendence is unlocked. Review a tier and its reset losses before confirming. Permanent tools remain; profession work resets. Each completed tier pays Inheritance once.",
         state.difficulty.unlocked and state.difficulty.ascensions == 0
     )
 end
@@ -357,7 +357,7 @@ function Tutorial.Refresh(ui)
                         node,
                         "Click "
                             .. talent.name
-                            .. " to spend one talent point. You can choose another green talent instead, or click a learned talent later to recover its point."
+                            .. " to spend 1 talent point, or choose another green talent. Click a learned talent to refund it for free."
                     )
                     return
                 end
@@ -417,7 +417,7 @@ function Tutorial.Refresh(ui)
                     map,
                     "Hover "
                         .. focus.name
-                        .. " on this map, then click its highlighted region to travel to this unlocked, higher frontier."
+                        .. " for its rewards, then click to travel. Travel abandons the current encounter without rewards."
                 )
                 return
             end

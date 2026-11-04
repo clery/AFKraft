@@ -8,7 +8,7 @@ Audio.categories = {
     {
         key = "soundCombat",
         name = "Sounds: combat and voices",
-        tip = "Weapon impacts, attack voices, and wound sounds, sampled every 1.2 seconds per side.",
+        tip = "Weapon impacts, attack voices and wound sounds.",
     },
     {
         key = "soundSpells",
@@ -28,7 +28,7 @@ Audio.categories = {
     {
         key = "soundProgression",
         name = "Sounds: progression and unlocks",
-        tip = "Hero levels, Adventure ranks, talents, training, recipes, destinations, and prestige.",
+        tip = "Hero levels, Adventure ranks, talents, recipes, destinations and resets.",
     },
     {
         key = "soundEquipment",

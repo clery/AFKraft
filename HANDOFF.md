@@ -1,81 +1,52 @@
-# WoWIdle handoff — 2026-11-04
+# WoWIdle — development status
 
-## Scope and current state
+Updated 2026-11-04. Accepted gameplay systems are implemented in source. Retail is the development/simulator target; Forever remains the product target. Neither source coverage nor simulator results establish live Forever behavior.
 
-Implement accepted features from DESIGN.md, then validate them. Detailed source and test references are in DESIGN.md and BALANCE.md.
+## Current implementation
 
-The latest requirement-by-requirement source audit found no remaining accepted gameplay feature gap. This means implemented in source, not validated in the live Forever client. Future scope remains deferred by explicit direction. Do not manufacture new features to replace missing client validation.
+- One account party, up to five heroes and nine classes; three 18-talent trees per class, natural levels to 60, permanent Mastery and configurable priorities/resources.
+- Gold/material equipment economy, ten wearable slots, class-aware power scoring and weapon/armor proficiencies, crafting, enchanting, titanforging and profession plans.
+- Permanent Growth investment with exact free refunds; four Commander boosts, reusable cooldowns, automation, ordered rules and profiles.
+- Manual chapters and Transcendence, retained capabilities, difficulty tiers, Inheritance and Runic recipes.
+- Source-specific outdoor/dungeon collections, independent rolls, durable receipts, one selected set effect and separate session totals.
+- Fullscreen/windowed/compact views, progressive menu discovery, onboarding and automatic return reports.
+- Optional offline routes limited to departure-cleared current-run/tier checkpoints and 12 transitions per absence.
 
-Implemented systems include:
+## Remaining work
 
-- Five-hero account party, nine classes, class talents, natural levels to 60, Mastery, configurable targeting and encounter resources.
-- Four Commander boosts, permanent ownership, manual activation, on-cooldown/conditional automation, ordered rules, saved profiles and milestone routes.
-- Gold/material equipment economy, inventory protection/salvage, crafting, enchanting, titanforging, profession branches and saved allocation plans.
-- Permanent Essence Development board with exact free refunds and conservative one-time economy migration.
-- Manual ordinary prestige and Prestige+, retained capabilities, tier records/affixes, Inheritance and Runic recipes.
-- Outdoor and dungeon collections: separate ledgers, exact-source eligibility, independent piece rolls and durable receipts, scrollable set catalog and shared selected effect, profiles/reset retention and separate session totals.
-- Full/windowed/compact controls, functional onboarding, tracked-goal/Development cards and automatic return/session reports.
+### 1. Forever integration and live validation — pending client access
 
-## Remaining work, in order
+Update the Forever simulator version and test setup together before using it. Confirm build detection and TOC metadata. Package a separate map-art/geometry profile using the [port checklist](MAPS.md#forever-port-checklist); the current geometry targets Retail. Native spell effects are disabled on Forever until assets and visual APIs are verified together. Exact offline alt appearance remains unfinished.
 
-### 1. Validate in the supported Forever client
+When client testing becomes available, back up the save and record build, action, expected/actual result and errors:
 
-Retail simulator results cannot establish Forever behavior. Confirm interface/build metadata before testing. Forever simulator testing is deferred until its version and setup are updated together.
+1. Login/reload and switch characters: retain identities, settings and earned progress; initialize and pay rewards once.
+2. Real activities: verify participation/loot credit, gray kills, gathering difficulty/success, quests, levels, bosses and confirmed dungeon completion. Leaving an instance must never count as completion.
+3. Collections: verify eligible real outdoor and instance kills, including trivial collection kills; reject wrong contexts and duplicate signals. Check discovery without bag/equipment drops, session totals, reload and profile restoration.
+4. Both resets: compare preview and actual losses/retention. Owned automation must work at level one without repurchase; cooldowns must remain.
+5. Offline catch-up: interrupt/reload, deliver live activity/discoveries during reconciliation, and check the 24-hour cap and cleared-route limits. No duplicate earnings or transitions.
+6. Visuals/input: model loading/fallbacks, equipment, attack/death/spell animations, camera framing, text bounds, all window modes and lock/unlock. Check normal WoW combat/input and performance. Reproduce any native HelpTip error before attributing it to the addon.
 
-Use a backed-up save and record client/build, action, expected result, actual result and errors:
+### 2. Pacing and management effort
 
-1. Login/reload and switch characters: retain party, alt identity, settings and earned progression; no duplicated initialization or rewards.
-2. Real activity: verify eligible and gray kills, loot/participation attribution, gathering success/difficulty, quest and level signals, eligible boss signals and confirmed dungeon completion. Overlapping signals must pay once; leaving an instance alone must never count as completion.
-3. Outdoor collections: on the enabled Forever profile, test gnolls in Redridge Mountains for the cloak and ogres in Loch Modan for the leather pieces. Verify eligible trivial kills can advance collections independently of Adventure XP, counters persist on reload and no bag/equipment drop is required.
-4. Dungeon collection: test Humans and Goblins in the Deadmines using the catalog's internal exact-source mappings. Confirm outdoor, raid, unknown-build/context and offline events cannot credit the dungeon ledger. Check counters, session totals, tracking, selected effect and profile restoration.
-5. Both reset types: compare preview with actual losses/retention. Owned automation must operate at level one without repurchase; cooldowns cannot reset for free. Keep resets manual.
-6. Offline reconciliation: test an interrupted catch-up, reload, live activity/discovery arriving during catch-up and the 24-hour cap; no duplicated currency, route transitions, uses or discoveries.
-7. Models and input: five friendly actors plus enemy groups, model fallbacks/loading, alt appearance approximation, camera framing, death/attack/spell animation, damage-number movement, full/windowed/compact resizing, lock/unlock, hidden progression and normal WoW combat/input without protected-action errors.
-8. Observe performance and errors during actual play. A previously seen native HelpTip error remains unproven as an addon defect; reproduce with a minimal case before changing anything.
+Use [BALANCE.md](BALANCE.md) as the source for tuning, fixture assumptions and recorded outcomes. The current target is **45–60 minutes to first prestige access**, replacing the earlier 4–6-hour hypothesis. Check-ins remain a provisional 15–30 minutes; choosing to reset is separate from unlocking it.
 
-### 2. Complete pacing/playtest work
+- Current-code profile rechecks reach first access in 43–46 minutes. Observe actual new-player pacing before tuning again.
+- The 96-case build fixture has 80 wins and 16 timeouts. Its synthetic retained-power budget does not prove acquisition time or broad build parity.
+- The current two-hour reset fixture stops at frontiers 50/48/47; none regains the previous frontier of 60. Relic-dust availability still limits modifications under its initial-zone policy. Compare material-aware routes before drawing a global affordability conclusion.
+- Earlier 100-hour journeys reached tier eight; one endpoint intervention required 900 paid modifications. Those results predate the class-stat correction and need rerunning before further tuning. Measure actual management effort, not domain-command counts. Tier-nine/ten acquisition remains unproven.
+- Measure live hunting rates, travel, source availability and unlucky-streak tails. Independent collection rolls never guarantee a discovery.
 
-- Current mixed-play simulations reach first prestige in roughly 46–47 minutes versus the provisional 4–6-hour hypothesis. This mismatch is documented, not resolved or validated as desirable.
-- Existing profile hunts use synthetic sources; measure live eligible-kill rates, travel/source availability and guarantee tails before adjusting acquisition probabilities.
-- The completed build/profession matrix times out in every tier-8 case and in level-60 tier-5 support/survival cases. Diagnose damage/healing/resource bottlenecks and compare broader Development/equipment budgets before tuning. The current scripts report outcomes and costs, not a complete cause analysis.
-- The actual reset comparison exposes a Relic-dust bottleneck: all 40 weapon-modification quotes defer under the chosen initial-zone farming policy. Compare a material-aware route/check-in policy before calling modifications globally unaffordable. It also does not prove a dominant reset loop; setup resources are synthetic and permanent-power differences are explicit.
-- Measure real check-ins, rebuilding and frontier progress, source/sink pressure and boost choices. Simulation comparisons are feasibility evidence, not measured player attention or acquisition time.
+### 3. UI and text
 
-### 3. UI/UX after feature validation
-
-Broad UI/UX rework is deliberately deferred. Current controls expose the features for testing. Rework readability, hierarchy and management flows after validation; do not reopen product design prematurely.
+Player-facing text uses effects, costs and actions first. Keep exact values in the relevant preview/tooltip; avoid repeating formulas and implementation details in panel help. Preserve destructive-action consequences and reset retention. Broad navigation/layout redesign remains deferred until feature validation.
 
 ## Explicitly deferred
 
-- Prestige automation and automated resets.
-- Simultaneous parties/raids, larger boost loadouts, arbitrary class scripting and broader profession content.
-- More collection catalog content beyond the representative sets unless selected later.
-- Retail collection acquisition: outdoor candidates remain disabled/unverified and no Retail dungeon profile is enabled. Do not reuse Forever mappings without independent evidence. Forever remains the product target; avoid repeating unproductive Retail research.
+Automated resets; simultaneous parties/raids; larger boost loadouts; arbitrary class scripting; broader profession content. Retail collection acquisition remains disabled pending independent source verification. Additional collection content is optional scope, not a substitute for validating the current catalog. Public source labels use monster families grouped by zone; exact creature IDs/names remain internal provenance.
 
-Creature source presentation must use monster families grouped by zone. Exact IDs/names remain internal eligibility/provenance data.
+## Verification and resuming
 
-## Completed agent validation work
+The text/documentation pass reruns domain and isolated Retail simulator tests, formatting, Lua syntax and LuaLS diagnostics. It also rechecks builds, six-hour profiles and actual-reset scenarios; see BALANCE.md for refreshed results. No live Forever validation has been performed. Simulator screenshots verify layout only, not native particles or protected client behavior.
 
-All assigned agent work is complete, integrated and independently reviewed. No agent task or scenario process is left running.
-
-- `scripts/balance_builds.lua`: 64 cases, each replayed exactly (128 boss simulations). Two compositions, two profession plans, levels 40/60, tiers 0/2/5/8 and two seeds. Uses real paid craft/enchant/forge commands with quote/payment conservation, bounded outcomes and deterministic checks. Equal budgets and synthetic retained work/power are disclosed. Results: 44 wins, 20 timeouts, zero wipes. No tuning changed.
-- `scripts/balance_rebuild.lua`: six cases, each replayed exactly (12 rebuild simulations). Actual ordinary prestige, same-tier Prestige+ control and next-tier Prestige+ commands; finite resources, retained investment/plan checks, two-hour horizon and 15-minute check-ins. Prior frontier 60 is regained in 37.18/43.38/53.93 minutes respectively; final frontiers are 91/85/79. Paid crafts: 4/6/6. Reset rewards are 19 Legacy versus one Inheritance; these and permanent-power differences are not treated as equivalent.
-- Independent review caught and corrected defeat-event accounting and undercounted equipment actions in the reset script. Both final independent runs passed.
-- Detailed assumptions, commands and findings are recorded in BALANCE.md. These are simulation feasibility checks, not live-client or acquisition-time evidence.
-- The older `scripts/balance_scenarios.lua` "Reset comparison" remains a fixture rebuild-push comparison; the new reset script supplies actual reset coverage.
-
-## Last completed checks
-
-- 359 domain tests passed; 97 Retail simulator tests passed after dungeon session integration.
-- Zero LuaLS diagnostics across 125 Lua files after the two completed validation scripts.
-- `scripts/balance_automation.lua`: 24 comparison rows, each replayed exactly, for 48 successful simulations; independently reviewed.
-- Automation fixture: one-hour victories were 101 without activation, 104 with manual boss-entry or conditional-boss activation, and 105 on cooldown. All reached frontier 37 without defeats. These are one-party/one-boost fixture results, not broad balance conclusions.
-- Relevant StyLua, Lua syntax and diff checks passed. No live Forever validation was performed.
-
-## Resume safely
-
-1. Read AGENTS.md, DESIGN.md and BALANCE.md; inspect current Git status and HEAD before editing.
-2. Preserve unrelated work. No gameplay code or prototype coefficients were changed by the final scenario/handoff update.
-3. Use the committed scripts, not earlier draft copies. Do not blindly merge old worktrees: they contain earlier task changes and stale dependencies.
-4. Use isolated work for independent implementation, bounded ownership and sequential integration. Keep changes in this chat's unpushed commit when its identity/HEAD remains verified; otherwise create a new commit. Do not push or release without instruction.
-5. Continue from validation tasks above. Do not mark the overall goal complete while required client observations or pacing evidence remain missing.
+Before editing, inspect Git status and HEAD, preserve unrelated work, and read the affected module's documentation. Use committed scenario scripts. Keep gameplay tuning separate from copy changes, and do not push or release without instruction.

@@ -41,9 +41,9 @@ function W.RegisterSettings()
         {
             "fullscreen",
             "Fullscreen",
-            "Use fullscreen for the expanded view. Also used after login.",
+            "Use fullscreen for expanded views. Saved for the next login.",
         },
-        { "compact", "Compact view", "Use the small adventure window. Also used after login." },
+        { "compact", "Compact view", "Use the small adventure window. Saved for the next login." },
         {
             "locked",
             "Lock window",
@@ -62,7 +62,7 @@ function W.RegisterSettings()
         {
             "soundEnabled",
             "Minigame sounds",
-            "Play sounds while the adventure window is visible. Uses WoW sound-effects volume; offline progress stays silent.",
+            "Play while the adventure is visible, using WoW sound-effects volume. Offline progress stays silent.",
         },
     }
     for _, entry in ipairs(W.Audio.categories) do

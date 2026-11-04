@@ -176,7 +176,7 @@ function P.Draw(ui, parent, state)
     U.Tooltip(
         ui.profileControls.save,
         "Save current setup",
-        "Snapshot the current equipped boost, automation rules, route preferences and selected collection effect. Timers, active effects and currencies are never saved or restored."
+        "Save your boost, automation, route preferences and collection effect. Applying a profile does not restore currency, cooldowns or active effects."
     )
     ui.profileControls.apply = button(frame, "Apply profile", 726, 446, 236, function()
         W.Action(G.ApplyBoostProfile, ui.selectedProfile)

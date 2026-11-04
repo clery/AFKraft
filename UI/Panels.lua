@@ -344,8 +344,8 @@ function P.boosts(ui, p, s)
             control,
             spec.name .. " automation",
             capability == "onCooldown"
-                    and "Permanent unlock: automatically activate an equipped boost when ready in combat. Learn once for 1 Heritage."
-                or "Permanent unlock: boss, ally health, safe farming and frontier triggers. Requires On cooldown. Learn once for 2 Heritage."
+                    and "Auto-cast the equipped boost when ready in combat. Permanent unlock: 1 Heritage."
+                or "Unlock boss, ally-health, farming, pushing and ordered rules. Requires On cooldown. Permanent unlock: 2 Heritage."
         )
         ui.boostAutomationPurchases[capability] = control
     end
@@ -383,13 +383,15 @@ function P.boosts(ui, p, s)
             tile,
             boost.name,
             boost.description
-                .. "\n\nPermanent unlock: "
+                .. "\n\nLearn once: "
                 .. boost.cost
-                .. " Essence. "
+                .. " Essence or "
+                .. boost.legacyCost
+                .. " Heritage.\n"
                 .. math.floor(boost.duration / 60)
                 .. " minutes active; "
                 .. math.floor(boost.cooldown / 60)
-                .. " minutes cooldown. Equip one boost at a time.",
+                .. " minutes cooldown from activation. Equip 1 boost; uses are free.",
             320
         )
         ui.boostTiles[id] = { button = tile, state = state, icon = icon }
@@ -416,7 +418,7 @@ function P.boosts(ui, p, s)
     U.Tooltip(
         purchase,
         "Permanent boost",
-        "Learn once with Essence. Activating a learned boost is free. Ownership and cooldowns survive chapter resets; active effects end."
+        "Learn permanently with Essence or Heritage. Uses are free. Both resets keep ownership and cooldowns, but end active effects."
     )
     local equip = button(p, "Equip", 370, detailY + 84, 170, function()
         W.Action(G.EquipBoost, id)
@@ -430,7 +432,7 @@ function P.boosts(ui, p, s)
         math.floor(boost.duration / 60)
             .. " adventure minutes active; "
             .. math.floor(boost.cooldown / 60)
-            .. " minutes cooldown from activation. One active effect at a time. Offline timers advance during eligible safe farming, up to 24 hours."
+            .. " minutes cooldown from activation. Uses are free. Only 1 boost effect can be active. Timers advance in combat and eligible offline farming."
     )
     local status = text(p, "", 850, detailY + 92, 14, T.muted, 420)
     local enabled = U.Checkbox(
@@ -464,7 +466,7 @@ function P.boosts(ui, p, s)
     U.Tooltip(
         mode,
         "Automatic trigger",
-        "Only the equipped boost can auto-cast during a living encounter. Unlock additional triggers with permanent automation capabilities."
+        "Auto-casts only the equipped boost during combat. Automation and Auto-cast must both be on."
     )
     local thresholds = {}
     for _, value in ipairs({ 35, 50, 65, 80 }) do
@@ -487,7 +489,7 @@ function P.boosts(ui, p, s)
     U.Tooltip(
         threshold,
         "Low health trigger",
-        "Activate when any living companion falls below this percentage of their own maximum health. Defeated companions do not trigger it."
+        "Activate when a living ally is below this health percentage."
     )
     local automaticStatus = text(p, "", 0, detailY + 198, 14, T.muted, 1240)
     ui.boostControls[id] = {
@@ -650,7 +652,7 @@ function P.talents(ui, p, s)
         "Talents",
         688,
         0,
-        "Earn permanent points from hero level records and Mastery.\n\nClick a talent to learn or refund it. Respecs are free; points and choices survive chapter resets.\n\n"
+        "Earn points from new hero level records and Mastery. Click a talent to learn or refund it for free. Points and choices survive both resets.\n\n"
             .. hint
     )
     W.TalentPanel.Draw(ui, p, h, index)
@@ -725,7 +727,7 @@ function P.talents(ui, p, s)
     U.Tooltip(
         ui.heroTargetChoice,
         "Enemy target priority",
-        "Selects the primary enemy for movement, strikes and basic attacks. Health priorities compare percentages; ties use encounter order. Dead enemies are excluded. Area effects still hit living enemies in range. Changes preserve health and cooldowns."
+        "Choose the primary target for movement, strikes and basic attacks. Health compares percentages; ties use encounter order. Area attacks still hit enemies in range."
     )
     local profile, value = G.HeroResource(h, s.battle and s.battle.heroes[index])
     if profile then
@@ -753,13 +755,13 @@ function P.talents(ui, p, s)
             ui.heroResourceChoice,
             profile.name .. ": " .. math.floor(value) .. "/" .. profile.maximum,
             profile.description
-                .. " Strike costs "
+                .. "\n\nAbility costs: strike "
                 .. profile.costs.attack
                 .. "; recovery "
                 .. profile.costs.heal
                 .. "; special "
                 .. profile.costs.special
-                .. ". Threshold checked before spending. Basic attacks continue while waiting. These are idle combat resources."
+                .. ".\nThe threshold is checked before spending. Basic attacks continue while waiting. These resources belong to the minigame."
         )
     end
 end
@@ -916,22 +918,22 @@ function P.legacy(ui, p, s)
         text(p, "KEEP", 0, 254, 14, T.gold)
         text(
             p,
-            "Hero identities and classes; talents, permanent talent points and Mastery; learned boosts, loadout and cooldowns; heirlooms; recipes, discoveries and collection talents; Heritage; Adventure rank and partial XP; unspent Essence.",
+            "Heroes and classes\nTalents, earned points and Mastery\nGrowth, boosts, automation, profiles and routes\nHeirlooms, recipes, collections and Heritage\nAdventure rank, partial XP and unspent Essence\nProfession work and permanent difficulty progress",
             0,
             287,
             17,
             T.text,
-            1220
+            610
         )
-        text(p, "RESET", 0, 365, 14, T.gold)
+        text(p, "RESET", 670, 254, 14, T.gold)
         text(
             p,
-            "Hero levels; ordinary equipped and stored gear; gold, zone materials and Runic fragments; destination and encounter progress; active commander effects. Natural growth to 60 stays available.",
-            0,
-            398,
+            "Hero levels and XP\nOrdinary equipped and stored gear\nGold, zone materials and Runic fragments\nDestination and encounter progress\nActive boosts end; cooldowns are kept",
+            670,
+            287,
             17,
             T.text,
-            1220
+            610
         )
         text(
             p,
@@ -967,7 +969,7 @@ function P.legacy(ui, p, s)
         "New chapter",
         624,
         138,
-        "Start a new run to earn Heritage and increase your permanent party bonus by 2 percentage points per Heritage earned.\n\nReview the rewards, retained progress and losses before confirming. The review button does not reset anything."
+        "Reset the run to earn Heritage. Each Heritage earned adds 2 percentage points to permanent party health, damage and healing.\n\nReview rewards and losses before confirming. Opening the review does not reset anything."
     )
 
     text(
@@ -1006,7 +1008,7 @@ function P.legacy(ui, p, s)
         "Heirlooms",
         1258,
         138,
-        "Heirlooms scale with hero level and survive chapter resets.\n\nUnlocking a recipe immediately spends 1 Heritage, then opens Crafting. Crafting uses gold and idle materials. Unlocking a recipe does not reset your run."
+        "Heirlooms scale with hero level and survive both resets.\n\nUnlock a recipe for 1 Heritage, then craft it in Forge with gold and materials. Learning a recipe does not reset your run."
     )
 
     for position, i in ipairs(C.equipmentSlots) do
@@ -1079,7 +1081,7 @@ function P.legacy(ui, p, s)
             talent.condition
                 .. " only. Each rank increases collection-piece drop chances by "
                 .. math.floor(C.collectionTalentBonus * 100 + 0.5)
-                .. "% of their base chance. Does not affect equipment loot.\n\nLearned ranks survive both resets. Purchases spend Heritage immediately. Every kill rolls independently; failures never increase future odds."
+                .. "% of the base chance, not percentage points. Equipment loot is unchanged.\n\nRanks survive both resets. Each kill rolls independently; no guaranteed discovery."
         )
     end
 end
@@ -1091,7 +1093,7 @@ function P.loot(ui, p, s)
         "Loot rules",
         1258,
         0,
-        "Automatically salvage future drops below the selected quality, with exceptions for your keep rules.\n\nHeirlooms and protected items are always safe. Existing inventory is unchanged; manage stored equipment in Party.\n\nMatching-loot filters keep drops that match every selected class, slot and stat."
+        "Salvage future drops below the selected quality unless a keep rule applies. Heirlooms and protected items are safe.\n\nMatching-loot rules require every selected filter to match. Stored items are unchanged; disenchant them in Party."
     )
     local qualities = {}
     for quality = 1, 4 do
@@ -1178,7 +1180,7 @@ function P.loot(ui, p, s)
         U.Tooltip(
             control,
             "Keep matching loot",
-            "When at least one filter is set, keep future drops matching every selected class, slot and stat. Class eligibility uses its maximum idle proficiency. Existing quality, upgrade, effect and protection rules still apply.",
+            "Keep future drops matching every selected filter. Class uses maximum armor and weapon proficiency, regardless of current hero level. Other keep rules still apply.",
             380
         )
         ui.lootPolicyControls[key] = control

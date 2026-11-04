@@ -65,7 +65,7 @@ function P.Draw(ui, parent, state)
             100,
             number(report.gold) .. " gold",
             count(report.victories, "victory", "victories"),
-            "Gold and victories from resolved offline encounters. Offline combat never awards real-activity Adventure XP or Essence."
+            "Earned from offline battles. No Adventure XP or Essence is awarded offline."
         )
         cards.progress = card(
             parent,
@@ -79,7 +79,7 @@ function P.Draw(ui, parent, state)
                 .. number(report.masteryXP)
                 .. " Mastery XP · "
                 .. count(report.masteryRanks, "rank", "ranks"),
-            "Actual retained XP across the party, including level and Mastery rank advances. XP beyond a progression cap is not counted."
+            "XP retained across the party. Includes level and Mastery gains; excludes XP lost at a cap."
         )
         cards.equipment = card(
             parent,
@@ -89,7 +89,7 @@ function P.Draw(ui, parent, state)
             100,
             count(report.itemsKept, "item kept", "items kept"),
             number(report.salvaged) .. " automatically salvaged",
-            "Kept items include stacked units added to your shared inventory. Your loot rules and inventory capacity decide what is retained or salvaged."
+            "Items added to your shared inventory, including stacked copies. Loot rules and inventory space determine what is kept."
         )
         local materials = {}
         for _, id in ipairs(C.materialOrder) do
@@ -109,7 +109,7 @@ function P.Draw(ui, parent, state)
                     and ("Runic fragments +" .. number(report.fragments))
                 or "Zone supplies",
             table.concat(materials, "\n"),
-            "Whole materials gained, including salvage returns. Runic fragments come only from eligible tier bosses after a recipe is learned. Fractional combat bonuses are retained for later encounters."
+            "Materials gained, including salvage. Fractional bonuses carry forward. Runic fragments require eligible tier bosses and a learned recipe."
         )
         cards.automation = card(
             parent,
@@ -126,7 +126,7 @@ function P.Draw(ui, parent, state)
                     or report.routesWaiting == false and "Routes were disabled"
                     or "Route state not recorded"
                 ),
-            "Owned, enabled boost rules use the same clock and cooldowns as online combat. Offline routes require a separate opt-in and visit only checkpoints cleared before departure, at most 12 transitions. New destinations, tiers and resets wait for online play."
+            "Enabled boosts use normal cooldowns. Optional offline routes visit departure-cleared checkpoints, up to 12 transitions. New progression and resets wait for you."
         )
     end
     U.Help(
@@ -134,7 +134,7 @@ function P.Draw(ui, parent, state)
         "Offline progress",
         1258,
         0,
-        "Rewards in this report are already applied; nothing needs claiming.\n\nOffline farming is capped at 24 hours. New progression and resets wait for you.\n\nA dash means an older report did not record that total."
+        "Rewards are already applied. Offline farming is capped at 24 hours.\n\nA dash means the older report did not record that total."
     )
     ui.offlineBack = U.Button(parent, "Back to adventure", 0, 552, 280, 34, function()
         ui:SetTab("adventure")

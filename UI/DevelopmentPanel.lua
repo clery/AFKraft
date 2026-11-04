@@ -12,7 +12,7 @@ local rows = {
     },
     provisioning = {
         { "Zone materials", "materials" },
-        { "Crafting cost", "costMultiplier" },
+        { "Equipment costs", "costMultiplier" },
         { "Hero XP", "heroXP" },
     },
 }
@@ -39,7 +39,7 @@ function P.Draw(ui, parent, state)
         "Refund every development rank",
         "Recover exactly "
             .. board.invested
-            .. " invested Essence immediately. Milestone choices stay saved and become active again at rank 3. Permanent capabilities, equipment, cooldowns and current health proportion are preserved.",
+            .. " invested Essence. Milestone choices stay saved and reactivate at rank 3. Learned abilities and equipment are kept.",
         380
     )
     for index, branch in ipairs(C.development) do
@@ -91,7 +91,7 @@ function P.Draw(ui, parent, state)
             buy,
             branch.name .. " development",
             branch.description
-                .. "\n\nPrototype coefficients. Price is 60 times the new rank squared. All ranks can be refunded for their exact paid Essence.",
+                .. "\n\nPermanent through both resets. Refund ranks freely for their exact Essence cost.",
             350
         )
         local refund = U.Button(
@@ -157,7 +157,7 @@ function P.Draw(ui, parent, state)
                 control,
                 choice.name,
                 choice.description
-                    .. "\n\nSwitch freely. Your saved choice becomes inactive below rank 3 and returns when you rebuild this branch.",
+                    .. "\n\nSwitch for free. Your choice stays saved below rank 3 and reactivates when the branch reaches rank 3.",
                 350
             )
             controls.choices[choice.id] = control
@@ -172,7 +172,7 @@ function P.Draw(ui, parent, state)
             "Previous investments",
             1258,
             660,
-            "Previously recorded investments were credited on migration.\n\nEssence: "
+            "Recorded purchases from the old economy were refunded once.\n\nEssence: "
                 .. (migration.trainingEssence + migration.equipmentEssence)
                 .. "\nGold: "
                 .. migration.trainingGold

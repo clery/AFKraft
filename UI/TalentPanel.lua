@@ -144,17 +144,14 @@ function P.Draw(ui, parent, hero, index)
         "Permanent Mastery",
         "Unlocks at hero level "
             .. C.mastery.unlockLevel
-            .. ". Each rank grants one permanent talent point.\n\nEarn XP from victories at or above your hardest completed encounter level ("
-            .. math.max(1, mastery.frontier)
-            .. "). Boss victories award double Mastery XP.\n\nMastery survives ordinary prestige and grows beyond character level "
+            .. ". Each rank grants 1 permanent talent point.\n\nTier "
+            .. W.state.tier
+            .. ": earn XP from victories at encounter level "
+            .. math.max(1, G.MasteryFrontier(hero, W.state.tier))
+            .. "+. Bosses award double XP.\n\nMastery survives both resets and continues at hero level "
             .. C.heroLevelCap
-            .. ". Each rank needs "
-            .. C.mastery.xpPerRank
-            .. " more XP per rank through rank "
-            .. C.mastery.softCap
-            .. ". Later prices also add "
-            .. C.mastery.xpPerLateRank
-            .. " XP times the square of ranks beyond that point.",
+            .. ".\n"
+            .. (complete and "All talent points earned." or ("Next rank: " .. cost .. " XP.")),
         360
     )
     ui.talentTrees:Show()

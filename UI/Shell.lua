@@ -417,14 +417,14 @@ function UI:Refresh(redraw)
         s.ui.tab == "adventure" and "Your company’s journey through Azeroth"
             or s.ui.tab == "party" and "Select a companion to manage equipment and growth"
             or s.ui.tab == "talents" and "Shape a companion’s talents and combat priorities"
-            or s.ui.tab == "crafting" and "Choose a hero, equipment slot and material, then craft the item for the cost shown.\n\nCrafted items enter your shared inventory. Equip them in Party.\n\nHeirlooms scale with hero level and survive resets. Unlock their recipes in Heritage first."
+            or s.ui.tab == "crafting" and "Choose a hero, slot and material. Craft for the shown cost, then equip the item in Party.\n\nHeirlooms scale with hero level and survive both resets. Learn their recipes in Heritage."
             or s.ui.tab == "legacy" and "Permanent rewards, heirlooms and chapter resets"
             or s.ui.tab == "loot" and "Choose what to keep from future drops"
             or s.ui.tab == "boosts" and "Permanent abilities for temporary party support"
-            or s.ui.tab == "profiles" and "Save your equipped boost, automation rules, route preferences and collection effect as a named profile.\n\nSelect a saved profile to apply, rename or delete it. Saving updates the selected snapshot.\n\nProfiles never restore currencies, timers or active boost effects."
+            or s.ui.tab == "profiles" and "Save your boost, automation, route preferences and collection effect.\n\nUpdate snapshot overwrites the selected profile. Applying a profile never restores currency, cooldowns or active effects."
             or s.ui.tab == "routes" and "Plan your next destinations"
             or s.ui.tab == "collections" and "Permanent discoveries and set bonuses"
-            or s.ui.tab == "workshop" and "Select a Forge tab, hero and equipped item. Compare the preview and cost before applying an upgrade.\n\nEnchantments replace the current enchantment. Titanforging raises item potential separately from enhancement. Ordinary items are lost on reset; heirloom investments survive.\n\nPaid work earns profession points. Spend them in Specializations; allocation resets are free."
+            or s.ui.tab == "workshop" and "Choose a hero and equipped item; compare the preview and cost.\n\nEnchanting replaces an enchantment. Titanforging adds item potential. Heirloom upgrades survive both resets; ordinary gear is lost.\n\nPaid work earns profession points. Reallocate them for free in Specializations."
             or s.ui.tab == "difficulty" and "Deeper resets and permanent Inheritance"
             or s.ui.tab == "offline" and "Your latest offline adventure"
             or s.ui.tab == "development" and "Permanent Essence investment for the whole party"
@@ -595,9 +595,13 @@ function W.CreateUI()
         help:SetSize(185, 50)
         help:EnableMouse(true)
         local descriptions = {
-            essence = "Earn Essence from real WoW activity through Adventure XP ranks. Invest it in permanent party development and learned Commander abilities. Hero levels and routine equipment never require Essence.",
-            gold = "Your heroes earn gold from idle battles. Gold and idle materials fund crafting and equipment improvements. This is separate from your WoW character’s gold.",
-            legacy = "Earn Heritage by beginning a new chapter after unlocking resets. Spend it on permanent heirloom recipes. Review reset consequences in Heritage.",
+            essence = "Earn "
+                .. C.adventure.essencePerRank
+                .. " Essence per "
+                .. C.adventure.xpPerRank
+                .. " Adventure XP from real WoW activities. Spend it in Growth or Commander. Kept through both resets.",
+            gold = "Earned in idle battles. Pays for crafting and equipment upgrades; separate from your WoW gold. Lost on either reset.",
+            legacy = "Earned from chapter resets. Buys heirloom recipes, Commander boosts, automation, routes and collection talents. Kept through both resets.",
         }
         U.Tooltip(help, currency[2], descriptions[currency[1]])
     end

@@ -39,9 +39,18 @@ Starter appearance item references (shirt items cover the torso until chest armo
 
 The current primary attributes are strength for warriors and paladins, agility for hunters and rogues, and intellect for priests, shamans, mages, warlocks, and druids. These class defaults can be extended when specializations affect item valuation.
 
-Power is a comparison estimate rounded to one decimal, computed from effective item attributes. It is not stored as an item stat. Weights are: primary attribute 1; stamina 0.6; spirit 0.4; haste 0.8; armor 0.04; weapon DPS 1.5; attack power 0.5; spell power 0.8; healing power 0.5; health restored per five seconds 1. Off-primary attributes and resistances score zero. These are idle balance weights, not Blizzard formulas.
+Power is a class-specific comparison estimate rounded to one decimal, not a combat stat or damage-per-second value. Scoring and combat share these equipment contributions:
 
-Combat aggregates effective attributes directly. Stamina adds 10 health per point. Armor reduces incoming damage by `armor / (500 + 50 × hero level + armor)`, capped at 60%. Primary attributes, weapon DPS, and attack/spell power add damage; intellect, spirit, and healing/spell power add healing. Haste multiplies attack and ability cooldown recovery by `1 + haste / 100`. Passive health regeneration is applied each simulation step. Existing hero-level baselines and prestige bonuses remain. No haste is invented for Classic items without that stat; the stat path is available for later catalog expansion.
+| Contribution | Formula |
+| --- | --- |
+| Damage | Primary stat + weapon DPS + eligible Attack Power × 0.325 + eligible Spell Power × 0.65 |
+| Healing | Intellect × 0.8 + Spirit × 0.6 + Healing Power + Spell Power × 0.6 |
+
+Attack Power contributes damage for Strength/Agility classes. Spell Power contributes damage for Intellect classes and hybrids, and healing for every class. Off-primary Strength/Agility do not add damage. These are minigame rules, not Blizzard formulas.
+
+Item power is `1.5 × damage + healingWeight × healing + 0.6 × stamina + 0.8 × haste + 0.04 × armor + healthRegen`. `healingWeight` is 0.5 for healers/hybrids and 0.1 for other roles. Resistances contribute no power or mitigation.
+
+Combat adds hero-level baselines and applies talents, prestige and Development separately. Each Stamina adds 10 base health. Armor reduction is `armor / (500 + 50 × hero level + armor)`, capped at 60% before other defenses. Haste multiplies attack and ability cooldown recovery by `1 + haste / 100`. Health regeneration restores the listed amount per five seconds. No haste is added to Classic items that lack it.
 
 ## Class equipment expansion
 
@@ -265,7 +274,7 @@ Only Forever interface 16001 party-instance kills qualify. Retail has no enabled
 
 The following item identities, icons, required levels, and selected creature links were checked in Wowhead’s rendered Forever item and creature drop tables on 2026-11-04. The eight named outdoor field kits and the two dungeon relic collections are authored collections, not claims of native equipment set bonuses. One verified source is selected per piece; other real drop sources are not automatically eligible. Tribal spans required levels 4–8; the other outdoor kits span 13–20, and the dungeon collections span 13–24.
 
-Outdoor sources use the existing Forever 16001 profile (5% discovery per eligible kill); dungeon sources use its party-instance profile (20% per eligible kill). These are addon discovery rules, not real-item drop chances. Two pieces grant 0.5% basic attacks and four grant 0.5% materials; Blessing of Kalimdor grants its material milestone at three pieces. Existing shared 5% milestone caps and one selected completed-set effect still apply. This expansion adds no items to ordinary loot or crafting pools; existing equipment identities are reused where available. Retail remains disabled and live-client validation remains outstanding.
+Outdoor sources use the existing Forever 16001 profile (5% discovery per eligible kill); dungeon sources use its party-instance profile (20% per eligible kill). These are addon discovery rules, not real-item drop chances. Two pieces grant 0.5% basic-attack damage and four grant 0.5% materials; Blessing of Kalimdor grants its material milestone at three pieces. Existing shared 5% milestone caps and one selected completed-set effect still apply. This expansion adds no items to ordinary loot or crafting pools; existing equipment identities are reused where available. Retail remains disabled and live-client validation remains outstanding.
 
 | Collection | Item | Selected drop mob | Location |
 | --- | --- | --- | --- |

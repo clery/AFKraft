@@ -6,7 +6,7 @@ C.development = {
         name = "Might",
         icon = "Ability_Warrior_BattleShout",
         summary = "Damage and healing",
-        description = "Invest Essence in the whole company. Each rank improves damage and healing with diminishing returns.",
+        description = "Party-wide damage and healing. Later ranks give smaller gains.",
         choices = {
             {
                 id = "assault",
@@ -27,7 +27,7 @@ C.development = {
         name = "Resolve",
         icon = "Ability_Warrior_ShieldWall",
         summary = "Health, defense and recovery",
-        description = "Improve maximum health, reduce damage taken and recover a small health fraction after victories.",
+        description = "Party-wide maximum health, damage reduction and victory recovery.",
         choices = {
             {
                 id = "bulwark",
@@ -39,7 +39,7 @@ C.development = {
                 id = "renewal",
                 name = "Renewal",
                 icon = "Spell_Holy_MagicalSentry",
-                description = "+0.5% maximum health recovered after victories while Resolve is rank 3 or higher.",
+                description = "Recover +0.5% maximum health after victories at Resolve rank 3+.",
             },
         },
     },
@@ -48,7 +48,7 @@ C.development = {
         name = "Provisioning",
         icon = "Trade_BlackSmithing",
         summary = "Materials, rebuilding and crafting",
-        description = "Earn more zone materials and hero XP while reducing crafting costs. Real WoW Adventure XP is unchanged.",
+        description = "More zone materials and hero XP; lower equipment costs. Adventure XP is unchanged.",
         choices = {
             {
                 id = "harvest",

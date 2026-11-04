@@ -1,6 +1,6 @@
 # WoWIdle — Design Document
 
-Status: implementation audit updated 2026-11-03 for boosts, ordered automation, profiles, online routes, outdoor and dungeon collections, separate hunting-session summaries, professions, and Prestige+. The audit below distinguishes source behavior from future extensions. The accepted progression revision separates idle hero growth, Essence-funded party development, source-specific outdoor collections, and Legacy. Natural growth, the gold/material equipment economy, the permanent development board and their one-time economy migration are implemented. Separate outdoor and dungeon ledgers, a scrollable set catalog and selectable effects, profile restoration, per-type session summaries and protected legacy migration are implemented. Forever interface 16001 now has an outdoor source profile and an initial Defias Leather dungeon profile verified against its Wowhead drop tables; Retail candidates remain disabled. Prices, probabilities, capacities, and multipliers are prototype tuning. Implemented source and simulator coverage still require supported-client validation and playtesting.
+Status: source audit reconciled 2026-11-04. The accepted gameplay systems are implemented; live Forever validation and playtesting remain pending. Retail is the current simulator target. Forever collection sources are database-verified, not live-client verified; Retail acquisition remains disabled. Current tuning and recorded simulations live in [BALANCE.md](BALANCE.md), and outstanding work in [HANDOFF.md](HANDOFF.md).
 
 ## Vision
 
@@ -8,7 +8,7 @@ An account-wide idle party RPG inside World of Warcraft: Forever. Five heroes ad
 
 The addon should feel like a polished minigame, with visible characters, attacks, spells, enemies, and discoveries. Management supports the adventure scene rather than replacing it.
 
-Target occasional meaningful check-ins every 15–30 minutes. Balance the first prestige around 4–6 hours of mixed real WoW activity over 2–3 days, including offline earnings. Dungeons are optional accelerators.
+Target meaningful check-ins every 15–30 minutes and first prestige access in roughly 45–60 minutes. Access is optional, not a forced reset. This replaces the earlier 4–6-hour hypothesis; observed player pacing is still untested. Dungeons are optional accelerators.
 
 ## Design principles
 
@@ -24,13 +24,13 @@ Target occasional meaningful check-ins every 15–30 minutes. Balance the first 
 
 ## Implementation audit
 
-Audit date: 2026-11-03. **Implemented** means present in source; **partial** means a foundation exists but does not provide the full proposed feature; **future** identifies an extension without claiming implementation. Code references identify the relevant entry points.
+Audit date: 2026-11-04. **Implemented** means present in source; **partial** means a foundation exists but does not provide the full proposed feature; **future** identifies an extension without claiming implementation. Code references identify the relevant entry points.
 
 | Feature | Current status | Boundary or next step |
 | --- | --- | --- |
 | Account party, companion discoveries, duplicate classes, same-class alt replacement | Implemented: [party rules](Domain/Party.lua) | One active party, up to five heroes; simultaneous parties and raids are future scope. |
 | Routine combat and hero priorities | Implemented: [combat](Simulation/Combat.lua), [configuration](Domain/Party.lua) | Attack/heal/special priorities, health/enemy-count thresholds, and Balanced/Offensive/role-labeled support presets. Per-hero primary-target selection supports first living enemy, lowest health percentage, or highest health percentage, with stable ties and matching movement/attack selection. Per-hero resource thresholds gate authored Rage/Energy/Mana abilities without stopping basics; pools reset each encounter, with shared online/offline simulation. Hero priorities remain separate from commander rules; arbitrary class scripting is future scope. |
-| Combat talents | Implemented: [base content](Content.lua), [traits](Content/TalentTraits.lua), [additional rows](Content/TalentExpansion.lua) | Nine classes, three 16-node trees each; shared foundations, class mechanics, free respecs, and persistent earned points. These are passive build choices, not commander boost buttons. |
+| Combat talents | Implemented: [base content](Content.lua), [traits](Content/TalentTraits.lua), [additional rows](Content/TalentExpansion.lua) | Nine classes, three 18-node trees each; shared foundations, class mechanics, free respecs, and persistent earned points. These are passive build choices, not commander boost buttons. |
 | Character levels and Mastery | Implemented: [party progression](Domain/Party.lua), [Mastery](Domain/Mastery.lua) | Natural idle growth reaches the 60 ceiling without paid training gates. Permanent Mastery unlocks at 20 and awards extra talent points. Rank costs start at 100 XP and increase by 50, with an additional `100 * max(0, rank - 8)^2` XP premium after rank eight. Per-tier encounter frontiers migrate the existing record into tier zero. |
 | Adventure XP and Essence | Implemented: [Adventure XP](Domain/Adventure.lua), [activity adapters](Compatibility/Kills.lua) | Real WoW activities award account progress; idle combat does not manufacture Adventure XP. The permanent Might/Resolve/Provisioning board offers ten ranks per branch, free redistribution and rank-three milestone choices. Supported-client reward signals still need live verification. |
 | Equipment and inventory | Implemented: [item content](Content/Items.lua), [transactions](Domain/Inventory.lua) | Ten wearable slots, comparisons, filters, protection, and a manual equip-best command. Equip-best is not an unattended purchasing or equipment automation feature. |
@@ -61,7 +61,7 @@ Audit date: 2026-11-03. **Implemented** means present in source; **partial** mea
 
 ## Core loop
 
-The loop below describes the accepted target progression. The audit identifies which systems still use the previous prototype behavior.
+The implemented loop below still needs supported-client validation and pacing tests.
 
 1. Select an unlocked Azeroth zone and prepare the party.
 2. Automatically fight small enemy groups and boss encounters.
@@ -87,13 +87,13 @@ These examples describe intended check-ins; their pacing and onboarding are not 
 - Current priorities use ally-health and enemy-count thresholds, with Balanced, Offensive, and Healing/Defensive presets. These presets set existing fields. Per-hero primary targets can use encounter order, lowest living enemy health percentage, or highest health percentage. Ties use encounter order; area effects retain living in-range targets. Idle combat now uses authored encounter resources: Warriors start with 0/100 Rage and gain 15 per basic attack and 5 per damaging hit received; Rogues start with 100 Energy and regenerate 8 per second; remaining supported classes start with 100 Mana and regenerate 4 per second. Strike/recovery/special costs are 20/15/30 Rage, 45/30/60 Energy, and 30/20/40 Mana. Each hero may require a minimum resource percentage before abilities; the threshold is checked before paying the cost. Unaffordable abilities wait without consuming cooldowns, while basic attacks continue. Pools reset each encounter and run identically online/offline. These are simulated game rules, independent of live character resources. Arbitrary class scripting remains future scope.
 - Deep class-specific talent paths should alter behavior and interactions, including damage, healing, survival, control, and support. Permit mixing paths.
 - Talent selections and earned points survive ordinary prestige. Personal level records grant points without rewarding repeated levels. Respecs remain free.
-- Heroes gain levels naturally from idle XP up to 60, without purchased training gates. Retain this ceiling initially to preserve talent and difficulty assumptions; infinite levels are outside this revision. Permanent Mastery unlocks at hero level 20 and awards additional talent points from victories at or above each hero's recorded encounter frontier. Rank XP costs increase gently, independent of character levels.
+- Heroes gain levels naturally from idle XP up to 60, without purchased training gates. Retain this ceiling initially to preserve talent and difficulty assumptions; infinite levels are outside this revision. Permanent Mastery unlocks at hero level 20 and awards additional talent points from victories at or above each hero's recorded encounter frontier. Rank XP costs rise independently of character levels, with a steeper quadratic premium after rank eight.
 - Equipment, talent, and priority changes are available at any time, including during idle combat. Changes preserve current health proportions and cooldowns rather than restarting the encounter.
 - Manual resting is not part of gameplay. Brief transitions let defeated models complete their death animation. Damage numbers rise and fade smoothly.
 - On defeat, recover automatically and farm the last safe encounter. Explain the defeat cause and offer a retry control.
 - Ten current equipment slots per hero: weapon, armor, head, back, shoulders, hands, waist, legs, feet, and wrists. Removed accessory/trinket IDs remain reserved for save compatibility.
 
-## Commander abilities — draft
+## Commander abilities
 
 The manual prototype implements all four abilities below. Battle Orders and Iron Resolve each cost 30 Essence; Focused Assault and Restorative Focus each cost 60 Essence. Each also offers an alternative 1-Legacy permanent purchase, without paying twice through another path. One boost is equipped and one effect can be active. All last 300 adventure seconds with a 600-second cooldown from activation. Battle Orders accelerates only basic-attack cooldown progress by 25%; quarter-second action resolution determines realized throughput. Iron Resolve reduces incoming damage by up to 20% before shields, stopping added mitigation at 90% total reduction without weakening stronger existing defenses. Focused Assault increases party damage by 20%, including ongoing effects; Restorative Focus increases healing-spell output by 25% without reviving defeated heroes. Values are provisional. Both reset types retain ownership/loadout/cooldown deadlines and end effects. Eligible offline farming advances the same simulation clock; ineligible absence does not advance boost time.
 
@@ -103,7 +103,7 @@ Commander abilities are player-triggered temporary buffs for the simulated party
 
 Buy an ability once with Essence or Legacy, according to its catalog entry. A starter Essence purchase gives a first use before late progression; Legacy supplies an alternative. Both paths resolve to the same ownership flag, preventing duplicate purchases. Prices, capacity, and unlock order remain tuning decisions.
 
-Default proposal: learned abilities are reusable through cooldowns, without an Essence or Legacy activation fee. Spending the currency primarily earned from real WoW play every five minutes would discourage experimenting and make unattended use drain savings. Any later consumable-based ability must be a separate, clearly labeled option with explicit spending limits.
+Learned abilities are reusable through cooldowns, without an Essence or Legacy activation fee. Spending the currency primarily earned from real WoW play every five minutes would discourage experimenting and make unattended use drain savings. Any later consumable-based ability must be a separate, clearly labeled option with explicit spending limits.
 
 ### First ability set
 
@@ -129,7 +129,7 @@ The attack-speed and defense lifecycle also supports the damage and healing abil
 - Use one monotonic adventure-time model for effects and cooldowns, including eligible offline simulation. Login, hiding the window, and clock rollback cannot restart timers or duplicate activations. Time beyond the offline reward cap does not produce extra simulated uses.
 - Manual and automatic use have identical strength, duration, cooldown, and validation. Attention changes timing choices, not the numerical power of the same button.
 
-## Automation — draft
+## Automation
 
 Only the equipped boost executes automatically in living encounters. On-cooldown automation costs 1 Legacy once; conditional automation costs 2 Legacy once and requires that unlock. Purchases do not enable automation: the global running toggle and per-boost Auto-cast must be enabled. Each boost can use one preset or up to four ordered activation rules. A nonempty rule list takes precedence over the preset, including Manual; the first matching rule requests the shared activation command. Empty rules preserve the selected preset. Conditions are always-in-combat, boss, living-ally health strictly below 10–90%, farming, pushing, or current tier at least 0–10. The compact rule editor starts collapsed; draft changes require Save. Manual activation remains available while automation is paused and owns the shared cooldown if requests coincide. Waiting reasons are readable and routine automatic activations are logged quietly. Up to eight named profiles snapshot loadout, rules, enable preferences, and selected route; applying one validates references/entitlements atomically without activating effects or resetting timers. Profile and rule limits/prices remain provisional.
 
@@ -153,7 +153,7 @@ Unlocking another control mode adds flexibility, not a stronger version of the b
 - Keep rules, profiles, selected modes, ownership, and enabled preferences through ordinary prestige and Prestige+. Temporary ineligibility in a new run pauses an action with a reason; it never deletes configuration or revokes a purchased feature.
 - Repeated failure must fall back to a safe behavior and a bounded notice, not an infinite retry loop or a stream of notifications.
 
-## Route planning — draft
+## Route planning
 
 A route is a saved plan for online zone changes during an adventure. Route planning costs 1 Legacy permanently and starts disabled. Up to eight named templates hold 1–12 distinct destinations with boss, named current-hero-level, destination-unlock, material-stock, or individual outdoor-discovery milestones. Editing is a preview until saved. The executor processes at most one step per resolved encounter, preserving stable step IDs and run completion markers. Manual travel pauses the route until resumed; unavailable/locked destinations wait safely. Material milestones observe current stock without spending it; spending before the next encounter boundary can delay travel. Discovery milestones observe exact outdoor piece identities, wait safely for unavailable catalog references, and cannot advance real-world hunting. Offline routes are a separate opt-in, limited to departure-cleared checkpoints in the current run/tier and at most 12 transitions per absence. Automatic resets remain future extensions. This is not control of the real WoW character.
 
@@ -218,7 +218,7 @@ Permit free redistribution of Essence invested in board ranks. Keep learned abil
 
 ### Idle activity
 
-Automatic combat yields experience, gold, ordinary equipment, and materials. The current destination selects its material; enemy-family metadata supports matching-family combat effects. Simulated collection eligibility is legacy prototype behavior and is removed by the accepted outdoor acquisition model. Explicitly tagged enemy families now add secondary idle spoils: humanoids yield timber; beasts, dragonkin and critters hide; machines and giants ore; elementals, undead and demons Relic dust. The encounter divides a maximum 25% bonus across its enemies; unknown families add nothing. Destination output remains unchanged. All 41 destination profiles have aligned enemy and boss tags, using the existing appearance catalog’s Classic tooltip taxonomy while retaining Westfall’s authored contract. Seven records without type evidence remain unknown. These are authored idle rewards, not claims about real loot. Targeted crafting complements random drops and provides a reliable route toward a desired build.
+Automatic combat yields experience, gold, ordinary equipment, and materials. The current destination selects its material; enemy-family metadata supports matching-family combat effects. Simulated battles never award outdoor or dungeon collection discoveries. Explicitly tagged enemy families now add secondary idle spoils: humanoids yield timber; beasts, dragonkin and critters hide; machines and giants ore; elementals, undead and demons Relic dust. The encounter divides a maximum 25% bonus across its enemies; unknown families add nothing. Destination output remains unchanged. All 41 destination profiles have aligned enemy and boss tags, using the existing appearance catalog’s Classic tooltip taxonomy while retaining Westfall’s authored contract. Seven records without type evidence remain unknown. These are authored idle rewards, not claims about real loot. Targeted crafting complements random drops and provides a reliable route toward a desired build.
 
 Natural combat experience is free. Allocating or changing talents never costs Essence. All currencies and crafting exist only inside the minigame.
 
@@ -342,7 +342,7 @@ Automatic prestige is outside the initial route-planning scope. A later version 
 - Handle negative elapsed time, reloads, and character switches without duplicate rewards.
 - Boosts and ordered rules use the same commands and simulation timeline during eligible offline farming. In the revised collection model, offline simulation grants no outdoor discoveries; the simulated collection behavior is retired. Do not estimate a full day at permanent boosted power or award manual activations the player never made.
 - Online routes also work while the minigame is hidden. Offline routes default off and require a separate opt-in, retained in profiles and both resets. A departure snapshot freezes the eligible current-run/tier checkpoints; each transition farms that cleared checkpoint, never the next uncleared encounter. Paused routes stay paused. The executor retains one transition per resolved encounter and caps each absence at 12. First-time bosses, new tiers, and automated resets remain excluded.
-- Current prototype behavior: the saved return summary records processed/remaining time, interruptions, retained hero XP/levels, gold, victories, material deltas, kept/salvaged items, Mastery XP/ranks, automatic boost uses, collection discoveries/upgrades, and route transition totals and final waiting/completion status. Adventure opens an icon-based return report; journal output retains key totals. Older reports mark unrecorded fields explicitly, and rewards never require claiming. Session feedback records real Adventure XP and Essence earned, eligible outdoor kills, discovered identities and elapsed session time separately from offline earnings. Purchases, refunds and migration credits do not count as earned activity Essence. The latest meaningful report is retained on save; empty sessions do not replace it. The collection book displays current or previous hunting totals; Adventure displays current or previous real-activity XP, Essence and discoveries. Older reports explicitly mark unrecorded activity totals.
+- Current prototype behavior: the saved return summary records processed/remaining time, interruptions, retained hero XP/levels, gold, victories, material deltas, kept/salvaged items, Mastery XP/ranks, automatic boost uses, collection discoveries/upgrades, and route transitions and final waiting/completion status. Adventure opens an icon-based return report; journal output retains key totals. Older reports mark unrecorded fields explicitly, and rewards never require claiming. Session feedback records real Adventure XP and Essence earned, eligible outdoor kills, discovered identities and elapsed session time separately from offline earnings. Purchases, refunds and migration credits do not count as earned activity Essence. The latest meaningful report is retained on save; empty sessions do not replace it. The collection book displays current or previous hunting totals; Adventure displays current or previous real-activity XP, Essence and discoveries. Older reports explicitly mark unrecorded activity totals.
 
 ## Presentation and controls
 
@@ -405,7 +405,7 @@ Implement missing features before broad UI/UX rework. Current controls need only
 
 ## Implementation sequence before balance tuning
 
-The initial source slice for phases 1–6 below is implemented, including a representative simulated collection set and the bounded rule/profile/route editors. This table retains the implementation order and acceptance criteria; it does not claim completed live-client validation or balanced progression. Phase 7 and the explicitly identified content/UI extensions remain work.
+Phases 1–6 are implemented, including source-specific outdoor/dungeon collections and bounded rule/profile/route editors. The former simulated collection remains archived only to preserve earned benefits. This table retains the implementation order and acceptance criteria; it does not claim completed live-client validation or balanced progression. Pacing/playtests and supported-client integration remain; broader content/UI extensions stay deferred.
 
 | Phase | Deliverable | Completion evidence before proceeding |
 | --- | --- | --- |
@@ -423,13 +423,13 @@ Supported-client validation and visual quality continue throughout. Maintain the
 
 ### Accepted progression revision — implementation status
 
-Steps 1–4 are implemented in source and covered by domain/simulator checks, including verified Forever source mappings and full/windowed/compact hunting feedback with separate outdoor/dungeon session totals. Step 5 has a reproducible comparison harness; supported-client hunting validation, combined pacing and final tuning remain outstanding. Source and simulator checks do not establish live-client behavior.
+Steps 1–4 are implemented in source and covered by domain/simulator checks, including database-verified Forever source mappings and full/windowed/compact hunting feedback with separate outdoor/dungeon session totals. Step 5 has a reproducible comparison harness; supported-client hunting validation, combined pacing and final tuning remain outstanding. Source and simulator checks do not establish live-client behavior.
 
 1. Remove paid hero training gates and retain natural idle growth to 60. Remove Essence from repeatable equipment production/modification, replacing costs with gold and idle materials.
 2. Add the three-branch permanent Essence development board with free rank redistribution, explicit benefit/cost previews, and reset retention.
 3. Audit and implement one verified outdoor collection with real-source attribution, individual-piece discovery, independent per-piece rolls, modest discovery rewards, and one selectable completion effect saved in profiles.
 4. Update full/windowed/compact feedback and automatic return/session summaries before expanding the catalog.
-5. Compare idle-only, ordinary mixed-play, and focused-hunt profiles; tune only after migrations and source attribution work. The reproducible `scripts/balance_profiles.lua` comparison now covers three fixed seeds and 15-minute/one-hour/six-hour horizons with paid equipment and Development decisions. Its hunting sources are synthetic only; verified-client hunting and final tuning remain incomplete. See BALANCE.md for assumptions and the first-prestige pacing mismatch.
+5. Compare idle-only, ordinary mixed-play, and focused-hunt profiles; tune only after migrations and source attribution work. The reproducible `scripts/balance_profiles.lua` comparison now covers three fixed seeds and 15-minute/one-hour/six-hour horizons with paid equipment and Development decisions. Its hunting sources are synthetic only; verified-client hunting and final tuning remain incomplete. See BALANCE.md for current assumptions, the revised 45–60-minute access target and recorded simulations.
 
 The implemented economy migration uses `economyVersion = 1`. It credits current-cycle training from saved ranks, retained enhancement ranks, and one retained historical enchantment application. Crafts with unknown discounts, forging, earlier replaced/discarded investments and unidentified items receive a documented zero fallback; existing equipment and modifiers remain. Credits are recorded once and visible in Development. Outdoor migration imports only identical discovered piece IDs, preserves the original archive and ranks, and retains the stronger legacy benefit on each affected axis rather than stacking duplicate benefits. The old cloak does not grant its replacement identity.
 
@@ -450,7 +450,7 @@ Use a versioned, idempotent migration. Preserve hero XP/levels, Adventure XP/ran
 - Save migrations, duplicated activity events, negative time, repeated reloads, and the 24-hour cap.
 - Screenshot checks at fullscreen, expanded, and compact sizes; readable text, unclipped controls, correct layering, and unlocked access from locked mode.
 - In-client model animation, spell feedback, combat-lockdown compatibility, and performance checks.
-- Simulated mixed-play profiles reaching first prestige after 4–6 hours of actual WoW activity over 2–3 days without requiring dungeons.
+- First prestige access around 45–60 minutes with 15–30-minute check-ins, without requiring dungeons; measure the chosen reset time separately.
 
 ## Balancing plan — after the behavior is implemented
 
@@ -479,7 +479,7 @@ Begin with fixed seeds and a small reproducible scenario set: new account, first
 - Evaluate reset rewards against total rebuilding plus pushing time. A large displayed reward can still be a poor loop, and a tiny repeatable reward can dominate if automation makes resets nearly free.
 - Keep guaranteed progression and useful fallback choices. Extra currencies, talent nodes, and rare rolls must create decisions rather than disguise a wait or a mathematically inferior option.
 - Prevent complete damage immunity, unbounded haste, infinite resource conversion, and multiplicative reward feedback loops before testing high-tier content.
-- Keep the earlier 15–30-minute check-in and 4–6-hour first-prestige goals as provisional pacing hypotheses. Research does not establish them for this game; timed playtests must.
+- Treat 15–30-minute check-ins and 45–60-minute first-prestige access as provisional targets. Timed playtests must establish actual pacing and the best reset moment.
 
 ## Research basis and limits
 

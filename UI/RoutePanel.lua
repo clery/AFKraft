@@ -47,7 +47,7 @@ function R.Draw(ui, parent, state)
         "Routes",
         1258,
         0,
-        "Create a route and add destination steps with travel conditions.\n\nEdits are a preview until you save. Use a saved route and enable it to travel between encounters. Manual travel pauses the route.\n\nOffline travel requires its separate option and visits only previously cleared checkpoints."
+        "Add destinations and milestones, then save. Select Use saved route and enable Routes to travel between encounters. Manual travel pauses the route.\n\nOffline travel has a separate option and uses only cleared checkpoints."
     )
     ui.routeBuy = button(
         frame,
@@ -85,7 +85,7 @@ function R.Draw(ui, parent, state)
     U.Tooltip(
         ui.routeOffline,
         "Offline route travel",
-        "Separate opt-in. While away, routes can visit only checkpoints cleared in this run and tier before departure. At most 12 transitions; paused routes stay paused. New destinations, tiers, collection discoveries and resets wait for online play."
+        "While away, visit only checkpoints cleared in this run and tier before departure. Limit: 12 transitions per absence. Paused routes stay paused. No new progression or collection discoveries."
     )
     ui.routeNew = button(frame, "New template", 0, 214, 280, function()
         draft(ui)
@@ -264,7 +264,7 @@ function R.Draw(ui, parent, state)
             U.Tooltip(
                 row.value,
                 "Material stock milestone",
-                "Travel after an encounter when current stock reaches this amount. Materials are not spent. Spending before the encounter boundary can delay this step."
+                "Travel after an encounter when you hold this amount. Materials are not spent; earlier purchases can delay travel."
             )
         elseif trigger.kind == "collection" then
             local item = G.CollectionItem(trigger.itemID)
@@ -283,8 +283,8 @@ function R.Draw(ui, parent, state)
             )
             U.Tooltip(
                 row.target,
-                "Outdoor discovery milestone",
-                "Observes an already earned outdoor or dungeon discovery. Idle routes never move your WoW character or award discoveries."
+                "Collection discovery milestone",
+                "Travel after this outdoor or dungeon piece is discovered. Routes never move your WoW character or earn discoveries."
             )
         elseif trigger.kind == "level" then
             row.target = U.Choice(

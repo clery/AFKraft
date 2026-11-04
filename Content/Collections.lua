@@ -142,7 +142,7 @@ C.collections = {
         id = "redridgeOutriders",
         kind = "outdoor",
         name = "Redridge Outriders",
-        description = "An inscribed leather field kit. Hunt individual pieces outdoors.",
+        description = "An outdoor cloak and leather collection. Hover pieces for their hunting locations.",
         pieces = { 4701, 2985, 2986, 2987, 2988 },
         milestones = {
             basicAttack = { pieces = 2, bonus = 0.005 },
@@ -168,7 +168,7 @@ C.collections[#C.collections + 1] = {
     id = "tribalTrail",
     kind = "outdoor",
     name = "Tribal Trail",
-    description = "A Tribal leather field kit from the starting lands. Item requirements: levels 4–8.",
+    description = "A Tribal leather field kit from the starting lands.",
     pieces = { 3288, 3287, 3284, 3286, 4674 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -181,7 +181,7 @@ C.collections[#C.collections + 1] = {
     id = "buccaneerFieldKit",
     kind = "outdoor",
     name = "Buccaneer's Field Kit",
-    description = "A matching Buccaneer cloth kit from outdoor creatures. Item requirements: levels 14–15.",
+    description = "Buccaneer cloth kit from outdoor creatures.",
     pieces = { 14167, 14173, 14174, 14166, 14168 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -194,7 +194,7 @@ C.collections[#C.collections + 1] = {
     id = "banditFieldKit",
     kind = "outdoor",
     name = "Bandit Field Kit",
-    description = "A matching Bandit leather kit from outdoor creatures. Item requirements: levels 14–17.",
+    description = "Bandit leather kit from outdoor creatures.",
     pieces = { 9775, 9777, 9780, 9776, 9781 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -207,7 +207,7 @@ C.collections[#C.collections + 1] = {
     id = "burnishedFieldKit",
     kind = "outdoor",
     name = "Burnished Field Kit",
-    description = "A matching Burnished mail kit from outdoor creatures. Item requirements: levels 14–16.",
+    description = "Burnished mail kit from outdoor creatures.",
     pieces = { 3211, 2992, 2991, 4697, 2989 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -220,7 +220,7 @@ C.collections[#C.collections + 1] = {
     id = "raiderFieldKit",
     kind = "outdoor",
     name = "Raider's Field Kit",
-    description = "A matching Raider mail kit from outdoor creatures. Item requirements: levels 13–15.",
+    description = "Raider mail kit from outdoor creatures.",
     pieces = { 9784, 9787, 9789, 9783, 9788 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -233,7 +233,7 @@ C.collections[#C.collections + 1] = {
     id = "seerFieldKit",
     kind = "outdoor",
     name = "Seer's Field Kit",
-    description = "A matching Seer cloth kit from outdoor creatures. Item requirements: levels 13–16.",
+    description = "Seer cloth kit from outdoor creatures.",
     pieces = { 2982, 2984, 4699, 2981, 4698 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -246,7 +246,7 @@ C.collections[#C.collections + 1] = {
     id = "shimmeringFieldKit",
     kind = "outdoor",
     name = "Shimmering Field Kit",
-    description = "A matching Shimmering cloth kit from outdoor creatures. Item requirements: levels 15–17.",
+    description = "Shimmering cloth kit from outdoor creatures.",
     pieces = { 6563, 6570, 6565, 6562, 6564 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -259,7 +259,7 @@ C.collections[#C.collections + 1] = {
     id = "defenderFieldKit",
     kind = "outdoor",
     name = "Defender Field Kit",
-    description = "A matching Defender mail kit from outdoor creatures. Item requirements: levels 15–18.",
+    description = "Defender mail kit from outdoor creatures.",
     pieces = { 6575, 6574, 6576, 6578, 6573 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -272,7 +272,7 @@ C.collections[#C.collections + 1] = {
     id = "blessingOfKalimdor",
     kind = "outdoor",
     name = "Blessing of Kalimdor",
-    description = "Three keepsakes from rare outdoor creatures in the Barrens. Item requirements: levels 16–20.",
+    description = "Three keepsakes from rare outdoor creatures in the Barrens.",
     pieces = { 285331, 285330, 285329 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -285,7 +285,7 @@ C.collections[#C.collections + 1] = {
     id = "hallOfThanes",
     kind = "dungeon",
     name = "Heirlooms of the Thanes",
-    description = "A curated collection from the Hall of Thanes. Item requirements: level 13.",
+    description = "A collection from the Hall of Thanes.",
     pieces = { 271097, 271096, 270230, 270231, 271098 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -298,7 +298,7 @@ C.collections[#C.collections + 1] = {
     id = "embraceOfTheViper",
     kind = "dungeon",
     name = "Embrace of the Viper",
-    description = "Fang leather from the druids of the Wailing Caverns. Item requirements: levels 14–18.",
+    description = "Fang leather from the druids of the Wailing Caverns.",
     pieces = { 10412, 10411, 10413, 10410, 6473 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -311,7 +311,7 @@ C.collections[#C.collections + 1] = {
     id = "rotmenderRaiment",
     kind = "dungeon",
     name = "Rotmender's Raiment",
-    description = "Rotmender cloth from the Ruins of Lordaeron. Item requirements: levels 17–19.",
+    description = "Rotmender cloth from the Ruins of Lordaeron.",
     pieces = { 286978, 286980, 271207, 271214, 286979 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -324,7 +324,7 @@ C.collections[#C.collections + 1] = {
     id = "shadowfangRelics",
     kind = "dungeon",
     name = "Shadowfang Relics",
-    description = "A curated collection from Shadowfang Keep. Item requirements: levels 17–23.",
+    description = "A collection from Shadowfang Keep.",
     pieces = { 5254, 6319, 6340, 3230, 6324 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },
@@ -337,7 +337,7 @@ C.collections[#C.collections + 1] = {
     id = "blackfathomRelics",
     kind = "dungeon",
     name = "Blackfathom Relics",
-    description = "A curated collection from Blackfathom Deeps. Item requirements: levels 22–24.",
+    description = "A collection from Blackfathom Deeps.",
     pieces = { 6907, 6908, 888, 6901, 6902 },
     milestones = {
         basicAttack = { pieces = 2, bonus = 0.005 },

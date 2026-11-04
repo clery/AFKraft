@@ -34,9 +34,9 @@ local function statGuide(hero)
     return "|cffffffffPrimary stat: "
         .. C.itemStatNames[C.primaryStats[hero.class]]
         .. "|r\n"
-        .. "Strength / Agility / Intellect: your class’s primary stat increases attack damage. Other primary stats do not increase attack damage. Intellect also increases healing for every class.\n\n"
-        .. "Stamina: increases maximum health.\nSpirit: increases healing.\nHaste: speeds up attacks and special ability cooldowns.\nArmor: reduces incoming damage, with diminishing returns.\nWeapon DPS: increases attack damage.\nAttack Power: increases damage for Strength and Agility classes.\nSpell Power: increases damage for Intellect classes and hybrids, and increases healing.\nHealing Power: increases healing.\nHealth / 5 sec: restores health during combat.\nResistances: currently informational; do not reduce damage.\n\n"
-        .. "Power estimates an item’s value for this class; it is not a combat stat. Talents and prestige can further modify combat stats."
+        .. "Your primary stat increases damage. Intellect also improves healing for every class.\n\n"
+        .. "Stamina: maximum health.\nSpirit / Healing Power: healing.\nHaste: attack and ability speed.\nArmor: damage reduction, with diminishing returns.\nWeapon DPS: damage.\nAttack Power: damage for Strength/Agility classes.\nSpell Power: damage for Intellect/hybrid classes; healing for all.\nHealth / 5 sec: combat health regeneration.\nResistances: no combat effect.\n\n"
+        .. "Power estimates item value for this class; it is not damage per second."
 end
 
 local function costText(state, cost)
@@ -141,7 +141,7 @@ local function recruit(ui, p, s)
         "Recruitment",
         1030,
         0,
-        "Choose a class for the new companion. Names and appearances are generated; repeated classes are allowed.\n\nA recruit joins the next encounter if your party is fighting. Every hero uses the shared inventory. Select a hero to manage their equipment."
+        "Choose any class, including duplicates. Names and appearances are generated.\n\nRecruits join the next encounter and use your shared inventory."
     )
 end
 
@@ -162,8 +162,10 @@ local function equipment(ui, p, s, hero, index)
 
     local attributeLines = {}
     for _, key in ipairs(C.itemStatOrder) do
-        attributeLines[#attributeLines + 1] =
-            string.format("%s: %.1f", C.itemStatNames[key], stats.attributes[key] or 0)
+        if (stats.attributes[key] or 0) > 0 then
+            attributeLines[#attributeLines + 1] =
+                string.format("%s: %.1f", C.itemStatNames[key], stats.attributes[key])
+        end
     end
     local development = U.Button(p, "Party development", 332, 0, 240, 34, function()
         ui:SetTab("development")
@@ -172,8 +174,11 @@ local function equipment(ui, p, s, hero, index)
     U.Tooltip(
         development,
         "Permanent party development · Equipment stats",
-        "Heroes earn levels naturally in idle combat without paid gates. Essence invests in permanent Might, Resolve and Provisioning ranks; redistribute ranks freely in Growth.\n\n"
-            .. table.concat(attributeLines, "\n")
+        "Invest Essence in party-wide bonuses in Growth. Ranks can be refunded freely. Hero levels come from idle combat.\n\nEquipment stats:\n"
+            .. (
+                #attributeLines > 0 and table.concat(attributeLines, "\n")
+                or "No equipment bonuses."
+            )
     )
 
     local selectedSlot = C.slots[ui.gearSlot or 1] and (ui.gearSlot or 1) or 1
@@ -730,9 +735,9 @@ local function disenchant(ui, p, s)
         U.Tooltip(
             choice,
             "Disenchant quantity",
-            "Consume up to "
+            "Destroy up to "
                 .. amount
-                .. " copies of the selected item. Smaller stacks yield only their remaining copies.",
+                .. " copies of the selected stack for gold and Relic dust. Smaller stacks use all remaining copies.",
             320
         )
     end

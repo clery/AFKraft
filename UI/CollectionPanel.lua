@@ -10,23 +10,8 @@ function P.SourceLabel(source)
 end
 
 function P.SourceProfile(kind)
-    kind = kind or "outdoor"
     local sources = W.CollectionSources
-    if not sources then
-        return nil
-    end
-    local active = sources.ActiveProfile and sources.ActiveProfile(kind)
-    if active then
-        return active
-    end
-    local ids = {}
-    for id, profile in pairs(sources.profiles or {}) do
-        if profile.flavor == W.Client.flavor and (profile.kind or "outdoor") == kind then
-            ids[#ids + 1] = id
-        end
-    end
-    table.sort(ids)
-    return ids[1] and sources.profiles[ids[1]] or nil
+    return sources and sources.ActiveProfile and sources.ActiveProfile(kind or "outdoor") or nil
 end
 
 local function createBrowser(parent)
@@ -101,7 +86,7 @@ function P.Draw(ui, parent, state)
         "Collections",
         1258,
         0,
-        "Browse sets on the left. Colored piece icons show your discoveries; gray icons show missing pieces. Hover over a piece for its source.\n\nEligible real WoW kills can discover pieces. Idle battles and crafting do not count. Discoveries and partial-set bonuses survive resets.\n\nComplete a set to choose its effect. Only one completed-set effect can be active."
+        "Hover a piece for its source and chance. Gray pieces are missing.\n\nDiscover pieces through eligible real WoW kills. Idle battles and crafting do not count. Discoveries and passive bonuses survive both resets.\n\nComplete a set to select its effect. Only one set effect can be active."
     )
     U.EndBuild(frame)
     U.Begin(frame.catalog)
@@ -152,6 +137,9 @@ function P.Draw(ui, parent, state)
         local details = P.SourceLabel(source)
         if profile and profile.enabled and profile.verified and source and source.verified then
             details = details .. "\n\n" .. P.DropChanceLabel(state, profile)
+        else
+            details = "Hunting unavailable on this client build. Sources are not verified. "
+                .. "Discoveries already earned are kept."
         end
         U.Tooltip(card, item.name, details, 400)
     end
@@ -194,7 +182,7 @@ function P.Draw(ui, parent, state)
     local active = effectID == collection.id
     ui.collectionEffect = U.Button(
         parent,
-        active and "Clear active collection effect" or "Select completed-set effect",
+        active and "Clear set effect" or "Select set effect",
         0,
         272,
         440,
@@ -207,23 +195,23 @@ function P.Draw(ui, parent, state)
     U.Enabled(ui.collectionEffect, progress.complete)
     local effectText = collection.effect.damageTaken
             and string.format(
-                "%.0f%% reduced %s damage",
+                "%.0f%% less damage from %s",
                 (1 - collection.effect.damageTaken) * 100,
                 collection.effect.family
             )
-        or string.format("+%.0f%% basic attacks", (collection.effect.basicAttack or 0) * 100)
+        or string.format("+%.0f%% basic-attack damage", (collection.effect.basicAttack or 0) * 100)
     U.Tooltip(
         ui.collectionEffect,
         "One active collection effect",
-        "Complete every piece to select this set's "
+        "Complete the set to select: "
             .. effectText
-            .. " effect. Selecting it replaces the previously selected collection effect. Partial-set bonuses remain permanent."
+            .. ". Replaces your current set effect. Passive discovery bonuses stay active."
     )
     U.Text(parent, "SET BONUSES", 0, 378, 16, T.gold, 930)
     ui.collectionMilestones = U.Text(
         parent,
         string.format(
-            "%d pieces: +%.1f%% basic attacks · %d pieces: +%.1f%% materials · Complete: selectable %s",
+            "%d pieces: +%.1f%% basic-attack damage\n%d pieces: +%.1f%% materials\nComplete: %s (selectable)",
             collection.milestones.basicAttack.pieces,
             collection.milestones.basicAttack.bonus * 100,
             collection.milestones.materials.pieces,
@@ -231,7 +219,7 @@ function P.Draw(ui, parent, state)
             effectText
         ),
         0,
-        410,
+        400,
         14,
         T.text,
         930
@@ -241,7 +229,7 @@ function P.Draw(ui, parent, state)
         active and "Active effect: " .. collection.name
             or "Active effect: " .. (effectID and C.collectionByID[effectID].name or "none"),
         0,
-        456,
+        466,
         14,
         active and T.green or T.muted,
         930
@@ -279,7 +267,7 @@ function P.Draw(ui, parent, state)
             900,
             500,
             string.format(
-                "Retained discoveries from earlier adventures. No new legacy pieces drop.\n\nBasic attacks: +%.2f%%\nMaterials: +%.2f%%\nHumanoid defense: %.2f%%",
+                "Earlier discoveries are retained; these retired pieces no longer drop.\n\nBasic-attack damage: +%.2f%%\nMaterials: +%.2f%%\nHumanoid damage taken: -%.2f%%",
                 (bonus.basicAttack - 1) * 100,
                 (bonus.materials - 1) * 100,
                 (1 - bonus.damageTaken) * 100

@@ -18,7 +18,7 @@ function D.Draw(ui, parent, state)
         "Transcendence",
         1258,
         0,
-        "Choose a difficulty and inspect its modifiers, affixes and Inheritance reward.\n\nA deeper reset rebuilds your run. Review what is kept and rebuilt before confirming.\n\nEssence and real-activity Adventure XP are unchanged by difficulty."
+        "Choose a tier, then review reset rewards and losses. Each completed tier pays Inheritance once.\n\nDifficulty changes idle battles and rewards, not real WoW Adventure XP or Essence."
     )
     U.Text(
         parent,
@@ -62,7 +62,7 @@ function D.Draw(ui, parent, state)
             ui.difficultyTiers[tier],
             "Tier " .. tier,
             #recipes > 0
-                    and ("While online, idle level-20+ bosses can teach: " .. table.concat(
+                    and ("Online idle bosses at encounter level 20+ can teach: " .. table.concat(
                         recipes,
                         ", "
                     ) .. ". Eligible bosses award one Runic fragment; recipes stay learned through both resets.")
@@ -80,7 +80,11 @@ function D.Draw(ui, parent, state)
         ui.difficultyReview, ui.inheritancePurchases = nil, {}
         U.Text(
             parent,
-            "REVIEW PRESTIGE+ " .. selected .. " · +" .. preview.inheritance .. " Inheritance",
+            "REVIEW TRANSCENDENCE · TIER "
+                .. selected
+                .. " · +"
+                .. preview.inheritance
+                .. " Inheritance",
             20,
             236,
             20,
@@ -98,7 +102,7 @@ function D.Draw(ui, parent, state)
         )
         U.Text(parent, "KEEP", 20, 282, 16, T.green, 610)
         U.Text(parent, table.concat(preview.retained, "\n"), 20, 320, 15, T.text, 610)
-        U.Text(parent, "REBUILD", 670, 282, 16, T.gold, 590)
+        U.Text(parent, "RESET", 670, 282, 16, T.gold, 590)
         U.Text(parent, table.concat(preview.rebuilt, "\n"), 670, 320, 15, T.text, 590)
         ui.difficultyExecute = button(
             parent,
@@ -179,7 +183,7 @@ function D.Draw(ui, parent, state)
         U.Tooltip(card, affix.name .. " | Tier " .. affix.tier .. "+", affix.description)
         ui.difficultyAffixes[affix.id] = card
     end
-    U.Text(parent, "PERMANENT REBUILDING", 0, 430, 16, T.gold, 1296)
+    U.Text(parent, "PERMANENT BONUSES", 0, 430, 16, T.gold, 1296)
     ui.inheritancePurchases = {}
     for index, id in ipairs({ "rebuilding", "supplies" }) do
         local purchase = G.InheritancePurchases[id]

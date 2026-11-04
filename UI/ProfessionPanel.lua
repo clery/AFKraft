@@ -80,7 +80,7 @@ local function research(ui, frame, state)
     )
     local unlocked = G.ProfessionUnlocks(state).research
     if not unlocked then
-        text(frame, "Specializations unlock at lifetime level 50.", 0, 116, 1260, T.gold)
+        text(frame, "Unlocks when any hero first reaches level 50.", 0, 116, 1260, T.gold)
     end
     local active = G.ProfessionActiveAllocations(state, kind)
     local desired = 0
@@ -98,7 +98,7 @@ local function research(ui, frame, state)
             x + 372,
             166,
             branch.description
-                .. "\n\nPaid work earns profession ranks and points. Allocations are free to reset and remain saved across deeper resets."
+                .. "\n\nPaid work earns points. Reallocate for free. Plans stay saved through both resets."
         )
         ui.professionControls.branches[branch.id] = {}
         for rank = 1, 3 do
@@ -143,7 +143,7 @@ local function research(ui, frame, state)
     U.Tooltip(
         ui.professionControls.respec,
         "Reallocate profession points",
-        "Free allocation reset. Profession ranks and combat talents are unchanged. Saved allocations survive deeper resets; inactive ranks return as paid work earns points again."
+        "Refund all points in this profession for free. Work ranks and combat talents are unchanged. Transcendence keeps the plan; paid work reactivates it."
     )
 end
 
@@ -271,11 +271,11 @@ function P.Draw(ui, parent, state)
                     U.Tooltip(
                         control,
                         enchant.name,
-                        "Recipe learned permanently while online from an idle level-20+ boss at tier "
+                        "Learn from an online idle boss at encounter level 20+ in tier "
                             .. enchant.tier
-                            .. "+. Runic fragments: one per tier 2+ level-20+ boss, capped at "
+                            .. "+.\n\nEarn 1 fragment per tier 2+ boss at encounter level 20+; cap: "
                             .. C.runicFragmentCap
-                            .. ". Previously cleared bosses can supply fragments offline after a recipe is learned. Both resets clear fragments; recipes and heirloom enchantments remain."
+                            .. ". Cleared bosses can supply fragments offline once a recipe is learned.\n\nBoth resets clear fragments but keep recipes and heirloom enchantments."
                     )
                 end
                 U.EndBuild(control)
@@ -344,7 +344,7 @@ function P.Draw(ui, parent, state)
                 "Titanforging",
                 1258,
                 252,
-                "Raise an item through five potential tiers, separately from enhancement and enchantment.\n\nHeirloom forging survives both resets. Ordinary equipment and its investments are lost on reset."
+                "5 potential tiers, separate from enhancement and enchanting. The preview shows the total bonus.\n\nHeirloom upgrades survive both resets; ordinary gear is lost."
             )
         end
         text(frame, costText(cost), 0, 488, 1250, T.gold, 17)

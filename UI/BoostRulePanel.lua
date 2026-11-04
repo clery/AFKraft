@@ -37,7 +37,7 @@ function P.Draw(ui, parent, state, id, x, y)
     U.Tooltip(
         controls.save,
         "Ordered activation rules",
-        "Preview edits, then save. Rules run top to bottom; the first match requests the ordinary activation command. Readiness, capacity, Auto-cast and the global Automation switch still apply. Empty rules use the existing preset.",
+        "Save to apply your edits. The first matching rule activates the boost when ready. Automation and Auto-cast must be on. With no rules, the selected preset applies.",
         380
     )
     if #draft.rules == 0 then
@@ -84,7 +84,7 @@ function P.Draw(ui, parent, state, id, x, y)
         U.Tooltip(
             condition,
             "Activation condition",
-            "Rules are alternatives, evaluated in saved order. Low health checks living allies only and requires health strictly below the threshold. Tier uses the current run's difficulty.",
+            "The first matching rule wins. Health checks living allies strictly below the selected percentage. Tier means the current difficulty.",
             360
         )
         local threshold
