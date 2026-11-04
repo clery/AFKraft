@@ -192,9 +192,9 @@ local traits = {
     },
     WARLOCK = {
         { "Spell_Shadow_LifeDrain02" }, -- Drain Life
-        { "Spell_Shadow_LifeDrain", "healing", "bleed", 28 }, -- Soul Siphon
-        { "spell_shadow_spectralsight", "basic", "bleed", 24 }, -- Nightfall
-        { "Spell_Shadow_Haunting", "strike", "bleed", 26 }, -- Haunt
+        { "Spell_Shadow_LifeDrain", "healing", "burning", 28 }, -- Soul Siphon
+        { "spell_shadow_spectralsight", "basic", "burning", 24 }, -- Nightfall
+        { "Spell_Shadow_Haunting", "strike", "burning", 26 }, -- Haunt
         { "spell_shadow_haunting_grey", "strike", "execute", 32 }, -- Drain Soul
         { "Spell_Shadow_DeathPact", "healing", "late", 28 }, -- Dark Regeneration
         { "Spell_Shadow_Requiem", "healing", "critical", 20 }, -- Siphon Life
@@ -213,7 +213,7 @@ local traits = {
         { "Spell_Shadow_ScourgeBuild", "strike", "execute", 34 }, -- Shadowburn
         { "spell_fire_felflamering", "healing", "execute", 26 }, -- Ember Tap
         { "Spell_Fire_FelImmolation", "basic", "group", 24 }, -- Fire and Brimstone
-        { "Spell_Shadow_SoulLeech_3", "healing", "bleed", 20 }, -- Soul Leech
+        { "Spell_Shadow_SoulLeech_3", "healing", "burning", 20 }, -- Soul Leech
         { "Spell_Shadow_SummonInfernal", "strike", "boss", 30 }, -- Infernal Power
     },
     DRUID = {

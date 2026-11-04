@@ -25,12 +25,12 @@ local tabIcons = {
     atlas = "INV_Misc_Map02",
     legacy = "INV_Misc_Book_09",
     loot = "INV_Misc_Bag_10",
-    boosts = "INV_Misc_Book_09",
-    profiles = "INV_Misc_Book_09",
-    routes = "INV_Misc_Map_01",
-    collections = "INV_Misc_Bag_10",
+    boosts = "Ability_Warrior_RallyingCry",
+    profiles = "INV_Misc_Note_01",
+    routes = "Ability_Hunter_Pathfinding",
+    collections = "INV_Misc_TreasureChest01a",
     workshop = "Trade_BlackSmithing",
-    difficulty = "INV_Misc_Map_01",
+    difficulty = "Ability_Warrior_InnerRage",
     development = "Ability_Warrior_BattleShout",
 }
 

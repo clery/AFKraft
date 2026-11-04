@@ -108,3 +108,62 @@ W.ModelAssets = {
         blackrock_mountain = { enemies = { 7025, 7026, 5850 }, boss = 9026 },
     },
 }
+
+-- Appearance keys keep client identifiers out of idle encounter definitions.
+W.ModelAssets.creatures = {
+    spider = 30, -- Forest Spider
+    crab = 3107, -- Surf Crawler
+    kobold = 40, -- Kobold Miner
+    skeleton = 48,
+    wolf = 299,
+    gnoll = 448,
+    fire = 5850,
+    troll = 595,
+    storm = 832,
+    warlock = 4663,
+    bandit = 38,
+    orc = 4064,
+    harvester = 114,
+    engineer = 3993,
+    cat = 2033,
+    quilboar = 3261,
+    whelp = 441,
+    wraith = 1802,
+    satyr = 7105,
+    dragon = 7040,
+    ghoul = 1793,
+    abomination = 8543,
+    raptor = 6505,
+    ogre = 5474,
+    gorilla = 6514,
+    basilisk = 4044,
+    felhound = 6010,
+    centaur = 4640,
+    earth = 2735,
+    hyena = 4127,
+    treant = 3919,
+    silithid = 11730,
+    ice = 23919,
+    owl = 1995,
+    furbolg = 3749,
+    bear = 2164,
+    crocolisk = 1693,
+    wyvern = 4107,
+    yeti = 7459,
+    ooze = 7086,
+    trex = 6584,
+    boar = 3098,
+    murloc = 1024, -- Bluegill Murloc
+    harpy = 2965, -- Windfury Matriarch
+    hydra = 6140, -- Hetaera
+    lostone = 761, -- Lost One Seer
+    darkiron = 5840, -- Dark Iron Steamsmith
+    tauren = 3060,
+    dwarf = 1229,
+}
+for zoneID, entries in pairs(W.Content.encounterAdditions) do
+    local assets = W.ModelAssets.zones[zoneID]
+    for _, entry in ipairs(entries) do
+        assets.enemies[#assets.enemies + 1] = W.ModelAssets.creatures[entry.appearance]
+    end
+end

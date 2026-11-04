@@ -34,12 +34,12 @@ test("Switching classes refreshes icons on buttons with shared legacy talent IDs
 end)
 
 test(
-    "Expanded talent trees scroll to the eighth row and keep learn/refund controls usable",
+    "Expanded talent trees scroll to the ninth row and keep learn/refund controls usable",
     function()
         local W, state, ui = setup()
         local hero = state.heroes[1]
         for _, node in ipairs(W.Game.TalentList(hero)) do
-            if node.path == 1 and node.column == 2 and node.row < 8 then
+            if node.path == 1 and node.column == 2 and node.row < 9 then
                 assert(W.Game.Talent(state, 1, node.id))
             end
         end
@@ -47,14 +47,14 @@ test(
         local tree = ui.talentTrees.trees[1]
         tree.scroll:GetScript("OnMouseWheel")(tree.scroll, -100)
         assert(tree.scroll:GetVerticalScroll() == tree.canvas:GetHeight() - tree.scroll:GetHeight())
-        local node = tree.buttons.warrior_1_16
+        local node = tree.buttons.warrior_1_18
         node:GetScript("OnEnter")(node)
         assert(GameTooltip:IsOwned(node))
         local points = W.Game.Points(hero)
         node:GetScript("OnClick")(node)
-        assert(hero.talents.warrior_1_16 and W.Game.Points(hero) == points - 1)
+        assert(hero.talents.warrior_1_18 and W.Game.Points(hero) == points - 1)
         node:GetScript("OnClick")(node)
-        assert(not hero.talents.warrior_1_16 and W.Game.Points(hero) == points)
+        assert(not hero.talents.warrior_1_18 and W.Game.Points(hero) == points)
         assert(node.label:GetWidth() <= 158)
     end
 )

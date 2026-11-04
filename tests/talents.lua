@@ -67,12 +67,12 @@ case("Rows require the immediately preceding row in the same specialization", fu
     end
 end)
 
-case("Every class has three sixteen-node specialization trees", function()
+case("Every class has three eighteen-node specialization trees", function()
     local total = 0
     for _, class in ipairs(C.classes) do
         local paths, ids, names, positions = {}, {}, {}, {}
         local list = C.talentsByClass[class.id]
-        assert(#list == 48)
+        assert(#list == 54)
         for _, node in ipairs(list) do
             assert(not ids[node.id] and not names[node.name])
             assert(C.talentByClassID[class.id][node.id] == node)
@@ -84,10 +84,10 @@ case("Every class has three sixteen-node specialization trees", function()
             total = total + 1
         end
         for path = 1, #class.paths do
-            assert(paths[path] == 16)
+            assert(paths[path] == 18)
         end
     end
-    assert(total == 432)
+    assert(total == 486)
 end)
 
 case("Legacy builds retain all nine selections in every class", function()
@@ -462,7 +462,7 @@ case("Expanded trees keep distinct choices while permitting shared foundations",
             end
         end
     end
-    assert(count == 351)
+    assert(count == 405)
     local distinct = 0
     for _ in pairs(unique) do
         distinct = distinct + 1
@@ -545,12 +545,12 @@ case("Boss defenses apply to incoming hits and disappear outside bosses", functi
     assert(hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation)))
 end)
 
-case("All 48 permanent choices reload and refund even after current levels decrease", function()
+case("All 54 permanent choices reload and refund even after current levels decrease", function()
     for _, class in ipairs(C.classes) do
         local state, h = hero(class.id)
         h.level, h.rank = 60, 14
         G.RewardMastery(h, 1, 100000, false)
-        assert(G.Points(h) == 48)
+        assert(G.Points(h) == 54)
         for _, node in ipairs(G.TalentList(h)) do
             assert(G.Talent(state, 1, node.id))
         end
@@ -564,11 +564,11 @@ case("All 48 permanent choices reload and refund even after current levels decre
         for index = #list, 1, -1 do
             assert(G.Talent(loaded, 1, list[index].id))
         end
-        assert(G.Points(h) == 48)
+        assert(G.Points(h) == 54)
         h.level = 49
-        assert(G.Points(h) == 48)
+        assert(G.Points(h) == 54)
         h.level = 54
-        assert(G.Points(h) == 48)
+        assert(G.Points(h) == 54)
     end
 end)
 
@@ -699,5 +699,50 @@ case("Full-health defense protects the opening hit without persisting after inju
         )
     end
 end)
+
+case(
+    "Specialization damage-over-time talents supply their own synergy without another class",
+    function()
+        for _, entry in ipairs({
+            { "HUNTER", "Barbed Shot", true },
+            { "DRUID", "Rend and Tear", true },
+            { "SHAMAN", "Hot Hand", false },
+            { "WARLOCK", "From the Shadows", false },
+            { "WARLOCK", "Infernal Combustion", false },
+        }) do
+            local state, _, unit, enemy = traitEncounter(entry[1], entry[2])
+            G.Step(state, 0.25)
+            assert(enemy.dots and next(enemy.dots), entry[2] .. " did not apply its damage effect")
+            for _, dot in pairs(enemy.dots) do
+                assert((dot.physical == true) == entry[3])
+            end
+            unit.cd, unit.attackCD = 100, 100
+            local hp = enemy.hp
+            G.Step(state, 0.25)
+            assert(enemy.hp < hp)
+        end
+    end
+)
+
+case(
+    "Previously complete builds retain their points and resume Mastery toward the new choices",
+    function()
+        local state, h = hero("WARRIOR")
+        G.RewardMastery(h, 60, 9450, false)
+        assert(G.Points(h) == 48)
+        for _, node in ipairs(G.TalentList(h)) do
+            if node.row <= 8 then
+                assert(G.Talent(state, 1, node.id))
+            end
+        end
+        assert(G.Points(h) == 0)
+        local loaded = assert(G.Load(G.Copy(state), 1000))
+        h = loaded.heroes[1]
+        assert(G.Points(h) == 0 and h.mastery.rank == 18)
+        G.RewardMastery(h, 60, 1000, false)
+        assert(G.Points(h) == 1 and h.mastery.rank == 19)
+        assert(G.Talent(loaded, 1, "warrior_1_17"))
+    end
+)
 
 return cases

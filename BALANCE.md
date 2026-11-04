@@ -67,7 +67,7 @@ Character levels stop at 60. Each hero retains selected talents, earned points, 
 
 Mastery unlocks permanently at hero level 20 and uses its own rank and XP bar. Every victory records that hero's highest completed encounter level for the current difficulty tier. Victories at or above that frontier award the encounter's base XP with the tier's Mastery multiplier, doubled for bosses; easier encounters award none. Frontiers survive both resets; existing records migrate to tier zero. Hero-XP rebuilding purchases do not multiply Mastery XP. This rewards pushing harder encounters while permitting steady progress at the current frontier, including offline farming and character-level caps.
 
-Mastery rank-ups grant one permanent talent point. The first costs 100 XP, with 50 XP added to each subsequent price. Eighteen ranks cost 9,450 XP in total; alongside 30 level-earned points, they fill the current 48-talent budget. Reaching level 60 is not required before earning Mastery points. Once all points are earned, further talent Mastery gains stop. Constants live in `Content/TalentTraits.lua`.
+Mastery rank-ups grant one permanent talent point. The first costs 100 XP, with 50 XP added to each subsequent price. Twenty-four ranks cost 16,200 XP in total; alongside 30 level-earned points, they fill the current 54-talent budget. Reaching level 60 is not required before earning Mastery points. Once all points are earned, further talent Mastery gains stop. Constants live in `Content/TalentTraits.lua`.
 
 Existing saves retain allocated and unspent talent points. Old hero levels above 60 become Mastery ranks once on load, preserving the existing talent budget; older resets that already discarded talents cannot be reconstructed.
 

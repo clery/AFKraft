@@ -138,6 +138,14 @@ function G.StartBattle(state)
     local zone = C.zoneByID[state.zone]
     local level = zone.level + floor((state.stage - 1) / 5)
     local boss = state.stage % 5 == 0
+    local champion
+    if boss and state.stage % 10 == 0 then
+        for _, entry in ipairs(C.encounterAdditions[state.zone] or {}) do
+            if entry.level >= 20 and entry.level <= level then
+                champion = entry
+            end
+        end
+    end
     local battle =
         { heroes = {}, enemies = {}, elapsed = 0, boss = boss, level = level, stage = state.stage }
     for i, hero in ipairs(state.heroes) do
@@ -161,7 +169,14 @@ function G.StartBattle(state)
     -- The opening adventure is fought alone, before the first discovery.
     local opening = G.CompanionSlots(state) == 1
     local count = boss and 1 or min(3, #state.heroes)
+    local roster = {}
+    for index in ipairs(zone.enemies) do
+        if not zone.enemyLevels or zone.enemyLevels[index] <= level then
+            roster[#roster + 1] = index
+        end
+    end
     for i = 1, count do
+        local index = roster[(state.stage + i - 2) % #roster + 1]
         local hp = floor(
             (60 + level * 24)
                 * 1.16 ^ min(level - 1, 7)
@@ -171,10 +186,10 @@ function G.StartBattle(state)
         )
         battle.enemies[i] = {
             id = i,
-            name = boss and zone.boss or zone.enemies[(state.stage + i - 2) % #zone.enemies + 1],
-            family = boss and zone.bossFamily
-                or zone.enemyFamilies
-                    and zone.enemyFamilies[(state.stage + i - 2) % #zone.enemies + 1],
+            name = champion and champion.name or boss and zone.boss or zone.enemies[index],
+            family = champion and C.creatureFamilies[champion.appearance]
+                or boss and zone.bossFamily
+                or zone.enemyFamilies and zone.enemyFamilies[index],
             hp = hp,
             maxHP = hp,
             damage = (6 + level * 3)

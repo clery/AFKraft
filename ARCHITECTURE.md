@@ -5,6 +5,7 @@
 | Directory | Responsibility | May depend on |
 | --- | --- | --- |
 | `Content.lua` | Stable class, zone, equipment, and talent definitions | Lua only |
+| `Content/Encounters.lua` | Additional regional creatures, families, and frontier unlocks through level 60 | Content and Lua |
 | `Content/Items.lua` | Fixed Classic item snapshots, stat labels, class attributes, and curated destination pools | Lua only |
 | `Content/Boosts.lua`, `Content/Collections.lua`, `Content/Professions.lua` | Boost catalog/unlocks, curated collection catalog and drop tuning, profession/enchantment definitions | Content and Lua |
 | `Domain/` | State, party/inventory transactions, boosts/rules/profiles, routes, collections, professions, difficulty/reset rules and rewards | Content and Lua |

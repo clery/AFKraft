@@ -50,6 +50,13 @@ local function zoneTooltip(map, zone)
     GameTooltip:SetOwner(map, "ANCHOR_CURSOR")
     GameTooltip:SetText(zone.name, unpack(T.gold))
     GameTooltip:AddLine(C.materials[zone.material] .. " · Frontier " .. zone.level, 0.8, 0.8, 0.7)
+    GameTooltip:AddLine(
+        #zone.enemies .. " creature encounters; new opponents at frontiers 20, 40 and 60.",
+        0.8,
+        0.8,
+        0.7,
+        true
+    )
     local spoils = familySpoils(zone)
     if spoils then
         GameTooltip:AddLine("Family spoils: " .. spoils, 0.8, 0.8, 0.7)

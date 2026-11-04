@@ -84,6 +84,7 @@ case(
             local unit = state.battle.heroes[1]
             unit.hp = unit.maxHP * 0.3
             for _, enemy in ipairs(state.battle.enemies) do
+                enemy.family = "humanoid" -- Keep this fractional-yield fixture independent of the roster.
                 enemy.hp = 0
             end
             G.Step(state, 0.25)

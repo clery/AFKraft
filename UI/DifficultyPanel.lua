@@ -68,7 +68,7 @@ function D.Draw(ui, parent, state)
                     ) .. ". Eligible bosses award one Runic fragment; recipes stay learned through both resets.")
                 or "Runic boss rewards begin at tier 2. Base enchantments need no fragments."
         )
-        U.Icon(parent, "INV_Misc_Map_01", x + 32, 178, 32)
+        U.Icon(parent, "Ability_Warrior_InnerRage", x + 32, 178, 32)
     end
     local selected = ui.difficultyTier
     local preview = G.PrestigePlusPreview(state, selected)

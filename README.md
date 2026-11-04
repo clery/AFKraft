@@ -54,6 +54,8 @@ Ordinary questing, combat, and gathering can support progression; dungeons are o
 
 Credit depends on information available from the client. Some kills or gathers cannot be confirmed and will not award XP. Reward detection and balance are still being tested.
 
+Each of the 41 destinations has an expanded regional creature roster. Further opponents join at encounter frontiers 20, 40, and 60; higher-frontier milestone bosses alternate with regional champions. These are authored idle encounters, with family-based material spoils. Existing destination unlocks are unchanged.
+
 ## Equipment, crafting, and loot
 
 Every hero, including your main character, starts with cosmetic clothing covering the torso, legs, and feet. It adds no stats and is replaced visually as you equip armor. Empty slots regain this clothing automatically.
@@ -66,7 +68,7 @@ In **Party**, select an equipment slot to compare items and preview the cost of 
 
 Crafting turns gold and idle materials into targeted equipment. Enhancement, enchantment and titanforging also use gold/materials rather than Essence. Configure salvage rules in the minigame to handle unwanted loot and protect items you want to keep. Talents and conditional ability priorities let you refine each hero's role as your party develops.
 
-Talent selections and earned points survive prestige, and respecs stay free. Hero levels stop at 60. Personal level records award a point every two levels, starting at level 1; repeating those levels never awards points twice. At level 20, permanent **Mastery** unlocks: victories at or above that hero's hardest completed encounter level grant Mastery XP, with double XP for bosses. Every Mastery rank grants another permanent talent point, up to the tree's 48-point total. The first rank costs 100 XP, and each later rank costs 50 more. Mastery continues when character levels are capped. The Talents view shows both tracks.
+Talent selections and earned points survive prestige, and respecs stay free. Hero levels stop at 60. Personal level records award a point every two levels, starting at level 1; repeating those levels never awards points twice. At level 20, permanent **Mastery** unlocks: victories at or above that hero's hardest completed encounter level grant Mastery XP, with double XP for bosses. Every Mastery rank grants another permanent talent point, up to the tree's 54-point total. The first rank costs 100 XP, and each later rank costs 50 more. Mastery continues when character levels are capped. The Talents view shows both tracks.
 
 In **Heritage**, learn permanent collection talents: **Fieldcraft** improves collection-piece chances from eligible outdoor kills, and **Relic Hunter** improves them inside eligible dungeons. Each has three ranks, provisionally costing 1, 2, then 3 Heritage. Each rank adds 10% of the base chance (5% becomes 6.5% at rank three), rather than ten percentage points. They affect collection pieces only, survive both resets, and never accumulate failed-roll progress or guarantee a discovery. Verified piece tooltips show the effective chance and active/inactive talent conditions. Costs and bonuses still need balancing.
 
@@ -105,7 +107,7 @@ Audio can be muted entirely or by category, including combat, encounters, progre
 
 The prototype already includes automatic party combat, zone travel, equipment, crafting, salvage, talents, ability priorities, offline catch-up, prestige, and scaling heirlooms.
 
-Full class-specific talent trees, final dungeon-completion mappings, and prestige pacing are still in development. Each class has three 16-talent specialization trees (48 talents per class), mixing shared foundations with signature mechanics and situational bonuses for its combat style. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
+Full class-specific talent trees, final dungeon-completion mappings, and prestige pacing are still in development. Each class has three 18-talent specialization trees (54 talents per class), mixing shared foundations with signature mechanics and situational bonuses for its combat style. Exact offline alt appearances and matching equipment visuals are unfinished. Models, textures, and animations still need in-client visual verification.
 
 For design details and contribution guidance, see [the game design](DESIGN.md), [balance notes](BALANCE.md), [architecture](ARCHITECTURE.md), and [development tooling](TOOLING.md) and [map maintenance and porting](MAPS.md).
 

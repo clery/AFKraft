@@ -49,6 +49,22 @@ test("Navigation keeps every feature reachable and gives management the workspac
     ui:ApplyMode()
 end)
 
+test("Every navigation destination has a distinct icon", function()
+    local _, _, ui = setup()
+    local seen = {}
+    for id, tab in pairs(ui.tabs) do
+        local icon
+        for _, region in ipairs({ (tab.content or tab):GetRegions() }) do
+            if region:GetObjectType() == "Texture" and region:GetWidth() == 20 then
+                icon = region:GetTexture()
+            end
+        end
+        assert(icon, id .. " has no icon")
+        assert(not seen[icon], id .. " repeats " .. (seen[icon] or ""))
+        seen[icon] = id
+    end
+end)
+
 test("Inventory fills the management workspace and filters retain valid pagination", function()
     local W, state, ui = setup()
     for index = 1, 20 do

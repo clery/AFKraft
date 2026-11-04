@@ -3,6 +3,7 @@
 local W = {}
 for _, file in ipairs({
     "Content.lua",
+    "Content/Encounters.lua",
     "Content/Items.lua",
     "Content/Boosts.lua",
     "Content/Professions.lua",

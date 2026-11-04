@@ -183,7 +183,7 @@ local additions = {
                 "quick",
                 22,
             },
-            { "Barbed Shot", "damage", "ability_hunter_barbedshot", "strike", "bleed", 18 },
+            { "Barbed Shot", "wounds", "ability_hunter_barbedshot", "strike", "bleed", 18 },
             {
                 "Kindred Mending",
                 "healing",
@@ -402,7 +402,14 @@ local additions = {
                 "patient",
                 22,
             },
-            { "Hot Hand", "damage", "spell_shaman_unleashweapon_flame", "basic", "burning", 24 },
+            {
+                "Hot Hand",
+                "burningWounds",
+                "spell_shaman_unleashweapon_flame",
+                "basic",
+                "burning",
+                24,
+            },
             { "Stormflurry", "damage", "spell_shaman_stormearthfire", "basic", "quick", 26 },
             {
                 "Ancestral Guidance",
@@ -529,7 +536,14 @@ local additions = {
                 "quick",
                 28,
             },
-            { "From the Shadows", "damage", "spell_warlock_focusshadow", "strike", "burning", 20 },
+            {
+                "From the Shadows",
+                "burningWounds",
+                "spell_warlock_focusshadow",
+                "strike",
+                "burning",
+                20,
+            },
             {
                 "Sacrificial Guard",
                 "mitigation",
@@ -587,7 +601,7 @@ local additions = {
         {
             { "Primal Instincts", "damage", "ability_druid_predatoryinstincts" },
             { "Ursine Endurance", "health", "ability_racial_bearform" },
-            { "Rend and Tear", "damage", "ability_druid_ripandtear", "strike", "bleed", 28 },
+            { "Rend and Tear", "wounds", "ability_druid_ripandtear", "strike", "bleed", 28 },
             { "Scent of Blood", "speed", "spell_druid_bloodythrash", "basic", "bleed", 24 },
             { "Primal Wrath", "damage", "spell_druid_primaltenacity", "basic", "group", 26 },
             {
@@ -627,6 +641,263 @@ local additions = {
         },
     },
 }
+
+-- Final choices reinforce each specialization without changing saved node IDs.
+local finalChoices = {
+    WARRIOR = {
+        {
+            { "Bloodletting", "damage", "ability_skeer_bloodletting", "strike", "bleed", 24 },
+            { "Juggernaut", "health", "ability_warrior_bullrush", "defense", "boss", 12 },
+        },
+        {
+            { "Slaughterhouse", "speed", "ability_warrior_bladestorm", "basic", "execute", 24 },
+            {
+                "Unquenchable Thirst",
+                "regen",
+                "spell_nzinsanity_bloodthirst",
+                "healing",
+                "wounded",
+                28,
+            },
+        },
+        {
+            {
+                "Shield Fortress",
+                "mitigation",
+                "ability_warrior_shieldbreak",
+                "defense",
+                "group",
+                12,
+            },
+            { "Vengeful Bulwark", "damage", "inv_shield_32", "strike", "wounded", 26 },
+        },
+    },
+    PALADIN = {
+        {
+            { "Veneration", "damage", "ability_paladin_veneration", "strike", "protect", 24 },
+            { "Overflowing Light", "healing", "spell_holy_holybolt", "healing", "rescue", 32 },
+        },
+        {
+            {
+                "Sanctified Ground",
+                "mitigation",
+                "ability_paladin_sanctifiedwrath",
+                "defense",
+                "group",
+                12,
+            },
+            {
+                "Bulwark of Faith",
+                "health",
+                "ability_paladin_barrieroffaith",
+                "healing",
+                "shielded",
+                26,
+            },
+        },
+        {
+            {
+                "Execution Sentence",
+                "damage",
+                "spell_paladin_executionsentence",
+                "strike",
+                "execute",
+                30,
+            },
+            { "Crusading Strikes", "speed", "spell_holy_sealofvengeance", "basic", "boss", 24 },
+        },
+    },
+    HUNTER = {
+        {
+            { "Dire Frenzy", "speed", "ability_hunter_beastwithin", "basic", "quick", 24 },
+            {
+                "Predator's Instinct",
+                "damage",
+                "ability_hunter_ferociousinspiration",
+                "strike",
+                "bleed",
+                26,
+            },
+        },
+        {
+            {
+                "Patient Marksman",
+                "damage",
+                "artifactability_marksmanhunter_legacyofthewindrunners",
+                "strike",
+                "healthy",
+                26,
+            },
+            { "Killing Zone", "damage", "ability_hunter_rapidkilling", "strike", "execute", 28 },
+        },
+        {
+            { "Wildfire Infusion", "damage", "inv_wildfirebomb_shrapnel", "strike", "burning", 28 },
+            {
+                "Survival of the Fittest",
+                "mitigation",
+                "artifactability_survivalhunter_eaglesbite",
+                "defense",
+                "wounded",
+                16,
+            },
+        },
+    },
+    ROGUE = {
+        {
+            {
+                "Sanguine Blades",
+                "damage",
+                "ability_ironmaidens_sanguinestrikes",
+                "basic",
+                "bleed",
+                26,
+            },
+            { "Venomous Intent", "speed", "ability_rogue_deadlybrew", "strike", "execute", 28 },
+        },
+        {
+            { "Blade Rush", "damage", "ability_ironmaidens_bladerush", "strike", "group", 28 },
+            { "Deft Maneuvers", "mitigation", "ability_rogue_feint", "defense", "quick", 14 },
+        },
+        {
+            { "Shadowed Finish", "speed", "ability_rogue_ambush", "strike", "execute", 30 },
+            { "Lingering Shadow", "speed", "rogue_shadow_reflection", "basic", "late", 26 },
+        },
+    },
+    PRIEST = {
+        {
+            {
+                "Harsh Discipline",
+                "damage",
+                "ability_priest_clarityofwill",
+                "strike",
+                "shielded",
+                26,
+            },
+            { "Protective Light", "healing", "spell_holy_divineshield", "healing", "protect", 30 },
+        },
+        {
+            {
+                "Answered Prayers",
+                "speed",
+                "spell_holy_prayerofmendingtga",
+                "healing",
+                "rescue",
+                30,
+            },
+            { "Divine Image", "healing", "spell_holy_divineprovidence", "healing", "ally", 28 },
+        },
+        {
+            { "Void Eruption", "damage", "ability_priest_voidentropy", "strike", "group", 28 },
+            {
+                "Devouring Darkness",
+                "damage",
+                "ability_priest_surgeofdarkness",
+                "basic",
+                "burning",
+                26,
+            },
+        },
+    },
+    SHAMAN = {
+        {
+            { "Searing Echoes", "damage", "spell_shaman_lavaburst", "strike", "burning", 28 },
+            {
+                "Storm Ascendant",
+                "speed",
+                "ability_thunderking_balllightning",
+                "basic",
+                "boss",
+                24,
+            },
+        },
+        {
+            { "Ashen Catalyst", "damage", "ability_shaman_lavalash", "basic", "burning", 28 },
+            { "Crashing Thunder", "speed", "ability_thunderbolt", "strike", "group", 26 },
+        },
+        {
+            { "Deluge", "healing", "ability_shaman_healingtide", "healing", "wounded", 28 },
+            { "Tidebringer", "speed", "spell_nature_healingway", "healing", "ally", 24 },
+        },
+    },
+    MAGE = {
+        {
+            {
+                "Arcane Bombardment",
+                "damage",
+                "ability_mage_arcanebarrage",
+                "strike",
+                "execute",
+                30,
+            },
+            { "Sustained Power", "speed", "spell_arcane_arcanetactics", "basic", "patient", 24 },
+        },
+        {
+            { "Searing Touch", "speed", "spell_fire_soulburn", "strike", "execute", 30 },
+            { "Wildfire Cascade", "speed", "ability_mage_worldinflames", "basic", "burning", 24 },
+        },
+        {
+            { "Comet Storm", "damage", "spell_mage_cometstorm", "strike", "group", 28 },
+            { "Glacial Shelter", "mitigation", "spell_frost_frostnova", "defense", "patient", 14 },
+        },
+    },
+    WARLOCK = {
+        {
+            { "Withering Bolt", "damage", "spell_shadow_shadowbolt", "strike", "burning", 28 },
+            {
+                "Soul Harvester",
+                "healing",
+                "inv_ability_soulharvesterwarlock_demonicsoul",
+                "healing",
+                "execute",
+                30,
+            },
+        },
+        {
+            { "Fel Dominion", "damage", "spell_shadow_felarmour", "basic", "late", 26 },
+            {
+                "Demonic Aegis",
+                "mitigation",
+                "ability_warlock_improveddemonictactics",
+                "defense",
+                "boss",
+                14,
+            },
+        },
+        {
+            { "Ruin", "damage", "ability_xavius_darkruination", "strike", "armored", 30 },
+            {
+                "Infernal Combustion",
+                "burningWounds",
+                "spell_fire_firebolt02",
+                "basic",
+                "burning",
+                24,
+            },
+        },
+    },
+    DRUID = {
+        {
+            { "Astral Smolder", "damage", "ability_druid_lunarguidance", "strike", "late", 28 },
+            { "Lunar Shrapnel", "speed", "spell_druid_lunarinspiration", "basic", "group", 24 },
+        },
+        {
+            { "Bloodtalons", "damage", "ability_druid_rake", "strike", "bleed", 30 },
+            { "Ursine Vigor", "health", "ability_druid_enrage", "defense", "wounded", 16 },
+        },
+        {
+            { "Spring Blossoms", "regen", "inv_misc_herb_talandrasrose", "healing", "group", 24 },
+            { "Photosynthesis", "speed", "ability_druid_replenish", "healing", "late", 26 },
+        },
+    },
+}
+for classID, paths in pairs(finalChoices) do
+    for path, entries in ipairs(paths) do
+        local target = additions[classID][path]
+        for _, entry in ipairs(entries) do
+            target[#target + 1] = entry
+        end
+    end
+end
 
 for classID, paths in pairs(additions) do
     local list, byID = C.talentsByClass[classID], C.talentByClassID[classID]

@@ -2,6 +2,7 @@
 local W = {}
 local files = {
     "Content.lua",
+    "Content/Encounters.lua",
     "Content/TalentTraits.lua",
     "Content/TalentExpansion.lua",
     "Content/Backdrops.lua",
@@ -40,6 +41,7 @@ end
 local cases = {}
 for _, file in ipairs({
     "tests/domain.lua",
+    "tests/encounters.lua",
     "tests/progression.lua",
     "tests/positioning.lua",
     "tests/talents.lua",
