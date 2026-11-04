@@ -98,18 +98,28 @@ function P.Draw(ui, parent, state)
                 .. "  "
                 .. (amount ~= nil and "+" .. number(amount) or "—")
         end
+        local trophies, trophyDetails = 0, {}
+        local components = type(report.components) == "table" and report.components or {}
+        for _, zone in ipairs(C.forgeComponentZones) do
+            local amount = components[zone] or 0
+            if type(amount) == "number" and amount > 0 and amount < math.huge then
+                trophies = trophies + amount
+                trophyDetails[#trophyDetails + 1] = C.zoneComponents[zone].name .. " +" .. number(amount)
+            end
+        end
         cards.materials = card(
             parent,
             "Materials",
             "Trade_BlackSmithing",
             0,
             314,
-            report.fragments
-                    and report.fragments > 0
-                    and ("Runic fragments +" .. number(report.fragments))
-                or "Zone supplies",
+            trophies > 0 and ("Boss trophies +" .. number(trophies)) or report.fragments
+            and report.fragments > 0
+            and ("Runic fragments +" .. number(report.fragments))
+            or "Zone supplies",
             table.concat(materials, "\n"),
-            "Materials gained, including salvage. Fractional bonuses carry forward. Runic fragments require eligible tier bosses and a learned recipe."
+            "Materials gained, including salvage. Fractional bonuses carry forward. Runic fragments require eligible tier bosses and a learned recipe.\n\n" ..
+            table.concat(trophyDetails, "\n")
         )
         cards.automation = card(
             parent,

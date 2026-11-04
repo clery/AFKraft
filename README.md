@@ -52,6 +52,8 @@ Each hero has **10 wearable slots**. Drops have fixed Classic item stats; class 
 
 **Forge** crafts targeted equipment with gold and idle materials. Enhancement adds **10% of base stats per purchase**. Enchanting unlocks when a hero first reaches **30**, titanforging at **50**, and profession specializations at **60**. Enchanting replaces the current enchantment; titanforging has five potential tiers. Previews show outcomes and costs before purchase. Heirloom recipes open at difficulty tier **4** for **1 Heritage per slot**. Heirloom investments survive both resets.
 
+Every zone has its own **boss trophy**: each idle boss victory guarantees one. Enchantments and titanforging consume specific trophies in addition to their existing costs. Forge previews show the source and your stock; **Farm** repeats an earned boss checkpoint, while **Travel** lets you clear a source for the first time. Map tooltips show each zone's trophy. Trophies survive both resets, and cleared bosses can supply them offline. These are addon resources, not real WoW inventory items.
+
 Identical ordinary items stack. Loot rules salvage unwanted future drops; **Disenchant** destroys stored equipment for gold and Relic dust. Equipped gear, heirlooms and protected items are kept. **Disenchant all** includes unprotected upgrades across every page and filter.
 
 Empty torso, leg and foot slots use cosmetic clothing with no stats. Exact offline alt appearances and matching equipment visuals remain unfinished. See [item rules and sources](Content/ITEMS.md) for formulas and unsupported item effects.

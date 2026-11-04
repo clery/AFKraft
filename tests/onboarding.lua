@@ -361,6 +361,7 @@ test("A stalled company can review prestige before sixty without resetting from 
         assertTrue(G.Talent(s, index, G.TalentList(hero)[1].id))
     end
     s.best, s.runBest, s.farming, s.prestigeUnlocked = 12, 12, true, true
+    s.lastDefeat = "The company could not defeat this encounter."
     s.guide.dismissed = true
     ui:SetTab("adventure")
     assertNotNil(find(ui, "Review prestige"))

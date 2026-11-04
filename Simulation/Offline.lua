@@ -27,7 +27,7 @@ function G.BeginCatchup(state, now)
     snapshot.battle = nil
     snapshot.rest = 0
     snapshot.pauseAfter = nil
-    snapshot.stage = safe
+    snapshot.stage = state.farming and state.stage % 5 == 0 and math.min(safe, state.stage) or safe
     snapshot.farming = true
     snapshot.offline = true
     snapshot.offlineRoute = {
@@ -43,6 +43,7 @@ function G.BeginCatchup(state, now)
         victories = snapshot.stats.victories,
         boostUses = snapshot.stats.boostUses or 0,
         fragments = snapshot.professions.fragments,
+        components = copy(snapshot.professions.components),
         salvaged = snapshot.stats.salvaged,
         materials = copy(snapshot.materials),
         inventoryCount = inventoryCount(snapshot),
@@ -131,6 +132,7 @@ function G.FinishCatchup(state, job)
             0,
             state.professions.fragments - (job.fragments or state.professions.fragments)
         ),
+        components = {},
         collectionMode = "outdoor",
         discoveries = 0,
         upgrades = 0,
@@ -146,6 +148,10 @@ function G.FinishCatchup(state, job)
     }
     for material, amount in pairs(state.materials) do
         summary.materials[material] = amount - ((job.materials or {})[material] or amount)
+    end
+    for zone, amount in pairs(state.professions.components) do
+        local gained = amount - ((job.components or {})[zone] or 0)
+        if gained > 0 then summary.components[zone] = gained end
     end
     -- Outdoor hunting is live-only; the live ledger is never replaced by this snapshot.
     for index, hero in ipairs(state.heroes) do

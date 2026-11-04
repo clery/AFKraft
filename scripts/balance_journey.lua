@@ -147,10 +147,26 @@ local function milestones(second)
         end
     end
 end
+local function componentShortage()
+    for index, hero in ipairs(s.heroes) do
+        for _, slot in ipairs(C.equipmentSlots) do
+            local item = hero.gear[slot]
+            if item then
+                local _, cost
+                if not item.enchant then _, cost = G.EnchantQuote(s, index, slot, "offense") end
+                if not cost and (item.forge or 0) < 2 then _, cost = G.ForgeQuote(s, index, slot) end
+                if cost and not G.HasComponents(s, cost) then
+                    local zone = next(cost.components)
+                    if G.IsUnlocked(s, C.zoneByID[zone]) then return zone end
+                end
+            end
+        end
+    end
+end
 local function checkin(second)
     milestones(second)
     metrics.checkins = metrics.checkins + 1
-    metrics.lastWall = s.farming
+    metrics.lastWall = s.farming and s.lastDefeat ~= nil
     while #s.heroes < G.CompanionSlots(s) do
         assert(command(G.Recruit(s, B.classes[#s.heroes + 1])))
     end
@@ -174,6 +190,8 @@ local function checkin(second)
             end
         end
     end
+    local component = plan.spend and componentShortage()
+    local farmingComponent = false
     local awaitingCap = plan.ascend and s.runBest >= 60 and not s.difficulty.cycleComplete
     local target = plan.adaptive and math.min(60, plan.reset + s.prestiges * 3) or plan.reset
     local eligible = G.PrestigePlusPreview(s, math.min(10, s.tier + 1))
@@ -196,12 +214,18 @@ local function checkin(second)
         metrics.resets = metrics.resets + 1
         metrics.legacyEarned = metrics.legacyEarned + reward
         metrics.lastReset, metrics.lastFrontier, metrics.stalled = second, 0, 0
+    elseif component then
+        if (s.safe[component] or 0) >= 5 then
+            farmingComponent = command(G.FarmZoneBoss(s, component))
+        else
+            command(G.Travel(s, component))
+        end
     elseif awaitingCap then
         command(G.Travel(s, C.transcendenceBoss.zone))
     elseif plan.spend then
         travel()
     end
-    if s.farming then command(G.Retry(s)) end
+    if s.farming and not farmingComponent then command(G.Retry(s)) end
     assert(G.Load(G.Copy(s), second), "Check-in must leave a loadable save")
 end
 print("Earned journey; activity 8 quests/80 kills/4 nodes per hour when enabled; no synthetic hunts.")

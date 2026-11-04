@@ -38,6 +38,14 @@ function G.ValidateProfessions(state)
     if type(p) ~= "table" then
         return false
     end
+    if p.components == nil then p.components = {} end
+    if p.lastComponentEncounter == nil then p.lastComponentEncounter = 0 end
+    if type(p.components) ~= "table" or not whole(p.lastComponentEncounter, 0, state.encounter) then
+        return false
+    end
+    for id, amount in pairs(p.components) do
+        if not C.zoneComponents[id] or not whole(amount, 0, C.componentCap) then return false end
+    end
     if p.fragments == nil then
         p.fragments = 0
     end
@@ -124,6 +132,12 @@ end
 
 function G.ProfessionBossRewards(state, battle)
     local p = state.professions
+    local zone = type(battle) == "table" and (battle.zone or state.zone)
+    if type(battle) == "table" and battle.boss == true and zone and C.zoneComponents[zone]
+        and state.encounter > p.lastComponentEncounter then
+        p.components[zone] = math.min(C.componentCap, (p.components[zone] or 0) + 1)
+        p.lastComponentEncounter = state.encounter
+    end
     if
         type(battle) ~= "table"
         or battle.boss ~= true
@@ -303,6 +317,27 @@ local function equipped(state, heroIndex, slot, profession)
     return item, hero
 end
 
+function G.ComponentCost(kind, slot, rank, enchantID)
+    local zone = C.enchantComponentZones[enchantID]
+    if kind == "titanforging" then
+        for position, id in ipairs(C.equipmentSlots) do
+            if id == slot then
+                zone = C.forgeComponentZones[math.min(#C.forgeComponentZones,
+                    (rank - 1) * #C.equipmentSlots + position)]
+                break
+            end
+        end
+    end
+    return zone and { [zone] = kind == "titanforging" and rank or 1 } or {}
+end
+
+function G.HasComponents(state, cost)
+    for zone, count in pairs(cost.components or {}) do
+        if (state.professions.components[zone] or 0) < count then return false end
+    end
+    return true
+end
+
 local function costFor(state, kind, item, hero, rank)
     local modifiers = G.ProfessionModifiers(state, kind)
     local discount = modifiers.costMultiplier
@@ -357,6 +392,7 @@ function G.EnchantQuote(state, heroIndex, slot, enchantID)
     end
     local cost = costFor(state, "enchanting", item, hero, 1)
     cost.fragments = enchant.fragments or 0
+    cost.components = G.ComponentCost("enchanting", slot, 1, enchantID)
     return preview, cost
 end
 
@@ -413,17 +449,23 @@ function G.ForgeQuote(state, heroIndex, slot)
         0.275,
         G.ForgeMultiplier(item) - 1 + G.ProfessionModifiers(state, "titanforging").forgeStep
     )
-    return preview, costFor(state, "titanforging", item, hero, preview.forge)
+    local cost = costFor(state, "titanforging", item, hero, preview.forge)
+    cost.components = G.ComponentCost("titanforging", slot, preview.forge)
+    return preview, cost
 end
 
 local function pay(state, cost)
-    if state.gold < cost.gold or state.professions.fragments < (cost.fragments or 0) then
+    if state.gold < cost.gold or state.professions.fragments < (cost.fragments or 0)
+        or not G.HasComponents(state, cost) then
         return false
     end
     for material, count in pairs(cost.materials) do
         if state.materials[material] < count then
             return false
         end
+    end
+    for zone, count in pairs(cost.components or {}) do
+        state.professions.components[zone] = state.professions.components[zone] - count
     end
     state.gold = state.gold - cost.gold
     state.professions.fragments = state.professions.fragments - (cost.fragments or 0)
@@ -442,6 +484,10 @@ local function modify(state, heroIndex, slot, kind, enchantID)
     end
     if not preview or not cost then
         return false, reason
+    end
+    if not G.HasComponents(state, cost) then
+        local zone = next(cost.components or {})
+        return false, "Defeat idle bosses in " .. C.zoneByID[zone].name .. " for " .. C.zoneComponents[zone].name .. "."
     end
     if not pay(state, cost) then
         return false,

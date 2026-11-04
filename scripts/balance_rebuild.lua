@@ -82,6 +82,9 @@ end
 
 local function established(seed)
     local state = G.New(0)
+    for _, zone in ipairs(C.zones) do
+        state.professions.components[zone.id] = 1000
+    end
     state.seed, state.best, state.runBest = seed, 60, 60
     -- Declared prior-account fixture, not a claim about resources earned en route.
     state.gold, state.legacy, state.essence = 100000, 20, 180

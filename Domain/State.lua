@@ -101,6 +101,8 @@ function G.New(now)
         },
         professions = {
             fragments = 0,
+            components = {},
+            lastComponentEncounter = 0,
             recipes = {},
             lastFragmentEncounter = 0,
             owned = {},

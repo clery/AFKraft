@@ -9,6 +9,9 @@ local function case(name, run)
 end
 local function party(level)
     local state = G.New(0)
+    for _, zone in ipairs(C.zones) do
+        state.professions.components[zone.id] = 1000
+    end
     assert(G.AddHero(state, "WARRIOR"))
     state.heroes[1].level = level or 1
     assert(G.TalentProgress(state.heroes[1]))

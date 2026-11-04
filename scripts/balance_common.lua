@@ -25,6 +25,9 @@ end
 -- Synthetic comparison fixture, not an earned-progression claim.
 function B.party(level, classes, path, geared, tier, strength)
     local s = G.New(0)
+    for _, zone in ipairs(C.zones) do
+        s.professions.components[zone.id] = 1000
+    end
     s.seed, s.tier, s.prestigeStrength = 17, tier or 0, strength or 0
     s.difficulty.unlocked, s.difficulty.maxTier = s.tier > 0, s.tier
     s.gold = 1000000

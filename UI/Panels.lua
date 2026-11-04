@@ -154,7 +154,7 @@ function P.adventure(ui, p, s)
                 "atlas"
         end
     end
-    if s.farming and label ~= "Recruit companions" then
+    if s.farming and s.lastDefeat and label ~= "Recruit companions" then
         title = "Build strength, then push forward"
         if s.prestigeUnlocked and G.PrestigeReward(s) > 0 and points == 0 then
             title, label, tab = "Begin a stronger chapter", "Review prestige", "legacy"

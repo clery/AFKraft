@@ -572,6 +572,22 @@ function G.Travel(state, zone, automatic)
     return true
 end
 
+-- Revisit an earned boss checkpoint without advancing or granting a reward.
+function G.FarmZoneBoss(state, zone)
+    local checkpoint = math.floor((state.safe[zone] or 0) / 5) * 5
+    if checkpoint < 5 then return false, "Clear a boss in this zone first." end
+    local ok, reason = G.Travel(state, zone)
+    if not ok then return false, reason end
+    if state.battle then
+        for _, unit in ipairs(state.battle.heroes) do
+            state.heroes[unit.id].health = math.max(0, unit.hp / unit.maxHP)
+        end
+    end
+    state.battle, state.rest, state.stage, state.farming = nil, 0, checkpoint, true
+    state.lastDefeat = nil
+    return true
+end
+
 -- Preserve current health proportion and cooldowns when a build changes mid-fight.
 function G.RefreshHero(state, index)
     local hero = state.heroes[index]

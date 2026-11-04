@@ -27,6 +27,10 @@ local function describe(self, zone)
     zone = zone or C.zoneByID[W.state.zone]
     self.focus = zone
     self.title:SetText(zone.name)
+    GameTooltip:AddLine(C.zoneComponents[zone.id].name .. " · Owned: "
+        .. (W.state.professions.components[zone.id] or 0), 1, 0.82, 0)
+    GameTooltip:AddLine("Idle bosses guarantee 1 trophy for enchanting or titanforging. Kept through both resets.", 0.8,
+        0.8, 0.7, true)
     local spoils = familySpoils(zone)
     self.detail:SetText(
         C.materials[zone.material]
@@ -57,6 +61,10 @@ local function zoneTooltip(map, zone)
         0.7,
         true
     )
+    GameTooltip:AddLine(C.zoneComponents[zone.id].name .. " · Owned: "
+        .. (W.state.professions.components[zone.id] or 0), 1, 0.82, 0)
+    GameTooltip:AddLine("Idle bosses guarantee 1 trophy for enchanting or titanforging. Kept through both resets.", 0.8,
+        0.8, 0.7, true)
     local spoils = familySpoils(zone)
     if spoils then
         GameTooltip:AddLine("Family spoils: " .. spoils, 0.8, 0.8, 0.7)

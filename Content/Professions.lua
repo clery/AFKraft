@@ -137,3 +137,26 @@ C.featureMilestones = {
     routes = { tier = 3, hint = "Unlock difficulty tier 3 to learn route planning." },
     heirlooms = { tier = 4, hint = "Unlock difficulty tier 4 to learn heirloom recipes." },
 }
+
+-- Idle boss trophies use zone IDs, independent of real WoW inventory items.
+C.zoneComponents, C.forgeComponentZones = {}, {}
+for _, zone in ipairs(C.zones) do
+    C.zoneComponents[zone.id] = { name = zone.name .. " trophy", zone = zone.id }
+    if zone.id ~= "blackrock_mountain" then
+        C.forgeComponentZones[#C.forgeComponentZones + 1] = zone.id
+    end
+end
+table.sort(C.forgeComponentZones, function(a, b)
+    local first, second = C.zoneByID[a], C.zoneByID[b]
+    return first.level == second.level and a < b or first.level < second.level
+end)
+C.forgeComponentZones[#C.forgeComponentZones + 1] = "blackrock_mountain"
+C.enchantComponentZones = {
+    offense = "westfall",
+    defense = "barrens",
+    utility = "ashenvale",
+    runicFury = "burning_steppes",
+    runicFortitude = "eastern_plaguelands",
+    runicClarity = "winterspring",
+}
+C.componentCap = 1000000000

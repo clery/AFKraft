@@ -8,6 +8,9 @@ end
 local function workshop(level)
     local W = WoWIdle
     local s = W.Game.New(W.Client.Now())
+    for _, zone in ipairs(W.Content.zones) do
+        s.professions.components[zone.id] = 1000
+    end
     W.Game.AddHero(s, "WARRIOR")
     local hero = s.heroes[1]
     hero.level = level or 60
@@ -122,4 +125,21 @@ test("Workshop previews runic recipes and gates payment on fragment stock", func
     assertEquals(0, state.professions.fragments)
     assertEquals(essence, state.essence)
     assertTrue(G.ValidateProfessions(state))
+end)
+
+
+test("Workshop shows trophy sources and farms only an earned boss checkpoint", function()
+    local W, s = workshop()
+    local ui = W.UI
+    s.professions.components.westfall = 0
+    s.runBest, s.safe.westfall = 20, 17
+    ui.professionTab, ui.professionEnchant = "enchanting", "offense"
+    ui:Refresh()
+    assertFalse(ui.professionControls.commit:IsEnabled())
+    assertNotNil(ui.professionControls.farm)
+    click(ui.professionControls.farm)
+    assertEquals("westfall", s.zone)
+    assertEquals(15, s.stage)
+    assertTrue(s.farming)
+    assertEquals("adventure", s.ui.tab)
 end)

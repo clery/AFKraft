@@ -9,6 +9,9 @@ local function case(name, fn)
 end
 local function party(level)
     local s = G.New(0)
+    for _, zone in ipairs(C.zones) do
+        s.professions.components[zone.id] = 1000
+    end
     G.AddHero(s, "WARRIOR")
     local hero = s.heroes[1]
     hero.level = level or 60
@@ -398,6 +401,97 @@ case("Runic enchantments use their matching profession specialization", function
             < 0.00001
     )
     assert(cost.fragments == 3 and G.ValidateProfessions(s))
+end)
+
+case("Every zone trophy has a reachable specific forge recipe", function()
+    local required = {}
+    for rank = 1, C.forgeCap do
+        for _, slot in ipairs(C.equipmentSlots) do
+            for zone, count in pairs(G.ComponentCost("titanforging", slot, rank)) do
+                assert(C.zoneByID[zone] and count == rank)
+                required[zone] = true
+            end
+        end
+    end
+    for _, zone in ipairs(C.zones) do assert(required[zone.id]) end
+    for _, enchant in ipairs(C.enchants) do
+        local zone, count = next(G.ComponentCost("enchanting", 1, 1, enchant.id))
+        assert(C.zoneComponents[zone] and count == 1)
+    end
+end)
+
+case("Boss trophies are zone-specific, bounded and awarded once per encounter", function()
+    local s = G.New(0)
+    assert(G.AddHero(s, "WARRIOR"))
+    s.encounter = 1
+    G.DifficultyVictory(s, { boss = false, level = 1, zone = "westfall" })
+    assert(not next(s.professions.components))
+    s.encounter = 2
+    local boss = { boss = true, level = 3, zone = "westfall" }
+    G.DifficultyVictory(s, boss)
+    G.DifficultyVictory(s, boss)
+    assert(s.professions.components.westfall == 1 and not s.professions.components.elwynn)
+    s.professions.components.westfall = C.componentCap
+    s.encounter = 3
+    G.DifficultyVictory(s, boss)
+    assert(s.professions.components.westfall == C.componentCap)
+    assert(G.Load(G.Copy(s), 0))
+end)
+
+case("Components are previewed, paid atomically and never returned by disenchanting", function()
+    local s, _, item = party()
+    local preview, cost = G.EnchantQuote(s, 1, 1, "offense")
+    assert(preview and cost.components.westfall == 1)
+    s.professions.components.westfall = 0
+    local gold, relic, essence = s.gold, s.materials.relic, s.essence
+    assert(not G.Enchant(s, 1, 1, "offense"))
+    assert(s.gold == gold and s.materials.relic == relic and s.essence == essence and not item.enchant)
+    s.professions.components.westfall = 1
+    assert(G.Enchant(s, 1, 1, "offense"))
+    assert(s.professions.components.westfall == 0)
+    s.heroes[1].gear[1] = nil
+    s.inventory[#s.inventory + 1] = item
+    assert(G.Disenchant(s, item))
+    assert(s.professions.components.westfall == 0)
+end)
+
+case("Component saves migrate empty, retain stock across both resets and reject malformed ledgers", function()
+    local s = party()
+    s.professions.components, s.professions.lastComponentEncounter = nil, nil
+    s = assert(G.Load(G.Copy(s), 0))
+    assert(not next(s.professions.components))
+    s.professions.components.elwynn = 3
+    s.prestigeUnlocked, s.runBest = true, 9
+    assert(G.Prestige(s) and s.professions.components.elwynn == 3)
+    assert(G.ResetAdventure(s, true) and s.professions.components.elwynn == 3)
+    for _, value in ipairs({ -1, 0.5, math.huge, C.componentCap + 1, "1" }) do
+        local bad = G.Copy(s)
+        bad.professions.components.elwynn = value
+        assert(not G.Load(bad, 0))
+    end
+    s.professions.components.missing_zone = 1
+    assert(not G.Load(s, 0))
+end)
+
+case("Manual boss farming preserves earned checkpoints and reconciles interrupted offline trophies once", function()
+    local s = party()
+    s.runBest, s.safe.westfall, s.stage = 20, 17, 17
+    assert(not G.FarmZoneBoss(s, "missing_zone"))
+    assert(not G.FarmZoneBoss(s, "durotar"))
+    s.lastDefeat = "Prior defeat"
+    assert(G.FarmZoneBoss(s, "westfall"))
+    assert(s.lastDefeat == nil)
+    assert(s.farming and s.stage == 15 and s.safe.westfall == 17)
+    local before = s.professions.components.westfall
+    local job = assert(G.BeginCatchup(s, 600))
+    assert(job.state.stage == 15)
+    G.CatchupBatch(job, 1000)
+    assert(G.FinishCatchup(s, job))
+    assert(s.professions.components.westfall > before)
+    assert(s.lastOfflineSummary.components.westfall == s.professions.components.westfall - before)
+    local count = s.professions.components.westfall
+    assert(not G.FinishCatchup(s, job) and s.professions.components.westfall == count)
+    assert(G.Load(G.Copy(s), 600))
 end)
 
 return cases

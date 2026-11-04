@@ -16,6 +16,7 @@ local function affordable(state, cost)
         not cost
         or state.gold < cost.gold
         or state.professions.fragments < (cost.fragments or 0)
+        or not G.HasComponents(state, cost)
     then
         return false
     end
@@ -348,6 +349,18 @@ function P.Draw(ui, parent, state)
             )
         end
         text(frame, costText(cost), 0, 488, 1250, T.gold, 17)
+        local source = next(cost.components or {})
+        if source then
+            text(frame, C.zoneComponents[source].name .. " · "
+                .. (state.professions.components[source] or 0) .. " / " .. cost.components[source]
+                .. " · Guaranteed from idle bosses in " .. C.zoneByID[source].name, 0, 516, 1250, T.gold, 15)
+            local cleared = (state.safe[source] or 0) >= 5
+            ui.professionControls.farm = button(frame, (cleared and "Farm · " or "Travel · ") .. C.zoneByID[source].name,
+                360, 548, 400, function()
+                if W.Action(cleared and G.FarmZoneBoss or G.Travel, source) then ui:SetTab("adventure") end
+            end)
+            U.Enabled(ui.professionControls.farm, G.IsUnlocked(state, C.zoneByID[source]))
+        end
     else
         text(frame, reason or "Choose an equipped item.", 0, 392, 1250, T.gold, 18)
     end

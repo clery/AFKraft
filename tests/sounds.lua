@@ -4,7 +4,7 @@ if not W then
 end
 local function fixture()
     local now, visible, played = 0, true, {}
-    local namespace = { L = W.L, state = W.Game.New(1000), L = W.L }
+    local namespace = { L = W.L, state = W.Game.New(1000) }
     local frame = {
         IsShown = function()
             return visible
