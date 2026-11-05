@@ -92,7 +92,7 @@ function U.Text(parent, text, x, y, size, color, width)
         return parent:CreateFontString(nil, "OVERLAY")
     end)
     f.fitSize = nil
-    f:SetFont("Fonts\\FRIZQT__.TTF", size or 14, "")
+    f:SetFont(W.font, size or 14, "")
     f:SetPoint("TOPLEFT", x, -y)
     f:SetJustifyH("LEFT")
     f:SetJustifyV("TOP")
@@ -150,7 +150,7 @@ end
 function U.Selected(button, selected)
     if button.nativeTab then
         button:SetTabSelected(selected)
-        button.text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+        button.text:SetFont(W.font, 13, "")
     else
         button.selected = selected == true
         if button.fill then
@@ -217,7 +217,7 @@ function U.Button(parent, text, x, y, w, h, fn, active, variant)
     end
     b.text:ClearAllPoints()
     b.text:SetPoint("CENTER", b, "CENTER", 0, variant == "primary" and b.native and 3 or 0)
-    b.text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    b.text:SetFont(W.font, 13, "")
     U.SingleLine(b.text, w - 24, h - 8, selection and "LEFT" or "CENTER")
     b.text:SetText(text)
     b.text:SetAlpha(1)
@@ -295,7 +295,7 @@ function U.Input(parent, x, y, w, h)
     edit:SetSize(w, h)
     edit:SetAutoFocus(false)
     edit:SetMaxLetters(40)
-    edit:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
+    edit:SetFont(W.font, 16, "")
     edit:SetScript("OnEnterPressed", function(self)
         self:ClearFocus()
     end)

@@ -38,12 +38,16 @@ case("Localized catalogs have matching keys, placeholders and line breaks", func
     end
 end)
 
-case("Client language, Spanish variants and explicit overrides resolve safely", function()
+case("Client language, supported locales and explicit overrides resolve safely", function()
     for _, example in ipairs({
         { "frFR", "auto", "frFR" },
         { "deDE", "auto", "deDE" },
         { "esMX", "auto", "esES" },
         { "esES", "auto", "esES" },
+        { "ruRU", "auto", "ruRU" },
+        { "zhCN", "auto", "zhCN" },
+        { "enUS", "ruRU", "ruRU" },
+        { "enUS", "zhCN", "zhCN" },
         { "koKR", "auto", "enUS" },
         { "frFR", "enUS", "enUS" },
         { "enUS", "deDE", "deDE" },
@@ -60,6 +64,8 @@ case("Client language, Spanish variants and explicit overrides resolve safely", 
         setfenv(chunk, environment)("WoWIdle", namespace)
         namespace.Locales = W.Locales
         assert(namespace.locale == example[3])
+        local fonts = { ruRU = "Fonts\\ARIALN.TTF", zhCN = "Fonts\\ARKai_T.ttf" }
+        assert(namespace.font == (fonts[example[3]] or "Fonts\\FRIZQT__.TTF"))
         assert(namespace.L.HERITAGE == W.Locales[example[3]].HERITAGE)
         assert(namespace.L.HERITAGE ~= namespace.L.INHERITANCE)
     end
@@ -92,7 +98,7 @@ case("Runtime lookups use defined named keys instead of English prose", function
 end)
 
 case("Every language loads content with stable IDs and translated talent sentences", function()
-    for _, locale in ipairs({ "enUS", "frFR", "deDE", "esES" }) do
+    for _, locale in ipairs({ "enUS", "frFR", "deDE", "esES", "ruRU", "zhCN" }) do
         local namespace = { locale = locale, Locales = W.Locales }
         namespace.L = setmetatable({}, {
             __index = function(_, key)
@@ -133,7 +139,7 @@ case("Item display names follow the locale without changing saved names", functi
     local item = { itemID = 25, name = "Worn Shortsword", uid = 7 }
     local original = C.itemNames[25]
     local ok, message = pcall(function()
-        for _, locale in ipairs({ "enUS", "frFR", "deDE", "esES" }) do
+        for _, locale in ipairs({ "enUS", "frFR", "deDE", "esES", "ruRU", "zhCN" }) do
             C.itemNames[25] = W.Locales[locale].ITEM_WORN_SHORTSWORD
             assert(G.ItemName(item) == C.itemNames[25])
             assert(item.name == "Worn Shortsword" and item.uid == 7)

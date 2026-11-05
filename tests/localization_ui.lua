@@ -8,7 +8,10 @@ test("Localized button labels fit and pooled font sizes recover for short labels
     local parent = CreateFrame("Frame", nil, UIParent)
     parent:SetSize(400, 100)
     parent:SetPoint("CENTER")
-    for _, locale in ipairs({ "frFR", "deDE", "esES" }) do
+    local originalFont = W.font
+    local fonts = { ruRU = "Fonts\\ARIALN.TTF", zhCN = "Fonts\\ARKai_T.ttf" }
+    for _, locale in ipairs({ "frFR", "deDE", "esES", "ruRU", "zhCN" }) do
+        W.font = fonts[locale] or originalFont
         local catalog = W.Locales[locale]
         local button = W.Widgets.Button(
             parent,
@@ -19,12 +22,14 @@ test("Localized button labels fit and pooled font sizes recover for short labels
             32,
             function() end
         )
+        assert(button.text:GetFont() == W.font)
         assert(button.text:GetUnboundedStringWidth() <= button.text:GetWidth() + 1, locale)
         button.text:SetText(catalog.CLOSE)
         local _, size = button.text:GetFont()
         assert(size == 13)
         button:Hide()
     end
+    W.font = originalFont
     parent:Hide()
 end)
 
@@ -41,6 +46,11 @@ test("Language settings preserve gameplay and validate saved choices", function(
     setting.set(nil, "invalid")
     assert(setting.get() == "deDE")
     assert(setting.values.enUS == "English")
+    for _, choice in ipairs({ "ruRU", "zhCN" }) do
+        assert(setting.values[choice])
+        setting.set(nil, choice)
+        assert(setting.get() == choice)
+    end
     setting.set(nil, "enUS")
     assert(setting.get() == "enUS")
     assert(W.state == state and state.gold == gold and state.essence == essence)

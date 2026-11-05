@@ -5,6 +5,8 @@
 ## Notes-deDE: Deine Abenteuer. Ihre wachsende Legende.
 ## Notes-esES: Tus aventuras. Su leyenda crece.
 ## Notes-esMX: Tus aventuras. Su leyenda crece.
+## Notes-ruRU: Ваши приключения. Их растущая легенда.
+## Notes-zhCN: 你的冒险，他们日渐壮大的传奇。
 ## Author: AFKcraft
 ## Version: 0.2.0
 ## SavedVariables: WoWIdleDB, WoWIdlePreferencesDB
@@ -27,6 +29,8 @@ Locales\enUS.lua
 Locales\frFR.lua
 Locales\deDE.lua
 Locales\esES.lua
+Locales\ruRU.lua
+Locales\zhCN.lua
 
 Content.lua
 Content\Encounters.lua

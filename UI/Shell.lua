@@ -652,7 +652,7 @@ function W.CreateUI()
         end)
         tab.text:ClearAllPoints()
         tab.text:SetPoint("TOPLEFT", 42, -2)
-        tab.text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+        tab.text:SetFont(W.font, 14, "")
         U.SingleLine(tab.text, 172, 26)
         tab.text:SetText(entry[2])
         tab.menuLabel = entry[2]

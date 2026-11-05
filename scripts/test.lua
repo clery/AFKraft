@@ -6,6 +6,8 @@ local files = {
     "Locales/frFR.lua",
     "Locales/deDE.lua",
     "Locales/esES.lua",
+    "Locales/ruRU.lua",
+    "Locales/zhCN.lua",
     "Content.lua",
     "Content/Encounters.lua",
     "Content/TalentTraits.lua",

@@ -232,7 +232,7 @@ function Scene:Layout(compact, management)
         unit:SetPoint("TOPLEFT", x, -(unit.y or 110))
         unit.placedX, unit.placedY = nil, nil
         unit:EnableMouse(friendly and not W.state.ui.locked)
-        unit.name:SetFont("Fonts\\FRIZQT__.TTF", compact and 20 or 12, "")
+        unit.name:SetFont(W.font, compact and 20 or 12, "")
         unit.name:SetHeight(compact and 24 or 19)
         unit.name:SetWidth(132)
         unit.detail:SetShown(not compact and unit.waiting)
@@ -414,8 +414,15 @@ function Scene:Refresh(s)
                         unit.recoilAt = GetTime()
                     end
                     if unit and unit:IsShown() and s.settings.combatText then
-                        unit.floating:SetText((event.kind == "heal" and "+" or "-") .. event.amount
-                            .. (event.critical == "supercritical" and "!!" or event.critical and "!" or ""))
+                        unit.floating:SetText(
+                            (event.kind == "heal" and "+" or "-")
+                                .. event.amount
+                                .. (
+                                    event.critical == "supercritical" and "!!"
+                                    or event.critical and "!"
+                                    or ""
+                                )
+                        )
                         unit.floating:SetTextColor(
                             unpack(event.kind == "heal" and T.green or T.gold)
                         )

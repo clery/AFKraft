@@ -117,6 +117,8 @@ function W.RegisterSettings()
             frFR = "Français",
             deDE = "Deutsch",
             esES = "Español",
+            ruRU = "Русский",
+            zhCN = "简体中文",
         },
         get = function()
             local locale = W.preferences.global.locale
