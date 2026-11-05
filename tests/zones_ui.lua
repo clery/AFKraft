@@ -121,7 +121,7 @@ test("Scaled coastal clicks select Darkshore and ignore its offshore margin", fu
                 end
                 map:GetScript("OnUpdate")(map, 0.05)
             end
-            point(552, 170)
+            point(545, 190)
             assertEquals("darkshore", map.hovered.id)
             map:GetScript("OnMouseUp")(map, "LeftButton")
             assertEquals("darkshore", state.zone)

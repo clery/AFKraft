@@ -77,7 +77,7 @@ def remove_detached_hatching(mask):
                 if neighbor in remaining:
                     remaining.remove(neighbor)
                     pending.append(neighbor)
-        if bottom - top + 1 <= 4 and right - left + 1 >= 4 * (bottom - top + 1) and len(component) <= 256:
+        if bottom - top + 1 <= 10 and right - left + 1 >= 3 * (bottom - top + 1) and len(component) <= 256:
             for pixel in component:
                 result.putpixel((pixel % width, pixel // width), 0)
     return result

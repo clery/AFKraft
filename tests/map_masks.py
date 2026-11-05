@@ -143,8 +143,8 @@ class MapMasks(unittest.TestCase):
     def test_plaguelands_and_alterac_are_not_shifted_into_each_other(self):
         entry = self.geometry["continents"]["eastern"]
         for name, points in {
-            "western_plaguelands": [(590, 280), (600, 300)],
-            "eastern_plaguelands": [(640, 280), (700, 300), (755, 250)],
+            "western_plaguelands": [(580, 265), (605, 250), (590, 280), (600, 300)],
+            "eastern_plaguelands": [(640, 280), (700, 300), (755, 250), (650, 305), (675, 320)],
             "alterac": [(610, 337), (620, 342)],
             "hillsbrad": [(555, 345), (560, 360), (578, 350), (596, 360), (616, 363)],
             "tirisfal": [(534, 289)],
@@ -180,13 +180,35 @@ class MapMasks(unittest.TestCase):
     def test_darkshore_and_felwood_keep_their_sides_of_the_northern_border(self):
         entry = self.geometry["continents"]["kalimdor"]
         for name, points in {
-            "darkshore": [(552, 170), (578, 170), (560, 194), (552, 250)],
-            "felwood": [(592, 185), (603, 205), (590, 225), (580, 250)],
+            "darkshore": [(545, 190), (551, 207), (552, 250)],
+            "felwood": [(552, 170), (578, 170), (592, 185), (603, 205), (590, 225), (580, 250)],
         }.items():
             for x, y in points:
                 with self.subTest(name=name, x=x, y=y):
                     label = self.fields["kalimdor"][y * self.size[0] + x]
                     self.assertEqual(name, entry["names"][label])
+
+    def test_blackrock_neighbors_keep_their_full_interiors(self):
+        entry = self.geometry["continents"]["eastern"]
+        for name, points in {
+            "searing_gorge": [(562, 550), (578, 546), (595, 540)],
+            "blackrock_mountain": [(575, 565)],
+            "burning_steppes": [(565, 580), (615, 580), (640, 585)],
+            "badlands": [(625, 550), (640, 555)],
+            "elwynn": [(550, 585), (570, 610)],
+        }.items():
+            for x, y in points:
+                with self.subTest(name=name, x=x, y=y):
+                    label = self.fields["eastern"][y * self.size[0] + x]
+                    self.assertGreaterEqual(label, 0)
+                    self.assertEqual(name, entry["names"][label])
+                    self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+
+    def test_slanted_sea_hatching_is_not_land_or_clickable(self):
+        for x, y in [(435, 266), (493, 233), (476, 247), (552, 222)]:
+            with self.subTest(x=x, y=y):
+                self.assertEqual(0, self.mask("eastern").getpixel((x, y)))
+                self.assertEqual(-1, self.fields["eastern"][y * self.size[0] + x])
 
     def test_every_non_land_hit_is_explicitly_reviewed_inland_water(self):
         for continent, entry in self.geometry["continents"].items():
@@ -208,10 +230,12 @@ class MapMasks(unittest.TestCase):
         draw.rectangle((2, 2, 25, 3), fill=255)
         draw.rectangle((4, 12, 9, 17), fill=255)
         draw.rectangle((30, 10, 60, 28), fill=255)
+        draw.polygon([(30, 2), (54, 0), (54, 5), (30, 7)], fill=255)
         cleaned = BUILDER.remove_detached_hatching(mask)
         self.assertEqual(0, cleaned.getpixel((12, 2)))
         self.assertEqual(255, cleaned.getpixel((6, 14)))
         self.assertEqual(255, cleaned.getpixel((45, 18)))
+        self.assertEqual(0, cleaned.getpixel((42, 4)))
 
     def test_propagation_margins_are_not_clickable_and_water_cannot_borrow_an_owner(self):
         from array import array

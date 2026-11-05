@@ -1141,8 +1141,8 @@ end)
 case("Generated coastal hits keep Felwood out of Darkshore and reject open water", function()
     local client = adapter("12.1.5", { C_Map = {} })
     for _, point in ipairs({
-        { "darkshore", 552, 170 },
-        { "darkshore", 578, 170 },
+        { "darkshore", 545, 190 },
+        { "felwood", 578, 170 },
         { "felwood", 592, 185 },
         { "felwood", 590, 225 },
         { "thousand_needles", 628, 566 },

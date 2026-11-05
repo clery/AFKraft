@@ -81,7 +81,7 @@ For a reported boundary defect, locate the cursor point on this raster, inspect 
 For a read-only runtime probe, convert a reviewed pixel to its normalized pixel center. For example, the current Retail Darkshore regression uses:
 
 ```lua
-/run local z=WoWIdle.Client.ZoneAtPosition("kalimdor",552.5/1200,170.5/800); print(z and z.name or "none")
+/run local z=WoWIdle.Client.ZoneAtPosition("kalimdor",545.5/1200,190.5/800); print(z and z.name or "none")
 ```
 
 Use that manifest's canvas dimensions for other profiles. A probe in an ocean margin should print `none`. The query does not travel or alter state.
