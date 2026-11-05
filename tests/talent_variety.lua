@@ -1,8 +1,12 @@
 local _, W = ...
-if not W then return end
+if not W then
+    return
+end
 local G, C = W.Game, W.Content
 local cases = {}
-local function case(name, run) cases[#cases + 1] = { name, run } end
+local function case(name, run)
+    cases[#cases + 1] = { name, run }
+end
 local function setup(class)
     local s = G.New(1000)
     assert(G.AddHero(s, class))
@@ -30,31 +34,41 @@ end
 local function withRoll(value, run)
     local original = G.Random
     G.Random = function(s, n)
-        if n == 10000 then return value end
+        if n == 10000 then
+            return value
+        end
         return original(s, n)
     end
     local ok, reason = pcall(run)
     G.Random = original
     assert(ok, reason)
 end
-case("Talent trees avoid repeated effect/condition pairs and mix caps independently of stats", function()
-    local capsByEffect = {}
-    for _, class in ipairs(C.classes) do
-        local seen = {}
-        for _, node in ipairs(C.talentsByClass[class.id]) do
-            local trait = node.trait
-            local key = node.path .. ":" .. node.effect .. ":"
-                .. (trait and trait.kind or "") .. ":" .. (trait and trait.condition or "")
-            assert(not seen[key], node.name .. " repeats " .. (seen[key] or ""))
-            seen[key] = node.name
-            capsByEffect[node.effect] = capsByEffect[node.effect] or {}
-            capsByEffect[node.effect][node.maxRanks] = true
+case(
+    "Talent trees avoid repeated effect/condition pairs and mix caps independently of stats",
+    function()
+        local capsByEffect = {}
+        for _, class in ipairs(C.classes) do
+            local seen = {}
+            for _, node in ipairs(C.talentsByClass[class.id]) do
+                local trait = node.trait
+                local key = node.path
+                    .. ":"
+                    .. node.effect
+                    .. ":"
+                    .. (trait and trait.kind or "")
+                    .. ":"
+                    .. (trait and trait.condition or "")
+                assert(not seen[key], node.name .. " repeats " .. (seen[key] or ""))
+                seen[key] = node.name
+                capsByEffect[node.effect] = capsByEffect[node.effect] or {}
+                capsByEffect[node.effect][node.maxRanks] = true
+            end
+        end
+        for _, effect in ipairs({ "attackSpeed", "criticalChance", "abilityEfficiency" }) do
+            assert(capsByEffect[effect][2] and capsByEffect[effect][3] and capsByEffect[effect][5])
         end
     end
-    for _, effect in ipairs({ "attackSpeed", "criticalChance", "abilityEfficiency" }) do
-        assert(capsByEffect[effect][2] and capsByEffect[effect][3] and capsByEffect[effect][5])
-    end
-end)
+)
 case("Attack speed and ability recovery affect separate live clocks", function()
     local s, h = setup("WARRIOR")
     selectEffect(h, "attackSpeed")
@@ -67,41 +81,48 @@ case("Attack speed and ability recovery affect separate live clocks", function()
     G.Step(other, 0.25)
     assert(math.abs(unit.cd - 99.7125) < 0.000001 and unit.attackCD == 99.75)
 end)
-case("Critical and super-critical outcomes are exclusive and scale damage independently of heals", function()
-    local s, h = setup("MAGE")
-    selectEffect(h, "criticalChance")
-    selectEffect(h, "superCriticalChance")
-    withRoll(400, function()
-        local amount, kind = G.CriticalResult(s, h, 100, false)
-        assert(amount == 300 and kind == "supercritical")
-    end)
-    withRoll(401, function()
-        local amount, kind = G.CriticalResult(s, h, 100, false)
-        assert(amount == 150 and kind == "critical")
-    end)
-    withRoll(1601, function()
-        local amount, kind = G.CriticalResult(s, h, 100, false)
-        assert(amount == 100 and kind == nil)
-    end)
-    local power, warrior = setup("WARRIOR")
-    selectEffect(warrior, "criticalDamage")
-    withRoll(1, function()
-        assert(G.CriticalResult(power, warrior, 100, false) == 200)
-        local amount, kind = G.CriticalResult(power, warrior, 100, true)
-        assert(amount == 100 and kind == nil)
-    end)
-end)
+case(
+    "Critical and super-critical outcomes are exclusive and scale damage independently of heals",
+    function()
+        local s, h = setup("MAGE")
+        selectEffect(h, "criticalChance")
+        selectEffect(h, "superCriticalChance")
+        withRoll(400, function()
+            local amount, kind = G.CriticalResult(s, h, 100, false)
+            assert(amount == 300 and kind == "supercritical")
+        end)
+        withRoll(401, function()
+            local amount, kind = G.CriticalResult(s, h, 100, false)
+            assert(amount == 150 and kind == "critical")
+        end)
+        withRoll(1601, function()
+            local amount, kind = G.CriticalResult(s, h, 100, false)
+            assert(amount == 100 and kind == nil)
+        end)
+        local power, warrior = setup("WARRIOR")
+        selectEffect(warrior, "criticalDamage")
+        withRoll(1, function()
+            assert(G.CriticalResult(power, warrior, 100, false) == 200)
+            local amount, kind = G.CriticalResult(power, warrior, 100, true)
+            assert(amount == 100 and kind == nil)
+        end)
+    end
+)
 case("Critical effects reach actual combat events without changing unselected fights", function()
     local s, h = setup("WARRIOR")
     selectEffect(h, "criticalChance")
     local unit, enemy = battle(s)
     unit.attackCD = 0
     local hp = enemy.hp
-    withRoll(1, function() G.Step(s, 0.25) end)
+    withRoll(1, function()
+        G.Step(s, 0.25)
+    end)
     assert(hp - enemy.hp == math.floor(unit.damage * 1.5))
     local found
     for _, event in ipairs(s.events) do
-        if event.kind == "hit" and event.enemy then found = event.critical end
+        if event.kind == "hit" and event.enemy then
+            found = event.critical
+        end
     end
     assert(found == "critical")
     local untouched, plain = setup("WARRIOR")
@@ -109,17 +130,24 @@ case("Critical effects reach actual combat events without changing unselected fi
     assert(G.CriticalResult(untouched, plain, 100, false) == 100 and untouched.seed == seed)
 end)
 case("Critical and super-critical direct healing use their own power bonuses", function()
-    for _, spec in ipairs({ { "criticalHealing", "critical", 200 }, { "superCriticalHealing", "supercritical", 375 } }) do
+    for _, spec in ipairs({
+        { "criticalHealing", "critical", 200 },
+        { "superCriticalHealing", "supercritical", 375 },
+    }) do
         local s, h = setup("PRIEST")
         selectEffect(h, spec[1])
         h.priority, h.healBelow = "heal", 100
         local unit = battle(s)
         unit.hp, unit.healing, unit.cd = 100, 100, 0
-        withRoll(1, function() G.Step(s, 0.25) end)
+        withRoll(1, function()
+            G.Step(s, 0.25)
+        end)
         assert(unit.hp == 100 + spec[3])
         local found
         for _, event in ipairs(s.events) do
-            if event.kind == "heal" then found = event.critical end
+            if event.kind == "heal" then
+                found = event.critical
+            end
         end
         assert(found == spec[2])
     end
@@ -140,20 +168,25 @@ case("Resource talents change actual income and cost while preserving threshold 
     assert(G.SpendHeroResource(h, unit, "attack") and unit.resource == 0)
     assert(G.Load(G.Copy(s), 1000))
 end)
-case("Damage-over-time talents strengthen existing ticks and respond immediately to refunds", function()
-    local s, h = setup("WARRIOR")
-    local node = selectEffect(h, "dotDamage")
-    selectEffect(h, "criticalChance")
-    local _, enemy = battle(s)
-    enemy.dots = { [1] = { damage = 20, remaining = 4, physical = true } }
-    local hp = enemy.hp
-    withRoll(1, function() G.Step(s, 1) end)
-    assert(hp - enemy.hp == 24)
-    h.talents[node.id] = nil
-    hp = enemy.hp
-    G.Step(s, 1)
-    assert(hp - enemy.hp == 20)
-end)
+case(
+    "Damage-over-time talents strengthen existing ticks and respond immediately to refunds",
+    function()
+        local s, h = setup("WARRIOR")
+        local node = selectEffect(h, "dotDamage")
+        selectEffect(h, "criticalChance")
+        local _, enemy = battle(s)
+        enemy.dots = { [1] = { damage = 20, remaining = 4, physical = true } }
+        local hp = enemy.hp
+        withRoll(1, function()
+            G.Step(s, 1)
+        end)
+        assert(hp - enemy.hp == 24)
+        h.talents[node.id] = nil
+        hp = enemy.hp
+        G.Step(s, 1)
+        assert(hp - enemy.hp == 20)
+    end
+)
 case("Direct overhealing refreshes a bounded shield instead of stacking it indefinitely", function()
     local s, h = setup("PRIEST")
     selectEffect(h, "overhealShield")
@@ -177,7 +210,9 @@ case("Varied talents preserve deterministic combat across a saved encounter", fu
     selectEffect(h, "cooldownRate")
     s.farming, s.safe.elwynn, s.stage = true, 5, 5
     G.StartBattle(s)
-    for _ = 1, 4 do G.Step(s, 0.25) end
+    for _ = 1, 4 do
+        G.Step(s, 0.25)
+    end
     local loaded = assert(G.Load(G.Copy(s), 1000))
     for _ = 1, 800 do
         G.Step(s, 0.25)
@@ -193,11 +228,15 @@ case("Critical output follows the weighted curve without multiplying critical ti
     selectEffect(h, "superCriticalChance")
     s.seed = 17
     local total = 0
-    for _ = 1, 20000 do total = total + G.CriticalResult(s, h, 100, false) end
+    for _ = 1, 20000 do
+        total = total + G.CriticalResult(s, h, 100, false)
+    end
     -- 84% normal + 12% at 1.5x + 4% at 3x = 1.14x expected output.
     assert(math.abs(total / 2000000 - 1.14) < 0.02)
     selectEffect(h, "superCriticalDamage")
-    withRoll(1, function() assert(G.CriticalResult(s, h, 100, false) == 375) end)
+    withRoll(1, function()
+        assert(G.CriticalResult(s, h, 100, false) == 375)
+    end)
 end)
 case("Damage-linked healing uses actual critical damage without a second critical roll", function()
     local s, h = setup("PRIEST")
@@ -207,11 +246,15 @@ case("Damage-linked healing uses actual critical damage without a second critica
     local unit, enemy = battle(s)
     unit.hp, unit.attackCD = 1, 0
     local hp = enemy.hp
-    withRoll(1, function() G.Step(s, 0.25) end)
+    withRoll(1, function()
+        G.Step(s, 0.25)
+    end)
     local dealt = hp - enemy.hp
     assert(unit.hp == 1 + math.floor(dealt * 0.15))
     for _, event in ipairs(s.events) do
-        if event.kind == "heal" then assert(event.critical == nil) end
+        if event.kind == "heal" then
+            assert(event.critical == nil)
+        end
     end
 end)
 
@@ -231,43 +274,53 @@ case("A ten-percent five-rank talent grants two percent per invested point", fun
     node.value = original
     assert(ok, reason)
 end)
-case("Every numeric talent and situational bonus supports partial ranks without rounding them away", function()
-    for _, class in ipairs(C.classes) do
-        local _, h = setup(class.id)
-        for _, node in ipairs(G.TalentList(h)) do
-            if node.value ~= true then
-                for rank = 1, node.maxRanks do
-                    h.talents = { [node.id] = rank }
-                    local expected = node.value * rank / node.maxRanks
-                    assert(math.abs(G.TalentEffects(h)[node.effect] - expected) < 0.000001)
-                    assert(type(C.TalentRankText(node, rank)) == "string")
+case(
+    "Every numeric talent and situational bonus supports partial ranks without rounding them away",
+    function()
+        for _, class in ipairs(C.classes) do
+            local _, h = setup(class.id)
+            for _, node in ipairs(G.TalentList(h)) do
+                if node.value ~= true then
+                    for rank = 1, node.maxRanks do
+                        h.talents = { [node.id] = rank }
+                        local expected = node.value * rank / node.maxRanks
+                        assert(math.abs(G.TalentEffects(h)[node.effect] - expected) < 0.000001)
+                        assert(type(C.TalentRankText(node, rank)) == "string")
+                    end
                 end
             end
         end
     end
-end)
+)
 case("The minimum critical chance supplied by a power talent also scales per rank", function()
     local s, h = setup("WARRIOR")
     local node = selectEffect(h, "criticalDamage")
     assert(node.maxRanks == 2)
     h.talents[node.id] = 1
-    withRoll(100, function() assert(G.CriticalResult(s, h, 100, false) == 175) end)
-    withRoll(101, function() assert(G.CriticalResult(s, h, 100, false) == 100) end)
+    withRoll(100, function()
+        assert(G.CriticalResult(s, h, 100, false) == 175)
+    end)
+    withRoll(101, function()
+        assert(G.CriticalResult(s, h, 100, false) == 100)
+    end)
     assert(C.TalentRankText(node, 1):find("1%% critical hit chance"))
 end)
 
-case("Legacy talent migration restarts cached fights without paying rewards or altering the input save", function()
-    local s, h = setup("WARRIOR")
-    local unit = battle(s)
-    unit.hp = unit.maxHP / 2
-    h.talentRanksVersion = nil
-    local victories, gold, seed = s.stats.victories, s.gold, s.seed
-    local loaded = assert(G.Load(s, 1000))
-    assert(loaded ~= s and loaded.battle == nil)
-    assert(s.battle and s.battle.heroes[1] == unit and h.talentRanksVersion == nil)
-    assert(loaded.stats.victories == victories and loaded.gold == gold and loaded.seed == seed)
-    assert(loaded.heroes[1].talentRanksVersion == 2)
-end)
+case(
+    "Legacy talent migration restarts cached fights without paying rewards or altering the input save",
+    function()
+        local s, h = setup("WARRIOR")
+        local unit = battle(s)
+        unit.hp = unit.maxHP / 2
+        h.talentRanksVersion = nil
+        local victories, gold, seed = s.stats.victories, s.gold, s.seed
+        local loaded = assert(G.Load(s, 1000))
+        assert(loaded ~= s and loaded.battle == nil)
+        assert(s.battle and s.battle.heroes[1] == unit and h.talentRanksVersion == nil)
+        assert(loaded.stats.victories == victories and loaded.gold == gold and loaded.seed == seed)
+        assert(loaded.heroes[1].talentRanksVersion == 2)
+    end
+)
 
 case("Whole ability costs give every efficiency rank one resource unit", function()
     local _, h = setup("SHAMAN")
@@ -293,7 +346,9 @@ case("All talent ranks display whole-number bonuses that match their actual valu
                 local description = C.TalentRankText(node, rank)
                 assert(not description:match("%d[.,]%d"), node.name .. ": " .. description)
                 if node.value ~= true then
-                    local units = node.effect == "regen" and 1000 or node.effect == "abilityEfficiency" and 1 or 100
+                    local units = node.effect == "regen" and 1000
+                        or node.effect == "abilityEfficiency" and 1
+                        or 100
                     local value = node.value * units * rank / node.maxRanks
                     assert(math.abs(value - math.floor(value + 0.5)) < 0.000001)
                     if node.trait then

@@ -5,12 +5,41 @@ local G, C = B.G, B.C
 local hours, policy, seed = tonumber(arg[1]) or 24, arg[2] or "invest", tonumber(arg[3]) or 17
 local plans = {
     passive = { cadence = 3600, activity = false, spend = false },
-    builder = { cadence = 1800, activity = false, spend = true, reset = 12, ascend = true, adaptive = true },
+    builder = {
+        cadence = 1800,
+        activity = false,
+        spend = true,
+        reset = 12,
+        ascend = true,
+        adaptive = true,
+    },
     invest = { cadence = 1800, activity = true, spend = true },
     short = { cadence = 1800, activity = true, spend = true, reset = 20 },
-    deep = { cadence = 1800, activity = true, spend = true, reset = 12, ascend = true, adaptive = true },
-    casual = { cadence = 3600, activity = true, spend = true, reset = 12, ascend = true, adaptive = true },
-    returning = { cadence = 3600, activity = true, spend = true, reset = 12, ascend = true, adaptive = true, offline = true },
+    deep = {
+        cadence = 1800,
+        activity = true,
+        spend = true,
+        reset = 12,
+        ascend = true,
+        adaptive = true,
+    },
+    casual = {
+        cadence = 3600,
+        activity = true,
+        spend = true,
+        reset = 12,
+        ascend = true,
+        adaptive = true,
+    },
+    returning = {
+        cadence = 3600,
+        activity = true,
+        spend = true,
+        reset = 12,
+        ascend = true,
+        adaptive = true,
+        offline = true,
+    },
 }
 local plan = assert(plans[policy], "Unknown policy")
 plan.cadence = tonumber(arg[4]) or plan.cadence
@@ -37,17 +66,21 @@ local metrics = {
     legacyEarned = 0,
     inheritanceEarned = 0,
     lastFrontier = 0,
-    stalled = 0
+    stalled = 0,
 }
 local function command(ok)
-    if ok then metrics.commands = metrics.commands + 1 end
+    if ok then
+        metrics.commands = metrics.commands + 1
+    end
     return ok
 end
 local function buyWork(index)
     local hero = s.heroes[index]
     local opportunity = G.CraftingOpportunity(s, index)
     if opportunity then
-        if command(G.Craft(s, index, opportunity.slot, opportunity.material, opportunity.heirloom)) then
+        if
+            command(G.Craft(s, index, opportunity.slot, opportunity.material, opportunity.heirloom))
+        then
             metrics.crafts = metrics.crafts + 1
             command(G.EquipBest(s, index))
         end
@@ -81,7 +114,9 @@ local function permanent()
     for _, id in ipairs({ "battleOrders", "ironResolve", "focusedAssault", "restorativeFocus" }) do
         if not s.boosts.owned[id] then
             local learned = G.BuyBoost(s, id)
-            if not learned and s.legacy >= 1 then learned = G.BuyBoost(s, id, "legacy") end
+            if not learned and s.legacy >= 1 then
+                learned = G.BuyBoost(s, id, "legacy")
+            end
             command(learned)
         end
     end
@@ -95,11 +130,17 @@ local function permanent()
         if not s.boosts.automation.owned.onCooldown then
             command(G.BuyBoostAutomation(s, "onCooldown"))
         end
-        if not s.routes.owned then command(G.BuyRoutes(s)) end
-        for _, slot in ipairs(C.equipmentSlots) do
-            if not s.recipes[slot] then command(G.UnlockRecipe(s, slot)) end
+        if not s.routes.owned then
+            command(G.BuyRoutes(s))
         end
-        for _, talent in ipairs(C.collectionTalents) do command(G.BuyCollectionTalent(s, talent.id)) end
+        for _, slot in ipairs(C.equipmentSlots) do
+            if not s.recipes[slot] then
+                command(G.UnlockRecipe(s, slot))
+            end
+        end
+        for _, talent in ipairs(C.collectionTalents) do
+            command(G.BuyCollectionTalent(s, talent.id))
+        end
     end
     if s.boosts.owned.focusedAssault then
         command(G.EquipBoost(s, "focusedAssault"))
@@ -110,23 +151,34 @@ local function permanent()
             command(G.ActivateBoost(s, "focusedAssault", true))
         end
     end
-    for _, id in ipairs({ "rebuilding", "supplies" }) do command(G.BuyInheritance(s, id)) end
+    for _, id in ipairs({ "rebuilding", "supplies" }) do
+        command(G.BuyInheritance(s, id))
+    end
 end
 local function travel()
     -- Rotate resource shortages. Choose the highest safely accessible native destination
     -- for that material; never set frontiers/safe records or fabricate material income.
     local desired = "ore"
-    if s.materials.relic < 20 and s.professions.owned.enchanting then desired = "relic" end
-    if s.materials[desired] > 80 then return end
+    if s.materials.relic < 20 and s.professions.owned.enchanting then
+        desired = "relic"
+    end
+    if s.materials[desired] > 80 then
+        return
+    end
     local target
     for _, zone in ipairs(C.zones) do
-        if zone.material == desired and G.IsUnlocked(s, zone)
+        if
+            zone.material == desired
+            and G.IsUnlocked(s, zone)
             and zone.level <= math.max(1, s.runBest - 3)
-            and (not target or zone.level > target.level) then
+            and (not target or zone.level > target.level)
+        then
             target = zone
         end
     end
-    if target and target.id ~= s.zone then command(G.Travel(s, target.id)) end
+    if target and target.id ~= s.zone then
+        command(G.Travel(s, target.id))
+    end
 end
 local discovered = {}
 local function milestones(second)
@@ -150,7 +202,25 @@ local function milestones(second)
         Routes = not G.FeatureHint(s, "routes"),
         Heirlooms = not G.FeatureHint(s, "heirlooms"),
     }
-    for _, name in ipairs({ "SecondHero", "ThirdHero", "FourthHero", "FifthHero", "EarlyZones", "MidZones", "LateZones", "FinalZones", "Mastery", "Commander", "Enchanting", "Automation", "Titanforging", "Specializations", "Conditional", "Routes", "Heirlooms" }) do
+    for _, name in ipairs({
+        "SecondHero",
+        "ThirdHero",
+        "FourthHero",
+        "FifthHero",
+        "EarlyZones",
+        "MidZones",
+        "LateZones",
+        "FinalZones",
+        "Mastery",
+        "Commander",
+        "Enchanting",
+        "Automation",
+        "Titanforging",
+        "Specializations",
+        "Conditional",
+        "Routes",
+        "Heirlooms",
+    }) do
         if available[name] and not discovered[name] then
             discovered[name] = true
             print(string.format("UNLOCK | %.2fh | %s", second / 3600, name))
@@ -163,11 +233,17 @@ local function componentShortage()
             local item = hero.gear[slot]
             if item then
                 local _, cost
-                if not item.enchant then _, cost = G.EnchantQuote(s, index, slot, "offense") end
-                if not cost and (item.forge or 0) < 2 then _, cost = G.ForgeQuote(s, index, slot) end
+                if not item.enchant then
+                    _, cost = G.EnchantQuote(s, index, slot, "offense")
+                end
+                if not cost and (item.forge or 0) < 2 then
+                    _, cost = G.ForgeQuote(s, index, slot)
+                end
                 if cost and not G.HasComponents(s, cost) then
                     local zone = next(cost.components)
-                    if G.IsUnlocked(s, C.zoneByID[zone]) then return zone end
+                    if G.IsUnlocked(s, C.zoneByID[zone]) then
+                        return zone
+                    end
                 end
             end
         end
@@ -183,7 +259,9 @@ local function checkin(second)
     metrics.stalled = s.runBest <= metrics.lastFrontier and s.farming and metrics.stalled + 1 or 0
     metrics.lastFrontier = s.runBest
     local gold = s.gold
-    if plan.spend then permanent() end
+    if plan.spend then
+        permanent()
+    end
     for index, hero in ipairs(s.heroes) do
         if plan.spend then
             B.talents(s, index, hero.class == "PRIEST" and 2 or 1)
@@ -191,7 +269,9 @@ local function checkin(second)
         end
         G.EquipBest(s, index)
         if plan.spend then
-            for _ = 1, math.max(1, math.floor(plan.cadence / 600)) do buyWork(index) end
+            for _ = 1, math.max(1, math.floor(plan.cadence / 600)) do
+                buyWork(index)
+            end
         end
     end
     metrics.goldSpent = metrics.goldSpent + gold - s.gold
@@ -209,19 +289,41 @@ local function checkin(second)
     local eligible = G.PrestigePlusPreview(s, math.min(10, s.tier + 1))
     if plan.ascend and eligible.eligible and eligible.inheritance > 0 then
         local inheritance = eligible.inheritance
-        print(string.format("ASCEND | %.2fh | tier %d -> %d | +%d Inheritance", second / 3600, s.tier,
-            eligible.targetTier, inheritance))
+        print(
+            string.format(
+                "ASCEND | %.2fh | tier %d -> %d | +%d Inheritance",
+                second / 3600,
+                s.tier,
+                eligible.targetTier,
+                inheritance
+            )
+        )
         assert(command(G.PrestigePlus(s, eligible.targetTier)))
         metrics.ascensions = metrics.ascensions + 1
         metrics.inheritanceEarned = metrics.inheritanceEarned + inheritance
         metrics.maxTier = math.max(metrics.maxTier, s.tier)
         metrics.lastReset, metrics.lastFrontier, metrics.stalled = second, 0, 0
-    elseif plan.reset and not awaitingCap and s.prestigeUnlocked and G.PrestigeReward(s) > 0
-        and ((s.runBest >= target and (not plan.ascend or s.runBest < 60)) or metrics.stalled >= 1) then
+    elseif
+        plan.reset
+        and not awaitingCap
+        and s.prestigeUnlocked
+        and G.PrestigeReward(s) > 0
+        and ((s.runBest >= target and (not plan.ascend or s.runBest < 60)) or metrics.stalled >= 1)
+    then
         local reward = G.PrestigeReward(s)
         local level = 1
-        for _, hero in ipairs(s.heroes) do level = math.max(level, hero.level) end
-        print(string.format("RESET | %.2fh | frontier %d | hero %d | +%d Legacy", second / 3600, s.runBest, level, reward))
+        for _, hero in ipairs(s.heroes) do
+            level = math.max(level, hero.level)
+        end
+        print(
+            string.format(
+                "RESET | %.2fh | frontier %d | hero %d | +%d Legacy",
+                second / 3600,
+                s.runBest,
+                level,
+                reward
+            )
+        )
         assert(command(G.Prestige(s)))
         metrics.resets = metrics.resets + 1
         metrics.legacyEarned = metrics.legacyEarned + reward
@@ -237,12 +339,17 @@ local function checkin(second)
     elseif plan.spend then
         travel()
     end
-    if s.farming and not farmingComponent then command(G.Retry(s)) end
+    if s.farming and not farmingComponent then
+        command(G.Retry(s))
+    end
     assert(G.Load(G.Copy(s), second), "Check-in must leave a loadable save")
 end
-print("Earned journey; activity 8 quests/80 kills/4 nodes per hour when enabled; no synthetic hunts.")
 print(
-    "Policy | Seed | Hours | Tier/max | Hero levels | Frontier | Gold/spent | Craft/upgrade/enchant/forge | Reset/deep | Legacy/Inheritance earned | Defeats | Wall hours | Successful calls/checkins")
+    "Earned journey; activity 8 quests/80 kills/4 nodes per hour when enabled; no synthetic hunts."
+)
+print(
+    "Policy | Seed | Hours | Tier/max | Hero levels | Frontier | Gold/spent | Craft/upgrade/enchant/forge | Reset/deep | Legacy/Inheritance earned | Defeats | Wall hours | Successful calls/checkins"
+)
 checkin(0)
 local second = 1
 while second <= hours * 3600 do
@@ -251,7 +358,8 @@ while second <= hours * 3600 do
         s.lastTime = second - 1
         local job = G.BeginCatchup(s, untilTime)
         if job then
-            while not G.CatchupBatch(job, 1600) do end
+            while not G.CatchupBatch(job, 1600) do
+            end
             assert(G.FinishCatchup(s, job))
             metrics.wallSeconds = metrics.wallSeconds + job.seconds
         end
@@ -259,28 +367,65 @@ while second <= hours * 3600 do
     else
         if plan.activity then
             for _, activity in ipairs({ { "quest", 8 }, { "kill", 80 }, { "gather", 4 } }) do
-                if math.floor(second * activity[2] / 3600) > math.floor((second - 1) * activity[2] / 3600) then
-                    G.AdventureXP(s, C.activityRewards[activity[1]].xp, activity[1], "Journey model")
+                if
+                    math.floor(second * activity[2] / 3600)
+                    > math.floor((second - 1) * activity[2] / 3600)
+                then
+                    G.AdventureXP(
+                        s,
+                        C.activityRewards[activity[1]].xp,
+                        activity[1],
+                        "Journey model"
+                    )
                 end
             end
         end
         G.Advance(s, 1)
         for _, event in ipairs(s.events) do
-            if event.kind == "defeat" then metrics.defeats = metrics.defeats + 1 end
+            if event.kind == "defeat" then
+                metrics.defeats = metrics.defeats + 1
+            end
         end
         s.events = {}
-        if s.farming then metrics.wallSeconds = metrics.wallSeconds + 1 end
+        if s.farming then
+            metrics.wallSeconds = metrics.wallSeconds + 1
+        end
     end
-    if second % plan.cadence == 0 then checkin(second) end
+    if second % plan.cadence == 0 then
+        checkin(second)
+    end
     if second == 3600 or second == 21600 or second == 86400 or second == hours * 3600 then
         local low, high = 60, 1
-        for _, hero in ipairs(s.heroes) do low, high = math.min(low, hero.level), math.max(high, hero.level) end
-        print(string.format(
-            "%s | %d | %.1f | %d/%d | %d-%d | %d | %d/%d | %d/%d/%d/%d | %d/%d | %d/%d | %d | %.2f | %d/%d",
-            policy, seed, second / 3600, s.tier, metrics.maxTier, low, high, s.runBest, s.gold, metrics.goldSpent,
-            metrics.crafts, metrics.upgrades, metrics.enchants, metrics.forges, metrics.resets, metrics.ascensions,
-            metrics.legacyEarned, metrics.inheritanceEarned, metrics.defeats, metrics.wallSeconds / 3600,
-            metrics.commands, metrics.checkins))
+        for _, hero in ipairs(s.heroes) do
+            low, high = math.min(low, hero.level), math.max(high, hero.level)
+        end
+        print(
+            string.format(
+                "%s | %d | %.1f | %d/%d | %d-%d | %d | %d/%d | %d/%d/%d/%d | %d/%d | %d/%d | %d | %.2f | %d/%d",
+                policy,
+                seed,
+                second / 3600,
+                s.tier,
+                metrics.maxTier,
+                low,
+                high,
+                s.runBest,
+                s.gold,
+                metrics.goldSpent,
+                metrics.crafts,
+                metrics.upgrades,
+                metrics.enchants,
+                metrics.forges,
+                metrics.resets,
+                metrics.ascensions,
+                metrics.legacyEarned,
+                metrics.inheritanceEarned,
+                metrics.defeats,
+                metrics.wallSeconds / 3600,
+                metrics.commands,
+                metrics.checkins
+            )
+        )
     end
     second = second + 1
 end
@@ -300,11 +445,15 @@ if plan.spend and metrics.lastWall and metrics.lastReset < hours * 3600 then
             local item = hero.gear[slot]
             if item then
                 while (item.upgrade or 0) < 20 do
-                    if not G.Upgrade(rescue, index, slot) then break end
+                    if not G.Upgrade(rescue, index, slot) then
+                        break
+                    end
                     spent = spent + 1
                 end
                 while (item.forge or 0) < C.forgeCap do
-                    if not G.Titanforge(rescue, index, slot) then break end
+                    if not G.Titanforge(rescue, index, slot) then
+                        break
+                    end
                     spent = spent + 1
                 end
             end
@@ -312,7 +461,17 @@ if plan.spend and metrics.lastWall and metrics.lastReset < hours * 3600 then
     end
     local after, improvedSeconds = B.fight(rescue, level, nil, nil, stage)
     assert(G.Load(G.Copy(rescue), hours * 3600))
-    print(string.format(
-        "Earned wall intervention | level %d tier %d | before %s %.2fs | after %s %.2fs | paid %d gold/%d modifications",
-        level, s.tier, tostring(before), seconds, tostring(after), improvedSeconds, gold - rescue.gold, spent))
+    print(
+        string.format(
+            "Earned wall intervention | level %d tier %d | before %s %.2fs | after %s %.2fs | paid %d gold/%d modifications",
+            level,
+            s.tier,
+            tostring(before),
+            seconds,
+            tostring(after),
+            improvedSeconds,
+            gold - rescue.gold,
+            spent
+        )
+    )
 end

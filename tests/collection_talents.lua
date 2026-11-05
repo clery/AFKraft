@@ -133,7 +133,12 @@ case("Collection talent ranks survive reload, prestige and Prestige+", function(
     hero.level = 60
     assert(G.TalentProgress(hero))
     s.encounter = s.encounter + 1
-    assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
+    assert(
+        G.DifficultyVictory(
+            s,
+            { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+        )
+    )
     assert(G.PrestigePlus(s, 1))
     assert(s.collectionTalents.fieldcraft == 3 and s.collectionTalents.relicHunter == 3)
     assert(G.Load(G.Copy(s), 0))

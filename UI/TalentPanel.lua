@@ -95,20 +95,29 @@ local function drawNode(tree, talent, hero, index)
     -- Leave unlearnable nodes mouse-enabled so their explanations remain accessible.
     b:SetScript("OnEnter", nil)
     b:SetScript("OnLeave", nil)
-    local description = learned and (L.TALENT_CURRENT_RANK .. "\n" .. C.TalentRankText(talent, rank)) or L.NOT_LEARNED
+    local description = learned
+            and (L.TALENT_CURRENT_RANK .. "\n" .. C.TalentRankText(talent, rank))
+        or L.NOT_LEARNED
     if rank < talent.maxRanks then
-        description = description .. "\n\n" .. L.NEXT_RANK_PREFIX .. (rank + 1) .. "/" .. talent.maxRanks
-            .. "\n" .. C.TalentRankText(talent, rank + 1)
+        description = description
+            .. "\n\n"
+            .. L.NEXT_RANK_PREFIX
+            .. (rank + 1)
+            .. "/"
+            .. talent.maxRanks
+            .. "\n"
+            .. C.TalentRankText(talent, rank + 1)
     end
     U.Tooltip(
         b,
         talent.name,
         L.RANK_PREFIX
-        .. (ranks)
-        .. "\n\n"
-        .. description
-        .. "\n\n" .. L.TALENT_RANK_CONTROLS
-        .. (not available and ("\n" .. (reason or "")) or ""),
+            .. ranks
+            .. "\n\n"
+            .. description
+            .. "\n\n"
+            .. L.TALENT_RANK_CONTROLS
+            .. (not available and ("\n" .. (reason or "")) or ""),
         320
     )
     b:Show()
@@ -155,18 +164,18 @@ function P.Draw(ui, parent, hero, index)
         bar,
         L.PERMANENT_MASTERY,
         L.UNLOCKS_AT_HERO_LEVEL_PREFIX
-        .. C.mastery.unlockLevel
-        .. L.EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX
-        .. W.state.tier
-        .. L.EARN_XP_FROM_VICTORIES_AT_ENCOUNTER_LEVEL_PREFIX
-        .. math.max(1, G.MasteryFrontier(hero, W.state.tier))
-        .. L.BOSSES_AWARD_DOUBLE_XP_MASTERY_SURVIVES_BOTH_RESETS_AND_PREFIX
-        .. C.heroLevelCap
-        .. ".\n"
-        .. (
-            complete and L.ALL_TALENT_POINTS_EARNED
-            or (L.NEXT_RANK_PREFIX .. cost .. L.XP_HEADING_3)
-        ),
+            .. C.mastery.unlockLevel
+            .. L.EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX
+            .. W.state.tier
+            .. L.EARN_XP_FROM_VICTORIES_AT_ENCOUNTER_LEVEL_PREFIX
+            .. math.max(1, G.MasteryFrontier(hero, W.state.tier))
+            .. L.BOSSES_AWARD_DOUBLE_XP_MASTERY_SURVIVES_BOTH_RESETS_AND_PREFIX
+            .. C.heroLevelCap
+            .. ".\n"
+            .. (
+                complete and L.ALL_TALENT_POINTS_EARNED
+                or (L.NEXT_RANK_PREFIX .. cost .. L.XP_HEADING_3)
+            ),
         360
     )
     ui.talentTrees:Show()

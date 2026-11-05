@@ -201,7 +201,12 @@ case("Development saves validate exact ledgers and survive ordinary and deeper r
     h.level = 60
     assert(G.TalentProgress(h))
     s.encounter = s.encounter + 1
-    assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
+    assert(
+        G.DifficultyVictory(
+            s,
+            { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+        )
+    )
     assert(G.PrestigePlus(s, 1))
     assert(s.development.ranks.might == 3 and s.development.choices.might == "assault")
     assert(G.Load(G.Copy(s), 100))

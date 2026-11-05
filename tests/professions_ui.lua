@@ -127,7 +127,6 @@ test("Workshop previews runic recipes and gates payment on fragment stock", func
     assertTrue(G.ValidateProfessions(state))
 end)
 
-
 test("Workshop shows trophy sources and farms only an earned boss checkpoint", function()
     local W, s = workshop()
     local ui = W.UI

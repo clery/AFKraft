@@ -16,33 +16,69 @@ local function qualify(state)
     state.heroes[1].level = 60
     assert(G.TalentProgress(state.heroes[1]))
     state.encounter = state.encounter + 1
-    return G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 })
+    return G.DifficultyVictory(
+        state,
+        { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+    )
 end
 
-case("Prestige+ unlock requires the online Blackrock final champion and current hero cap", function()
-    local state = party()
-    state.encounter = 1
-    assert(not G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
-    state.heroes[1].level = 60
-    state.encounter, state.offline = 2, true
-    assert(not G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
-    assert(not state.difficulty.unlocked)
-    state.offline, state.encounter = nil, 3
-    assert(not G.DifficultyVictory(state, { boss = false, level = 60 }))
-    state.encounter = 4
-    assert(not G.DifficultyVictory(state, { boss = true, level = 59 }))
-    state.encounter = 5
-    assert(not G.DifficultyVictory(state, { boss = true, level = 60, zone = "blackrock_mountain", stage = 215 }))
-    state.encounter = 6
-    assert(not G.DifficultyVictory(state, { boss = true, level = 61, zone = "elwynn", stage = 300 }))
-    state.encounter = 7
-    assert(not G.DifficultyVictory(state, { boss = true, level = 62, zone = "blackrock_mountain", stage = 225 }))
-    assert(qualify(state))
-    assert(state.difficulty.unlocked and state.difficulty.cycleComplete)
-    assert(state.difficulty.maxTier == 1 and state.difficulty.currency == 0)
-    assert(not G.DifficultyVictory(state, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
-    assert(G.ValidateDifficulty(state))
-end)
+case(
+    "Prestige+ unlock requires the online Blackrock final champion and current hero cap",
+    function()
+        local state = party()
+        state.encounter = 1
+        assert(
+            not G.DifficultyVictory(
+                state,
+                { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+            )
+        )
+        state.heroes[1].level = 60
+        state.encounter, state.offline = 2, true
+        assert(
+            not G.DifficultyVictory(
+                state,
+                { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+            )
+        )
+        assert(not state.difficulty.unlocked)
+        state.offline, state.encounter = nil, 3
+        assert(not G.DifficultyVictory(state, { boss = false, level = 60 }))
+        state.encounter = 4
+        assert(not G.DifficultyVictory(state, { boss = true, level = 59 }))
+        state.encounter = 5
+        assert(
+            not G.DifficultyVictory(
+                state,
+                { boss = true, level = 60, zone = "blackrock_mountain", stage = 215 }
+            )
+        )
+        state.encounter = 6
+        assert(
+            not G.DifficultyVictory(
+                state,
+                { boss = true, level = 61, zone = "elwynn", stage = 300 }
+            )
+        )
+        state.encounter = 7
+        assert(
+            not G.DifficultyVictory(
+                state,
+                { boss = true, level = 62, zone = "blackrock_mountain", stage = 225 }
+            )
+        )
+        assert(qualify(state))
+        assert(state.difficulty.unlocked and state.difficulty.cycleComplete)
+        assert(state.difficulty.maxTier == 1 and state.difficulty.currency == 0)
+        assert(
+            not G.DifficultyVictory(
+                state,
+                { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+            )
+        )
+        assert(G.ValidateDifficulty(state))
+    end
+)
 
 case("Older readiness retains earned tiers but requires a new final-boss victory", function()
     local s = party()

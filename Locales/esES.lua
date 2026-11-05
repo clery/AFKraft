@@ -319,8 +319,7 @@ W.Locales.esES = {
     OVERMASTER_PYRON = "Maestro Supremo Pyron",
     BASIC_ATTACKS_AND_STRIKES_HIT_EVERY_ENEMY = "Los ataques y golpes básicos golpean a todos los enemigos.",
     STRIKES_DEAL_50_MORE_DAMAGE_BELOW_35_ENEMY_HEALTH = "Los golpes causan un 50% más de daño por debajo de 35% enemy Health.",
-    OFFENSIVE_ABILITIES_HAVE_A_4_2_SECOND_BASE_COOLDOWN =
-    "Las habilidades ofensivas tienen un tiempo de reutilización base un 30% menor.",
+    OFFENSIVE_ABILITIES_HAVE_A_4_2_SECOND_BASE_COOLDOWN = "Las habilidades ofensivas tienen un tiempo de reutilización base un 30% menor.",
     HEALING_ABILITIES_RESTORE_60_MORE_HEALTH = "Las habilidades curativas restauran un 60% más de salud.",
     RESTORE_AN_ADDITIONAL_8_HEALTH_AFTER_VICTORY = "Restaura un 8% adicional de salud después de la victoria.",
     OFFENSIVE_ABILITIES_RESTORE_12_OF_THEIR_DAMAGE_AS_HEALTH = "Las habilidades ofensivas restauran 12% of su daño como salud.",
@@ -550,8 +549,7 @@ W.Locales.esES = {
     STRIKES_DEAL_45_MORE_DAMAGE_TO_ENEMIES_ABOVE_80 = "Los golpes infligen un 45% más de daño a los enemigos con más del 80% de salud.",
     SPECIAL_ATTACKS_BURN_EACH_TARGET_FOR_25_WEAPON_DAMAGE = "Los ataques especiales queman a cada objetivo con un 25% de daño de arma por segundo durante 3 segundos.",
     BASIC_ATTACKS_POISON_THE_TARGET_FOR_12_WEAPON_DAMAGE = "Los ataques básicos envenenan al objetivo con un 12% de daño de arma por segundo durante 6 segundos.",
-    BASIC_ATTACKS_REDUCE_YOUR_REMAINING_ABILITY_COOLDOWN_BY_0 =
-    "Cada segundo ataque básico reduce el tiempo de reutilización restante de las habilidades en 1 segundo.",
+    BASIC_ATTACKS_REDUCE_YOUR_REMAINING_ABILITY_COOLDOWN_BY_0 = "Cada segundo ataque básico reduce el tiempo de reutilización restante de las habilidades en 1 segundo.",
     YOUR_FIRST_STRIKE_EACH_ENCOUNTER_DEALS_DOUBLE_DAMAGE = "Tu primer golpe en cada encuentro causa el doble de daño.",
     BASIC_ATTACKS_AND_STRIKES_RESTORE_15_OF_DAMAGE_DEALT = "Los ataques y golpes básicos restauran 15% of de daño infligido al aliado vivo más herido.",
     HEALING_ALSO_RESTORES_25_HEALING_POWER_TO_EVERY_OTHER = "La curación también restaura un 25% del poder curativo a todos los demás aliados vivos.",
@@ -561,8 +559,7 @@ W.Locales.esES = {
     HEALING_HAS_A_4_SECOND_BASE_COOLDOWN_WHILE_THE = "La curación tiene un tiempo de reutilización base de 4 segundos mientras el receptor permanece por debajo de la mitad de su salud.",
     EACH_SUCCESSIVE_OFFENSIVE_CAST_GAINS_5_DAMAGE_UP_TO = "Cada lanzamiento ofensivo sucesivo gana 5% damage, hasta un 30% por encuentro.",
     STRIKES_BURN_THE_TARGET_FOR_20_OF_DAMAGE_DEALT = "Los golpes queman al objetivo y le infligen 20% of de daño por segundo durante 3 segundos.",
-    BASIC_ATTACKS_DELAY_THE_TARGET_S_NEXT_ATTACK_BY =
-    "Cada tercer ataque básico retrasa el siguiente ataque del objetivo en 1 segundo.",
+    BASIC_ATTACKS_DELAY_THE_TARGET_S_NEXT_ATTACK_BY = "Cada tercer ataque básico retrasa el siguiente ataque del objetivo en 1 segundo.",
     STRIKES_RESTORE_30_OF_DAMAGE_DEALT_AS_HEALTH_DOUBLED = "Los golpes restauran 30% of de daño infligido como salud, duplicado por debajo del 35% de salud.",
     TAKE_20_LESS_DAMAGE_WHILE_ABOVE_HALF_HEALTH_DRAW = "Recibe un 20% menos de daño mientras tienes más de la mitad de salud; llamar la atención del enemigo.",
     SPECIAL_ATTACKS_DELAY_EACH_TARGET_S_NEXT_ATTACK_BY = "Los ataques especiales retrasan el siguiente ataque de cada objetivo en 2 segundos.",
@@ -2320,8 +2317,7 @@ W.Locales.esES = {
     UP_TO_25_SUFFIX = " (hasta 25%).",
     YOUR_COMPANY_IS_TRAVELING_THROUGH_PREFIX = "Tu compañía está viajando por ",
     FRAGMENT_FRONTIER_2 = " · Primer encuentro: ",
-    CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX =
-    " encuentros con criaturas; nuevos oponentes en las fronteras 20, 40 y 60.",
+    CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX = " encuentros con criaturas; nuevos oponentes en las fronteras 20, 40 y 60.",
     FAMILY_SPOILS_PREFIX = "Botín familiar: ",
     UP_TO_25_ADDITIONAL_IDLE_MATERIALS_SHARED_ACROSS_THE = "Hasta un 25% de materiales inactivos adicionales, compartidos entre los enemigos del encuentro.",
     CLICK_TO_TRAVEL = "Haga clic para viajar",
@@ -2420,8 +2416,7 @@ W.Locales.esES = {
     ENCOUNTER_LEVEL_PREFIX = ", nivel de encuentro ",
     MASTERY_UNLOCKS_AT_HERO_LEVEL_PREFIX = "La maestría se desbloquea a nivel de héroe. ",
     TALENTS = "Talentos",
-    TALENT_POINTS_DESCRIPTION =
-    "Gana puntos permanentes con nuevos récords de nivel y cada tres rangos de maestría. Invierte un total de 5/10/15/20/25 puntos en las filas anteriores para abrir las filas 2–6. Clic izquierdo: añadir un rango; clic derecho: recuperar uno gratis. Los puntos y las elecciones sobreviven a ambos reinicios.\n\n",
+    TALENT_POINTS_DESCRIPTION = "Gana puntos permanentes con nuevos récords de nivel y cada tres rangos de maestría. Invierte un total de 5/10/15/20/25 puntos en las filas anteriores para abrir las filas 2–6. Clic izquierdo: añadir un rango; clic derecho: recuperar uno gratis. Los puntos y las elecciones sobreviven a ambos reinicios.\n\n",
     CLASS_PRESETS = "Preajustes de clase",
     RECOVER_BELOW_PREFIX = "Recuperar a continuación ",
     SPECIAL_AT_PREFIX = "Especial en ",
@@ -2533,8 +2528,7 @@ W.Locales.esES = {
     LEARN_ROUTE_PLANNING_ADD_DESTINATIONS_AND_MILESTONES_THEN_SAVE = "Aprenda a planificar rutas, agregue destinos e hitos, luego guarde y habilite la ruta. Los viajes ocurren entre encuentros. El viaje manual lo pausa hasta Reanudar.",
     HOVER_A_MISSING_COLLECTION_PIECE_FOR_ITS_CREATURES_LOCATION = "Coloca el cursor sobre una pieza de colección faltante para conocer sus criaturas, ubicación y posibilidades. Caza con tu verdadero personaje de WoW; Las combates del minijuego y las rutas fuera de línea no cuentan.",
     BROWSE_SETS_AND_HOVER_PIECES_FOR_THEIR_SOURCES_COMPLETE = "Explora los conjuntos y pasa el cursor sobre las piezas para ver sus fuentes. Completa un conjunto para elegir su efecto. Solo puede haber 1 efecto de conjunto activo; los descubrimientos se conservan tras ambos reinicios.",
-    MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT =
-    "La maestría se desbloquea permanentemente al nivel 20 del héroe. Gana encuentros en la frontera de tu nivel de dificultad o superior para obtener EXP. Cada tres rangos de maestría otorgan un punto de talento permanente.",
+    MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT = "La maestría se desbloquea permanentemente al nivel 20 del héroe. Gana encuentros en la frontera de tu nivel de dificultad o superior para obtener EXP. Cada tres rangos de maestría otorgan un punto de talento permanente.",
     ENCHANTING_IS_UNLOCKED_IN_FORGE_CHOOSE_A_HERO_EQUIPPED = "El encantamiento está desbloqueado en Forge. Elige un héroe, un objeto equipado y un encantamiento. La aplicación reemplaza el antiguo encantamiento; Las mejoras de reliquias sobreviven a ambos reinicios.",
     TITANFORGING_IS_UNLOCKED_IN_FORGE_RAISE_EQUIPPED_ITEM_POTENTIAL = "Forja de titanes está desbloqueado en Forge. Aumenta el potencial de los elementos equipados a través de 5 niveles, independientemente de las mejoras y los encantamientos. Consulte la vista previa y el costo antes de presentar la solicitud.",
     SPECIALIZATIONS_ARE_UNLOCKED_IN_FORGE_PAID_WORK_EARNS_PROFESSION = "Las especializaciones se desbloquean en Forge. El trabajo remunerado gana puntos de profesión. Tu plan sobrevive a la Trascendencia y se reactiva a medida que se reconstruyen las filas laborales.",
@@ -2790,62 +2784,38 @@ W.Locales.esES = {
     TALENT_MAX_RANK = "Rango máximo alcanzado.",
     SPEND_POINTS_IN_EARLIER_TALENT_ROWS = "Gasta un total de %d puntos en las filas anteriores de esta especialización.",
     REFUND_HIGHER_TALENT_ROWS_FIRST = "Recupera primero los talentos de las filas superiores.",
-    TALENT_RANK_SCALING =
-    "\nLos valores corresponden al rango máximo; los bonos pasivos aumentan por igual con cada rango.",
+    TALENT_RANK_SCALING = "\nLos valores corresponden al rango máximo; los bonos pasivos aumentan por igual con cada rango.",
     TALENT_RANK_CONTROLS = "Clic izquierdo: gastar un punto. Clic derecho: recuperar un rango.",
-    EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX =
-    "\nCada tres rangos de maestría otorgan un punto de talento permanente. Nivel ",
-    TALENT_ATTACK_SPEED =
-    "Los ataques básicos se recuperan un 15% más rápido; los tiempos de reutilización de habilidades no cambian.",
-    TALENT_COOLDOWN_RECOVERY =
-    "Los tiempos de reutilización de habilidades se recuperan un 15% más rápido; los ataques básicos no cambian.",
-    TALENT_CRITICAL_CHANCE =
-    "Los ataques y sanaciones directos ganan un 12% de probabilidad crítica. Los críticos infligen o restauran el 150% del valor normal.",
-    TALENT_CRITICAL_DAMAGE =
-    "Los golpes críticos infligen un 50% adicional del daño normal. Otorga al menos un 5% de probabilidad de golpe crítico.",
-    TALENT_CRITICAL_HEALING =
-    "Las sanaciones críticas restauran un 50% adicional de la sanación normal. Otorga al menos un 5% de probabilidad de sanación crítica.",
-    TALENT_SUPER_CRITICAL_CHANCE =
-    "Los ataques y sanaciones directos ganan un 4% de probabilidad supercrítica para un 300% de daño o sanación. Los supercríticos sustituyen a los críticos normales.",
-    TALENT_SUPER_CRITICAL_DAMAGE =
-    "Los golpes supercríticos infligen un 75% adicional del daño normal. Otorga al menos un 1% de probabilidad de golpe supercrítico.",
-    TALENT_SUPER_CRITICAL_HEALING =
-    "Las sanaciones supercríticas restauran un 75% adicional de la sanación normal. Otorga al menos un 1% de probabilidad de sanación supercrítica.",
+    EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX = "\nCada tres rangos de maestría otorgan un punto de talento permanente. Nivel ",
+    TALENT_ATTACK_SPEED = "Los ataques básicos se recuperan un 15% más rápido; los tiempos de reutilización de habilidades no cambian.",
+    TALENT_COOLDOWN_RECOVERY = "Los tiempos de reutilización de habilidades se recuperan un 15% más rápido; los ataques básicos no cambian.",
+    TALENT_CRITICAL_CHANCE = "Los ataques y sanaciones directos ganan un 12% de probabilidad crítica. Los críticos infligen o restauran el 150% del valor normal.",
+    TALENT_CRITICAL_DAMAGE = "Los golpes críticos infligen un 50% adicional del daño normal. Otorga al menos un 5% de probabilidad de golpe crítico.",
+    TALENT_CRITICAL_HEALING = "Las sanaciones críticas restauran un 50% adicional de la sanación normal. Otorga al menos un 5% de probabilidad de sanación crítica.",
+    TALENT_SUPER_CRITICAL_CHANCE = "Los ataques y sanaciones directos ganan un 4% de probabilidad supercrítica para un 300% de daño o sanación. Los supercríticos sustituyen a los críticos normales.",
+    TALENT_SUPER_CRITICAL_DAMAGE = "Los golpes supercríticos infligen un 75% adicional del daño normal. Otorga al menos un 1% de probabilidad de golpe supercrítico.",
+    TALENT_SUPER_CRITICAL_HEALING = "Las sanaciones supercríticas restauran un 75% adicional de la sanación normal. Otorga al menos un 1% de probabilidad de sanación supercrítica.",
     TALENT_RESOURCE_GAIN = "Obtienes un 25% más de recurso de clase por regeneración, ataques básicos y daño recibido.",
-    TALENT_ABILITY_EFFICIENCY =
-    "Cada rango reduce el coste de las habilidades en 1 de recurso de clase, con un mínimo de 1. Se siguen aplicando los umbrales de recurso.",
+    TALENT_ABILITY_EFFICIENCY = "Cada rango reduce el coste de las habilidades en 1 de recurso de clase, con un mínimo de 1. Se siguen aplicando los umbrales de recurso.",
     TALENT_DOT_DAMAGE = "Tus efectos de daño periódico infligen un 25% más de daño y no pueden ser críticos.",
-    TALENT_OVERHEAL_SHIELD =
-    "La sobresanación directa crea un escudo igual al 20% de la sanación sobrante, hasta un 20% de la salud máxima del objetivo. Se conserva el escudo mayor; las sanaciones activadas no crean escudos.",
+    TALENT_OVERHEAL_SHIELD = "La sobresanación directa crea un escudo igual al 20% de la sanación sobrante, hasta un 20% de la salud máxima del objetivo. Se conserva el escudo mayor; las sanaciones activadas no crean escudos.",
     TALENT_RANK_DAMAGE = "Inflige un %s%% más de daño.",
     TALENT_RANK_HEALING = "+%s%% de poder curativo.",
     TALENT_RANK_HEALTH = "+%s%% de salud máxima.",
     TALENT_RANK_SPEED = "Los ataques básicos y los tiempos de reutilización de habilidades progresan %s%% faster.",
-    TALENT_RANK_MITIGATION =
-    "Reduce el daño recibido en un %s%% adicional, hasta un 75%% de reducción total de armadura.",
+    TALENT_RANK_MITIGATION = "Reduce el daño recibido en un %s%% adicional, hasta un 75%% de reducción total de armadura.",
     TALENT_RANK_REGEN = "Regeneras un %s%% de la salud máxima por cada 10 segundos.",
-    TALENT_RANK_ATTACK_SPEED =
-    "Los ataques básicos se recuperan un %s%% más rápido; los tiempos de reutilización de habilidades no cambian.",
-    TALENT_RANK_COOLDOWN_RECOVERY =
-    "Los tiempos de reutilización de habilidades se recuperan un %s%% más rápido; los ataques básicos no cambian.",
-    TALENT_RANK_CRITICAL_CHANCE =
-    "Los ataques y sanaciones directos ganan un %s%% de probabilidad crítica. Los críticos infligen o restauran el 150%% del valor normal.",
-    TALENT_RANK_CRITICAL_DAMAGE =
-    "Los golpes críticos infligen un %s%% adicional del daño normal. Otorga al menos un %s%% de probabilidad de golpe crítico.",
-    TALENT_RANK_CRITICAL_HEALING =
-    "Las sanaciones críticas restauran un %s%% adicional de la sanación normal. Otorga al menos un %s%% de probabilidad de sanación crítica.",
-    TALENT_RANK_SUPER_CRITICAL_CHANCE =
-    "Los ataques y sanaciones directos ganan un %s%% de probabilidad supercrítica para un 300%% de daño o sanación. Los supercríticos sustituyen a los críticos normales.",
-    TALENT_RANK_SUPER_CRITICAL_DAMAGE =
-    "Los golpes supercríticos infligen un %s%% adicional del daño normal. Otorga al menos un %s%% de probabilidad de golpe supercrítico.",
-    TALENT_RANK_SUPER_CRITICAL_HEALING =
-    "Las sanaciones supercríticas restauran un %s%% adicional de la sanación normal. Otorga al menos un %s%% de probabilidad de sanación supercrítica.",
-    TALENT_RANK_RESOURCE_GAIN =
-    "Obtienes un %s%% más de recurso de clase por regeneración, ataques básicos y daño recibido.",
-    TALENT_RANK_ABILITY_EFFICIENCY =
-    "Las habilidades cuestan %s menos de recurso de clase, con un mínimo de 1. Se siguen aplicando los umbrales de recurso.",
+    TALENT_RANK_ATTACK_SPEED = "Los ataques básicos se recuperan un %s%% más rápido; los tiempos de reutilización de habilidades no cambian.",
+    TALENT_RANK_COOLDOWN_RECOVERY = "Los tiempos de reutilización de habilidades se recuperan un %s%% más rápido; los ataques básicos no cambian.",
+    TALENT_RANK_CRITICAL_CHANCE = "Los ataques y sanaciones directos ganan un %s%% de probabilidad crítica. Los críticos infligen o restauran el 150%% del valor normal.",
+    TALENT_RANK_CRITICAL_DAMAGE = "Los golpes críticos infligen un %s%% adicional del daño normal. Otorga al menos un %s%% de probabilidad de golpe crítico.",
+    TALENT_RANK_CRITICAL_HEALING = "Las sanaciones críticas restauran un %s%% adicional de la sanación normal. Otorga al menos un %s%% de probabilidad de sanación crítica.",
+    TALENT_RANK_SUPER_CRITICAL_CHANCE = "Los ataques y sanaciones directos ganan un %s%% de probabilidad supercrítica para un 300%% de daño o sanación. Los supercríticos sustituyen a los críticos normales.",
+    TALENT_RANK_SUPER_CRITICAL_DAMAGE = "Los golpes supercríticos infligen un %s%% adicional del daño normal. Otorga al menos un %s%% de probabilidad de golpe supercrítico.",
+    TALENT_RANK_SUPER_CRITICAL_HEALING = "Las sanaciones supercríticas restauran un %s%% adicional de la sanación normal. Otorga al menos un %s%% de probabilidad de sanación supercrítica.",
+    TALENT_RANK_RESOURCE_GAIN = "Obtienes un %s%% más de recurso de clase por regeneración, ataques básicos y daño recibido.",
+    TALENT_RANK_ABILITY_EFFICIENCY = "Las habilidades cuestan %s menos de recurso de clase, con un mínimo de 1. Se siguen aplicando los umbrales de recurso.",
     TALENT_RANK_DOT_DAMAGE = "Tus efectos de daño periódico infligen un %s%% más de daño y no pueden ser críticos.",
-    TALENT_RANK_OVERHEAL_SHIELD =
-    "La sobresanación directa crea un escudo igual al %s%% de la sanación sobrante, hasta un 20%% de la salud máxima del objetivo. Se conserva el escudo mayor; las sanaciones activadas no crean escudos.",
+    TALENT_RANK_OVERHEAL_SHIELD = "La sobresanación directa crea un escudo igual al %s%% de la sanación sobrante, hasta un 20%% de la salud máxima del objetivo. Se conserva el escudo mayor; las sanaciones activadas no crean escudos.",
     TALENT_CURRENT_RANK = "Rango actual",
 }

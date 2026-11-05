@@ -393,10 +393,12 @@ test("Defeated models play death and damage text rises with a frame-rate fade", 
         scene:Refresh(state)
         assertTrue(unit.floatAnimation:IsPlaying())
         assertEquals("-12", unit.floating:GetText())
-        state.events = { { kind = "hit", target = 1, enemy = true, amount = 18, critical = "critical" } }
+        state.events =
+            { { kind = "hit", target = 1, enemy = true, amount = 18, critical = "critical" } }
         scene:Refresh(state)
         assertEquals("-18!", unit.floating:GetText())
-        state.events = { { kind = "hit", target = 1, enemy = true, amount = 36, critical = "supercritical" } }
+        state.events =
+            { { kind = "hit", target = 1, enemy = true, amount = 36, critical = "supercritical" } }
         scene:Refresh(state)
         assertEquals("-36!!", unit.floating:GetText())
         unit.floatAnimation:Stop()

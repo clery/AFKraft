@@ -191,7 +191,12 @@ case("Hero target preferences survive both prestige resets and same-class replac
     s.heroes[1].level = 60
     G.TalentProgress(s.heroes[1])
     s.encounter = 1
-    assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
+    assert(
+        G.DifficultyVictory(
+            s,
+            { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+        )
+    )
     assert(G.PrestigePlus(s, 1))
     assert(s.heroes[1].targetMode == "strongest" and s.heroes[1].level == 1)
 end)

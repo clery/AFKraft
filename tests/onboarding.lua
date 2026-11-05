@@ -158,7 +158,10 @@ test(
     function()
         local W, s, ui = opening()
         assertEquals(1, #s.heroes)
-        assertEquals("Milestone boss level " .. W.Content.companionMilestones[2], ui.cards[2].detail:GetText())
+        assertEquals(
+            "Milestone boss level " .. W.Content.companionMilestones[2],
+            ui.cards[2].detail:GetText()
+        )
         assertTrue(ui.tabs.party.notice:GetText() ~= "Recruit")
         click(ui.cards[2])
         assertNotNil(find(ui, "Back to equipment"))
@@ -173,7 +176,10 @@ test(
         assertEquals("PRIEST", s.heroes[2].class)
         assertFalse(ui.recruiting)
         assertFalse(W.Game.Recruit(s, "MAGE"))
-        assertEquals("Milestone boss level " .. W.Content.companionMilestones[3], ui.cards[3].detail:GetText())
+        assertEquals(
+            "Milestone boss level " .. W.Content.companionMilestones[3],
+            ui.cards[3].detail:GetText()
+        )
     end
 )
 
@@ -350,24 +356,26 @@ test("First hunt lesson waits for verified sources and retains its acknowledgeme
     assertTrue(ok, message)
 end)
 
-
-test("A stalled company can review prestige before sixty without resetting from the advice", function()
-    local W, s, ui = advanced()
-    local G = W.Game
-    for _, class in ipairs({ "PRIEST", "MAGE", "ROGUE", "SHAMAN" }) do
-        assertTrue(G.AddHero(s, class))
+test(
+    "A stalled company can review prestige before sixty without resetting from the advice",
+    function()
+        local W, s, ui = advanced()
+        local G = W.Game
+        for _, class in ipairs({ "PRIEST", "MAGE", "ROGUE", "SHAMAN" }) do
+            assertTrue(G.AddHero(s, class))
+        end
+        for index, hero in ipairs(s.heroes) do
+            assertTrue(G.Talent(s, index, G.TalentList(hero)[1].id))
+        end
+        s.best, s.runBest, s.farming, s.prestigeUnlocked = 12, 12, true, true
+        s.lastDefeat = "The company could not defeat this encounter."
+        s.guide.dismissed = true
+        ui:SetTab("adventure")
+        assertNotNil(find(ui, "Review prestige"))
+        click(find(ui, "Review prestige"))
+        assertEquals("legacy", s.ui.tab)
+        assertEquals(0, s.prestiges)
+        assertEquals(0, s.legacy)
+        assertEquals(12, s.runBest)
     end
-    for index, hero in ipairs(s.heroes) do
-        assertTrue(G.Talent(s, index, G.TalentList(hero)[1].id))
-    end
-    s.best, s.runBest, s.farming, s.prestigeUnlocked = 12, 12, true, true
-    s.lastDefeat = "The company could not defeat this encounter."
-    s.guide.dismissed = true
-    ui:SetTab("adventure")
-    assertNotNil(find(ui, "Review prestige"))
-    click(find(ui, "Review prestige"))
-    assertEquals("legacy", s.ui.tab)
-    assertEquals(0, s.prestiges)
-    assertEquals(0, s.legacy)
-    assertEquals(12, s.runBest)
-end)
+)

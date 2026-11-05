@@ -137,7 +137,9 @@ case("Slower discoveries preserve old access and do not expire before recruitmen
     old.best, old.runBest, old.unlocks = 8, 18, nil
     local loaded = assert(G.Load(old, 1000))
     assert(G.CompanionSlots(loaded) == 5)
-    for _, zone in ipairs(C.zones) do assert(G.IsUnlocked(loaded, zone)) end
+    for _, zone in ipairs(C.zones) do
+        assert(G.IsUnlocked(loaded, zone))
+    end
     loaded.prestigeUnlocked = true
     assert(G.Prestige(loaded))
     assert(G.CompanionSlots(loaded) == 5)
@@ -170,10 +172,18 @@ end)
 
 case("Unlock receipts reject malformed state rather than granting discoveries", function()
     for _, corrupt in ipairs({
-        function(s) s.unlocks.companions = 6 end,
-        function(s) s.unlocks.companions = 1.5 end,
-        function(s) s.unlocks.zones.missing_zone = true end,
-        function(s) s.unlocks.zones.westfall = false end,
+        function(s)
+            s.unlocks.companions = 6
+        end,
+        function(s)
+            s.unlocks.companions = 1.5
+        end,
+        function(s)
+            s.unlocks.zones.missing_zone = true
+        end,
+        function(s)
+            s.unlocks.zones.westfall = false
+        end,
     }) do
         local s = G.New(1000)
         corrupt(s)
@@ -203,7 +213,9 @@ end)
 case("Four hours in Elwynn cannot bypass its hero level ceiling", function()
     local s = G.New(0)
     assert(G.AddHero(s, "WARRIOR"))
-    for _ = 1, 4 * 3600 do G.Step(s, 1) end
+    for _ = 1, 4 * 3600 do
+        G.Step(s, 1)
+    end
     assert(s.heroes[1].level == 10 and s.heroes[1].xp == 0)
     local level, xp = s.heroes[1].level, s.heroes[1].xp
     assert(G.ActivityReward(s, "quest:curve-test", "quest", "test"))
@@ -224,7 +236,11 @@ case("Zone XP ceilings taper, stop overflow and preserve veteran progress", func
     for _, destination in ipairs(C.zones) do
         assert(destination.heroLevelCap >= destination.unlockLevel)
     end
-    level, xp = G.ExperienceResult({ level = 59, xp = G.LevelXP(59) - 1 }, 100, C.zoneByID.blackrock_mountain)
+    level, xp = G.ExperienceResult(
+        { level = 59, xp = G.LevelXP(59) - 1 },
+        100,
+        C.zoneByID.blackrock_mountain
+    )
     assert(level == 60 and xp == 0)
 end)
 
@@ -234,7 +250,8 @@ case("Offline farming respects zone ceilings and reports exact nonlinear XP", fu
     s.heroes[1].level, s.heroes[1].xp = 9, G.LevelXP(9) - 1
     s.safe.elwynn = 1
     local job = assert(G.BeginCatchup(s, 3600))
-    while not G.CatchupBatch(job, 1000) do end
+    while not G.CatchupBatch(job, 1000) do
+    end
     G.FinishCatchup(s, job)
     assert(s.heroes[1].level == 10 and s.heroes[1].xp == 0)
     assert(s.lastOfflineSummary.heroXP == 1)

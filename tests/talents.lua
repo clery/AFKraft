@@ -31,31 +31,37 @@ local function prerequisites(state, h, talent)
     end
 end
 
-case("Rows require five additional cumulative points in earlier rows of the same specialization", function()
-    for _, class in ipairs(C.classes) do
-        for _, node in ipairs(C.talentsByClass[class.id]) do
-            if node.row > 1 then
-                local state, h = hero(class.id)
-                assert(not G.Talent(state, 1, node.id))
-                prerequisites(state, h, node)
-                local previous
-                for _, candidate in ipairs(G.TalentList(h)) do
-                    if candidate.path == node.path and candidate.row == node.row - 1
-                        and G.TalentRank(h, candidate) > 0 then
-                        previous = candidate
+case(
+    "Rows require five additional cumulative points in earlier rows of the same specialization",
+    function()
+        for _, class in ipairs(C.classes) do
+            for _, node in ipairs(C.talentsByClass[class.id]) do
+                if node.row > 1 then
+                    local state, h = hero(class.id)
+                    assert(not G.Talent(state, 1, node.id))
+                    prerequisites(state, h, node)
+                    local previous
+                    for _, candidate in ipairs(G.TalentList(h)) do
+                        if
+                            candidate.path == node.path
+                            and candidate.row == node.row - 1
+                            and G.TalentRank(h, candidate) > 0
+                        then
+                            previous = candidate
+                        end
                     end
+                    assert(previous and G.Talent(state, 1, previous.id, true))
+                    assert(not G.Talent(state, 1, node.id))
+                    assert(G.Talent(state, 1, previous.id))
+                    assert(G.Talent(state, 1, node.id))
+                    assert(not G.Talent(state, 1, previous.id, true))
+                    assert(G.Talent(state, 1, node.id, true))
+                    assert(G.Talent(state, 1, previous.id, true))
                 end
-                assert(previous and G.Talent(state, 1, previous.id, true))
-                assert(not G.Talent(state, 1, node.id))
-                assert(G.Talent(state, 1, previous.id))
-                assert(G.Talent(state, 1, node.id))
-                assert(not G.Talent(state, 1, previous.id, true))
-                assert(G.Talent(state, 1, node.id, true))
-                assert(G.Talent(state, 1, previous.id, true))
             end
         end
     end
-end)
+)
 
 case("Every class has three eighteen-node specialization trees", function()
     local total = 0
@@ -193,8 +199,9 @@ case("Repeated specialization motifs stack numeric bonuses", function()
     end
     assert(count > 1)
     assert(
-        math.abs(G.Stats(state, h).healing / base - ((1 + initial + count * 0.2 / 5) / (1 + initial)))
-        < 0.000001
+        math.abs(
+            G.Stats(state, h).healing / base - ((1 + initial + count * 0.2 / 5) / (1 + initial))
+        ) < 0.000001
     )
 end)
 
@@ -548,7 +555,9 @@ case("All ranked choices reload and refund after current levels decrease", funct
         for row = 1, 6 do
             for _, node in ipairs(G.TalentList(h)) do
                 if node.row == row then
-                    for _ = 1, node.maxRanks do assert(G.Talent(state, 1, node.id)) end
+                    for _ = 1, node.maxRanks do
+                        assert(G.Talent(state, 1, node.id))
+                    end
                 end
             end
         end
@@ -559,7 +568,9 @@ case("All ranked choices reload and refund after current levels decrease", funct
             for _, node in ipairs(G.TalentList(h)) do
                 if node.row == row then
                     assert(G.TalentRank(h, node) == node.maxRanks)
-                    for _ = 1, node.maxRanks do assert(G.Talent(loaded, 1, node.id, true)) end
+                    for _ = 1, node.maxRanks do
+                        assert(G.Talent(loaded, 1, node.id, true))
+                    end
                 end
             end
         end
@@ -586,8 +597,8 @@ end)
 case("Burning-target talents distinguish magical dots from bleeds and expired effects", function()
     local s, _, unit, enemy = traitEncounter("MAGE", "Pyroclasm")
     for _, sample in ipairs({
-        { physical = true,  remaining = 5,   bonus = 1 },
-        { physical = false, remaining = 5,   bonus = 1.25 },
+        { physical = true, remaining = 5, bonus = 1 },
+        { physical = false, remaining = 5, bonus = 1.25 },
         { physical = false, remaining = 0.1, bonus = 1 },
     }) do
         enemy.dots =
@@ -731,7 +742,9 @@ case("Existing earned budgets survive the ranked tree and resume slower Mastery"
     local loaded = assert(G.Load(G.Copy(state), 1000))
     h = loaded.heroes[1]
     assert(G.Points(h) == 53 and h.talents.cleave == 1)
-    for _ = 1, 2 do G.RewardMastery(h, 60, G.MasteryCost(h.mastery.rank), false) end
+    for _ = 1, 2 do
+        G.RewardMastery(h, 60, G.MasteryCost(h.mastery.rank), false)
+    end
     assert(G.Points(h) == 53)
     G.RewardMastery(h, 60, G.MasteryCost(h.mastery.rank), false)
     assert(G.Points(h) == 54)
@@ -758,11 +771,15 @@ case("Every row can hold five points without signature abilities needing empty r
     for _, class in ipairs(C.classes) do
         local rows = {}
         for _, node in ipairs(C.talentsByClass[class.id]) do
-            assert(node.maxRanks == 1 or node.maxRanks == 2 or node.maxRanks == 3 or node.maxRanks == 5)
+            assert(
+                node.maxRanks == 1 or node.maxRanks == 2 or node.maxRanks == 3 or node.maxRanks == 5
+            )
             local row = node.path .. ":" .. node.row
             rows[row] = (rows[row] or 0) + node.maxRanks
         end
-        for _, capacity in pairs(rows) do assert(capacity >= 5) end
+        for _, capacity in pairs(rows) do
+            assert(capacity >= 5)
+        end
     end
 end)
 
@@ -803,8 +820,12 @@ case("Cumulative gates allow uneven spending and refunds protect every later row
     spend(2, 1, 1)
     local target, earlier
     for _, node in ipairs(G.TalentList(h)) do
-        if node.path == 1 and node.row == 3 then target = node end
-        if node.path == 1 and node.row == 1 and G.TalentRank(h, node) > 0 then earlier = node end
+        if node.path == 1 and node.row == 3 then
+            target = node
+        end
+        if node.path == 1 and node.row == 1 and G.TalentRank(h, node) > 0 then
+            earlier = node
+        end
     end
     assert(target and earlier and not G.CanTalent(h, target))
     spend(1, 2, 1)
@@ -817,7 +838,9 @@ end)
 case("Each class mixes two, three and five-rank passive choices", function()
     for _, class in ipairs(C.classes) do
         local caps = {}
-        for _, node in ipairs(C.talentsByClass[class.id]) do caps[node.maxRanks] = true end
+        for _, node in ipairs(C.talentsByClass[class.id]) do
+            caps[node.maxRanks] = true
+        end
         assert(caps[1] and caps[2] and caps[3] and caps[5])
     end
 end)

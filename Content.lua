@@ -644,8 +644,21 @@ C.zones = {
         bossFamily = "elemental",
     },
 }
-local zoneXPLevels = { [1] = 10, [3] = 20, [5] = 25, [7] = 30, [8] = 35, [9] = 35, [10] = 40, [12] = 45, [14] = 50, [15] = 52,
-    [16] = 55, [17] = 58, [18] = 60 }
+local zoneXPLevels = {
+    [1] = 10,
+    [3] = 20,
+    [5] = 25,
+    [7] = 30,
+    [8] = 35,
+    [9] = 35,
+    [10] = 40,
+    [12] = 45,
+    [14] = 50,
+    [15] = 52,
+    [16] = 55,
+    [17] = 58,
+    [18] = 60,
+}
 C.zoneByID = {}
 for _, zone in ipairs(C.zones) do
     zone.heroLevelCap = zoneXPLevels[zone.level]

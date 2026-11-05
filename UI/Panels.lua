@@ -70,7 +70,9 @@ function P.GuideStep(s, selectedHero)
         for index, hero in ipairs(s.heroes) do
             if G.Points(hero) > 0 then
                 for _, talent in ipairs(G.TalentList(hero)) do
-                    if G.TalentRank(hero, talent) < talent.maxRanks and G.CanTalent(hero, talent) then
+                    if
+                        G.TalentRank(hero, talent) < talent.maxRanks and G.CanTalent(hero, talent)
+                    then
                         return 3, index
                     end
                 end
@@ -776,13 +778,13 @@ function P.talents(ui, p, s)
             ui.heroResourceChoice,
             profile.name .. ": " .. math.floor(value) .. "/" .. profile.maximum,
             profile.description
-            .. L.FRAGMENT_ABILITY_COSTS_STRIKE
-            .. G.HeroAbilityCost(h, "attack")
-            .. L.RECOVERY_PREFIX
-            .. G.HeroAbilityCost(h, "heal")
-            .. L.SPECIAL_PREFIX
-            .. G.HeroAbilityCost(h, "special")
-            .. L.THE_THRESHOLD_IS_CHECKED_BEFORE_SPENDING_BASIC_ATTACKS_CONTINUE
+                .. L.FRAGMENT_ABILITY_COSTS_STRIKE
+                .. G.HeroAbilityCost(h, "attack")
+                .. L.RECOVERY_PREFIX
+                .. G.HeroAbilityCost(h, "heal")
+                .. L.SPECIAL_PREFIX
+                .. G.HeroAbilityCost(h, "special")
+                .. L.THE_THRESHOLD_IS_CHECKED_BEFORE_SPENDING_BASIC_ATTACKS_CONTINUE
         )
     end
 end

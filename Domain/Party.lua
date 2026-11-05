@@ -30,30 +30,45 @@ function G.CompanionSlots(state)
         end
     end
     slots = math.min(5, slots)
-    if state.unlocks then state.unlocks.companions = slots end
+    if state.unlocks then
+        state.unlocks.companions = slots
+    end
     return slots
 end
 
 function G.ValidateUnlocks(state, legacy)
     local unlocked = state.unlocks
     local function whole(value, low, high)
-        return type(value) == "number" and value >= low and value <= high and value == math.floor(value)
+        return type(value) == "number"
+            and value >= low
+            and value <= high
+            and value == math.floor(value)
     end
-    if type(unlocked) ~= "table" or type(unlocked.zones) ~= "table"
+    if
+        type(unlocked) ~= "table"
+        or type(unlocked.zones) ~= "table"
         or not whole(unlocked.companions, 1, 5)
-        or not whole(state.best, 1, 1000000000) or not whole(state.runBest, 1, 1000000000) then
+        or not whole(state.best, 1, 1000000000)
+        or not whole(state.runBest, 1, 1000000000)
+    then
         return false
     end
     for zone, known in pairs(unlocked.zones) do
-        if not C.zoneByID[zone] or known ~= true then return false end
+        if not C.zoneByID[zone] or known ~= true then
+            return false
+        end
     end
     if legacy then
         -- Preserve discoveries earned under the earlier opening curve.
         for index, level in ipairs({ 0, 1, 3, 5, 7 }) do
-            if state.best > level then unlocked.companions = math.max(unlocked.companions, index) end
+            if state.best > level then
+                unlocked.companions = math.max(unlocked.companions, index)
+            end
         end
         for _, zone in ipairs(C.zones) do
-            if zone.level <= state.runBest then unlocked.zones[zone.id] = true end
+            if zone.level <= state.runBest then
+                unlocked.zones[zone.id] = true
+            end
         end
         unlocked.zones[state.zone] = true
     end
@@ -284,8 +299,15 @@ function G.TalentList(hero)
         local replacement = byID[id] and id or legacy[id]
         local node = replacement and byID[replacement]
         local rank = learned == true and 1 or learned
-        if hero.talentRanksVersion == nil and node and node.value ~= true
-            and type(rank) == "number" and rank >= 1 and rank <= 5 and rank == floor(rank) then
+        if
+            hero.talentRanksVersion == nil
+            and node
+            and node.value ~= true
+            and type(rank) == "number"
+            and rank >= 1
+            and rank <= 5
+            and rank == floor(rank)
+        then
             rank = min(rank, node.maxRanks)
         end
         if not node or type(rank) ~= "number" then
@@ -299,7 +321,9 @@ function G.TalentList(hero)
             selected[id] = rank
         end
     end
-    if hero.talentRanksVersion == nil then hero.talentRanksVersion = 2 end
+    if hero.talentRanksVersion == nil then
+        hero.talentRanksVersion = 2
+    end
     return C.talentsByClass[hero.class] or {}
 end
 
@@ -310,7 +334,9 @@ end
 
 function G.TalentLimit(hero)
     local total = 0
-    for _, node in ipairs(G.TalentList(hero)) do total = total + node.maxRanks end
+    for _, node in ipairs(G.TalentList(hero)) do
+        total = total + node.maxRanks
+    end
     return total
 end
 
@@ -321,10 +347,14 @@ function G.TalentEffects(hero)
             if talent.value == true then
                 effects[talent.effect] = true
             else
-                effects[talent.effect] = (effects[talent.effect] or 0) +
-                    talent.value * G.TalentRank(hero, talent) / talent.maxRanks
-                if talent.effect == "criticalDamage" or talent.effect == "criticalHealing"
-                    or talent.effect == "superCriticalDamage" or talent.effect == "superCriticalHealing" then
+                effects[talent.effect] = (effects[talent.effect] or 0)
+                    + talent.value * G.TalentRank(hero, talent) / talent.maxRanks
+                if
+                    talent.effect == "criticalDamage"
+                    or talent.effect == "criticalHealing"
+                    or talent.effect == "superCriticalDamage"
+                    or talent.effect == "superCriticalHealing"
+                then
                     local chance = talent.effect .. "Chance"
                     effects[chance] = (effects[chance] or 0) + G.TalentRank(hero, talent) / 100
                 end
@@ -338,17 +368,25 @@ end
 function G.CriticalResult(state, hero, amount, healing)
     local effects = G.TalentEffects(hero)
     local criticalPower, superPower = effects.criticalDamage or 0, effects.superCriticalDamage or 0
-    local criticalMinimum, superMinimum = effects.criticalDamageChance or 0, effects.superCriticalDamageChance or 0
+    local criticalMinimum, superMinimum =
+        effects.criticalDamageChance or 0, effects.superCriticalDamageChance or 0
     if healing then
         criticalPower, superPower = effects.criticalHealing or 0, effects.superCriticalHealing or 0
-        criticalMinimum, superMinimum = effects.criticalHealingChance or 0, effects.superCriticalHealingChance or 0
+        criticalMinimum, superMinimum =
+            effects.criticalHealingChance or 0, effects.superCriticalHealingChance or 0
     end
     local criticalChance = min(0.75, max(effects.criticalChance or 0, criticalMinimum))
     local superChance = min(0.2, max(effects.superCriticalChance or 0, superMinimum))
-    if criticalChance + superChance <= 0 then return amount end
+    if criticalChance + superChance <= 0 then
+        return amount
+    end
     local roll = G.Random(state, 10000)
-    if roll <= floor(superChance * 10000 + 0.5) then return amount * (3 + superPower), "supercritical" end
-    if roll <= floor((superChance + criticalChance) * 10000 + 0.5) then return amount * (1.5 + criticalPower), "critical" end
+    if roll <= floor(superChance * 10000 + 0.5) then
+        return amount * (3 + superPower), "supercritical"
+    end
+    if roll <= floor((superChance + criticalChance) * 10000 + 0.5) then
+        return amount * (1.5 + criticalPower), "critical"
+    end
     return amount
 end
 
@@ -575,24 +613,34 @@ function G.CanTalent(hero, talent, refund)
         if node.path == talent.path then
             local selected = G.TalentRank(hero, node)
             rows[node.row] = (rows[node.row] or 0) + selected
-            if node.row < talent.row then previous = previous + selected end
+            if node.row < talent.row then
+                previous = previous + selected
+            end
         end
     end
     if refund then
-        if rank == 0 then return false end
+        if rank == 0 then
+            return false
+        end
         local earlier = 0
         for row = 1, 6 do
             local required = (row - 1) * C.talentProgression.pointsPerRow
             -- Preserve old builds, but do not invalidate an already satisfied requirement.
-            if row > talent.row and (rows[row] or 0) > 0
-                and earlier >= required and earlier - 1 < required then
+            if
+                row > talent.row
+                and (rows[row] or 0) > 0
+                and earlier >= required
+                and earlier - 1 < required
+            then
                 return false, L.REFUND_HIGHER_TALENT_ROWS_FIRST
             end
             earlier = earlier + (rows[row] or 0)
         end
         return true
     end
-    if rank >= talent.maxRanks then return false, L.TALENT_MAX_RANK end
+    if rank >= talent.maxRanks then
+        return false, L.TALENT_MAX_RANK
+    end
     local required = (talent.row - 1) * C.talentProgression.pointsPerRow
     if previous < required then
         return false, string.format(L.SPEND_POINTS_IN_EARLIER_TALENT_ROWS, required)
@@ -603,11 +651,14 @@ function G.CanTalent(hero, talent, refund)
     end
     if progress.earned <= spent then
         local level = G.NextTalentLevel(hero)
-        return false, level
-            and (L.REACH_IDLE_LEVEL_PREFIX .. level .. L.FOR_ANOTHER_PERMANENT_TALENT_POINT_SUFFIX)
-            or (progress.earned < G.TalentLimit(hero)
-                and L.EARN_MASTERY_XP_FROM_HARDER_ENCOUNTERS_FOR_ANOTHER_PERMANENT
-                or L.ALL_PERMANENT_TALENT_POINTS_HAVE_BEEN_EARNED)
+        return false,
+            level
+                    and (L.REACH_IDLE_LEVEL_PREFIX .. level .. L.FOR_ANOTHER_PERMANENT_TALENT_POINT_SUFFIX)
+                or (
+                    progress.earned < G.TalentLimit(hero)
+                        and L.EARN_MASTERY_XP_FROM_HARDER_ENCOUNTERS_FOR_ANOTHER_PERMANENT
+                    or L.ALL_PERMANENT_TALENT_POINTS_HAVE_BEEN_EARNED
+                )
     end
     return true
 end
@@ -711,7 +762,9 @@ function G.ExperienceResult(hero, amount, zone)
     local level, xp, cap = hero.level, hero.xp, G.LevelCap(hero)
     if zone then
         cap = math.min(cap, zone.heroLevelCap)
-        if level >= cap then return level, xp end
+        if level >= cap then
+            return level, xp
+        end
         amount = floor(amount * math.min(1, (cap - level) / 5))
     end
     if level < cap then

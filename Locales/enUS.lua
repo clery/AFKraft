@@ -549,8 +549,7 @@ W.Locales.enUS = {
     STRIKES_DEAL_45_MORE_DAMAGE_TO_ENEMIES_ABOVE_80 = "Strikes deal 45% more damage to enemies above 80% health.",
     SPECIAL_ATTACKS_BURN_EACH_TARGET_FOR_25_WEAPON_DAMAGE = "Special attacks burn each target for 25% weapon damage per second for 3 seconds.",
     BASIC_ATTACKS_POISON_THE_TARGET_FOR_12_WEAPON_DAMAGE = "Basic attacks poison the target for 12% weapon damage per second for 6 seconds.",
-    BASIC_ATTACKS_REDUCE_YOUR_REMAINING_ABILITY_COOLDOWN_BY_0 =
-    "Every second basic attack reduces your remaining ability cooldown by 1 second.",
+    BASIC_ATTACKS_REDUCE_YOUR_REMAINING_ABILITY_COOLDOWN_BY_0 = "Every second basic attack reduces your remaining ability cooldown by 1 second.",
     YOUR_FIRST_STRIKE_EACH_ENCOUNTER_DEALS_DOUBLE_DAMAGE = "Your first strike each encounter deals double damage.",
     BASIC_ATTACKS_AND_STRIKES_RESTORE_15_OF_DAMAGE_DEALT = "Basic attacks and strikes restore 15% of damage dealt to the most injured living ally.",
     HEALING_ALSO_RESTORES_25_HEALING_POWER_TO_EVERY_OTHER = "Healing also restores 25% healing power to every other living ally.",
@@ -560,8 +559,7 @@ W.Locales.enUS = {
     HEALING_HAS_A_4_SECOND_BASE_COOLDOWN_WHILE_THE = "Healing has a 4 second base cooldown while the recipient remains below half health.",
     EACH_SUCCESSIVE_OFFENSIVE_CAST_GAINS_5_DAMAGE_UP_TO = "Each successive offensive cast gains 5% damage, up to 30% per encounter.",
     STRIKES_BURN_THE_TARGET_FOR_20_OF_DAMAGE_DEALT = "Strikes burn the target for 20% of damage dealt per second for 3 seconds.",
-    BASIC_ATTACKS_DELAY_THE_TARGET_S_NEXT_ATTACK_BY =
-    "Every third basic attack delays the target’s next attack by 1 second.",
+    BASIC_ATTACKS_DELAY_THE_TARGET_S_NEXT_ATTACK_BY = "Every third basic attack delays the target’s next attack by 1 second.",
     STRIKES_RESTORE_30_OF_DAMAGE_DEALT_AS_HEALTH_DOUBLED = "Strikes restore 30% of damage dealt as health, doubled below 35% health.",
     TAKE_20_LESS_DAMAGE_WHILE_ABOVE_HALF_HEALTH_DRAW = "Take 20% less damage while above half health; draw enemy attention.",
     SPECIAL_ATTACKS_DELAY_EACH_TARGET_S_NEXT_ATTACK_BY = "Special attacks delay each target's next attack by 2 seconds.",
@@ -2319,8 +2317,7 @@ W.Locales.enUS = {
     UP_TO_25_SUFFIX = " (up to 25%).",
     YOUR_COMPANY_IS_TRAVELING_THROUGH_PREFIX = "Your company is traveling through ",
     FRAGMENT_FRONTIER_2 = " · Starts at encounter ",
-    CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX =
-    " creature encounters; new opponents at frontiers 20, 40 and 60.",
+    CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX = " creature encounters; new opponents at frontiers 20, 40 and 60.",
     FAMILY_SPOILS_PREFIX = "Family spoils: ",
     UP_TO_25_ADDITIONAL_IDLE_MATERIALS_SHARED_ACROSS_THE = "Up to 25% additional idle materials, shared across the encounter's enemies.",
     CLICK_TO_TRAVEL = "Click to travel",
@@ -2419,8 +2416,7 @@ W.Locales.enUS = {
     ENCOUNTER_LEVEL_PREFIX = ", encounter level ",
     MASTERY_UNLOCKS_AT_HERO_LEVEL_PREFIX = "Mastery unlocks at hero level ",
     TALENTS = "Talents",
-    TALENT_POINTS_DESCRIPTION =
-    "Earn permanent points from hero level records and every three Mastery ranks. Invest 5/10/15/20/25 points across earlier rows to open rows 2–6. Left-click adds a rank; right-click refunds one for free. Points and choices survive both resets.\n\n",
+    TALENT_POINTS_DESCRIPTION = "Earn permanent points from hero level records and every three Mastery ranks. Invest 5/10/15/20/25 points across earlier rows to open rows 2–6. Left-click adds a rank; right-click refunds one for free. Points and choices survive both resets.\n\n",
     CLASS_PRESETS = "Class presets",
     RECOVER_BELOW_PREFIX = "Recover below ",
     SPECIAL_AT_PREFIX = "Special at ",
@@ -2532,8 +2528,7 @@ W.Locales.enUS = {
     LEARN_ROUTE_PLANNING_ADD_DESTINATIONS_AND_MILESTONES_THEN_SAVE = "Learn route planning, add destinations and milestones, then save and enable the route. Travel happens between encounters. Manual travel pauses it until Resume.",
     HOVER_A_MISSING_COLLECTION_PIECE_FOR_ITS_CREATURES_LOCATION = "Hover a missing collection piece for its creatures, location and chance. Hunt with your real WoW character; idle battles and offline routes do not count.",
     BROWSE_SETS_AND_HOVER_PIECES_FOR_THEIR_SOURCES_COMPLETE = "Browse sets and hover pieces for their sources. Complete a set to select its effect. Only 1 set effect can be active; discoveries survive both resets.",
-    MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT =
-    "Mastery unlocks permanently at hero level 20. Win at your current-tier encounter frontier or higher to earn XP. Every three Mastery ranks add one permanent talent point.",
+    MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT = "Mastery unlocks permanently at hero level 20. Win at your current-tier encounter frontier or higher to earn XP. Every three Mastery ranks add one permanent talent point.",
     ENCHANTING_IS_UNLOCKED_IN_FORGE_CHOOSE_A_HERO_EQUIPPED = "Enchanting is unlocked in Forge. Choose a hero, equipped item and enchantment. Applying replaces the old enchantment; heirloom upgrades survive both resets.",
     TITANFORGING_IS_UNLOCKED_IN_FORGE_RAISE_EQUIPPED_ITEM_POTENTIAL = "Titanforging is unlocked in Forge. Raise equipped item potential through 5 tiers, separately from enhancement and enchanting. Check the preview and cost before applying.",
     SPECIALIZATIONS_ARE_UNLOCKED_IN_FORGE_PAID_WORK_EARNS_PROFESSION = "Specializations are unlocked in Forge. Paid work earns profession points. Your plan survives Transcendence and reactivates as work ranks rebuild.",
@@ -2791,28 +2786,19 @@ W.Locales.enUS = {
     REFUND_HIGHER_TALENT_ROWS_FIRST = "Refund talents in higher rows first.",
     TALENT_RANK_SCALING = "\nValues shown are at maximum rank; passive bonuses scale equally with each rank.",
     TALENT_RANK_CONTROLS = "Left-click: spend one point. Right-click: refund one rank.",
-    EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX =
-    "\nEvery three Mastery ranks grant one permanent talent point. Tier ",
+    EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX = "\nEvery three Mastery ranks grant one permanent talent point. Tier ",
     TALENT_ATTACK_SPEED = "Basic attacks recover 15% faster; ability cooldowns are unchanged.",
     TALENT_COOLDOWN_RECOVERY = "Ability cooldowns recover 15% faster; basic attacks are unchanged.",
-    TALENT_CRITICAL_CHANCE =
-    "Direct attacks and direct heals gain 12% critical chance. Criticals deal or heal 150% of normal.",
-    TALENT_CRITICAL_DAMAGE =
-    "Critical hits deal an additional 50% of normal damage. Grants at least 5% critical hit chance.",
-    TALENT_CRITICAL_HEALING =
-    "Critical heals restore an additional 50% of normal healing. Grants at least 5% critical heal chance.",
-    TALENT_SUPER_CRITICAL_CHANCE =
-    "Direct attacks and heals gain 4% super-critical chance, for 300% damage or healing. Super-criticals replace ordinary criticals.",
-    TALENT_SUPER_CRITICAL_DAMAGE =
-    "Super-critical hits deal an additional 75% of normal damage. Grants at least 1% super-critical hit chance.",
-    TALENT_SUPER_CRITICAL_HEALING =
-    "Super-critical heals restore an additional 75% of normal healing. Grants at least 1% super-critical heal chance.",
+    TALENT_CRITICAL_CHANCE = "Direct attacks and direct heals gain 12% critical chance. Criticals deal or heal 150% of normal.",
+    TALENT_CRITICAL_DAMAGE = "Critical hits deal an additional 50% of normal damage. Grants at least 5% critical hit chance.",
+    TALENT_CRITICAL_HEALING = "Critical heals restore an additional 50% of normal healing. Grants at least 5% critical heal chance.",
+    TALENT_SUPER_CRITICAL_CHANCE = "Direct attacks and heals gain 4% super-critical chance, for 300% damage or healing. Super-criticals replace ordinary criticals.",
+    TALENT_SUPER_CRITICAL_DAMAGE = "Super-critical hits deal an additional 75% of normal damage. Grants at least 1% super-critical hit chance.",
+    TALENT_SUPER_CRITICAL_HEALING = "Super-critical heals restore an additional 75% of normal healing. Grants at least 1% super-critical heal chance.",
     TALENT_RESOURCE_GAIN = "Gain 25% more class resource from regeneration, basic attacks and taking damage.",
-    TALENT_ABILITY_EFFICIENCY =
-    "Each rank reduces ability costs by 1 class resource, to a minimum of 1. Resource thresholds still apply.",
+    TALENT_ABILITY_EFFICIENCY = "Each rank reduces ability costs by 1 class resource, to a minimum of 1. Resource thresholds still apply.",
     TALENT_DOT_DAMAGE = "Your damage-over-time effects deal 25% more damage. Damage-over-time cannot critically strike.",
-    TALENT_OVERHEAL_SHIELD =
-    "Direct overhealing creates a shield equal to 20% of excess healing, capped at 20% of the recipient’s maximum health. Shields refresh to the larger amount; triggered heals cannot create shields.",
+    TALENT_OVERHEAL_SHIELD = "Direct overhealing creates a shield equal to 20% of excess healing, capped at 20% of the recipient’s maximum health. Shields refresh to the larger amount; triggered heals cannot create shields.",
     TALENT_RANK_DAMAGE = "Deal %s%% more damage.",
     TALENT_RANK_HEALING = "+%s%% healing power.",
     TALENT_RANK_HEALTH = "+%s%% maximum health.",
@@ -2821,24 +2807,15 @@ W.Locales.enUS = {
     TALENT_RANK_REGEN = "Regenerate %s%% of maximum health per 10 seconds.",
     TALENT_RANK_ATTACK_SPEED = "Basic attacks recover %s%% faster; ability cooldowns are unchanged.",
     TALENT_RANK_COOLDOWN_RECOVERY = "Ability cooldowns recover %s%% faster; basic attacks are unchanged.",
-    TALENT_RANK_CRITICAL_CHANCE =
-    "Direct attacks and direct heals gain %s%% critical chance. Criticals deal or heal 150%% of normal.",
-    TALENT_RANK_CRITICAL_DAMAGE =
-    "Critical hits deal an additional %s%% of normal damage. Grants at least %s%% critical hit chance.",
-    TALENT_RANK_CRITICAL_HEALING =
-    "Critical heals restore an additional %s%% of normal healing. Grants at least %s%% critical heal chance.",
-    TALENT_RANK_SUPER_CRITICAL_CHANCE =
-    "Direct attacks and heals gain %s%% super-critical chance, for 300%% damage or healing. Super-criticals replace ordinary criticals.",
-    TALENT_RANK_SUPER_CRITICAL_DAMAGE =
-    "Super-critical hits deal an additional %s%% of normal damage. Grants at least %s%% super-critical hit chance.",
-    TALENT_RANK_SUPER_CRITICAL_HEALING =
-    "Super-critical heals restore an additional %s%% of normal healing. Grants at least %s%% super-critical heal chance.",
+    TALENT_RANK_CRITICAL_CHANCE = "Direct attacks and direct heals gain %s%% critical chance. Criticals deal or heal 150%% of normal.",
+    TALENT_RANK_CRITICAL_DAMAGE = "Critical hits deal an additional %s%% of normal damage. Grants at least %s%% critical hit chance.",
+    TALENT_RANK_CRITICAL_HEALING = "Critical heals restore an additional %s%% of normal healing. Grants at least %s%% critical heal chance.",
+    TALENT_RANK_SUPER_CRITICAL_CHANCE = "Direct attacks and heals gain %s%% super-critical chance, for 300%% damage or healing. Super-criticals replace ordinary criticals.",
+    TALENT_RANK_SUPER_CRITICAL_DAMAGE = "Super-critical hits deal an additional %s%% of normal damage. Grants at least %s%% super-critical hit chance.",
+    TALENT_RANK_SUPER_CRITICAL_HEALING = "Super-critical heals restore an additional %s%% of normal healing. Grants at least %s%% super-critical heal chance.",
     TALENT_RANK_RESOURCE_GAIN = "Gain %s%% more class resource from regeneration, basic attacks and taking damage.",
-    TALENT_RANK_ABILITY_EFFICIENCY =
-    "Abilities cost %s less class resource, to a minimum of 1. Resource thresholds still apply.",
-    TALENT_RANK_DOT_DAMAGE =
-    "Your damage-over-time effects deal %s%% more damage. Damage-over-time cannot critically strike.",
-    TALENT_RANK_OVERHEAL_SHIELD =
-    "Direct overhealing creates a shield equal to %s%% of excess healing, capped at 20%% of the recipient’s maximum health. Shields refresh to the larger amount; triggered heals cannot create shields.",
+    TALENT_RANK_ABILITY_EFFICIENCY = "Abilities cost %s less class resource, to a minimum of 1. Resource thresholds still apply.",
+    TALENT_RANK_DOT_DAMAGE = "Your damage-over-time effects deal %s%% more damage. Damage-over-time cannot critically strike.",
+    TALENT_RANK_OVERHEAL_SHIELD = "Direct overhealing creates a shield equal to %s%% of excess healing, capped at 20%% of the recipient’s maximum health. Shields refresh to the larger amount; triggered heals cannot create shields.",
     TALENT_CURRENT_RANK = "Current rank",
 }

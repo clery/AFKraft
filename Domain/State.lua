@@ -204,7 +204,9 @@ function G.Load(db, now)
     end
     local needsTalentMigration = false
     for _, hero in ipairs(type(db.heroes) == "table" and db.heroes or {}) do
-        if type(hero) == "table" and hero.talentRanksVersion == nil then needsTalentMigration = true end
+        if type(hero) == "table" and hero.talentRanksVersion == nil then
+            needsTalentMigration = true
+        end
     end
     local previousEconomy = db.economyVersion
     if
@@ -290,7 +292,10 @@ function G.Load(db, now)
         return nil, L.THE_SAVED_DESTINATION_IS_UNKNOWN_YOUR_ADVENTURE_HAS_NOT
     end
     if not G.ValidateUnlocks(db, legacyUnlocks) then
-        return nil, L.THE_SAVED_ADVENTURE_HAS_AN_INVALID_PREFIX .. "unlocks" .. L.FIELD_IT_HAS_NOT_BEEN_RESET_SUFFIX
+        return nil,
+            L.THE_SAVED_ADVENTURE_HAS_AN_INVALID_PREFIX
+                .. "unlocks"
+                .. L.FIELD_IT_HAS_NOT_BEEN_RESET_SUFFIX
     end
     local progress = db.adventure
     local function whole(value)

@@ -15,16 +15,29 @@ local variedEffects = {
     criticalChance = { 0.12, L.TALENT_CRITICAL_CHANCE, L.TALENT_RANK_CRITICAL_CHANCE },
     criticalDamage = { 0.5, L.TALENT_CRITICAL_DAMAGE, L.TALENT_RANK_CRITICAL_DAMAGE },
     criticalHealing = { 0.5, L.TALENT_CRITICAL_HEALING, L.TALENT_RANK_CRITICAL_HEALING },
-    superCriticalChance = { 0.04, L.TALENT_SUPER_CRITICAL_CHANCE, L.TALENT_RANK_SUPER_CRITICAL_CHANCE },
-    superCriticalDamage = { 0.75, L.TALENT_SUPER_CRITICAL_DAMAGE, L.TALENT_RANK_SUPER_CRITICAL_DAMAGE },
-    superCriticalHealing = { 0.75, L.TALENT_SUPER_CRITICAL_HEALING, L.TALENT_RANK_SUPER_CRITICAL_HEALING },
+    superCriticalChance = {
+        0.04,
+        L.TALENT_SUPER_CRITICAL_CHANCE,
+        L.TALENT_RANK_SUPER_CRITICAL_CHANCE,
+    },
+    superCriticalDamage = {
+        0.75,
+        L.TALENT_SUPER_CRITICAL_DAMAGE,
+        L.TALENT_RANK_SUPER_CRITICAL_DAMAGE,
+    },
+    superCriticalHealing = {
+        0.75,
+        L.TALENT_SUPER_CRITICAL_HEALING,
+        L.TALENT_RANK_SUPER_CRITICAL_HEALING,
+    },
     resourceGain = { 0.25, L.TALENT_RESOURCE_GAIN, L.TALENT_RANK_RESOURCE_GAIN },
     abilityEfficiency = { 0.15, L.TALENT_ABILITY_EFFICIENCY, L.TALENT_RANK_ABILITY_EFFICIENCY },
     dotDamage = { 0.25, L.TALENT_DOT_DAMAGE, L.TALENT_RANK_DOT_DAMAGE },
     overhealShield = { 0.2, L.TALENT_OVERHEAL_SHIELD, L.TALENT_RANK_OVERHEAL_SHIELD },
 }
 for effect, definition in pairs(variedEffects) do
-    C.talentEffects[effect] = { value = definition[1], text = definition[2], rankText = definition[3] }
+    C.talentEffects[effect] =
+        { value = definition[1], text = definition[2], rankText = definition[3] }
 end
 
 local additions = {
@@ -1093,67 +1106,116 @@ end
 -- Ranks and mechanics are authored per node, independently of the stat category.
 local variedTalents = {
     WARRIOR = {
-        { "1_9",  "criticalChance", 3 }, { "1_10", "resourceGain", 2 },
-        { "1_11", "criticalDamage", 2 }, { "1_17", "dotDamage", 3 },
-        { "2_9",  "attackSpeed",  5 }, { "2_10", "abilityEfficiency", 3 },
-        { "2_13", "cooldownRate", 2 }, { "3_9", "abilityEfficiency", 2 },
-        { "3_10", "resourceGain", 3 }, { "1_5", false, 2 }, { "2_5", false, 3 }, { "3_4", false, 2 },
+        { "1_9", "criticalChance", 3 },
+        { "1_10", "resourceGain", 2 },
+        { "1_11", "criticalDamage", 2 },
+        { "1_17", "dotDamage", 3 },
+        { "2_9", "attackSpeed", 5 },
+        { "2_10", "abilityEfficiency", 3 },
+        { "2_13", "cooldownRate", 2 },
+        { "3_9", "abilityEfficiency", 2 },
+        { "3_10", "resourceGain", 3 },
+        { "1_5", false, 2 },
+        { "2_5", false, 3 },
+        { "3_4", false, 2 },
     },
     PALADIN = {
-        { "1_9",  "criticalHealing",      3 }, { "1_10", "overhealShield", 2 },
-        { "1_16", "superCriticalHealing", 2 }, { "1_17", "criticalDamage", 3 },
-        { "2_9", "resourceGain", 5 }, { "2_10", "abilityEfficiency", 2 },
-        { "3_9", "attackSpeed",  3 }, { "3_10", "criticalChance", 5 },
-        { "2_3", false, 3 }, { "3_7", false, 2 },
+        { "1_9", "criticalHealing", 3 },
+        { "1_10", "overhealShield", 2 },
+        { "1_16", "superCriticalHealing", 2 },
+        { "1_17", "criticalDamage", 3 },
+        { "2_9", "resourceGain", 5 },
+        { "2_10", "abilityEfficiency", 2 },
+        { "3_9", "attackSpeed", 3 },
+        { "3_10", "criticalChance", 5 },
+        { "2_3", false, 3 },
+        { "3_7", false, 2 },
     },
     HUNTER = {
-        { "1_9",  "attackSpeed",    2 }, { "1_10", "resourceGain", 3 },
-        { "1_17", "criticalChance", 2 }, { "2_9", "criticalDamage", 5 },
-        { "2_10", "superCriticalChance", 3 }, { "3_9", "abilityEfficiency", 5 },
-        { "3_10", "cooldownRate",        2 }, { "3_17", "dotDamage", 3 },
-        { "1_6", false, 2 }, { "2_4", false, 3 },
+        { "1_9", "attackSpeed", 2 },
+        { "1_10", "resourceGain", 3 },
+        { "1_17", "criticalChance", 2 },
+        { "2_9", "criticalDamage", 5 },
+        { "2_10", "superCriticalChance", 3 },
+        { "3_9", "abilityEfficiency", 5 },
+        { "3_10", "cooldownRate", 2 },
+        { "3_17", "dotDamage", 3 },
+        { "1_6", false, 2 },
+        { "2_4", false, 3 },
     },
     ROGUE = {
-        { "1_9",  "criticalChance", 5 }, { "1_10", "abilityEfficiency", 2 },
-        { "1_14", "resourceGain",   3 }, { "1_17", "dotDamage", 2 },
-        { "2_9", "attackSpeed",         3 }, { "2_10", "criticalDamage", 2 },
-        { "3_9", "superCriticalChance", 2 }, { "3_10", "cooldownRate", 5 },
-        { "2_6", false, 3 }, { "3_7", false, 2 },
+        { "1_9", "criticalChance", 5 },
+        { "1_10", "abilityEfficiency", 2 },
+        { "1_14", "resourceGain", 3 },
+        { "1_17", "dotDamage", 2 },
+        { "2_9", "attackSpeed", 3 },
+        { "2_10", "criticalDamage", 2 },
+        { "3_9", "superCriticalChance", 2 },
+        { "3_10", "cooldownRate", 5 },
+        { "2_6", false, 3 },
+        { "3_7", false, 2 },
     },
     PRIEST = {
-        { "1_9",  "criticalHealing",   2 }, { "1_10", "overhealShield", 3 },
-        { "1_18", "abilityEfficiency", 3 }, { "2_9", "cooldownRate", 3 },
-        { "2_10", "resourceGain",         5 }, { "2_16", "criticalChance", 2 },
-        { "2_18", "superCriticalHealing", 3 }, { "3_9", "criticalDamage", 3 },
-        { "3_10", "superCriticalChance", 5 }, { "3_16", "dotDamage", 2 },
-        { "1_5",  false,                 2 }, { "2_7", false, 3 },
+        { "1_9", "criticalHealing", 2 },
+        { "1_10", "overhealShield", 3 },
+        { "1_18", "abilityEfficiency", 3 },
+        { "2_9", "cooldownRate", 3 },
+        { "2_10", "resourceGain", 5 },
+        { "2_16", "criticalChance", 2 },
+        { "2_18", "superCriticalHealing", 3 },
+        { "3_9", "criticalDamage", 3 },
+        { "3_10", "superCriticalChance", 5 },
+        { "3_16", "dotDamage", 2 },
+        { "1_5", false, 2 },
+        { "2_7", false, 3 },
     },
     SHAMAN = {
-        { "1_9", "criticalChance", 3 }, { "1_10", "abilityEfficiency", 5 },
-        { "2_9", "attackSpeed",    2 }, { "2_10", "resourceGain", 3 },
-        { "3_9", "criticalHealing", 5 }, { "3_10", "overhealShield", 2 },
-        { "1_5", false,             2 }, { "2_7", false, 3 }, { "3_6", false, 3 },
+        { "1_9", "criticalChance", 3 },
+        { "1_10", "abilityEfficiency", 5 },
+        { "2_9", "attackSpeed", 2 },
+        { "2_10", "resourceGain", 3 },
+        { "3_9", "criticalHealing", 5 },
+        { "3_10", "overhealShield", 2 },
+        { "1_5", false, 2 },
+        { "2_7", false, 3 },
+        { "3_6", false, 3 },
     },
     MAGE = {
-        { "1_9", "resourceGain",   2 }, { "1_10", "abilityEfficiency", 3 },
-        { "2_9", "criticalChance", 3 }, { "2_10", "criticalDamage", 5 },
-        { "2_18", "dotDamage",           3 }, { "3_9", "cooldownRate", 5 },
-        { "3_10", "superCriticalChance", 2 }, { "3_17", "superCriticalDamage", 3 },
-        { "1_6", false, 3 }, { "3_7", false, 2 },
+        { "1_9", "resourceGain", 2 },
+        { "1_10", "abilityEfficiency", 3 },
+        { "2_9", "criticalChance", 3 },
+        { "2_10", "criticalDamage", 5 },
+        { "2_18", "dotDamage", 3 },
+        { "3_9", "cooldownRate", 5 },
+        { "3_10", "superCriticalChance", 2 },
+        { "3_17", "superCriticalDamage", 3 },
+        { "1_6", false, 3 },
+        { "3_7", false, 2 },
     },
     WARLOCK = {
-        { "1_9",  "abilityEfficiency", 3 }, { "1_10", "resourceGain", 5 },
-        { "1_17", "dotDamage",         5 }, { "2_9", "attackSpeed", 3 },
-        { "2_10", "criticalChance",      2 }, { "3_9", "criticalDamage", 2 },
-        { "3_10", "superCriticalChance", 3 }, { "3_16", "superCriticalDamage", 2 },
-        { "1_7", false, 2 }, { "2_2", false, 3 },
+        { "1_9", "abilityEfficiency", 3 },
+        { "1_10", "resourceGain", 5 },
+        { "1_17", "dotDamage", 5 },
+        { "2_9", "attackSpeed", 3 },
+        { "2_10", "criticalChance", 2 },
+        { "3_9", "criticalDamage", 2 },
+        { "3_10", "superCriticalChance", 3 },
+        { "3_16", "superCriticalDamage", 2 },
+        { "1_7", false, 2 },
+        { "2_2", false, 3 },
     },
     DRUID = {
-        { "1_9",  "criticalChance",      5 }, { "1_10", "cooldownRate", 3 },
-        { "1_17", "superCriticalDamage", 2 }, { "2_9", "attackSpeed", 5 },
-        { "2_10", "abilityEfficiency", 2 }, { "3_9", "criticalHealing", 2 },
-        { "3_10", "overhealShield",    5 }, { "3_17", "resourceGain", 3 },
-        { "3_18", "superCriticalHealing", 2 }, { "1_5", false, 3 }, { "2_3", false, 2 },
+        { "1_9", "criticalChance", 5 },
+        { "1_10", "cooldownRate", 3 },
+        { "1_17", "superCriticalDamage", 2 },
+        { "2_9", "attackSpeed", 5 },
+        { "2_10", "abilityEfficiency", 2 },
+        { "3_9", "criticalHealing", 2 },
+        { "3_10", "overhealShield", 5 },
+        { "3_17", "resourceGain", 3 },
+        { "3_18", "superCriticalHealing", 2 },
+        { "1_5", false, 3 },
+        { "2_3", false, 2 },
     },
 }
 for classID, entries in pairs(variedTalents) do
@@ -1165,7 +1227,10 @@ for classID, entries in pairs(variedTalents) do
             node.effect, node.value, node.text = entry[2], definition.value, definition.text
             if node.trait then
                 C.ApplyTalentTrait(node, {
-                    node.icon, node.trait.kind, node.trait.condition, node.trait.amount * 100,
+                    node.icon,
+                    node.trait.kind,
+                    node.trait.condition,
+                    node.trait.amount * 100,
                 })
             end
         end
@@ -1178,29 +1243,39 @@ for _, class in ipairs(C.classes) do
         local nodes = {}
         for _, node in ipairs(C.talentsByClass[class.id]) do
             node.maxRanks = node.maxRanks or (node.value == true and 1 or 5)
-            if node.path == path then nodes[#nodes + 1] = node end
+            if node.path == path then
+                nodes[#nodes + 1] = node
+            end
         end
         for _, node in ipairs(nodes) do
             if node.value ~= true then
                 local units = node.effect == "regen" and 1000 or 100
                 local perRank = math.max(1, math.floor(node.value * units / node.maxRanks + 0.5))
-                node.value = node.effect == "abilityEfficiency" and node.maxRanks or perRank * node.maxRanks / units
+                node.value = node.effect == "abilityEfficiency" and node.maxRanks
+                    or perRank * node.maxRanks / units
                 if node.trait then
-                    local amount = math.max(1, math.floor(node.trait.amount * 100 / node.maxRanks + 0.5))
+                    local amount =
+                        math.max(1, math.floor(node.trait.amount * 100 / node.maxRanks + 0.5))
                     node.trait.amount = amount * node.maxRanks / 100
                 end
                 node.text = C.TalentRankText(node, node.maxRanks)
             end
         end
         for index = 1, #nodes, 3 do
-            local capacity = nodes[index].maxRanks + nodes[index + 1].maxRanks + nodes[index + 2].maxRanks
+            local capacity = nodes[index].maxRanks
+                + nodes[index + 1].maxRanks
+                + nodes[index + 2].maxRanks
             if capacity < C.talentProgression.pointsPerRow then
                 local smallest, strongest = index, index + 3
                 for choice = index + 1, index + 2 do
-                    if nodes[choice].maxRanks <= nodes[smallest].maxRanks then smallest = choice end
+                    if nodes[choice].maxRanks <= nodes[smallest].maxRanks then
+                        smallest = choice
+                    end
                 end
                 for later = index + 3, #nodes do
-                    if nodes[later].maxRanks > nodes[strongest].maxRanks then strongest = later end
+                    if nodes[later].maxRanks > nodes[strongest].maxRanks then
+                        strongest = later
+                    end
                 end
                 assert(nodes[strongest], "Talent rows need enough investment capacity")
                 nodes[smallest], nodes[strongest] = nodes[strongest], nodes[smallest]

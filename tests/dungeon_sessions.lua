@@ -83,7 +83,12 @@ case("Dungeon session deltas survive both resets and repeated session starts", f
     hero.level = 60
     assert(G.TalentProgress(hero))
     s.encounter = s.encounter + 1
-    assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
+    assert(
+        G.DifficultyVictory(
+            s,
+            { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+        )
+    )
     assert(G.PrestigePlus(s, 1))
     local report = assert(G.HuntSessionSummary(s, 30))
     assert(report.seconds == 20 and report.dungeon.kills == 2 and report.dungeon.discoveries == 1)

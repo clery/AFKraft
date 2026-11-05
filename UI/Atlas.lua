@@ -50,7 +50,8 @@ local function describe(self, zone)
         C.materials[zone.material]
             .. L.FRAGMENT_FRONTIER
             .. zone.level
-            .. "  ·  " .. string.format(L.HERO_XP_CEILING, zone.heroLevelCap)
+            .. "  ·  "
+            .. string.format(L.HERO_XP_CEILING, zone.heroLevelCap)
             .. "  ·  "
             .. (G.IsUnlocked(W.state, zone) and L.AVAILABLE or unlockText(zone))
             .. (spoils and (L.FRAGMENT_SECONDARY_SPOILS .. spoils .. L.UP_TO_25_SUFFIX) or "")

@@ -22,7 +22,9 @@ local rankDescriptions = {
     mitigation = L.TALENT_RANK_MITIGATION,
     regen = L.TALENT_RANK_REGEN,
 }
-for effect, text in pairs(rankDescriptions) do C.talentEffects[effect].rankText = text end
+for effect, text in pairs(rankDescriptions) do
+    C.talentEffects[effect].rankText = text
+end
 
 -- Node order follows talentSpecs so existing saved IDs and prerequisites stay intact.
 -- Shared foundations gain a situational bonus; signature mechanics already stand alone.
@@ -344,7 +346,9 @@ local function rankPercent(value)
 end
 
 function C.TalentRankText(node, rank)
-    if node.value == true then return node.text end
+    if node.value == true then
+        return node.text
+    end
     local scale = rank / node.maxRanks
     local definition = C.talentEffects[node.effect]
     local units = node.effect == "regen" and 1000 or node.effect == "abilityEfficiency" and 1 or 100
@@ -353,7 +357,9 @@ function C.TalentRankText(node, rank)
         local trait = node.trait
         local template = descriptions[trait.kind][trait.condition]:gsub("%%d", "%%s")
         text = text .. "\n" .. string.format(template, rankPercent(trait.amount * scale * 100))
-        if trait.kind == "defense" then text = text .. L.SITUATIONAL_DAMAGE_REDUCTION_IS_CAPPED_AT_60_SUFFIX end
+        if trait.kind == "defense" then
+            text = text .. L.SITUATIONAL_DAMAGE_REDUCTION_IS_CAPPED_AT_60_SUFFIX
+        end
     end
     return text
 end

@@ -38,11 +38,14 @@ test(
     function()
         local W, state, ui = setup()
         local hero = state.heroes[1]
-        hero.talentProgress = { bestLevel = 60, levelPoints = 30, earned = W.Game.TalentLimit(hero) }
+        hero.talentProgress =
+            { bestLevel = 60, levelPoints = 30, earned = W.Game.TalentLimit(hero) }
         for row = 1, 5 do
             for _, node in ipairs(W.Game.TalentList(hero)) do
                 if node.path == 1 and node.row == row then
-                    for _ = 1, node.maxRanks do assert(W.Game.Talent(state, 1, node.id)) end
+                    for _ = 1, node.maxRanks do
+                        assert(W.Game.Talent(state, 1, node.id))
+                    end
                 end
             end
         end
@@ -143,7 +146,6 @@ test("Hero target selection changes configuration without resetting active comba
     assertTrue(ok, message)
 end)
 
-
 test("Passive buttons show partial ranks and right-click refunds exactly one point", function()
     local W, state, ui = setup()
     local hero = state.heroes[1]
@@ -156,7 +158,6 @@ test("Passive buttons show partial ranks and right-click refunds exactly one poi
     node:GetScript("OnClick")(node, "RightButton")
     assert(node.rank:GetText() == "1/5" and W.Game.Points(hero) == points - 1)
 end)
-
 
 test("Three-column trees display two, three and five-rank choices", function()
     local W, state, ui = setup()
@@ -173,13 +174,14 @@ test("Three-column trees display two, three and five-rank choices", function()
     assert(caps[2] and caps[3] and caps[5])
 end)
 
-
 test("Talent tooltips show current and next-rank bonuses instead of maximum-only values", function()
     local W, state, ui = setup()
     state.heroes[1].talents.warrior_1_4 = 1
     local original, details = W.Widgets.Tooltip, nil
     W.Widgets.Tooltip = function(owner, title, text, ...)
-        if title == "Weapon Mastery" then details = text end
+        if title == "Weapon Mastery" then
+            details = text
+        end
         return original(owner, title, text, ...)
     end
     local ok, reason = pcall(function()

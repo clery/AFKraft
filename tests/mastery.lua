@@ -80,18 +80,21 @@ case(
     end
 )
 
-case("Mastery rank prices grow gently, preserve overflow, and grant one point every three ranks", function()
-    local _, h = hero(20)
-    local initial = G.Points(h)
-    assert(G.MasteryCost(0) == 100 and G.MasteryCost(1) == 150 and G.MasteryCost(9) == 650)
-    local gained, ranks = G.RewardMastery(h, 10, 300, false)
-    assert(gained == 300 and ranks == 2 and h.mastery.rank == 2 and h.mastery.xp == 50)
-    assert(G.Points(h) == initial)
-    G.RewardMastery(h, 10, 149, false)
-    assert(h.mastery.rank == 2 and h.mastery.xp == 199)
-    G.RewardMastery(h, 10, 1, false)
-    assert(h.mastery.rank == 3 and h.mastery.xp == 0 and G.Points(h) == initial + 1)
-end)
+case(
+    "Mastery rank prices grow gently, preserve overflow, and grant one point every three ranks",
+    function()
+        local _, h = hero(20)
+        local initial = G.Points(h)
+        assert(G.MasteryCost(0) == 100 and G.MasteryCost(1) == 150 and G.MasteryCost(9) == 650)
+        local gained, ranks = G.RewardMastery(h, 10, 300, false)
+        assert(gained == 300 and ranks == 2 and h.mastery.rank == 2 and h.mastery.xp == 50)
+        assert(G.Points(h) == initial)
+        G.RewardMastery(h, 10, 149, false)
+        assert(h.mastery.rank == 2 and h.mastery.xp == 199)
+        G.RewardMastery(h, 10, 1, false)
+        assert(h.mastery.rank == 3 and h.mastery.xp == 0 and G.Points(h) == initial + 1)
+    end
+)
 
 case("Victory continues to grant Mastery at the character level cap", function()
     local state, h = hero(60)

@@ -549,8 +549,7 @@ W.Locales.deDE = {
     STRIKES_DEAL_45_MORE_DAMAGE_TO_ENEMIES_ABOVE_80 = "Schläge fügen Feinden mit mehr als 80 % Leben 45 % mehr Schaden zu.",
     SPECIAL_ATTACKS_BURN_EACH_TARGET_FOR_25_WEAPON_DAMAGE = "Spezialangriffe verbrennen jedes Ziel und verursachen 3 Sekunden lang 25 % Waffenschaden pro Sekunde.",
     BASIC_ATTACKS_POISON_THE_TARGET_FOR_12_WEAPON_DAMAGE = "Normale Angriffe vergiften das Ziel und verursachen 6 Sekunden lang 12 % Waffenschaden pro Sekunde.",
-    BASIC_ATTACKS_REDUCE_YOUR_REMAINING_ABILITY_COOLDOWN_BY_0 =
-    "Jeder zweite automatische Angriff verkürzt die verbleibende Fähigkeitabklingzeit um 1 Sekunde.",
+    BASIC_ATTACKS_REDUCE_YOUR_REMAINING_ABILITY_COOLDOWN_BY_0 = "Jeder zweite automatische Angriff verkürzt die verbleibende Fähigkeitabklingzeit um 1 Sekunde.",
     YOUR_FIRST_STRIKE_EACH_ENCOUNTER_DEALS_DOUBLE_DAMAGE = "Ihr erster Schlag bei jeder Begegnung verursacht doppelten Schaden.",
     BASIC_ATTACKS_AND_STRIKES_RESTORE_15_OF_DAMAGE_DEALT = "Einfache Angriffe und Schläge stellen 15% of Schaden wieder her, der dem am meisten verletzten lebenden Verbündeten zugefügt wird.",
     HEALING_ALSO_RESTORES_25_HEALING_POWER_TO_EVERY_OTHER = "Heilung stellt außerdem bei jedem anderen lebenden Verbündeten 25 % der Heilkraft wieder her.",
@@ -560,8 +559,7 @@ W.Locales.deDE = {
     HEALING_HAS_A_4_SECOND_BASE_COOLDOWN_WHILE_THE = "Die Heilung hat eine Grundabklingzeit von 4 Sekunden, solange die Gesundheit des Empfängers unter der Hälfte bleibt.",
     EACH_SUCCESSIVE_OFFENSIVE_CAST_GAINS_5_DAMAGE_UP_TO = "Jeder aufeinanderfolgende offensive Einsatz erhält 5% damage, bis zu 30 % pro Begegnung.",
     STRIKES_BURN_THE_TARGET_FOR_20_OF_DAMAGE_DEALT = "Schläge verbrennen das Ziel und verursachen 3 Sekunden lang pro Sekunde 20% of Schaden.",
-    BASIC_ATTACKS_DELAY_THE_TARGET_S_NEXT_ATTACK_BY =
-    "Jeder dritte automatische Angriff verzögert den nächsten Angriff des Ziels um 1 Sekunde.",
+    BASIC_ATTACKS_DELAY_THE_TARGET_S_NEXT_ATTACK_BY = "Jeder dritte automatische Angriff verzögert den nächsten Angriff des Ziels um 1 Sekunde.",
     STRIKES_RESTORE_30_OF_DAMAGE_DEALT_AS_HEALTH_DOUBLED = "Schläge stellen 30% of verursachten Schaden als Gesundheit wieder her, verdoppelt sich bei weniger als 35 % Gesundheit.",
     TAKE_20_LESS_DAMAGE_WHILE_ABOVE_HALF_HEALTH_DRAW = "Erleidet 20 % weniger Schaden, wenn die Gesundheit über der Hälfte liegt; die Aufmerksamkeit des Feindes auf sich ziehen.",
     SPECIAL_ATTACKS_DELAY_EACH_TARGET_S_NEXT_ATTACK_BY = "Spezialangriffe verzögern den nächsten Angriff jedes Ziels um 2 Sekunden.",
@@ -2319,8 +2317,7 @@ W.Locales.deDE = {
     UP_TO_25_SUFFIX = " (bis zu 25 %).",
     YOUR_COMPANY_IS_TRAVELING_THROUGH_PREFIX = "Deine Gefährten ist auf der Durchreise ",
     FRAGMENT_FRONTIER_2 = " · Erster Kampf: ",
-    CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX =
-    " Begegnungen mit Kreaturen; neue Gegner an den Grenzen 20, 40 und 60.",
+    CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX = " Begegnungen mit Kreaturen; neue Gegner an den Grenzen 20, 40 und 60.",
     FAMILY_SPOILS_PREFIX = "Familienverwöhnungen: ",
     UP_TO_25_ADDITIONAL_IDLE_MATERIALS_SHARED_ACROSS_THE = "Bis zu 25 % zusätzliches ungenutztes Material, das auf die Gegner der Begegnung verteilt wird.",
     CLICK_TO_TRAVEL = "Klicken Sie hier, um zu reisen",
@@ -2419,8 +2416,7 @@ W.Locales.deDE = {
     ENCOUNTER_LEVEL_PREFIX = ", Begegnungsstufe ",
     MASTERY_UNLOCKS_AT_HERO_LEVEL_PREFIX = "Meisterschaft wird auf Heldenebene freigeschaltet ",
     TALENTS = "Talente",
-    TALENT_POINTS_DESCRIPTION =
-    "Dauerhafte Punkte gibt es für neue Heldenstufenrekorde und je drei Meisterschaftsränge. Investiert insgesamt 5/10/15/20/25 Punkte in frühere Reihen, um die Reihen 2–6 zu öffnen. Linksklick erhöht einen Rang, Rechtsklick erstattet ihn kostenlos. Punkte und Auswahl bleiben bei beiden Neustarts erhalten.\n\n",
+    TALENT_POINTS_DESCRIPTION = "Dauerhafte Punkte gibt es für neue Heldenstufenrekorde und je drei Meisterschaftsränge. Investiert insgesamt 5/10/15/20/25 Punkte in frühere Reihen, um die Reihen 2–6 zu öffnen. Linksklick erhöht einen Rang, Rechtsklick erstattet ihn kostenlos. Punkte und Auswahl bleiben bei beiden Neustarts erhalten.\n\n",
     CLASS_PRESETS = "Klassenvoreinstellungen",
     RECOVER_BELOW_PREFIX = "Unten erholen ",
     SPECIAL_AT_PREFIX = "Speziell bei ",
@@ -2532,8 +2528,7 @@ W.Locales.deDE = {
     LEARN_ROUTE_PLANNING_ADD_DESTINATIONS_AND_MILESTONES_THEN_SAVE = "Lernen Sie die Routenplanung kennen, fügen Sie Ziele und Meilensteine ​​hinzu, speichern und aktivieren Sie dann die Route. Reisen findet zwischen Begegnungen statt. Die manuelle Fahrt pausiert bis zur Wiederaufnahme.",
     HOVER_A_MISSING_COLLECTION_PIECE_FOR_ITS_CREATURES_LOCATION = "Bewegen Sie den Mauszeiger über ein fehlendes Sammlungsstück, um Informationen zu Kreaturen, Standort und Zufall zu erhalten. Jagen Sie mit Ihrem echten WoW-Charakter. Kämpfe des Minispiels und Offline-Routen zählen nicht.",
     BROWSE_SETS_AND_HOVER_PIECES_FOR_THEIR_SOURCES_COMPLETE = "Sieh dir Sets an und fahre über Teile, um ihre Quellen zu sehen. Vervollständige ein Set, um seinen Effekt zu wählen. Nur 1 Seteffekt kann aktiv sein; Entdeckungen bleiben bei beiden Zurücksetzungen erhalten.",
-    MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT =
-    "Meisterschaft wird auf Heldenstufe 20 dauerhaft freigeschaltet. Siege an der aktuellen Stufenfront oder darüber gewähren EP. Je drei Meisterschaftsränge gibt es einen dauerhaften Talentpunkt.",
+    MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT = "Meisterschaft wird auf Heldenstufe 20 dauerhaft freigeschaltet. Siege an der aktuellen Stufenfront oder darüber gewähren EP. Je drei Meisterschaftsränge gibt es einen dauerhaften Talentpunkt.",
     ENCHANTING_IS_UNLOCKED_IN_FORGE_CHOOSE_A_HERO_EQUIPPED = "Verzauberung wird in Forge freigeschaltet. Wählen Sie einen Helden, einen ausgerüsteten Gegenstand und eine Verzauberung. Die Anwendung ersetzt die alte Verzauberung; Erbstück-Upgrades überleben beide Zurücksetzungen.",
     TITANFORGING_IS_UNLOCKED_IN_FORGE_RAISE_EQUIPPED_ITEM_POTENTIAL = "Titanschmieden wird in Forge freigeschaltet. Erhöhen Sie das Potenzial ausgerüsteter Gegenstände um 5 Stufen, unabhängig von Verstärkung und Verzauberung. Überprüfen Sie die Vorschau und die Kosten, bevor Sie sich bewerben.",
     SPECIALIZATIONS_ARE_UNLOCKED_IN_FORGE_PAID_WORK_EARNS_PROFESSION = "Spezialisierungen werden in Forge freigeschaltet. Durch bezahlte Arbeit erhält man Berufspunkte. Ihr Plan überlebt Transzendenz und wird reaktiviert, wenn die Arbeitskräfte neu aufgebaut werden.",
@@ -2791,59 +2786,36 @@ W.Locales.deDE = {
     REFUND_HIGHER_TALENT_ROWS_FIRST = "Erstattet zuerst Talente in höheren Reihen.",
     TALENT_RANK_SCALING = "\nDie Werte gelten für den maximalen Rang; passive Boni steigen gleichmäßig je Rang.",
     TALENT_RANK_CONTROLS = "Linksklick: einen Punkt investieren. Rechtsklick: einen Rang erstatten.",
-    EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX =
-    "\nJe drei Meisterschaftsränge gewähren einen dauerhaften Talentpunkt. Stufe ",
+    EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX = "\nJe drei Meisterschaftsränge gewähren einen dauerhaften Talentpunkt. Stufe ",
     TALENT_ATTACK_SPEED = "Automatische Angriffe erholen sich 15% schneller; Fähigkeitabklingzeiten bleiben unverändert.",
-    TALENT_COOLDOWN_RECOVERY =
-    "Fähigkeitabklingzeiten erholen sich 15% schneller; automatische Angriffe bleiben unverändert.",
-    TALENT_CRITICAL_CHANCE =
-    "Direkte Angriffe und Heilungen erhalten 12% kritische Trefferchance. Kritische Treffer verursachen oder heilen 150% des normalen Werts.",
-    TALENT_CRITICAL_DAMAGE =
-    "Kritische Treffer verursachen zusätzlich 50% des normalen Schadens. Gewährt mindestens 5% kritische Trefferchance.",
-    TALENT_CRITICAL_HEALING =
-    "Kritische Heilungen stellen zusätzlich 50% der normalen Heilung wieder her. Gewährt mindestens 5% kritische Heilchance.",
-    TALENT_SUPER_CRITICAL_CHANCE =
-    "Direkte Angriffe und Heilungen erhalten 4% superkritische Chance für 300% Schaden oder Heilung. Superkritische Treffer ersetzen normale kritische Treffer.",
-    TALENT_SUPER_CRITICAL_DAMAGE =
-    "Superkritische Treffer verursachen zusätzlich 75% des normalen Schadens. Gewährt mindestens 1% superkritische Trefferchance.",
-    TALENT_SUPER_CRITICAL_HEALING =
-    "Superkritische Heilungen stellen zusätzlich 75% der normalen Heilung wieder her. Gewährt mindestens 1% superkritische Heilchance.",
-    TALENT_RESOURCE_GAIN =
-    "Erhaltet 25% mehr Klassenressource durch Regeneration, automatische Angriffe und erlittenen Schaden.",
-    TALENT_ABILITY_EFFICIENCY =
-    "Jeder Rang reduziert Fähigkeitkosten um 1 Klassenressource, mindestens jedoch auf 1. Ressourcenschwellen gelten weiterhin.",
+    TALENT_COOLDOWN_RECOVERY = "Fähigkeitabklingzeiten erholen sich 15% schneller; automatische Angriffe bleiben unverändert.",
+    TALENT_CRITICAL_CHANCE = "Direkte Angriffe und Heilungen erhalten 12% kritische Trefferchance. Kritische Treffer verursachen oder heilen 150% des normalen Werts.",
+    TALENT_CRITICAL_DAMAGE = "Kritische Treffer verursachen zusätzlich 50% des normalen Schadens. Gewährt mindestens 5% kritische Trefferchance.",
+    TALENT_CRITICAL_HEALING = "Kritische Heilungen stellen zusätzlich 50% der normalen Heilung wieder her. Gewährt mindestens 5% kritische Heilchance.",
+    TALENT_SUPER_CRITICAL_CHANCE = "Direkte Angriffe und Heilungen erhalten 4% superkritische Chance für 300% Schaden oder Heilung. Superkritische Treffer ersetzen normale kritische Treffer.",
+    TALENT_SUPER_CRITICAL_DAMAGE = "Superkritische Treffer verursachen zusätzlich 75% des normalen Schadens. Gewährt mindestens 1% superkritische Trefferchance.",
+    TALENT_SUPER_CRITICAL_HEALING = "Superkritische Heilungen stellen zusätzlich 75% der normalen Heilung wieder her. Gewährt mindestens 1% superkritische Heilchance.",
+    TALENT_RESOURCE_GAIN = "Erhaltet 25% mehr Klassenressource durch Regeneration, automatische Angriffe und erlittenen Schaden.",
+    TALENT_ABILITY_EFFICIENCY = "Jeder Rang reduziert Fähigkeitkosten um 1 Klassenressource, mindestens jedoch auf 1. Ressourcenschwellen gelten weiterhin.",
     TALENT_DOT_DAMAGE = "Eure Schaden-über-Zeit-Effekte verursachen 25% mehr Schaden und können nicht kritisch treffen.",
-    TALENT_OVERHEAL_SHIELD =
-    "Direkte Überheilung erzeugt einen Schild in Höhe von 20% der überschüssigen Heilung, höchstens 20% der maximalen Gesundheit des Ziels. Der größere Schild bleibt bestehen; ausgelöste Heilungen erzeugen keine Schilde.",
+    TALENT_OVERHEAL_SHIELD = "Direkte Überheilung erzeugt einen Schild in Höhe von 20% der überschüssigen Heilung, höchstens 20% der maximalen Gesundheit des Ziels. Der größere Schild bleibt bestehen; ausgelöste Heilungen erzeugen keine Schilde.",
     TALENT_RANK_DAMAGE = "Verursache %s %% mehr Schaden.",
     TALENT_RANK_HEALING = "+%s %% Heilkraft.",
     TALENT_RANK_HEALTH = "+%s %% maximale Gesundheit.",
     TALENT_RANK_SPEED = "Grundlegende Angriffe und Abklingzeiten von Fähigkeiten schreiten um %s%% faster voran.",
     TALENT_RANK_MITIGATION = "Reduziert eingehenden Schaden um weitere %s %%, bis zu 75 %% Gesamtrüstungsreduzierung.",
     TALENT_RANK_REGEN = "Regeneriert %s%% der maximalen Gesundheit pro 10 Sekunden.",
-    TALENT_RANK_ATTACK_SPEED =
-    "Automatische Angriffe erholen sich %s%% schneller; Fähigkeitabklingzeiten bleiben unverändert.",
-    TALENT_RANK_COOLDOWN_RECOVERY =
-    "Fähigkeitabklingzeiten erholen sich %s%% schneller; automatische Angriffe bleiben unverändert.",
-    TALENT_RANK_CRITICAL_CHANCE =
-    "Direkte Angriffe und Heilungen erhalten %s%% kritische Trefferchance. Kritische Treffer verursachen oder heilen 150%% des normalen Werts.",
-    TALENT_RANK_CRITICAL_DAMAGE =
-    "Kritische Treffer verursachen zusätzlich %s%% des normalen Schadens. Gewährt mindestens %s%% kritische Trefferchance.",
-    TALENT_RANK_CRITICAL_HEALING =
-    "Kritische Heilungen stellen zusätzlich %s%% der normalen Heilung wieder her. Gewährt mindestens %s%% kritische Heilchance.",
-    TALENT_RANK_SUPER_CRITICAL_CHANCE =
-    "Direkte Angriffe und Heilungen erhalten %s%% superkritische Chance für 300%% Schaden oder Heilung. Superkritische Treffer ersetzen normale kritische Treffer.",
-    TALENT_RANK_SUPER_CRITICAL_DAMAGE =
-    "Superkritische Treffer verursachen zusätzlich %s%% des normalen Schadens. Gewährt mindestens %s%% superkritische Trefferchance.",
-    TALENT_RANK_SUPER_CRITICAL_HEALING =
-    "Superkritische Heilungen stellen zusätzlich %s%% der normalen Heilung wieder her. Gewährt mindestens %s%% superkritische Heilchance.",
-    TALENT_RANK_RESOURCE_GAIN =
-    "Erhaltet %s%% mehr Klassenressource durch Regeneration, automatische Angriffe und erlittenen Schaden.",
-    TALENT_RANK_ABILITY_EFFICIENCY =
-    "Fähigkeiten kosten %s Klassenressource weniger, mindestens jedoch 1. Ressourcenschwellen gelten weiterhin.",
-    TALENT_RANK_DOT_DAMAGE =
-    "Eure Schaden-über-Zeit-Effekte verursachen %s%% mehr Schaden und können nicht kritisch treffen.",
-    TALENT_RANK_OVERHEAL_SHIELD =
-    "Direkte Überheilung erzeugt einen Schild in Höhe von %s%% der überschüssigen Heilung, höchstens 20%% der maximalen Gesundheit des Ziels. Der größere Schild bleibt bestehen; ausgelöste Heilungen erzeugen keine Schilde.",
+    TALENT_RANK_ATTACK_SPEED = "Automatische Angriffe erholen sich %s%% schneller; Fähigkeitabklingzeiten bleiben unverändert.",
+    TALENT_RANK_COOLDOWN_RECOVERY = "Fähigkeitabklingzeiten erholen sich %s%% schneller; automatische Angriffe bleiben unverändert.",
+    TALENT_RANK_CRITICAL_CHANCE = "Direkte Angriffe und Heilungen erhalten %s%% kritische Trefferchance. Kritische Treffer verursachen oder heilen 150%% des normalen Werts.",
+    TALENT_RANK_CRITICAL_DAMAGE = "Kritische Treffer verursachen zusätzlich %s%% des normalen Schadens. Gewährt mindestens %s%% kritische Trefferchance.",
+    TALENT_RANK_CRITICAL_HEALING = "Kritische Heilungen stellen zusätzlich %s%% der normalen Heilung wieder her. Gewährt mindestens %s%% kritische Heilchance.",
+    TALENT_RANK_SUPER_CRITICAL_CHANCE = "Direkte Angriffe und Heilungen erhalten %s%% superkritische Chance für 300%% Schaden oder Heilung. Superkritische Treffer ersetzen normale kritische Treffer.",
+    TALENT_RANK_SUPER_CRITICAL_DAMAGE = "Superkritische Treffer verursachen zusätzlich %s%% des normalen Schadens. Gewährt mindestens %s%% superkritische Trefferchance.",
+    TALENT_RANK_SUPER_CRITICAL_HEALING = "Superkritische Heilungen stellen zusätzlich %s%% der normalen Heilung wieder her. Gewährt mindestens %s%% superkritische Heilchance.",
+    TALENT_RANK_RESOURCE_GAIN = "Erhaltet %s%% mehr Klassenressource durch Regeneration, automatische Angriffe und erlittenen Schaden.",
+    TALENT_RANK_ABILITY_EFFICIENCY = "Fähigkeiten kosten %s Klassenressource weniger, mindestens jedoch 1. Ressourcenschwellen gelten weiterhin.",
+    TALENT_RANK_DOT_DAMAGE = "Eure Schaden-über-Zeit-Effekte verursachen %s%% mehr Schaden und können nicht kritisch treffen.",
+    TALENT_RANK_OVERHEAL_SHIELD = "Direkte Überheilung erzeugt einen Schild in Höhe von %s%% der überschüssigen Heilung, höchstens 20%% der maximalen Gesundheit des Ziels. Der größere Schild bleibt bestehen; ausgelöste Heilungen erzeugen keine Schilde.",
     TALENT_CURRENT_RANK = "Aktueller Rang",
 }

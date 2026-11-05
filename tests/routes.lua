@@ -343,7 +343,12 @@ case(
         s.heroes[1].level = 60
         G.TalentProgress(s.heroes[1])
         s.encounter = 1
-        assert(G.DifficultyVictory(s, { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }))
+        assert(
+            G.DifficultyVictory(
+                s,
+                { boss = true, level = 61, zone = "blackrock_mountain", stage = 220 }
+            )
+        )
         assert(G.PrestigePlus(s, 1))
         assert(s.routes.offlineEnabled and s.routes.enabled and next(s.safe) == nil)
         assert(s.routes.run.cursor == 1 and #s.routes.templates == 1)

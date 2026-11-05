@@ -103,7 +103,8 @@ local function setup(seed, level, tier, composition, professionPlan)
         local index, hero = #s.heroes, s.heroes[#s.heroes]
         hero.level, hero.mastery.rank = level, 8
         local progress = assert(G.TalentProgress(hero))
-        progress.earned = math.min(G.TalentLimit(hero), progress.earned + math.floor(8 / C.mastery.ranksPerPoint))
+        progress.earned =
+            math.min(G.TalentLimit(hero), progress.earned + math.floor(8 / C.mastery.ranksPerPoint))
         for pass = 0, 2 do
             local path = (composition.path + pass - 1) % 3 + 1
             for _, talent in ipairs(G.TalentList(hero)) do

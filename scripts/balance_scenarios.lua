@@ -55,7 +55,10 @@ local function party(level, prestiges, tier, mastery, heirlooms)
         hero.level, hero.rank = level, 0
         local progress = assert(G.TalentProgress(hero))
         hero.mastery.rank = mastery
-        progress.earned = math.min(G.TalentLimit(hero), progress.earned + math.floor(mastery / C.mastery.ranksPerPoint))
+        progress.earned = math.min(
+            G.TalentLimit(hero),
+            progress.earned + math.floor(mastery / C.mastery.ranksPerPoint)
+        )
         if heirlooms then
             -- A completed talent budget retained from a capped previous adventure.
             local levelPoints = 1
@@ -73,7 +76,9 @@ local function party(level, prestiges, tier, mastery, heirlooms)
             for row = 1, 6 do
                 for _, talent in ipairs(G.TalentList(hero)) do
                     if talent.path == path and talent.row == row then
-                        while G.CanTalent(hero, talent) do G.Talent(state, hero.id, talent.id) end
+                        while G.CanTalent(hero, talent) do
+                            G.Talent(state, hero.id, talent.id)
+                        end
                     end
                 end
             end
