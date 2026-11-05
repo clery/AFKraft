@@ -32,8 +32,15 @@ function G.GainHeroResource(hero, unit, amount)
     if not profile then
         return false
     end
-    unit.resource = math.min(profile.maximum, value + amount)
+    unit.resource = math.min(profile.maximum, value + amount * (1 + (G.TalentEffects(hero).resourceGain or 0)))
     return true
+end
+
+function G.HeroAbilityCost(hero, action)
+    local profile = G.HeroResource(hero)
+    if not profile or not profile.costs[action] then return nil end
+    local reduction = G.TalentEffects(hero).abilityEfficiency or 0
+    return math.max(1, profile.costs[action] - reduction)
 end
 
 function G.CanHeroAbility(hero, unit, action)
@@ -46,13 +53,14 @@ function G.CanHeroAbility(hero, unit, action)
         return false,
             L.WAITING_FOR_PREFIX .. threshold .. "% " .. profile.name .. L.BASIC_ATTACKS_CONTINUE
     end
-    if value < profile.costs[action] then
+    local cost = G.HeroAbilityCost(hero, action)
+    if value < cost then
         return false,
             L.NEED_PREFIX
-                .. profile.costs[action]
-                .. " "
-                .. profile.name
-                .. L.BASIC_ATTACKS_CONTINUE
+            .. cost
+            .. " "
+            .. profile.name
+            .. L.BASIC_ATTACKS_CONTINUE
     end
     return true, L.RESOURCE_READY
 end
@@ -66,6 +74,6 @@ function G.SpendHeroResource(hero, unit, action)
     if not profile then
         return false, L.RESOURCE_UNAVAILABLE
     end
-    unit.resource = value - profile.costs[action]
+    unit.resource = value - G.HeroAbilityCost(hero, action)
     return true
 end

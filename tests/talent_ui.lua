@@ -34,13 +34,16 @@ test("Switching classes refreshes icons on buttons with shared legacy talent IDs
 end)
 
 test(
-    "Expanded talent trees scroll to the ninth row and keep learn/refund controls usable",
+    "Expanded talent trees scroll to the sixth row and keep learn/refund controls usable",
     function()
         local W, state, ui = setup()
         local hero = state.heroes[1]
-        for _, node in ipairs(W.Game.TalentList(hero)) do
-            if node.path == 1 and node.column == 2 and node.row < 9 then
-                assert(W.Game.Talent(state, 1, node.id))
+        hero.talentProgress = { bestLevel = 60, levelPoints = 30, earned = W.Game.TalentLimit(hero) }
+        for row = 1, 5 do
+            for _, node in ipairs(W.Game.TalentList(hero)) do
+                if node.path == 1 and node.row == row then
+                    for _ = 1, node.maxRanks do assert(W.Game.Talent(state, 1, node.id)) end
+                end
             end
         end
         ui:Refresh()
@@ -53,9 +56,9 @@ test(
         local points = W.Game.Points(hero)
         node:GetScript("OnClick")(node)
         assert(hero.talents.warrior_1_18 and W.Game.Points(hero) == points - 1)
-        node:GetScript("OnClick")(node)
+        node:GetScript("OnClick")(node, "RightButton")
         assert(not hero.talents.warrior_1_18 and W.Game.Points(hero) == points)
-        assert(node.label:GetWidth() <= 158)
+        assert(node.label:GetWidth() <= 122)
     end
 )
 
@@ -138,4 +141,55 @@ test("Hero target selection changes configuration without resetting active comba
     end)
     W.Widgets.Choice = original
     assertTrue(ok, message)
+end)
+
+
+test("Passive buttons show partial ranks and right-click refunds exactly one point", function()
+    local W, state, ui = setup()
+    local hero = state.heroes[1]
+    local node = ui.talentTrees.trees[1].buttons.warrior_1_4
+    local points = W.Game.Points(hero)
+    node:GetScript("OnClick")(node, "LeftButton")
+    assert(node.rank:GetText() == "1/5" and W.Game.Points(hero) == points - 1)
+    node:GetScript("OnClick")(node, "LeftButton")
+    assert(node.rank:GetText() == "2/5" and W.Game.Points(hero) == points - 2)
+    node:GetScript("OnClick")(node, "RightButton")
+    assert(node.rank:GetText() == "1/5" and W.Game.Points(hero) == points - 1)
+end)
+
+
+test("Three-column trees display two, three and five-rank choices", function()
+    local W, state, ui = setup()
+    local caps = {}
+    for _, node in ipairs(W.Game.TalentList(state.heroes[1])) do
+        local button = ui.talentTrees.trees[node.path].buttons[node.id]
+        assert(button.rank:GetText() == "0/" .. node.maxRanks)
+        local canvas = ui.talentTrees.trees[node.path].canvas
+        assert(button.label:GetLeft() >= canvas:GetLeft() - 0.1)
+        assert(button.label:GetRight() <= canvas:GetRight() + 0.1)
+        assert(node.column >= 1 and node.column <= 3 and node.row <= 6)
+        caps[node.maxRanks] = true
+    end
+    assert(caps[2] and caps[3] and caps[5])
+end)
+
+
+test("Talent tooltips show current and next-rank bonuses instead of maximum-only values", function()
+    local W, state, ui = setup()
+    state.heroes[1].talents.warrior_1_4 = 1
+    local original, details = W.Widgets.Tooltip, nil
+    W.Widgets.Tooltip = function(owner, title, text, ...)
+        if title == "Weapon Mastery" then details = text end
+        return original(owner, title, text, ...)
+    end
+    local ok, reason = pcall(function()
+        ui:Refresh()
+        assert(type(details) == "string")
+        assert(details:find("Deal 2%% more damage."))
+        assert(details:find("Next rank: 2/5", 1, true))
+        assert(details:find("Deal 4%% more damage."))
+        assert(not details:find("Deal 10%% more damage."))
+    end)
+    W.Widgets.Tooltip = original
+    assert(ok, reason)
 end)

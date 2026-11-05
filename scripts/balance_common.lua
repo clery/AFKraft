@@ -16,9 +16,13 @@ B.classes = { "WARRIOR", "PRIEST", "MAGE", "ROGUE", "SHAMAN" }
 function B.talents(state, index, path)
     local hero = state.heroes[index]
     for pass = 0, 2 do
-        for _, talent in ipairs(G.TalentList(hero)) do
-            if talent.path == (path + pass - 1) % 3 + 1 and not hero.talents[talent.id] then
-                G.Talent(state, index, talent.id)
+        for row = 1, 6 do
+            for _, talent in ipairs(G.TalentList(hero)) do
+                if talent.path == (path + pass - 1) % 3 + 1 and talent.row == row then
+                    while G.CanTalent(hero, talent) do
+                        assert(G.Talent(state, index, talent.id))
+                    end
+                end
             end
         end
     end

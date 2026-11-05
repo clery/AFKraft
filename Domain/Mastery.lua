@@ -75,7 +75,7 @@ function G.RewardMastery(hero, encounterLevel, experience, boss, tier)
     if tier == 0 then
         mastery.frontier = mastery.frontiers[0]
     end
-    if not eligible or not G.MasteryUnlocked(hero) or progress.earned >= #G.TalentList(hero) then
+    if not eligible or not G.MasteryUnlocked(hero) or progress.earned >= G.TalentLimit(hero) then
         return 0, 0
     end
     local gained = experience * (boss and C.mastery.bossMultiplier or 1)
@@ -83,11 +83,13 @@ function G.RewardMastery(hero, encounterLevel, experience, boss, tier)
         return 0, 0
     end
     local xp, ranks = mastery.xp + gained, 0
-    local limit = #G.TalentList(hero)
+    local limit = G.TalentLimit(hero)
     while progress.earned < limit and xp >= G.MasteryCost(mastery.rank) do
         xp = xp - G.MasteryCost(mastery.rank)
         mastery.rank = mastery.rank + 1
-        progress.earned = progress.earned + 1
+        if mastery.rank % C.mastery.ranksPerPoint == 0 then
+            progress.earned = progress.earned + 1
+        end
         ranks = ranks + 1
     end
     mastery.xp = min(xp, G.MasteryCost(mastery.rank) - 1)

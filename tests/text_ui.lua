@@ -66,7 +66,7 @@ test("Mastery help uses the selected difficulty frontier and actual next-rank pr
         assert(details:find("Next rank: " .. W.Game.MasteryCost(9) .. " XP", 1, true))
         hero.level, hero.mastery.rank = 60, 24
         local progress = assert(W.Game.TalentProgress(hero))
-        progress.earned = #W.Game.TalentList(hero)
+        progress.earned = W.Game.TalentLimit(hero)
         ui:Refresh()
         assert(type(details) == "string")
         assert(details:find("All talent points earned.", 1, true))

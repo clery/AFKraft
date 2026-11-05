@@ -44,16 +44,20 @@ case("A developed prestige party can finish base and first-tier capstones", func
             local hero = state.heroes[#state.heroes]
             hero.level, hero.rank = 60, 14
             local progress = assert(G.TalentProgress(hero))
-            hero.mastery.rank = 8
-            progress.earned = math.min(#G.TalentList(hero), progress.earned + 8)
+            hero.mastery.rank = (G.TalentLimit(hero) - progress.earned) * C.mastery.ranksPerPoint
+            progress.earned = G.TalentLimit(hero)
             for _, slot in ipairs(C.equipmentSlots) do
                 hero.gear[slot] = assert(G.CraftItem(hero, slot, false, state))
             end
             for pass = 1, 3 do
                 local path = (preferred[class] + pass - 2) % 3 + 1
-                for _, talent in ipairs(G.TalentList(hero)) do
-                    if talent.path == path and not hero.talents[talent.id] then
-                        G.Talent(state, hero.id, talent.id)
+                for row = 1, 6 do
+                    for _, talent in ipairs(G.TalentList(hero)) do
+                        if talent.path == path and talent.row == row then
+                            while G.CanTalent(hero, talent) do
+                                assert(G.Talent(state, hero.id, talent.id))
+                            end
+                        end
                     end
                 end
             end

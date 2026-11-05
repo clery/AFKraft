@@ -16,52 +16,42 @@ local function hero(class)
 end
 
 local function prerequisites(state, h, talent)
+    h.talentProgress = { bestLevel = 60, levelPoints = 30, earned = G.TalentLimit(h) }
     for row = 1, talent.row - 1 do
+        local spent = 0
         for _, node in ipairs(G.TalentList(h)) do
             if node.path == talent.path and node.row == row then
-                if not h.talents[node.id] then
+                while spent < 5 and G.TalentRank(h, node) < node.maxRanks do
                     assert(G.Talent(state, 1, node.id))
+                    spent = spent + 1
                 end
-                break
+                spent = math.max(spent, G.TalentRank(h, node))
             end
         end
     end
 end
 
-case("Rows require the immediately preceding row in the same specialization", function()
+case("Rows require five additional cumulative points in earlier rows of the same specialization", function()
     for _, class in ipairs(C.classes) do
-        local state, h = hero(class.id)
-        for _, node in ipairs(G.TalentList(h)) do
+        for _, node in ipairs(C.talentsByClass[class.id]) do
             if node.row > 1 then
-                h.talents = {}
+                local state, h = hero(class.id)
                 assert(not G.Talent(state, 1, node.id))
-                for _, candidate in ipairs(G.TalentList(h)) do
-                    if candidate.path ~= node.path or candidate.row < node.row - 1 then
-                        h.talents[candidate.id] = true
-                    end
-                end
-                assert(not G.Talent(state, 1, node.id))
-                h.talents = {}
                 prerequisites(state, h, node)
-                assert(G.Talent(state, 1, node.id))
                 local previous
                 for _, candidate in ipairs(G.TalentList(h)) do
-                    if candidate.path == node.path and candidate.row == node.row - 1 then
-                        previous = previous or candidate
+                    if candidate.path == node.path and candidate.row == node.row - 1
+                        and G.TalentRank(h, candidate) > 0 then
+                        previous = candidate
                     end
                 end
-                assert(not G.Talent(state, 1, previous.id))
-                for _, candidate in ipairs(G.TalentList(h)) do
-                    if
-                        candidate.path == node.path
-                        and candidate.row == previous.row
-                        and candidate ~= previous
-                    then
-                        assert(G.Talent(state, 1, candidate.id))
-                    end
-                end
+                assert(previous and G.Talent(state, 1, previous.id, true))
+                assert(not G.Talent(state, 1, node.id))
                 assert(G.Talent(state, 1, previous.id))
                 assert(G.Talent(state, 1, node.id))
+                assert(not G.Talent(state, 1, previous.id, true))
+                assert(G.Talent(state, 1, node.id, true))
+                assert(G.Talent(state, 1, previous.id, true))
             end
         end
     end
@@ -85,6 +75,11 @@ case("Every class has three eighteen-node specialization trees", function()
         end
         for path = 1, #class.paths do
             assert(paths[path] == 18)
+            for row = 1, 6 do
+                for column = 1, 3 do
+                    assert(positions[path .. ":" .. row .. ":" .. column])
+                end
+            end
         end
     end
     assert(total == 486)
@@ -109,7 +104,7 @@ case("Legacy builds retain all nine selections in every class", function()
         for i = #C.talentsByClass[class.id], 1, -1 do
             local node = C.talentsByClass[class.id][i]
             if h.talents[node.id] then
-                assert(G.Talent(state, 1, node.id))
+                assert(G.Talent(state, 1, node.id, true))
             end
         end
         assert(G.Points(h) == 24)
@@ -137,7 +132,7 @@ case("All new talents can be learned, affect their declared stat, and refund", f
             if stats[node.effect] then
                 assert(G.Stats(state, h)[stats[node.effect]] > base[stats[node.effect]])
             end
-            assert(G.Talent(state, 1, node.id))
+            assert(G.Talent(state, 1, node.id, true))
             assert(not h.talents[node.id] and G.Points(h) == points)
         end
     end
@@ -176,7 +171,7 @@ case("Live stat talents preserve health ratio, cooldowns, and death", function()
     assert(unit.maxHP > maximum and unit.hp / unit.maxHP == 0.5)
     assert(unit.cd == 3 and unit.attackCD == 1)
     unit.hp = 0
-    assert(G.Talent(state, 1, node.id))
+    assert(G.Talent(state, 1, node.id, true))
     assert(unit.hp == 0 and unit.maxHP == maximum)
 end)
 
@@ -198,8 +193,8 @@ case("Repeated specialization motifs stack numeric bonuses", function()
     end
     assert(count > 1)
     assert(
-        math.abs(G.Stats(state, h).healing / base - ((1 + initial + count * 0.2) / (1 + initial)))
-            < 0.000001
+        math.abs(G.Stats(state, h).healing / base - ((1 + initial + count * 0.2 / 5) / (1 + initial)))
+        < 0.000001
     )
 end)
 
@@ -224,7 +219,7 @@ local function encounter(class, effect)
     local state, h = hero(class)
     for _, node in ipairs(G.TalentList(h)) do
         if node.effect == effect then
-            h.talents[node.id] = true
+            h.talents[node.id] = node.maxRanks
         end
     end
     assert(G.TalentEffects(h)[effect])
@@ -311,7 +306,7 @@ case("Class basic attacks trigger pets, poison, Windfury, cooldown recovery and 
         { "MAGE", "frost" },
     }) do
         local s, _, unit, enemy = encounter(spec[1], spec[2])
-        unit.cd, unit.attackCD, unit.swings = 10, 0, 2
+        unit.cd, unit.attackCD, unit.swings = 10, 0, spec[2] == "potency" and 1 or 2
         local hp = enemy.hp
         G.Step(s, 0.25)
         local multiplier = spec[2] == "beast" and 1.25 or spec[2] == "windfury" and 2 or 1
@@ -475,7 +470,7 @@ local function traitEncounter(class, name)
     local selected
     for _, node in ipairs(G.TalentList(h)) do
         if node.name == name then
-            h.talents[node.id], selected = true, node
+            h.talents[node.id], selected = node.maxRanks, node
         end
     end
     assert(selected and selected.trait)
@@ -545,30 +540,34 @@ case("Boss defenses apply to incoming hits and disappear outside bosses", functi
     assert(hp - unit.hp == math.floor(enemy.damage * (1 - unit.mitigation)))
 end)
 
-case("All 54 permanent choices reload and refund even after current levels decrease", function()
+case("All ranked choices reload and refund after current levels decrease", function()
     for _, class in ipairs(C.classes) do
         local state, h = hero(class.id)
-        h.level, h.rank = 60, 14
-        G.RewardMastery(h, 1, 1000000, false)
-        assert(G.Points(h) == 54)
-        for _, node in ipairs(G.TalentList(h)) do
-            assert(G.Talent(state, 1, node.id))
+        local limit = G.TalentLimit(h)
+        h.talentProgress = { bestLevel = 60, levelPoints = 30, earned = limit }
+        for row = 1, 6 do
+            for _, node in ipairs(G.TalentList(h)) do
+                if node.row == row then
+                    for _ = 1, node.maxRanks do assert(G.Talent(state, 1, node.id)) end
+                end
+            end
         end
         assert(G.Points(h) == 0)
         local loaded = assert(G.Load(state, 1000))
         h = loaded.heroes[1]
-        for _, node in ipairs(G.TalentList(h)) do
-            assert(h.talents[node.id])
+        for row = 6, 1, -1 do
+            for _, node in ipairs(G.TalentList(h)) do
+                if node.row == row then
+                    assert(G.TalentRank(h, node) == node.maxRanks)
+                    for _ = 1, node.maxRanks do assert(G.Talent(loaded, 1, node.id, true)) end
+                end
+            end
         end
-        local list = G.TalentList(h)
-        for index = #list, 1, -1 do
-            assert(G.Talent(loaded, 1, list[index].id))
-        end
-        assert(G.Points(h) == 54)
+        assert(G.Points(h) == limit)
         h.level = 49
-        assert(G.Points(h) == 54)
+        assert(G.Points(h) == limit)
         h.level = 54
-        assert(G.Points(h) == 54)
+        assert(G.Points(h) == limit)
     end
 end)
 
@@ -579,7 +578,7 @@ case("Sustained-cast talents begin after three offensive abilities", function()
         unit.cd = 0
         local hp = enemy.hp
         G.Step(s, 0.25)
-        local bonus = cast == 4 and 1.26 or 1
+        local bonus = cast == 4 and 1.25 or 1
         assert(hp - enemy.hp == math.floor(unit.damage * 1.7 * bonus))
     end
 end)
@@ -587,8 +586,8 @@ end)
 case("Burning-target talents distinguish magical dots from bleeds and expired effects", function()
     local s, _, unit, enemy = traitEncounter("MAGE", "Pyroclasm")
     for _, sample in ipairs({
-        { physical = true, remaining = 5, bonus = 1 },
-        { physical = false, remaining = 5, bonus = 1.26 },
+        { physical = true,  remaining = 5,   bonus = 1 },
+        { physical = false, remaining = 5,   bonus = 1.25 },
         { physical = false, remaining = 0.1, bonus = 1 },
     }) do
         enemy.dots =
@@ -610,7 +609,7 @@ case("Emergency healing uses the recipient's health and excludes fallen allies",
     fallen.id, fallen.hp = 3, 0
     s.heroes[3], s.battle.heroes[3] = G.Copy(h), fallen
     G.Step(s, 0.25)
-    assert(ally.hp == 10 + math.floor(unit.healing * 1.28))
+    assert(ally.hp == 10 + math.floor(unit.healing * 1.3))
     assert(fallen.hp == 0)
 end)
 
@@ -663,7 +662,7 @@ case("Basic-attack momentum survives reload and starts on the third attack", fun
         unit.attackCD = 0
         local hp = enemy.hp
         G.Step(state, 0.25)
-        assert(hp - enemy.hp == math.floor(unit.damage * (swing == 3 and 1.22 or 1)))
+        assert(hp - enemy.hp == math.floor(unit.damage * (swing == 3 and 1.2 or 1)))
         if swing == 2 then
             state = assert(G.Load(state, 1000))
             unit, enemy = state.battle.heroes[1], state.battle.enemies[1]
@@ -724,29 +723,124 @@ case(
     end
 )
 
-case(
-    "Previously complete builds retain their points and resume Mastery toward the new choices",
-    function()
-        local state, h = hero("WARRIOR")
-        local experience = 0
-        for rank = 0, 17 do
-            experience = experience + G.MasteryCost(rank)
+case("Existing earned budgets survive the ranked tree and resume slower Mastery", function()
+    local state, h = hero("WARRIOR")
+    h.talentProgress = { bestLevel = 60, levelPoints = 30, earned = 54 }
+    h.mastery.rank = 24
+    h.talents.cleave = true
+    local loaded = assert(G.Load(G.Copy(state), 1000))
+    h = loaded.heroes[1]
+    assert(G.Points(h) == 53 and h.talents.cleave == 1)
+    for _ = 1, 2 do G.RewardMastery(h, 60, G.MasteryCost(h.mastery.rank), false) end
+    assert(G.Points(h) == 53)
+    G.RewardMastery(h, 60, G.MasteryCost(h.mastery.rank), false)
+    assert(G.Points(h) == 54)
+end)
+
+case("Passive ranks scale stats and traits, stop at five, and refund one point", function()
+    local state, h = hero("WARRIOR")
+    local node = C.talentByClassID.WARRIOR.warrior_1_4
+    assert(node.maxRanks == 5 and node.row == 1 and node.trait)
+    local points = G.Points(h)
+    for rank = 1, 5 do
+        assert(G.Talent(state, 1, node.id))
+        assert(G.TalentRank(h, node) == rank and G.Points(h) == points - rank)
+        assert(math.abs(G.TalentEffects(h)[node.effect] - node.value * rank / 5) < 0.000001)
+    end
+    assert(not G.Talent(state, 1, node.id))
+    assert(G.Talent(state, 1, node.id, true))
+    assert(G.TalentRank(h, node) == 4 and G.Points(h) == points - 4)
+    local loaded = assert(G.Load(G.Copy(state), 1000))
+    assert(loaded.heroes[1].talents[node.id] == 4)
+end)
+
+case("Every row can hold five points without signature abilities needing empty ranks", function()
+    for _, class in ipairs(C.classes) do
+        local rows = {}
+        for _, node in ipairs(C.talentsByClass[class.id]) do
+            assert(node.maxRanks == 1 or node.maxRanks == 2 or node.maxRanks == 3 or node.maxRanks == 5)
+            local row = node.path .. ":" .. node.row
+            rows[row] = (rows[row] or 0) + node.maxRanks
         end
-        G.RewardMastery(h, 60, experience, false)
-        assert(G.Points(h) == 48)
+        for _, capacity in pairs(rows) do assert(capacity >= 5) end
+    end
+end)
+
+case("Malformed saved ranks refuse loading without silently removing the investment", function()
+    for _, rank in ipairs({ 0, -1, 1.5, 6, math.huge }) do
+        local state, h = hero("WARRIOR")
+        h.talents.warrior_1_4 = rank
+        assert(not G.Load(state, 1000))
+        assert(h.talents.warrior_1_4 == rank)
+    end
+end)
+
+case("Partial ranks apply their proportional situational bonus to actual combat", function()
+    local s, h, unit, enemy, node = traitEncounter("WARRIOR", "Weapon Mastery")
+    h.talents[node.id] = 1
+    G.RefreshHero(s, 1)
+    s.battle.boss = true
+    local hp = enemy.hp
+    G.Step(s, 0.25)
+    assert(hp - enemy.hp == math.floor(unit.damage * 1.7 * (1 + node.trait.amount / 5)))
+end)
+
+case("Cumulative gates allow uneven spending and refunds protect every later row", function()
+    local state, h = hero("WARRIOR")
+    local function spend(path, row, amount)
         for _, node in ipairs(G.TalentList(h)) do
-            if node.row <= 8 then
-                assert(G.Talent(state, 1, node.id))
+            if node.path == path and node.row == row then
+                while amount > 0 and G.TalentRank(h, node) < node.maxRanks do
+                    assert(G.Talent(state, 1, node.id))
+                    amount = amount - 1
+                end
             end
         end
-        assert(G.Points(h) == 0)
-        local loaded = assert(G.Load(G.Copy(state), 1000))
-        h = loaded.heroes[1]
-        assert(G.Points(h) == 0 and h.mastery.rank == 18)
-        G.RewardMastery(h, 60, G.MasteryCost(h.mastery.rank), false)
-        assert(G.Points(h) == 1 and h.mastery.rank == 19)
-        assert(G.Talent(loaded, 1, "warrior_1_17"))
+        assert(amount == 0)
     end
-)
+    spend(1, 1, 7)
+    spend(1, 2, 2)
+    spend(2, 1, 1)
+    local target, earlier
+    for _, node in ipairs(G.TalentList(h)) do
+        if node.path == 1 and node.row == 3 then target = node end
+        if node.path == 1 and node.row == 1 and G.TalentRank(h, node) > 0 then earlier = node end
+    end
+    assert(target and earlier and not G.CanTalent(h, target))
+    spend(1, 2, 1)
+    assert(G.Talent(state, 1, target.id))
+    assert(not G.Talent(state, 1, earlier.id, true))
+    assert(G.Talent(state, 1, target.id, true))
+    assert(G.Talent(state, 1, earlier.id, true))
+end)
+
+case("Each class mixes two, three and five-rank passive choices", function()
+    for _, class in ipairs(C.classes) do
+        local caps = {}
+        for _, node in ipairs(C.talentsByClass[class.id]) do caps[node.maxRanks] = true end
+        assert(caps[1] and caps[2] and caps[3] and caps[5])
+    end
+end)
+
+case("Lower rank caps return old investments to unspent points exactly once", function()
+    local state, h = hero("WARRIOR")
+    local node = C.talentByClassID.WARRIOR.warrior_2_5
+    assert(node.maxRanks == 3)
+    h.talentRanksVersion = nil
+    h.talents[node.id] = 5
+    h.talents.warrior_3_4 = 5
+    local previousLimit = 0
+    for _, talent in ipairs(C.talentsByClass[h.class]) do
+        previousLimit = previousLimit + (talent.value == true and 1 or 5)
+    end
+    h.talentProgress = { bestLevel = 60, levelPoints = 30, earned = previousLimit }
+    local loaded = assert(G.Load(G.Copy(state), 1000))
+    h = loaded.heroes[1]
+    assert(h.talents[node.id] == 3 and h.talentRanksVersion == 2)
+    assert(h.talents.warrior_3_4 == 2 and G.Points(h) == previousLimit - 5)
+    assert(math.abs(G.TalentEffects(h)[node.effect] - node.value) < 0.000001)
+    loaded = assert(G.Load(G.Copy(loaded), 1000))
+    assert(G.Points(loaded.heroes[1]) == previousLimit - 5)
+end)
 
 return cases

@@ -318,7 +318,8 @@ W.Locales.frFR = {
     OVERMASTER_PYRON = "Maître Pyron",
     BASIC_ATTACKS_AND_STRIKES_HIT_EVERY_ENEMY = "Les attaques et frappes de base touchent tous les ennemis.",
     STRIKES_DEAL_50_MORE_DAMAGE_BELOW_35_ENEMY_HEALTH = "Les frappes infligent 50 % de dégâts supplémentaires en dessous de la santé de mon ennemi de 35% e.",
-    OFFENSIVE_ABILITIES_HAVE_A_4_2_SECOND_BASE_COOLDOWN = "Les capacités offensives ont un temps de recharge de base de 4,2 secondes au lieu de 6 secondes.",
+    OFFENSIVE_ABILITIES_HAVE_A_4_2_SECOND_BASE_COOLDOWN =
+    "Les capacités offensives ont des temps de recharge de base réduits de 30%.",
     HEALING_ABILITIES_RESTORE_60_MORE_HEALTH = "Les capacités de guérison restaurent 60 % de santé en plus.",
     RESTORE_AN_ADDITIONAL_8_HEALTH_AFTER_VICTORY = "Restaurez 8% de santé supplémentaire après la victoire.",
     OFFENSIVE_ABILITIES_RESTORE_12_OF_THEIR_DAMAGE_AS_HEALTH = "Les capacités offensives restaurent 12% of de leurs dégâts sous forme de santé.",
@@ -548,7 +549,8 @@ W.Locales.frFR = {
     STRIKES_DEAL_45_MORE_DAMAGE_TO_ENEMIES_ABOVE_80 = "Les frappes infligent 45 % de dégâts supplémentaires aux ennemis ayant plus de 80 % de santé.",
     SPECIAL_ATTACKS_BURN_EACH_TARGET_FOR_25_WEAPON_DAMAGE = "Les attaques spéciales brûlent chaque cible et infligent 25 % des dégâts de l'arme par seconde pendant 3 secondes.",
     BASIC_ATTACKS_POISON_THE_TARGET_FOR_12_WEAPON_DAMAGE = "Les attaques de base empoisonnent la cible en lui infligeant 12 % des dégâts de l'arme par seconde pendant 6 secondes.",
-    BASIC_ATTACKS_REDUCE_YOUR_REMAINING_ABILITY_COOLDOWN_BY_0 = "Les attaques de base réduisent le temps de recharge restant de votre capacité de 0,5 seconde.",
+    BASIC_ATTACKS_REDUCE_YOUR_REMAINING_ABILITY_COOLDOWN_BY_0 =
+    "Une attaque de base sur deux réduit le temps de recharge restant des capacités de 1 seconde.",
     YOUR_FIRST_STRIKE_EACH_ENCOUNTER_DEALS_DOUBLE_DAMAGE = "Votre premier coup à chaque rencontre inflige le double de dégâts.",
     BASIC_ATTACKS_AND_STRIKES_RESTORE_15_OF_DAMAGE_DEALT = "Les attaques et frappes de base restaurent 15% of dégâts infligés à l'allié vivant le plus blessé.",
     HEALING_ALSO_RESTORES_25_HEALING_POWER_TO_EVERY_OTHER = "La guérison restaure également 25 % de puissance de guérison à tous les autres alliés vivants.",
@@ -558,7 +560,8 @@ W.Locales.frFR = {
     HEALING_HAS_A_4_SECOND_BASE_COOLDOWN_WHILE_THE = "La guérison a un temps de recharge de base de 4 secondes tandis que le destinataire reste en dessous de la moitié de sa santé.",
     EACH_SUCCESSIVE_OFFENSIVE_CAST_GAINS_5_DAMAGE_UP_TO = "Chaque lancement offensif successif gagne 5% damage, jusqu'à 30 % par rencontre.",
     STRIKES_BURN_THE_TARGET_FOR_20_OF_DAMAGE_DEALT = "Les frappes brûlent la cible et lui infligent 20% of dégâts par seconde pendant 3 secondes.",
-    BASIC_ATTACKS_DELAY_THE_TARGET_S_NEXT_ATTACK_BY = "Les attaques de base retardent la prochaine attaque de la cible de 0,3 seconde.",
+    BASIC_ATTACKS_DELAY_THE_TARGET_S_NEXT_ATTACK_BY =
+    "Une attaque de base sur trois retarde la prochaine attaque de la cible de 1 seconde.",
     STRIKES_RESTORE_30_OF_DAMAGE_DEALT_AS_HEALTH_DOUBLED = "Les frappes restaurent 30% of dégâts infligés sous forme de santé, doublés en dessous de 35% de santé.",
     TAKE_20_LESS_DAMAGE_WHILE_ABOVE_HALF_HEALTH_DRAW = "Subissez 20 % de dégâts en moins lorsque vous avez plus de la moitié de votre santé ; attirer l'attention de l'ennemi.",
     SPECIAL_ATTACKS_DELAY_EACH_TARGET_S_NEXT_ATTACK_BY = "Les attaques spéciales retardent la prochaine attaque de chaque cible de 2 secondes.",
@@ -2416,7 +2419,8 @@ W.Locales.frFR = {
     ENCOUNTER_LEVEL_PREFIX = ", niveau de rencontre ",
     MASTERY_UNLOCKS_AT_HERO_LEVEL_PREFIX = "La maîtrise se débloque au niveau du héros ",
     TALENTS = "Talents",
-    TALENT_POINTS_DESCRIPTION = "Gagnez des points grâce aux nouveaux records de niveau de héros et à la maîtrise. Cliquez sur un talent pour l'apprendre ou le rembourser gratuitement. Les points et les choix survivent aux deux réinitialisations.\n\n",
+    TALENT_POINTS_DESCRIPTION =
+    "Gagnez des points permanents grâce aux records de niveau et tous les trois rangs de maîtrise. Investissez 5/10/15/20/25 points au total dans les rangées précédentes pour ouvrir les rangées 2 à 6. Clic gauche : ajouter un rang ; clic droit : rembourser un rang gratuitement. Points et choix survivent aux deux réinitialisations.\n\n",
     CLASS_PRESETS = "Préréglages de classe",
     RECOVER_BELOW_PREFIX = "Récupérer ci-dessous ",
     SPECIAL_AT_PREFIX = "Spécial à ",
@@ -2528,7 +2532,8 @@ W.Locales.frFR = {
     LEARN_ROUTE_PLANNING_ADD_DESTINATIONS_AND_MILESTONES_THEN_SAVE = "Apprenez à planifier un itinéraire, ajoutez des destinations et des jalons, puis enregistrez et activez l'itinéraire. Le voyage se produit entre les rencontres. Le déplacement manuel le met en pause jusqu'à la reprise.",
     HOVER_A_MISSING_COLLECTION_PIECE_FOR_ITS_CREATURES_LOCATION = "Survolez une pièce de collection manquante pour connaître ses créatures, son emplacement et sa chance. Chassez avec votre vrai personnage WoW ; les combats du mini-jeu et les itinéraires hors ligne ne comptent pas.",
     BROWSE_SETS_AND_HOVER_PIECES_FOR_THEIR_SOURCES_COMPLETE = "Parcourez les ensembles et survolez les pièces pour voir leurs sources. Terminez un ensemble pour choisir son effet. Un seul effet d’ensemble peut être actif ; les découvertes sont conservées après les deux resets.",
-    MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT = "La maîtrise se débloque de manière permanente au niveau de héros 20. Gagnez à la frontière de votre rencontre actuelle ou supérieure pour gagner de l'EXP. Chaque rang de maîtrise ajoute 1 point de talent permanent.",
+    MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT =
+    "La maîtrise se débloque définitivement au niveau 20 du héros. Gagnez des combats à la frontière de votre palier ou au-delà pour obtenir de l’EXP. Tous les trois rangs de maîtrise, vous gagnez un point de talent permanent.",
     ENCHANTING_IS_UNLOCKED_IN_FORGE_CHOOSE_A_HERO_EQUIPPED = "L'enchantement est débloqué dans Forge. Choisissez un héros, un objet équipé et un enchantement. L'application remplace l'ancien enchantement ; les améliorations d'héritage survivent aux deux réinitialisations.",
     TITANFORGING_IS_UNLOCKED_IN_FORGE_RAISE_EQUIPPED_ITEM_POTENTIAL = "Forge des titans est débloqué dans Forge. Augmentez le potentiel des objets équipés à travers 5 niveaux, séparément de l'amélioration et de l'enchantement. Vérifiez l'aperçu et le coût avant de postuler.",
     SPECIALIZATIONS_ARE_UNLOCKED_IN_FORGE_PAID_WORK_EARNS_PROFESSION = "Les spécialisations sont débloquées dans Forge. Le travail rémunéré rapporte des points de profession. Votre plan survit à la Transcendance et se réactive à mesure que les rangs du travail se reconstruisent.",
@@ -2781,4 +2786,66 @@ W.Locales.frFR = {
     ONE_HANDED_MACES = "Masses à une main",
     ONLINE_IDLE_BOSSES_AT_ENCOUNTER_LEVEL_20_CAN_TEACH_PREFIX = "Les boss du mini-jeu de niveau de rencontre 20+ peuvent enseigner en ligne : ",
     ONE_ACTIVE_COLLECTION_EFFECT = "Un seul effet d’ensemble actif",
+    TALENT_MAX_RANK = "Rang maximum atteint.",
+    SPEND_POINTS_IN_EARLIER_TALENT_ROWS =
+    "Dépensez %d points au total dans les rangées précédentes de cette spécialisation.",
+    REFUND_HIGHER_TALENT_ROWS_FIRST = "Remboursez d’abord les talents des rangées supérieures.",
+    TALENT_RANK_SCALING = "\nValeurs au rang maximum ; les bonus passifs augmentent proportionnellement au rang.",
+    TALENT_RANK_CONTROLS = "Clic gauche : dépenser un point. Clic droit : rembourser un rang.",
+    EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX =
+    "\nTous les trois rangs de maîtrise, vous gagnez un point de talent permanent. Palier ",
+    TALENT_ATTACK_SPEED =
+    "Les attaques de base récupèrent 15% plus vite, sans modifier les temps de recharge des capacités.",
+    TALENT_COOLDOWN_RECOVERY = "Les capacités récupèrent 15% plus vite, sans modifier les attaques de base.",
+    TALENT_CRITICAL_CHANCE =
+    "Les attaques et soins directs gagnent 12% de chances de critique. Les critiques infligent ou rendent 150% de la valeur normale.",
+    TALENT_CRITICAL_DAMAGE =
+    "Les coups critiques infligent 50% de dégâts normaux supplémentaires. Confère au moins 5% de chances de coup critique.",
+    TALENT_CRITICAL_HEALING =
+    "Les soins critiques rendent 50% de soins normaux supplémentaires. Confère au moins 5% de chances de soin critique.",
+    TALENT_SUPER_CRITICAL_CHANCE =
+    "Les attaques et soins directs gagnent 4% de chances de super-critique, pour 300% de dégâts ou de soins. Les super-critiques remplacent les critiques ordinaires.",
+    TALENT_SUPER_CRITICAL_DAMAGE =
+    "Les super-critiques infligent 75% de dégâts normaux supplémentaires. Confère au moins 1% de chances de super-critique.",
+    TALENT_SUPER_CRITICAL_HEALING =
+    "Les soins super-critiques rendent 75% de soins normaux supplémentaires. Confère au moins 1% de chances de soin super-critique.",
+    TALENT_RESOURCE_GAIN =
+    "Gagnez 25% de ressource de classe supplémentaire par régénération, attaques de base et dégâts subis.",
+    TALENT_ABILITY_EFFICIENCY =
+    "Chaque rang réduit le coût des capacités de 1 point de ressource de classe, avec un minimum de 1. Les seuils de ressource restent applicables.",
+    TALENT_DOT_DAMAGE =
+    "Vos dégâts sur la durée infligent 25% de dégâts supplémentaires et ne peuvent pas être critiques.",
+    TALENT_OVERHEAL_SHIELD =
+    "Les soins directs excédentaires créent un bouclier égal à 20% de cet excédent, limité à 20% des points de vie maximum du bénéficiaire. Le plus grand bouclier est conservé ; les soins déclenchés ne créent pas de bouclier.",
+    TALENT_RANK_DAMAGE = "Inflige %s%% de dégâts supplémentaires.",
+    TALENT_RANK_HEALING = "+%s%% de pouvoir de guérison.",
+    TALENT_RANK_HEALTH = "+%s%% de santé maximale.",
+    TALENT_RANK_SPEED = "Les attaques de base et les temps de recharge des capacités progressent %s%% faster.",
+    TALENT_RANK_MITIGATION =
+    "Réduisez les dégâts reçus de %s %% supplémentaires, jusqu'à 75 %% de réduction totale de l'armure.",
+    TALENT_RANK_REGEN = "Régénérez %s%% des points de vie maximum par 10 secondes.",
+    TALENT_RANK_ATTACK_SPEED =
+    "Les attaques de base récupèrent %s%% plus vite, sans modifier les temps de recharge des capacités.",
+    TALENT_RANK_COOLDOWN_RECOVERY = "Les capacités récupèrent %s%% plus vite, sans modifier les attaques de base.",
+    TALENT_RANK_CRITICAL_CHANCE =
+    "Les attaques et soins directs gagnent %s%% de chances de critique. Les critiques infligent ou rendent 150%% de la valeur normale.",
+    TALENT_RANK_CRITICAL_DAMAGE =
+    "Les coups critiques infligent %s%% de dégâts normaux supplémentaires. Confère au moins %s%% de chances de coup critique.",
+    TALENT_RANK_CRITICAL_HEALING =
+    "Les soins critiques rendent %s%% de soins normaux supplémentaires. Confère au moins %s%% de chances de soin critique.",
+    TALENT_RANK_SUPER_CRITICAL_CHANCE =
+    "Les attaques et soins directs gagnent %s%% de chances de super-critique, pour 300%% de dégâts ou de soins. Les super-critiques remplacent les critiques ordinaires.",
+    TALENT_RANK_SUPER_CRITICAL_DAMAGE =
+    "Les super-critiques infligent %s%% de dégâts normaux supplémentaires. Confère au moins %s%% de chances de super-critique.",
+    TALENT_RANK_SUPER_CRITICAL_HEALING =
+    "Les soins super-critiques rendent %s%% de soins normaux supplémentaires. Confère au moins %s%% de chances de soin super-critique.",
+    TALENT_RANK_RESOURCE_GAIN =
+    "Gagnez %s%% de ressource de classe supplémentaire par régénération, attaques de base et dégâts subis.",
+    TALENT_RANK_ABILITY_EFFICIENCY =
+    "Les capacités coûtent %s points de ressource de classe en moins, avec un minimum de 1. Les seuils de ressource restent applicables.",
+    TALENT_RANK_DOT_DAMAGE =
+    "Vos dégâts sur la durée infligent %s%% de dégâts supplémentaires et ne peuvent pas être critiques.",
+    TALENT_RANK_OVERHEAL_SHIELD =
+    "Les soins directs excédentaires créent un bouclier égal à %s%% de cet excédent, limité à 20%% des points de vie maximum du bénéficiaire. Le plus grand bouclier est conservé ; les soins déclenchés ne créent pas de bouclier.",
+    TALENT_CURRENT_RANK = "Rang actuel",
 }

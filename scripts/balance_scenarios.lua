@@ -55,14 +55,14 @@ local function party(level, prestiges, tier, mastery, heirlooms)
         hero.level, hero.rank = level, 0
         local progress = assert(G.TalentProgress(hero))
         hero.mastery.rank = mastery
-        progress.earned = math.min(#G.TalentList(hero), progress.earned + mastery)
+        progress.earned = math.min(G.TalentLimit(hero), progress.earned + math.floor(mastery / C.mastery.ranksPerPoint))
         if heirlooms then
             -- A completed talent budget retained from a capped previous adventure.
             local levelPoints = 1
                 + math.floor((C.heroLevelCap - 1) / C.talentProgression.levelsPerPoint)
             progress.bestLevel, progress.levelPoints, progress.earned =
-                C.heroLevelCap, levelPoints, #G.TalentList(hero)
-            hero.mastery.rank = #G.TalentList(hero) - levelPoints
+                C.heroLevelCap, levelPoints, G.TalentLimit(hero)
+            hero.mastery.rank = (G.TalentLimit(hero) - levelPoints) * C.mastery.ranksPerPoint
         end
         for _, slot in ipairs(C.equipmentSlots) do
             hero.gear[slot] = G.CraftItem(hero, slot, heirlooms, state)
@@ -70,9 +70,11 @@ local function party(level, prestiges, tier, mastery, heirlooms)
         end
         for pass = 1, 3 do
             local path = (preferred[class] + pass - 2) % 3 + 1
-            for _, talent in ipairs(G.TalentList(hero)) do
-                if talent.path == path and not hero.talents[talent.id] then
-                    G.Talent(state, hero.id, talent.id)
+            for row = 1, 6 do
+                for _, talent in ipairs(G.TalentList(hero)) do
+                    if talent.path == path and talent.row == row then
+                        while G.CanTalent(hero, talent) do G.Talent(state, hero.id, talent.id) end
+                    end
                 end
             end
         end

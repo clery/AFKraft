@@ -62,7 +62,7 @@ local function drawNode(tree, talent, hero, index)
         U.Rect(b, 22, 34, 28, 16, { 0, 0, 0 }, 0.95, "OVERLAY")
         b.rank = U.SingleLine(U.Text(b, "", 19, 33, 12, T.green), 32, 18, "CENTER")
         b.rank:SetDrawLayer("OVERLAY", 7)
-        b.label = U.SingleLine(U.Text(b, "", -48, 51, 11, T.text), 140, 18, "CENTER")
+        b.label = U.SingleLine(U.Text(b, "", -37, 51, 11, T.text), 118, 18, "CENTER")
         b:SetScript("OnHide", function(self)
             if GameTooltip:IsOwned(self) then
                 GameTooltip:Hide()
@@ -74,38 +74,41 @@ local function drawNode(tree, talent, hero, index)
         b.icon:SetTexture("Interface\\Icons\\" .. talent.icon)
         b.iconName = talent.icon
     end
-    local learned = hero.talents[talent.id]
+    local rank = G.TalentRank(hero, talent)
+    local learned = rank > 0
+    local ranks = rank .. "/" .. talent.maxRanks
     local available, reason = G.CanTalent(hero, talent)
     local color = learned and T.gold or available and T.green or T.muted
     b:ClearAllPoints()
-    b:SetPoint("TOPLEFT", 64 + (talent.column - 2) * 158, -16 - (talent.row - 1) * 82)
+    b:SetPoint("TOPLEFT", 37 + (talent.column - 1) * 122, -16 - (talent.row - 1) * 82)
     b:SetBackdropBorderColor(unpack(color))
     b.icon:SetDesaturated(not learned and not available)
     b.icon:SetAlpha((learned or available) and 1 or 0.45)
     b.label:SetText(talent.name)
-    b.rank:SetText(learned and "1/1" or "0/1")
+    b.rank:SetText(ranks)
     b.rank:SetTextColor(unpack(color))
-    b:SetScript("OnClick", function()
+    b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    b:SetScript("OnClick", function(_, button)
         GameTooltip:Hide()
-        W.Action(G.Talent, index, talent.id)
+        W.Action(G.Talent, index, talent.id, button == "RightButton")
     end)
     -- Leave unlearnable nodes mouse-enabled so their explanations remain accessible.
     b:SetScript("OnEnter", nil)
     b:SetScript("OnLeave", nil)
+    local description = learned and (L.TALENT_CURRENT_RANK .. "\n" .. C.TalentRankText(talent, rank)) or L.NOT_LEARNED
+    if rank < talent.maxRanks then
+        description = description .. "\n\n" .. L.NEXT_RANK_PREFIX .. (rank + 1) .. "/" .. talent.maxRanks
+            .. "\n" .. C.TalentRankText(talent, rank + 1)
+    end
     U.Tooltip(
         b,
         talent.name,
         L.RANK_PREFIX
-            .. (learned and "1/1" or "0/1")
-            .. "\n\n"
-            .. talent.text
-            .. "\n\n"
-            .. (
-                not available and reason
-                or learned and L.CLICK_TO_UNLEARN_AND_RECOVER_THE_POINT
-                or available and L.CLICK_TO_SPEND_ONE_TALENT_POINT
-                or L.REACH_NEW_LEVEL_MILESTONES_TO_EARN_PERMANENT_TALENT_POINTS
-            ),
+        .. (ranks)
+        .. "\n\n"
+        .. description
+        .. "\n\n" .. L.TALENT_RANK_CONTROLS
+        .. (not available and ("\n" .. (reason or "")) or ""),
         320
     )
     b:Show()
@@ -133,7 +136,7 @@ function P.Draw(ui, parent, hero, index)
     local bar = ui.talentTrees.mastery
     local unlocked = G.MasteryUnlocked(hero)
     local cost = G.MasteryCost(mastery.rank)
-    local complete = progress.earned >= #talents
+    local complete = progress.earned >= G.TalentLimit(hero)
     bar:SetValue(complete and 1 or unlocked and mastery.xp / cost or 0)
     bar.label:SetText(
         not unlocked and (L.MASTERY_UNLOCKS_AT_HERO_LEVEL_PREFIX .. C.mastery.unlockLevel)
@@ -152,18 +155,18 @@ function P.Draw(ui, parent, hero, index)
         bar,
         L.PERMANENT_MASTERY,
         L.UNLOCKS_AT_HERO_LEVEL_PREFIX
-            .. C.mastery.unlockLevel
-            .. L.EACH_RANK_GRANTS_1_PERMANENT_TALENT_POINT_TIER_PREFIX
-            .. W.state.tier
-            .. L.EARN_XP_FROM_VICTORIES_AT_ENCOUNTER_LEVEL_PREFIX
-            .. math.max(1, G.MasteryFrontier(hero, W.state.tier))
-            .. L.BOSSES_AWARD_DOUBLE_XP_MASTERY_SURVIVES_BOTH_RESETS_AND_PREFIX
-            .. C.heroLevelCap
-            .. ".\n"
-            .. (
-                complete and L.ALL_TALENT_POINTS_EARNED
-                or (L.NEXT_RANK_PREFIX .. cost .. L.XP_HEADING_3)
-            ),
+        .. C.mastery.unlockLevel
+        .. L.EVERY_THREE_RANKS_GRANT_ONE_TALENT_POINT_TIER_PREFIX
+        .. W.state.tier
+        .. L.EARN_XP_FROM_VICTORIES_AT_ENCOUNTER_LEVEL_PREFIX
+        .. math.max(1, G.MasteryFrontier(hero, W.state.tier))
+        .. L.BOSSES_AWARD_DOUBLE_XP_MASTERY_SURVIVES_BOTH_RESETS_AND_PREFIX
+        .. C.heroLevelCap
+        .. ".\n"
+        .. (
+            complete and L.ALL_TALENT_POINTS_EARNED
+            or (L.NEXT_RANK_PREFIX .. cost .. L.XP_HEADING_3)
+        ),
         360
     )
     ui.talentTrees:Show()
@@ -174,8 +177,8 @@ function P.Draw(ui, parent, hero, index)
         end
         for _, talent in ipairs(talents) do
             if talent.path == path then
-                count = count + 1
-                spent = spent + (hero.talents[talent.id] and 1 or 0)
+                count = count + talent.maxRanks
+                spent = spent + G.TalentRank(hero, talent)
                 rows = math.max(rows, talent.row)
                 drawNode(tree, talent, hero, index)
             end

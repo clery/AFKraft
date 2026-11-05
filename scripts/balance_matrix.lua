@@ -95,7 +95,7 @@ elseif mode == "walls" then
         end
         for index, hero in ipairs(s.heroes) do
             hero.mastery.rank = 24
-            hero.talentProgress.earned = #G.TalentList(hero)
+            hero.talentProgress.earned = G.TalentLimit(hero)
             B.talents(s, index, 1)
         end
         local enhanced, seconds = B.fight(s, 60)

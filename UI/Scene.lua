@@ -414,7 +414,8 @@ function Scene:Refresh(s)
                         unit.recoilAt = GetTime()
                     end
                     if unit and unit:IsShown() and s.settings.combatText then
-                        unit.floating:SetText((event.kind == "heal" and "+" or "-") .. event.amount)
+                        unit.floating:SetText((event.kind == "heal" and "+" or "-") .. event.amount
+                            .. (event.critical == "supercritical" and "!!" or event.critical and "!" or ""))
                         unit.floating:SetTextColor(
                             unpack(event.kind == "heal" and T.green or T.gold)
                         )

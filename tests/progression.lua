@@ -103,7 +103,7 @@ case("Guide milestones record successful actions without being undone by respecs
     assert(G.Equip(s, 1, 1) and s.guide.equipped)
     local talent = G.TalentList(s.heroes[1])[1].id
     assert(G.Talent(s, 1, talent) and s.guide.talent)
-    assert(G.Talent(s, 1, talent) and s.guide.talent)
+    assert(G.Talent(s, 1, talent, true) and s.guide.talent)
     assert(G.Travel(s, "elwynn") and not s.guide.traveled)
     assert(G.Travel(s, "durotar") and s.guide.traveled)
     s.guide.equipped = "bad"
@@ -179,6 +179,36 @@ case("Unlock receipts reject malformed state rather than granting discoveries", 
         corrupt(s)
         assert(not G.Load(s, 1000))
     end
+end)
+
+case("Hero XP costs retain the opening and grow smoothly beyond level ten", function()
+    assert(G.LevelXP(1) == 45 and G.LevelXP(10) == 450)
+    assert(G.LevelXP(40) == 5400 and G.LevelXP(60) == 11700)
+    local previous = 0
+    for level = 1, 59 do
+        local cost = G.LevelXP(level)
+        assert(cost > previous)
+        local h = { level = level, xp = cost - 1 }
+        local nextLevel, xp = G.ExperienceResult(h, 1)
+        assert(nextLevel == level + 1 and xp == 0)
+        previous = cost
+    end
+    local s = G.New(1000)
+    assert(G.AddHero(s, "WARRIOR"))
+    s.heroes[1].level, s.heroes[1].xp = 41, 1000
+    local loaded = assert(G.Load(s, 1000))
+    assert(loaded.heroes[1].level == 41 and loaded.heroes[1].xp == 1000)
+end)
+
+case("Four hours of unmanaged farming no longer races into the forties", function()
+    local s = G.New(0)
+    assert(G.AddHero(s, "WARRIOR"))
+    for _ = 1, 4 * 3600 do G.Step(s, 1) end
+    assert(s.heroes[1].level >= 28 and s.heroes[1].level <= 32)
+    local level, xp = s.heroes[1].level, s.heroes[1].xp
+    assert(G.ActivityReward(s, "quest:curve-test", "quest", "test"))
+    assert(s.heroes[1].level == level and s.heroes[1].xp == xp)
+    assert(G.Load(G.Copy(s), 4 * 3600))
 end)
 
 return cases

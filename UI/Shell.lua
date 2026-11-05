@@ -308,7 +308,7 @@ function UI:Refresh(redraw)
                     W.Game.TalentProgress(h).earned >= #W.Game.TalentList(h) and cost or mastery.xp
                 )
             else
-                button.xp:SetMinMaxValues(0, h.level * 45)
+                button.xp:SetMinMaxValues(0, W.Game.LevelXP(h.level))
                 button.xp:SetValue(h.xp)
             end
             button.icon:SetTexture("Interface\\Icons\\" .. class.icon)

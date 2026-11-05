@@ -202,9 +202,14 @@ function G.Load(db, now)
     elseif db.version ~= C.version then
         return nil, L.THIS_SAVE_BELONGS_TO_AN_UNSUPPORTED_VERSION_IT_HAS
     end
+    local needsTalentMigration = false
+    for _, hero in ipairs(type(db.heroes) == "table" and db.heroes or {}) do
+        if type(hero) == "table" and hero.talentRanksVersion == nil then needsTalentMigration = true end
+    end
     local previousEconomy = db.economyVersion
     if
         previousEconomy == nil
+        or needsTalentMigration
         or db.unlocks == nil
         or db.outdoorCollections == nil
         or db.dungeonCollections == nil
@@ -558,6 +563,10 @@ function G.Load(db, now)
         db.battle = nil
         db.rest = 0
         db.itemStatsVersion = 1
+    end
+    if needsTalentMigration then
+        -- Old encounters contain cached stats from the previous talent definitions.
+        db.battle, db.rest = nil, 0
     end
     G.ProfessionUnlocks(db)
     if not G.ValidateDevelopment(db) then

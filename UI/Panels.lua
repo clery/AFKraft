@@ -70,7 +70,7 @@ function P.GuideStep(s, selectedHero)
         for index, hero in ipairs(s.heroes) do
             if G.Points(hero) > 0 then
                 for _, talent in ipairs(G.TalentList(hero)) do
-                    if not hero.talents[talent.id] and G.CanTalent(hero, talent) then
+                    if G.TalentRank(hero, talent) < talent.maxRanks and G.CanTalent(hero, talent) then
                         return 3, index
                     end
                 end
@@ -663,7 +663,7 @@ function P.talents(ui, p, s)
     local progress = G.TalentProgress(h)
     local nextLevel = G.NextTalentLevel(h)
     local hint = nextLevel and (L.NEXT_LEVEL_POINT_PREFIX .. nextLevel .. ". ") or ""
-    if progress.earned >= #G.TalentList(h) then
+    if progress.earned >= G.TalentLimit(h) then
         hint = L.ALL_PERMANENT_TALENT_POINTS_EARNED
     elseif G.MasteryUnlocked(h) then
         hint = hint
@@ -776,13 +776,13 @@ function P.talents(ui, p, s)
             ui.heroResourceChoice,
             profile.name .. ": " .. math.floor(value) .. "/" .. profile.maximum,
             profile.description
-                .. L.FRAGMENT_ABILITY_COSTS_STRIKE
-                .. profile.costs.attack
-                .. L.RECOVERY_PREFIX
-                .. profile.costs.heal
-                .. L.SPECIAL_PREFIX
-                .. profile.costs.special
-                .. L.THE_THRESHOLD_IS_CHECKED_BEFORE_SPENDING_BASIC_ATTACKS_CONTINUE
+            .. L.FRAGMENT_ABILITY_COSTS_STRIKE
+            .. G.HeroAbilityCost(h, "attack")
+            .. L.RECOVERY_PREFIX
+            .. G.HeroAbilityCost(h, "heal")
+            .. L.SPECIAL_PREFIX
+            .. G.HeroAbilityCost(h, "special")
+            .. L.THE_THRESHOLD_IS_CHECKED_BEFORE_SPENDING_BASIC_ATTACKS_CONTINUE
         )
     end
 end

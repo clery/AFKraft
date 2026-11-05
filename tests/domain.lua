@@ -220,7 +220,7 @@ case("Natural experience passes the retired training gates without Essence", fun
     equal(s.essence, 0)
     local level, xp = G.ExperienceResult(s.heroes[1], 1000000)
     equal(level, 60)
-    assert(xp < 60 * 45)
+    assert(xp < G.LevelXP(60))
     local gold, experience = s.gold, s.heroes[1].xp
     assert(not G.Train(s, 1))
     equal(s.gold, gold)
@@ -232,7 +232,7 @@ case("Talent and priority changes are free during active encounters", function()
     s.essence = 12
     assert(G.Talent(s, 1, "guard"))
     equal(s.essence, 12)
-    assert(G.Talent(s, 1, "guard"))
+    assert(G.Talent(s, 1, "guard", true))
     equal(G.Points(s.heroes[1]), 1)
     G.StartBattle(s)
     assert(G.Talent(s, 1, "guard"))
@@ -619,7 +619,7 @@ case("Milestone logs notify once while routine XP stays quiet", function()
         notices = {}
         G.AdventureXP(s, 1, "test", "Test")
         equal(#notices, 0)
-        s.heroes[1].level, s.heroes[1].xp = 59, 2654
+        s.heroes[1].level, s.heroes[1].xp = 59, G.LevelXP(59) - 1
         s.heroes[1].mastery.frontier = 100
         s.heroes[1].mastery.frontiers[0] = 100
         G.StartBattle(s)
@@ -665,7 +665,7 @@ end)
 case("Offline level caps remain in the final adventure log", function()
     local s = party()
     s.safe.elwynn = 1
-    s.heroes[1].level, s.heroes[1].xp = 59, 2654
+    s.heroes[1].level, s.heroes[1].xp = 59, G.LevelXP(59) - 1
     local job = assert(G.BeginCatchup(s, 1120))
     while not G.CatchupBatch(job, 100) do
     end

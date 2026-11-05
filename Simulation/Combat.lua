@@ -29,7 +29,11 @@ local function activeTraits(state)
         local traits = {}
         for _, node in ipairs(G.TalentList(hero)) do
             if node.trait and hero.talents[node.id] then
-                traits[#traits + 1] = node.trait
+                traits[#traits + 1] = {
+                    kind = node.trait.kind,
+                    condition = node.trait.condition,
+                    amount = node.trait.amount * G.TalentRank(hero, node) / node.maxRanks,
+                }
             end
         end
         result[i] = traits
@@ -217,8 +221,13 @@ local function hurt(state, target, amount, enemy, source, passive)
     if enemy and state.battle then
         amount = amount * (state.battle.boostDamage or 1)
     end
+    local critical
+    if enemy and not passive and state.heroes[source] then
+        amount, critical = G.CriticalResult(state, state.heroes[source], amount, false)
+    end
     amount = floor(max(1, amount))
-    local wasAlive = target.hp > 0
+    local previousHP = target.hp
+    local wasAlive = previousHP > 0
     target.hp = max(0, target.hp - amount)
     if not enemy and wasAlive and state.battle then
         local hero = state.heroes[target.id]
@@ -230,20 +239,30 @@ local function hurt(state, target, amount, enemy, source, passive)
     G.Emit(
         state,
         "hit",
-        { target = target.id, enemy = enemy, amount = amount, source = source, passive = passive }
+        { target = target.id, enemy = enemy, amount = amount, source = source, passive = passive, critical = critical }
     )
     if wasAlive and target.hp == 0 then
         G.Emit(state, "death", { target = target.id, enemy = enemy })
     end
+    return min(previousHP, amount)
 end
 
-local function heal(state, target, amount, source)
+local function heal(state, target, amount, source, passive)
+    local critical
     if state.battle then
         amount = amount * (state.battle.boostHealing or 1)
+        if not passive and state.heroes[source] then
+            amount, critical = G.CriticalResult(state, state.heroes[source], amount, true)
+            local shield = G.TalentEffects(state.heroes[source]).overhealShield or 0
+            if shield > 0 and target.hp > 0 then
+                local overflow = max(0, amount - (target.maxHP - target.hp))
+                target.shield = max(target.shield or 0, floor(min(target.maxHP * 0.2, overflow * shield)))
+            end
+        end
     end
     amount = floor(min(amount, target.maxHP - target.hp))
     target.hp = min(target.maxHP, target.hp + amount)
-    G.Emit(state, "heal", { target = target.id, amount = amount, source = source })
+    G.Emit(state, "heal", { target = target.id, amount = amount, source = source, critical = critical })
     return amount
 end
 
@@ -294,22 +313,26 @@ local function victory(state, battle)
             )
             G.Emit(state, "unlock", { target = result.id, masteryUnlocked = true })
         end
+        local earned = result.hero.talentProgress.earned
         local _, ranks =
             G.RewardMastery(result.hero, battle.level, masteryXP, battle.boss, state.tier)
+        local points = result.hero.talentProgress.earned - earned
         if ranks > 0 then
             G.Log(
                 state,
                 result.hero.name
-                    .. L.FRAGMENT_REACHED_MASTERY
-                    .. result.hero.mastery.rank
-                    .. ". +"
-                    .. ranks
-                    .. L.PERMANENT_TALENT_SUFFIX
-                    .. (ranks == 1 and L.POINT_SUFFIX or L.POINTS_SUFFIX),
-                nil,
+                .. L.FRAGMENT_REACHED_MASTERY
+                .. result.hero.mastery.rank
+                .. ". +"
+                .. points
+                .. L.PERMANENT_TALENT_SUFFIX
+                .. (points == 1 and L.POINT_SUFFIX or L.POINTS_SUFFIX),
+                points == 0,
                 "progress"
             )
-            G.Emit(state, "unlock", { target = result.id, mastery = ranks })
+            if points > 0 then
+                G.Emit(state, "unlock", { target = result.id, mastery = ranks })
+            end
         end
         if result.level > previousLevel then
             G.Emit(state, "levelup", { target = result.id })
@@ -430,6 +453,7 @@ function G.Step(state, seconds)
             local owner = battle.heroes[source]
             if enemy.hp > 0 and owner and owner.hp > 0 then
                 dot.pending = (dot.pending or 0) + dot.damage * min(seconds, dot.remaining)
+                    * (1 + (G.TalentEffects(state.heroes[source]).dotDamage or 0))
                 local amount = floor(dot.pending)
                 if amount > 0 then
                     hurt(state, enemy, amount, true, source, true)
@@ -462,8 +486,9 @@ function G.Step(state, seconds)
                 unit.hp = min(unit.maxHP, unit.hp + unit.maxHP * 0.01 * min(seconds, hot))
                 unit.rejuvenation = hot > seconds and hot - seconds or nil
             end
-            unit.cd = max(0, unit.cd - seconds * (unit.haste or 1))
-            unit.attackCD = max(0, unit.attackCD - seconds * (unit.haste or 1) * attackSpeed)
+            unit.cd = max(0, unit.cd - seconds * (unit.haste or 1) * (1 + (talents.cooldownRate or 0)))
+            unit.attackCD = max(0,
+                unit.attackCD - seconds * (unit.haste or 1) * attackSpeed * (1 + (talents.attackSpeed or 0)))
             local allies = living(battle.heroes)
             local lowest = allies[1]
             for _, a in ipairs(allies) do
@@ -503,7 +528,7 @@ function G.Step(state, seconds)
                         i
                     )
                     if talents.beacon and recovery ~= unit then
-                        heal(state, unit, restored * 0.4, i)
+                        heal(state, unit, restored * 0.4, i, true)
                     end
                     if talents.holyShield then
                         recovery.shield = max(recovery.shield or 0, unit.healing * 0.3)
@@ -511,7 +536,7 @@ function G.Step(state, seconds)
                     if talents.hymn then
                         for _, ally in ipairs(allies) do
                             if ally ~= recovery then
-                                heal(state, ally, unit.healing * 0.25, i)
+                                heal(state, ally, unit.healing * 0.25, i, true)
                             end
                         end
                     end
@@ -551,7 +576,7 @@ function G.Step(state, seconds)
                         end
                         if P.InRange(unit, target) then
                             amount = min(target.hp, amount)
-                            hurt(state, target, amount, true, i)
+                            amount = hurt(state, target, amount, true, i)
                             if
                                 talents.wounds
                                 or talents.ignite
@@ -571,24 +596,24 @@ function G.Step(state, seconds)
                                 }
                             end
                             if talents.bloodthirst and unit.hp < unit.maxHP * 0.5 then
-                                heal(state, unit, unit.maxHP * 0.08, i)
+                                heal(state, unit, unit.maxHP * 0.08, i, true)
                             end
                             if talents.judgement or talents.atonement then
-                                heal(state, lowest, amount * (talents.judgement and 0.2 or 0.15), i)
+                                heal(state, lowest, amount * (talents.judgement and 0.2 or 0.15), i, true)
                             end
                             if talents.drain then
                                 heal(
                                     state,
                                     unit,
                                     amount * (unit.hp < unit.maxHP * 0.35 and 0.6 or 0.3),
-                                    i
+                                    i, true
                                 )
                             end
                             if talents.shadowfury and action == "special" then
                                 target.attackCD = target.attackCD + 2
                             end
                             if talents.leech then
-                                heal(state, unit, amount * 0.12, i)
+                                heal(state, unit, amount * 0.12, i, true)
                             end
                             if talents.control then
                                 target.attackCD = target.attackCD + 1
@@ -631,22 +656,22 @@ function G.Step(state, seconds)
                             * traitMultiplier(traits[i], "basic", battle, unit, target)
                             * collection.basicAttack
                             * difficulty.basicDamageTaken
+                        local dealt = hurt(state, target, amount, true, i)
                         if talents.atonement then
-                            heal(state, lowest, min(target.hp, amount) * 0.15, i)
+                            heal(state, lowest, dealt * 0.15, i, true)
                         end
-                        hurt(state, target, amount, true, i)
                         if talents.poison then
                             target.dots = target.dots or {}
                             target.dots[i] =
                                 { damage = unit.damage * 0.12, remaining = 6, physical = true }
                         end
-                        if talents.frost then
-                            target.attackCD = target.attackCD + 0.3
+                        if talents.frost and unit.swings % 3 == 0 then
+                            target.attackCD = target.attackCD + 1
                         end
                     end
                 end
-                if talents.potency then
-                    unit.cd = max(0, unit.cd - 0.5)
+                if talents.potency and unit.swings % 2 == 0 then
+                    unit.cd = max(0, unit.cd - 1)
                 end
                 unit.attackCD = 2
             end

@@ -51,6 +51,7 @@ for _, file in ipairs({
     "tests/progression.lua",
     "tests/positioning.lua",
     "tests/talents.lua",
+    "tests/talent_variety.lua",
     "tests/resources.lua",
     "tests/materials.lua",
     "tests/mastery.lua",

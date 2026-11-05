@@ -355,7 +355,7 @@ function Tutorial.Refresh(ui)
             )
         else
             for _, talent in ipairs(G.TalentList(h)) do
-                if not h.talents[talent.id] and G.CanTalent(h, talent) then
+                if G.CanTalent(h, talent) then
                     local node = ui.talentTrees.trees[talent.path].buttons[talent.id]
                     show(
                         ui,

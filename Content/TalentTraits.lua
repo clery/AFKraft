@@ -3,15 +3,26 @@ local L = W.L
 local C = W.Content
 
 C.heroLevelCap = 60
-C.talentProgression = { levelsPerPoint = 2 }
+C.talentProgression = { levelsPerPoint = 2, pointsPerRow = 5 }
 C.mastery = {
     unlockLevel = 20,
+    ranksPerPoint = 3,
     baseXP = 100,
     xpPerRank = 50,
     softCap = 8,
     xpPerLateRank = 100,
     bossMultiplier = 2,
 }
+
+local rankDescriptions = {
+    damage = L.TALENT_RANK_DAMAGE,
+    healing = L.TALENT_RANK_HEALING,
+    health = L.TALENT_RANK_HEALTH,
+    speed = L.TALENT_RANK_SPEED,
+    mitigation = L.TALENT_RANK_MITIGATION,
+    regen = L.TALENT_RANK_REGEN,
+}
+for effect, text in pairs(rankDescriptions) do C.talentEffects[effect].rankText = text end
 
 -- Node order follows talentSpecs so existing saved IDs and prerequisites stay intact.
 -- Shared foundations gain a situational bonus; signature mechanics already stand alone.
@@ -327,6 +338,25 @@ local descriptions = {
         outnumbered = L.TRAIT_DEFENSE_OUTNUMBERED,
     },
 }
+
+local function rankPercent(value)
+    return tostring(math.floor(value + 0.5))
+end
+
+function C.TalentRankText(node, rank)
+    if node.value == true then return node.text end
+    local scale = rank / node.maxRanks
+    local definition = C.talentEffects[node.effect]
+    local units = node.effect == "regen" and 1000 or node.effect == "abilityEfficiency" and 1 or 100
+    local text = string.format(definition.rankText, rankPercent(node.value * scale * units), rank)
+    if node.trait then
+        local trait = node.trait
+        local template = descriptions[trait.kind][trait.condition]:gsub("%%d", "%%s")
+        text = text .. "\n" .. string.format(template, rankPercent(trait.amount * scale * 100))
+        if trait.kind == "defense" then text = text .. L.SITUATIONAL_DAMAGE_REDUCTION_IS_CAPPED_AT_60_SUFFIX end
+    end
+    return text
+end
 
 function C.ApplyTalentTrait(node, entry)
     node.icon = entry[1]

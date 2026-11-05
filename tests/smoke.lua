@@ -393,6 +393,12 @@ test("Defeated models play death and damage text rises with a frame-rate fade", 
         scene:Refresh(state)
         assertTrue(unit.floatAnimation:IsPlaying())
         assertEquals("-12", unit.floating:GetText())
+        state.events = { { kind = "hit", target = 1, enemy = true, amount = 18, critical = "critical" } }
+        scene:Refresh(state)
+        assertEquals("-18!", unit.floating:GetText())
+        state.events = { { kind = "hit", target = 1, enemy = true, amount = 36, critical = "supercritical" } }
+        scene:Refresh(state)
+        assertEquals("-36!!", unit.floating:GetText())
         unit.floatAnimation:Stop()
         unit.floatAnimation:GetScript("OnFinished")(unit.floatAnimation)
         assertEquals(0, unit.floating:GetAlpha())
@@ -622,8 +628,8 @@ test("Talent icons preserve choices and scroll through expanded trees", function
     node:GetScript("OnClick")(node)
     assertTrue(W.state.heroes[1].talents.cleave)
     assertEquals("1/1", node.rank:GetText())
-    node:GetScript("OnClick")(node)
-    assertFalse(W.state.heroes[1].talents.cleave == true)
+    node:GetScript("OnClick")(node, "RightButton")
+    assertFalse(W.state.heroes[1].talents.cleave)
     assertEquals("0/1", node.rank:GetText())
     local talent = W.Content.talents[1]
     local row = talent.row

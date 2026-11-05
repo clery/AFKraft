@@ -79,7 +79,7 @@ local function checkin(state)
     end
     for index, hero in ipairs(state.heroes) do
         for _, talent in ipairs(G.TalentList(hero)) do
-            if not hero.talents[talent.id] then
+            if G.TalentRank(hero, talent) < talent.maxRanks then
                 G.Talent(state, index, talent.id)
             end
         end

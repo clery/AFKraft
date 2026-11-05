@@ -97,6 +97,7 @@ function G.AddHero(state, classID, identity)
         health = 1,
         gear = {},
         talents = {},
+        talentRanksVersion = 2,
         priority = "heal",
         targetMode = "front",
         resourceThreshold = 0,
@@ -280,15 +281,37 @@ function G.TalentList(hero)
     end
     local selected = hero.talents
     for id, learned in pairs(selected) do
-        if not byID[id] or learned ~= true then
+        local replacement = byID[id] and id or legacy[id]
+        local node = replacement and byID[replacement]
+        local rank = learned == true and 1 or learned
+        if hero.talentRanksVersion == nil and node and node.value ~= true
+            and type(rank) == "number" and rank >= 1 and rank <= 5 and rank == floor(rank) then
+            rank = min(rank, node.maxRanks)
+        end
+        if not node or type(rank) ~= "number" then
             selected[id] = nil
-            local replacement = legacy[id]
-            if learned == true and replacement then
-                selected[replacement] = true
-            end
+        elseif replacement ~= id then
+            local previous = selected[replacement]
+            previous = previous == true and 1 or type(previous) == "number" and previous or 0
+            selected[id] = nil
+            selected[replacement] = max(previous, rank)
+        elseif learned ~= rank then
+            selected[id] = rank
         end
     end
+    if hero.talentRanksVersion == nil then hero.talentRanksVersion = 2 end
     return C.talentsByClass[hero.class] or {}
+end
+
+function G.TalentRank(hero, talent)
+    local rank = hero.talents[talent.id]
+    return rank == true and 1 or rank or 0
+end
+
+function G.TalentLimit(hero)
+    local total = 0
+    for _, node in ipairs(G.TalentList(hero)) do total = total + node.maxRanks end
+    return total
 end
 
 function G.TalentEffects(hero)
@@ -298,11 +321,35 @@ function G.TalentEffects(hero)
             if talent.value == true then
                 effects[talent.effect] = true
             else
-                effects[talent.effect] = (effects[talent.effect] or 0) + talent.value
+                effects[talent.effect] = (effects[talent.effect] or 0) +
+                    talent.value * G.TalentRank(hero, talent) / talent.maxRanks
+                if talent.effect == "criticalDamage" or talent.effect == "criticalHealing"
+                    or talent.effect == "superCriticalDamage" or talent.effect == "superCriticalHealing" then
+                    local chance = talent.effect .. "Chance"
+                    effects[chance] = (effects[chance] or 0) + G.TalentRank(hero, talent) / 100
+                end
             end
         end
     end
     return effects
+end
+
+-- Only direct attacks and direct healing can critically strike; no recursive proc rolls.
+function G.CriticalResult(state, hero, amount, healing)
+    local effects = G.TalentEffects(hero)
+    local criticalPower, superPower = effects.criticalDamage or 0, effects.superCriticalDamage or 0
+    local criticalMinimum, superMinimum = effects.criticalDamageChance or 0, effects.superCriticalDamageChance or 0
+    if healing then
+        criticalPower, superPower = effects.criticalHealing or 0, effects.superCriticalHealing or 0
+        criticalMinimum, superMinimum = effects.criticalHealingChance or 0, effects.superCriticalHealingChance or 0
+    end
+    local criticalChance = min(0.75, max(effects.criticalChance or 0, criticalMinimum))
+    local superChance = min(0.2, max(effects.superCriticalChance or 0, superMinimum))
+    if criticalChance + superChance <= 0 then return amount end
+    local roll = G.Random(state, 10000)
+    if roll <= floor(superChance * 10000 + 0.5) then return amount * (3 + superPower), "supercritical" end
+    if roll <= floor((superChance + criticalChance) * 10000 + 0.5) then return amount * (1.5 + criticalPower), "critical" end
+    return amount
 end
 
 -- Apply talent modifiers after base equipment stats so both stat models stay compatible.
@@ -355,9 +402,19 @@ end
 -- Personal level records award permanent points. Respecs and repeated levels
 -- never advance the record; Mastery grants additional points independently.
 function G.TalentProgress(hero)
-    local limit, spent = #G.TalentList(hero), 0
-    for _ in pairs(hero.talents) do
-        spent = spent + 1
+    local limit, spent, previousLimit = G.TalentLimit(hero), 0, 0
+    if hero.talentRanksVersion ~= 2 then
+        return nil, L.THE_SAVED_TALENT_PROGRESSION_IS_INVALID_YOUR_ADVENTURE_HAS
+    end
+    for _, node in ipairs(G.TalentList(hero)) do
+        previousLimit = previousLimit + (node.value == true and 1 or 5)
+    end
+    for id, rank in pairs(hero.talents) do
+        local node = C.talentByClassID[hero.class][id]
+        if not positiveInteger(rank) or rank > node.maxRanks then
+            return nil, L.THE_SAVED_TALENT_PROGRESSION_IS_INVALID_YOUR_ADVENTURE_HAS
+        end
+        spent = spent + rank
     end
     if not positiveInteger(hero.level) or limit == 0 then
         return nil, L.THE_SAVED_HERO_LEVEL_OR_CLASS_IS_INVALID_YOUR
@@ -374,7 +431,7 @@ function G.TalentProgress(hero)
         type(progress) ~= "table"
         or not positiveInteger(progress.bestLevel)
         or not positiveInteger(progress.earned)
-        or progress.earned > limit
+        or progress.earned > max(limit, previousLimit)
     then
         return nil, L.THE_SAVED_TALENT_PROGRESSION_IS_INVALID_YOUR_ADVENTURE_HAS
     end
@@ -393,7 +450,7 @@ function G.TalentProgress(hero)
     end
     local bestLevel = max(min(hero.level, C.heroLevelCap), recordedBest)
     local current = 1 + floor((bestLevel - 1) / C.talentProgression.levelsPerPoint)
-    local earned = min(limit, progress.earned + current - levelPoints)
+    local earned = max(progress.earned, min(limit, progress.earned + current - levelPoints))
     if spent > earned then
         return nil, L.THE_SAVED_TALENT_SELECTIONS_EXCEED_EARNED_POINTS_YOUR_ADVENTURE
     end
@@ -409,7 +466,7 @@ end
 
 function G.NextTalentLevel(hero)
     local progress = G.TalentProgress(hero)
-    if progress and progress.earned < #G.TalentList(hero) then
+    if progress and progress.earned < G.TalentLimit(hero) then
         local level = progress.levelPoints * C.talentProgression.levelsPerPoint + 1
         return level <= C.heroLevelCap and level or nil
     end
@@ -511,27 +568,34 @@ function G.Configure(state, index, key, value)
     return true
 end
 
-function G.CanTalent(hero, talent)
-    local previous, peers, nextRow = false, 0, false
+function G.CanTalent(hero, talent, refund)
+    G.TalentList(hero)
+    local rank, previous, rows = G.TalentRank(hero, talent), 0, {}
     for _, node in ipairs(G.TalentList(hero)) do
-        if node.path == talent.path and hero.talents[node.id] then
-            if node.row == talent.row - 1 then
-                previous = true
-            elseif node.row == talent.row then
-                peers = peers + 1
-            elseif node.row == talent.row + 1 then
-                nextRow = true
-            end
+        if node.path == talent.path then
+            local selected = G.TalentRank(hero, node)
+            rows[node.row] = (rows[node.row] or 0) + selected
+            if node.row < talent.row then previous = previous + selected end
         end
     end
-    if hero.talents[talent.id] then
-        if peers == 1 and nextRow then
-            return false, L.UNLEARN_TALENTS_IN_THE_NEXT_ROW_FIRST
+    if refund then
+        if rank == 0 then return false end
+        local earlier = 0
+        for row = 1, 6 do
+            local required = (row - 1) * C.talentProgression.pointsPerRow
+            -- Preserve old builds, but do not invalidate an already satisfied requirement.
+            if row > talent.row and (rows[row] or 0) > 0
+                and earlier >= required and earlier - 1 < required then
+                return false, L.REFUND_HIGHER_TALENT_ROWS_FIRST
+            end
+            earlier = earlier + (rows[row] or 0)
         end
         return true
     end
-    if talent.row > 1 and not previous then
-        return false, L.SPEND_AT_LEAST_ONE_POINT_IN_THE_PREVIOUS_ROW
+    if rank >= talent.maxRanks then return false, L.TALENT_MAX_RANK end
+    local required = (talent.row - 1) * C.talentProgression.pointsPerRow
+    if previous < required then
+        return false, string.format(L.SPEND_POINTS_IN_EARLIER_TALENT_ROWS, required)
     end
     local progress, spent = G.TalentProgress(hero)
     if not progress then
@@ -539,19 +603,16 @@ function G.CanTalent(hero, talent)
     end
     if progress.earned <= spent then
         local level = G.NextTalentLevel(hero)
-        return false,
-            level
-                    and (L.REACH_IDLE_LEVEL_PREFIX .. level .. L.FOR_ANOTHER_PERMANENT_TALENT_POINT_SUFFIX)
-                or (
-                    progress.earned < #G.TalentList(hero)
-                        and L.EARN_MASTERY_XP_FROM_HARDER_ENCOUNTERS_FOR_ANOTHER_PERMANENT
-                    or L.ALL_PERMANENT_TALENT_POINTS_HAVE_BEEN_EARNED
-                )
+        return false, level
+            and (L.REACH_IDLE_LEVEL_PREFIX .. level .. L.FOR_ANOTHER_PERMANENT_TALENT_POINT_SUFFIX)
+            or (progress.earned < G.TalentLimit(hero)
+                and L.EARN_MASTERY_XP_FROM_HARDER_ENCOUNTERS_FOR_ANOTHER_PERMANENT
+                or L.ALL_PERMANENT_TALENT_POINTS_HAVE_BEEN_EARNED)
     end
     return true
 end
 
-function G.Talent(state, index, id)
+function G.Talent(state, index, id, refund)
     local hero = state.heroes[index]
     if not hero then
         return false
@@ -561,16 +622,16 @@ function G.Talent(state, index, id)
     if not C.talentByClassID[hero.class][id] then
         return false
     end
-    local allowed, reason = G.CanTalent(hero, C.talentByClassID[hero.class][id])
+    local allowed, reason = G.CanTalent(hero, C.talentByClassID[hero.class][id], refund)
     if not allowed then
         return false, reason
     end
-    if hero.talents[id] then
-        hero.talents[id] = nil
+    local rank = G.TalentRank(hero, C.talentByClassID[hero.class][id]) + (refund and -1 or 1)
+    hero.talents[id] = rank > 0 and rank or nil
+    if refund then
         G.RefreshHero(state, index)
         return true
     end
-    hero.talents[id] = true
     state.guide.talent = true
     G.RefreshHero(state, index)
     G.Emit(state, "unlock")
@@ -642,16 +703,20 @@ function G.RefreshHero(state, index)
     unit.haste, unit.mitigation, unit.regen = stats.haste, stats.mitigation, stats.regen
 end
 
+function G.LevelXP(level)
+    return floor(level * 45 * (1 + max(0, level - 10) / 15))
+end
+
 function G.ExperienceResult(hero, amount)
     local level, xp, cap = hero.level, hero.xp, G.LevelCap(hero)
     if level < cap then
         xp = xp + amount
     end
-    while level < cap and xp >= level * 45 do
-        xp, level = xp - level * 45, level + 1
+    while level < cap and xp >= G.LevelXP(level) do
+        xp, level = xp - G.LevelXP(level), level + 1
     end
     if level >= cap then
-        xp = math.min(xp, level * 45 - 1)
+        xp = math.min(xp, G.LevelXP(level) - 1)
     end
     return level, xp
 end
