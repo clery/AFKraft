@@ -8,7 +8,7 @@ AFKraft is an idle party RPG that lives inside World of Warcraft. Start with one
 
 Check in for a new weapon, rethink a talent build after a defeat, or pick the next zone to explore. Then let the party get back to work.
 
-> **Screenshot 1: The adventure in action.** Show the full adventure window with a five-hero party fighting a boss, a clear zone backdrop, and the battle UI visible. Use this as the main showcase image.
+![AFKraft adventure panel showing the party battling in Elwynn Forest](https://github.com/clery/AFKraft/raw/refs/heads/main/Images/AdventurePanel.png)
 
 ## Build a party worth checking in on
 
@@ -18,7 +18,7 @@ Battles play out automatically, but you decide how the party fights. Choose equi
 
 Heroes level to 60 through idle battles. Mastery adds permanent talent points as they keep winning challenging fights. Your whole account shares one adventure, so changing characters doesn't mean starting over.
 
-> **Screenshot 2: Party and talents.** Show a selected hero with their equipment and a developed talent tree. Keep item names, choices, and stats readable.
+![Rogue talent trees and combat priorities](https://github.com/clery/AFKraft/raw/refs/heads/main/Images/Talents.png)
 
 ## Pick the next stop
 
@@ -27,8 +27,6 @@ Explore 41 outdoor destinations across Kalimdor and the Eastern Kingdoms. Each h
 Use gold and materials to craft equipment, enhance a favorite piece, and work toward enchantments, titanforging, and lasting heirlooms. When the party loses, it falls back to safe farming. You can make a few changes and try the frontier again when you're ready.
 
 Later, unlock routes to plan your travels and Commander boosts to help the party through a difficult fight.
-
-> **Screenshot 3: Choosing a destination.** Show the world map with explored zones and a destination tooltip open, including its loot, materials, or boss trophy.
 
 ## Your adventures help theirs
 
@@ -46,7 +44,7 @@ When you log back in, AFKraft calculates up to 24 hours of safe offline farming 
 
 Eventually, start a new chapter to earn Heritage and strengthen future runs. Rebuild with your recruited heroes, talents, Mastery, and other permanent investments intact. Farther along, Transcendence opens harder difficulty tiers and more lasting rewards. Both resets are your choice, with a preview of what you keep and what you lose.
 
-> **Screenshot 4: Compact mode during normal play.** Show the small adventure view beside ordinary WoW gameplay, with the party and essential controls clearly visible.
+![AFKraft compact mode alongside normal World of Warcraft gameplay](https://github.com/clery/AFKraft/raw/refs/heads/main/Images/CompactMode.png)
 
 ## Try the prototype
 
