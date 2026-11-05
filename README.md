@@ -1,112 +1,75 @@
 # AFKraft : WoW Idle Game
 
-**Your adventures. Their growing legend.**
+**A little party. A long adventure.**
 
-An account-wide idle party RPG inside World of Warcraft. Build a company of five heroes, fight through Azeroth, and improve their equipment and builds while playing your own character.
+Your next dungeon group is still forming. Somewhere in Azeroth, your other party is already fighting.
 
-**Early playable prototype.** Retail is the current development and simulator client. Forever is the intended content target; its maps, visuals and live activity signals still need integration and testing.
+AFKraft is an idle party RPG that lives inside World of Warcraft. Start with one hero, recruit companions, and build a company of five. Send them across Azeroth to fight, bring home loot, and take on tougher bosses while you play your own character.
 
-## Distribution
+Check in for a new weapon, rethink a talent build after a defeat, or pick the next zone to explore. Then let the party get back to work.
 
-Forever is the only planned release target. Retail remains a development client;
-no Retail distribution is published. Packaging does not establish Forever readiness.
-See [packaging and release checks](TOOLING.md#packaging) before preparing a release.
+> **Screenshot 1: The adventure in action.** Show the full adventure window with a five-hero party fighting a boss, a clear zone backdrop, and the battle UI visible. Use this as the main showcase image.
 
-## Getting started
+## Build a party worth checking in on
 
-1. Put the `WoWIdle` folder in your client's `Interface/AddOns` directory, with `WoWIdle.toc` directly inside it.
-2. Enable the addon and log in. Restart WoW if you installed it while the game was running.
-3. Enter `/afkcraft` (or `/wowidle` or `/wi`) to open the adventure. Follow the dismissible starter guide.
+Start with your character's identity and class, then discover more companions as you defeat milestone bosses. Choose from all nine original classes, mix roles, or double up on a favorite. Log in on an alt to let them take the place of a generated companion of the same class.
 
-Libraries are bundled. Your characters share one saved adventure; idle hero levels, equipment and currencies are separate from your real WoW character.
+Battles play out automatically, but you decide how the party fights. Choose equipment, spend talent points, and set targeting and ability priorities. Each class has three talent trees, with free respecs so you can try a different approach when a boss stops you.
 
-## Party and battles
+Heroes level to 60 through idle battles. Mastery adds permanent talent points as they keep winning challenging fights. Your whole account shares one adventure, so changing characters doesn't mean starting over.
 
-Start with one hero. Defeat milestone bosses at encounter levels **2, 24, 36 and 52** to discover companions, then choose their classes in **Party**. All nine original classes are available, including duplicates. Companion discoveries and recruited heroes survive resets. Later companions arrive over several hours rather than all joining in the opening session. Loading the addon on an alt lets that character replace a generated companion of the same class.
+> **Screenshot 2: Party and talents.** Show a selected hero with their equipment and a developed talent tree. Keep item names, choices, and stats readable.
 
-Combat is automatic. Equipment, talents, targeting and ability priorities shape each hero's role. Change them during battle without resetting health proportions or cooldowns. Heroes gain levels naturally to **60**; no Essence or paid training is required. Each class has three **18-talent** trees, with free respecs and permanent earned points.
+## Pick the next stop
 
-**Mastery** unlocks permanently at hero level **20**. Victories at or above that hero's hardest completed encounter in the current difficulty earn Mastery XP; bosses award double. Each rank adds a permanent talent point, up to the tree's 54-point total. Easier rebuild encounters cannot farm Mastery points. The Talents bar shows current XP and the next rank cost.
+Explore 41 outdoor destinations across Kalimdor and the Eastern Kingdoms. Each has its own enemies, scenery, loot, and materials. Go looking for an upgrade, gather what the Forge needs, or return to a beaten boss for its trophy.
 
-Choose among **41 outdoor destinations** on the Kalimdor and Eastern Kingdoms maps. Destinations differ in scenery, enemies, equipment pools and materials. Cities, dungeons and raids are not idle destinations. Travel abandons the current encounter without rewards and preserves health. After a defeat, the party farms a safe encounter; improve its build and use **Retry frontier** to push again.
+Use gold and materials to craft equipment, enhance a favorite piece, and work toward enchantments, titanforging, and lasting heirlooms. When the party loses, it falls back to safe farming. You can make a few changes and try the frontier again when you're ready.
 
-## Real WoW activity and Essence
+Later, unlock routes to plan your travels and Commander boosts to help the party through a difficult fight.
 
-Every **100 Adventure XP** awards **60 Essence**. Spend Essence on permanent party bonuses in **Growth** or learn abilities in **Commander**. Growth ranks can be refunded for their exact Essence cost.
+> **Screenshot 3: Choosing a destination.** Show the world map with explored zones and a destination tooltip open, including its loot, materials, or boss trophy.
 
-| Eligible activity | Adventure XP |
-| --- | ---: |
-| Creature kill | 1 |
-| Herb or ore node | 4 |
-| Skinning | 0.25 |
-| Quest completion | 20 |
-| Boss | 25 |
-| Confirmed dungeon completion | 40 bonus |
-| Character level gained | 5 bonus |
+## Your adventures help theirs
 
-Kills and bosses must be within your XP range; gathering must be skill-up eligible. Gray kills, legacy boss farming and unconfirmed completions award no XP. Credit depends on client evidence and still needs live validation. Hero XP comes from idle battles instead.
+Questing, gathering, and fighting eligible enemies with your real WoW character earns Adventure XP. That becomes Essence, which buys permanent party improvements and unlocks Commander abilities.
 
-## Equipment and Forge
+Collections give you another reason to visit particular creatures and places. Find pieces through eligible kills, complete sets, and choose a set effect for your party.
 
-Each hero has **10 wearable slots**. Drops have fixed Classic item stats; class proficiencies and idle level requirements apply. **Power** estimates item value for the selected class, not damage per second. Compare items, equip individual upgrades, or use **Equip best power** in Party.
+The idle party also has its own progression through battles, loot, and crafting. Its levels, equipment, and currencies are separate from your WoW character's.
 
-**Forge** crafts targeted equipment with gold and idle materials. Enhancement adds **10% of base stats per purchase**. Enchanting unlocks when a hero first reaches **30**, titanforging at **50**, and profession specializations at **60**. Enchanting replaces the current enchantment; titanforging has five potential tiers. Previews show outcomes and costs before purchase. Heirloom recipes open at difficulty tier **4** for **1 Heritage per slot**. Heirloom investments survive both resets.
+## Come back to something
 
-Every zone has its own **boss trophy**: each idle boss victory guarantees one. Enchantments and titanforging consume specific trophies in addition to their existing costs. Forge previews show the source and your stock; **Farm** repeats an earned boss checkpoint, while **Travel** lets you clear a source for the first time. Map tooltips show each zone's trophy. Trophies survive both resets, and cleared bosses can supply them offline. These are addon resources, not real WoW inventory items.
+Keep the adventure open in a full window, tuck it into compact mode, or close it while you play. The party keeps fighting while its window is hidden.
 
-Identical ordinary items stack. Loot rules salvage unwanted future drops; **Disenchant** destroys stored equipment for gold and Relic dust. Equipped gear, heirlooms and protected items are kept. **Disenchant all** includes unprotected upgrades across every page and filter.
+When you log back in, AFKraft calculates up to 24 hours of safe offline farming and applies the rewards automatically. New progression waits for you. There's time to look through the loot and decide what comes next.
 
-Empty torso, leg and foot slots use cosmetic clothing with no stats. Exact offline alt appearances and matching equipment visuals remain unfinished. See [item rules and sources](Content/ITEMS.md) for formulas and unsupported item effects.
+Eventually, start a new chapter to earn Heritage and strengthen future runs. Rebuild with your recruited heroes, talents, Mastery, and other permanent investments intact. Farther along, Transcendence opens harder difficulty tiers and more lasting rewards. Both resets are your choice, with a preview of what you keep and what you lose.
 
-## Commander, routes and collections
+> **Screenshot 4: Compact mode during normal play.** Show the small adventure view beside ordinary WoW gameplay, with the party and essential controls clearly visible.
 
-At lifetime idle level **22**, learn one of four party boosts permanently with Essence or **1 Heritage**. Equip one at a time: effects last **15 adventure minutes**, with a **30-minute cooldown from activation**. Uses are free. At lifetime idle level **45**, learn on-cooldown automation for **1 Heritage**; level **60** opens conditional automation for **2 Heritage**. Enable both **Automation** and **Auto-cast** to use it.
+## Try the prototype
 
-Unlock difficulty tier **3** to learn route planning for **1 Heritage**. Save destinations and milestones, then enable the route to travel between encounters. Manual travel pauses it until Resume. Profiles save your boost, automation, route preferences and selected collection effect without restoring currencies or cooldowns.
+**AFKraft is an early playable prototype. Forever is the only planned release target.** Retail is currently used for development and simulator testing; there is no published Retail distribution.
 
-**Collections** come from eligible kills by your real WoW character. Hover a piece for its creature families, locations and chance. Each kill rolls independently; no discovery is guaranteed. Passive discovery bonuses survive both resets, and a completed set unlocks a selectable effect. Only one set effect can be active. Fieldcraft and Relic Hunter improve outdoor and dungeon chances respectively; each has three permanent ranks costing **1, 2 and 3 Heritage**.
+Forever integration and live testing are still in progress, including maps, character visuals, reward detection, and save behavior. Collection hunting is disabled on Retail. Its Forever source profiles still need live testing, and progression pacing may change.
 
-Collection acquisition is enabled only for the verified Forever source profiles and still needs live-client testing. Retail hunting remains disabled. Idle battles, crafting and offline farming never discover collection pieces.
+For a development copy:
 
-## Resets and permanent progress
+1. Place the `WoWIdle` folder in your client's `Interface/AddOns` directory, with `WoWIdle.toc` directly inside it.
+2. Enable the addon and log in. Restart WoW if it was running when you installed it.
+3. Type `/afkcraft` to open the adventure and follow the starter guide. `/wowidle` and `/wi` also work.
 
-Defeat a **level 8 milestone boss** to unlock ordinary prestige in **Heritage**. Review the exact reward and losses before confirming. Plan around **30-minute management visits**. Safe farming continues between visits; discoveries and resources do not expire. First prestige access depends on your party and investments.
+Libraries are bundled. English, French, German, and Spanish are supported. You can change the language in **Settings > Language**, then use `/reload` to apply it.
 
-| Progress | New chapter | Transcendence |
-| --- | --- | --- |
-| Hero levels/XP, ordinary gear, gold, materials and run progress | Reset | Reset |
-| Profession work ranks/XP | Kept | Reset; allocation plan kept |
-| Heroes, talents, earned points, Mastery and Growth | Kept | Kept |
-| Adventure rank/XP, Essence, Heritage, heirlooms and recipes | Kept | Kept |
-| Boost ownership, cooldowns, automation, profiles, routes and collections | Kept | Kept |
-| Active boost effects | End | End |
+## Follow development
 
-New chapters award Heritage and permanent party strength. Each Heritage earned adds **2 percentage points** to party health, damage and healing. Spent Essence is not refunded.
+See [what's still being worked on](HANDOFF.md) and the [changelog](CHANGELOG.md). For the details behind the game, read the [design](DESIGN.md), [item rules](Content/ITEMS.md), and [balance notes](BALANCE.md). Contributor setup and release checks are in [tooling](TOOLING.md), with separate guides for [architecture](ARCHITECTURE.md) and [maps](MAPS.md).
 
-**Transcendence** requires a current level-60 hero and an online victory over **Spire dragonmarshal**, the final Blackrock Mountain champion, in that cycle. Choose an unlocked tier and review the deeper reset. Each completed tier pays Inheritance once, funding permanent rebuilding bonuses. Both reset types remain manual.
-
-## Language
-
-AFKcraft follows the game language for French, German, and Spanish (including Spanish clients in Latin America), with English as the fallback. Choose a different language in **Settings → Language**, then use `/reload` to apply it. Player-created names and existing journal entries are preserved.
-
-Localization uses named keys such as `L.RESET_ADVENTURE_DESCRIPTION`. English text lives in `Locales/enUS.lua`; the other locale files use the same keys and fall back to English for missing entries.
-
-## Returning and window controls
-
-The adventure continues while its window is closed. On the next login, up to **24 hours** of safe offline farming is calculated and applied automatically. No code runs while WoW is closed. Offline routes default off; when enabled, they visit only checkpoints cleared in the current run and tier before departure, with at most **12 transitions**. New progression and resets wait for you.
-
-Switch between fullscreen, windowed and compact views using the top-right controls. Drag the top edge to move a window and the bottom-right grip to resize it. Compact mode has a lock and an accessible unlock control; management opens a larger view. Menus reveal their names and icons as features are discovered.
-
-**Settings → AddOns → AFKraft : WoW Idle Game** controls display, locking, chat and sound. Audio uses WoW sound-effects volume and plays only while the adventure is visible. **Reset all adventure progress** permanently erases the shared account adventure, including Heritage and heirlooms; display and audio preferences are kept.
-
-## Development status
-
-The accepted gameplay systems are implemented. Remaining work is Forever integration, live reward/save/visual checks, pacing and management-effort playtests, then broader UI polish. Collection timing and high-tier affordability remain provisional.
-
-See [design](DESIGN.md), [balance evidence](BALANCE.md), [architecture](ARCHITECTURE.md), [tooling](TOOLING.md), [map maintenance](MAPS.md), and [remaining work](HANDOFF.md).
+<!-- Reserved for the author's AI usage disclaimer. Add the final wording here. -->
 
 ## License and credits
 
-AFKcraft uses an **All Rights Reserved** notice. See [LICENSE](LICENSE).
+AFKraft is **All Rights Reserved**. See [LICENSE](LICENSE).
 
-Bundled third-party libraries retain their own licenses and notices; see [embedded libraries](Libs/README.md). Landscape artwork sources and credits are listed in [backdrop credits](Assets/Backdrops/SOURCES.md). The project notice does not replace those third-party terms.
+Bundled libraries retain their own licenses and notices. See [library credits](Libs/README.md) and [landscape artwork credits](Assets/Backdrops/SOURCES.md) for the applicable terms and attribution.
