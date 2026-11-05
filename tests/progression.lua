@@ -200,15 +200,44 @@ case("Hero XP costs retain the opening and grow smoothly beyond level ten", func
     assert(loaded.heroes[1].level == 41 and loaded.heroes[1].xp == 1000)
 end)
 
-case("Four hours of unmanaged farming no longer races into the forties", function()
+case("Four hours in Elwynn cannot bypass its hero level ceiling", function()
     local s = G.New(0)
     assert(G.AddHero(s, "WARRIOR"))
     for _ = 1, 4 * 3600 do G.Step(s, 1) end
-    assert(s.heroes[1].level >= 28 and s.heroes[1].level <= 32)
+    assert(s.heroes[1].level == 10 and s.heroes[1].xp == 0)
     local level, xp = s.heroes[1].level, s.heroes[1].xp
     assert(G.ActivityReward(s, "quest:curve-test", "quest", "test"))
     assert(s.heroes[1].level == level and s.heroes[1].xp == xp)
     assert(G.Load(G.Copy(s), 4 * 3600))
+end)
+
+case("Zone XP ceilings taper, stop overflow and preserve veteran progress", function()
+    local zone = C.zoneByID.elwynn
+    local level, xp = G.ExperienceResult({ level = 5, xp = 0 }, 100, zone)
+    assert(level == 5 and xp == 100)
+    level, xp = G.ExperienceResult({ level = 9, xp = 0 }, 100, zone)
+    assert(level == 9 and xp == 20)
+    level, xp = G.ExperienceResult({ level = 9, xp = 0 }, 1000000, zone)
+    assert(level == 10 and xp == 0)
+    level, xp = G.ExperienceResult({ level = 41, xp = 1000 }, 1000000, zone)
+    assert(level == 41 and xp == 1000)
+    for _, destination in ipairs(C.zones) do
+        assert(destination.heroLevelCap >= destination.unlockLevel)
+    end
+    level, xp = G.ExperienceResult({ level = 59, xp = G.LevelXP(59) - 1 }, 100, C.zoneByID.blackrock_mountain)
+    assert(level == 60 and xp == 0)
+end)
+
+case("Offline farming respects zone ceilings and reports exact nonlinear XP", function()
+    local s = G.New(0)
+    assert(G.AddHero(s, "WARRIOR"))
+    s.heroes[1].level, s.heroes[1].xp = 9, G.LevelXP(9) - 1
+    s.safe.elwynn = 1
+    local job = assert(G.BeginCatchup(s, 3600))
+    while not G.CatchupBatch(job, 1000) do end
+    G.FinishCatchup(s, job)
+    assert(s.heroes[1].level == 10 and s.heroes[1].xp == 0)
+    assert(s.lastOfflineSummary.heroXP == 1)
 end)
 
 return cases

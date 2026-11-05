@@ -69,7 +69,7 @@ case(
 case(
     "Development modifies actual combat and fractional rewards without minting Adventure XP",
     function()
-        local base, hero = party(20)
+        local base, hero = party(4)
         base.essence, base.stage, base.farming = 1000, 100, true
         local developed = G.Copy(base)
         for _, id in ipairs({ "might", "resolve", "provisioning" }) do

@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.ruRU = {
+    HERO_XP_CEILING = "Предел опыта героев: уровень %d",
     WEAPON = "Оружие",
     ARMOR = "Броня",
     HEAD = "Голова",

@@ -707,15 +707,22 @@ function G.LevelXP(level)
     return floor(level * 45 * (1 + max(0, level - 10) / 15))
 end
 
-function G.ExperienceResult(hero, amount)
+function G.ExperienceResult(hero, amount, zone)
     local level, xp, cap = hero.level, hero.xp, G.LevelCap(hero)
+    if zone then
+        cap = math.min(cap, zone.heroLevelCap)
+        if level >= cap then return level, xp end
+        amount = floor(amount * math.min(1, (cap - level) / 5))
+    end
     if level < cap then
         xp = xp + amount
     end
     while level < cap and xp >= G.LevelXP(level) do
         xp, level = xp - G.LevelXP(level), level + 1
     end
-    if level >= cap then
+    if zone and level >= cap then
+        xp = 0
+    elseif level >= cap then
         xp = math.min(xp, G.LevelXP(level) - 1)
     end
     return level, xp

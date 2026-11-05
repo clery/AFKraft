@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.esES = {
+    HERO_XP_CEILING = "Límite de EXP de héroe: nivel %d",
     WEAPON = "Arma",
     ARMOR = "Armadura",
     HEAD = "Cabeza",

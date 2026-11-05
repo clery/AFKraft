@@ -50,6 +50,7 @@ local function describe(self, zone)
         C.materials[zone.material]
             .. L.FRAGMENT_FRONTIER
             .. zone.level
+            .. "  ·  " .. string.format(L.HERO_XP_CEILING, zone.heroLevelCap)
             .. "  ·  "
             .. (G.IsUnlocked(W.state, zone) and L.AVAILABLE or unlockText(zone))
             .. (spoils and (L.FRAGMENT_SECONDARY_SPOILS .. spoils .. L.UP_TO_25_SUFFIX) or "")
@@ -73,6 +74,7 @@ local function zoneTooltip(map, zone)
         0.8,
         0.7
     )
+    GameTooltip:AddLine(string.format(L.HERO_XP_CEILING, zone.heroLevelCap), 0.8, 0.8, 0.7, true)
     GameTooltip:AddLine(
         #zone.enemies .. L.CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX,
         0.8,

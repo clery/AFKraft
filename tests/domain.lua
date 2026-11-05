@@ -619,6 +619,7 @@ case("Milestone logs notify once while routine XP stays quiet", function()
         notices = {}
         G.AdventureXP(s, 1, "test", "Test")
         equal(#notices, 0)
+        s.zone = "blackrock_mountain"
         s.heroes[1].level, s.heroes[1].xp = 59, G.LevelXP(59) - 1
         s.heroes[1].mastery.frontier = 100
         s.heroes[1].mastery.frontiers[0] = 100
@@ -664,7 +665,9 @@ end)
 
 case("Offline level caps remain in the final adventure log", function()
     local s = party()
-    s.safe.elwynn = 1
+    s.zone = "blackrock_mountain"
+    s.safe.blackrock_mountain = 1
+    s.prestigeStrength = 1000
     s.heroes[1].level, s.heroes[1].xp = 59, G.LevelXP(59) - 1
     local job = assert(G.BeginCatchup(s, 1120))
     while not G.CatchupBatch(job, 100) do

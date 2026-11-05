@@ -160,13 +160,11 @@ function G.FinishCatchup(state, job)
     for index, hero in ipairs(state.heroes) do
         local previous = previousHeroes[index]
         if previous then
-            summary.heroXP = summary.heroXP
-                + max(
-                    0,
-                    45 * (hero.level - previous.level) * (hero.level + previous.level - 1) / 2
-                        + hero.xp
-                        - previous.xp
-                )
+            local gainedXP = hero.xp - previous.xp
+            for level = previous.level, hero.level - 1 do
+                gainedXP = gainedXP + G.LevelXP(level)
+            end
+            summary.heroXP = summary.heroXP + max(0, gainedXP)
             summary.heroLevels = summary.heroLevels + max(0, hero.level - previous.level)
         end
         summary.masteryRanks = summary.masteryRanks

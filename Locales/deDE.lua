@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.deDE = {
+    HERO_XP_CEILING = "Helden-EP bis Stufe %d",
     WEAPON = "Waffe",
     ARMOR = "Rüstung",
     HEAD = "Kopf",

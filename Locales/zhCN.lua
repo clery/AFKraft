@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.zhCN = {
+    HERO_XP_CEILING = "英雄经验上限：%d级",
     WEAPON = "武器",
     ARMOR = "护甲",
     HEAD = "头部",

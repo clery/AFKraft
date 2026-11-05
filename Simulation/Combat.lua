@@ -292,7 +292,7 @@ local function victory(state, battle)
                 + development.recovery
                 + (G.TalentEffects(hero).renew and 0.08 or 0)
         )
-        local level, experience = G.ExperienceResult(hero, xp)
+        local level, experience = G.ExperienceResult(hero, xp, z)
         results[#results + 1] =
             { hero = hero, id = unit.id, health = health, xp = experience, level = level }
     end

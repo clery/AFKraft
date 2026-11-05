@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.enUS = {
+    HERO_XP_CEILING = "Hero XP ceiling: level %d",
     WEAPON = "Weapon",
     ARMOR = "Armor",
     HEAD = "Head",

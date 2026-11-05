@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.frFR = {
+    HERO_XP_CEILING = "Plafond d’EXP des héros : niveau %d",
     WEAPON = "Arme",
     ARMOR = "Armure",
     HEAD = "Tête",
