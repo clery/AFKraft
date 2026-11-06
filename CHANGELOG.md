@@ -1,6 +1,5 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
-- Prepare Forever distribution packaging with bundled libraries and artwork.
-- Forever integration and live-client validation remain pending; this is not a released build.
+- Initial release.
