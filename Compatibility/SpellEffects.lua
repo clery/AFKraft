@@ -13,6 +13,7 @@ local retail = {
     lightning = { fileID = 529304, width = 110, height = 90, yawOffset = math.pi }, -- Lightning Bolt missile
     shield = { fileID = 166360, width = 220, height = 240 }, -- Holy Word Shield, chest
     heal = { fileID = 166197, width = 210, height = 240 }, -- Flash Heal
+    smite = { fileID = 166354, width = 160, height = 200 }, -- Holy Smite, target chest
     slash = { fileID = 1274646, width = 160, height = 180, cameraHeight = 0 }, -- Cleave impact
     burst = { fileID = 1634276, width = 210, height = 240 }, -- Holy Nova impact
     sparkle = { fileID = 166698, width = 210, height = 240 }, -- Reputation reward
@@ -35,9 +36,40 @@ local bursts = {
     DRUID = { fileID = 165794, width = 210, height = 240 }, -- Circle of renewal
 }
 
+-- Native cast kits include hand attachments; these are SpellVisualKit IDs.
+-- Frostbolt, Shadow Bolt, Lightning Bolt, Wrath, Smite and Flash Heal cast kits.
+local castKits =
+    { MAGE = 202, WARLOCK = 118, SHAMAN = 72, DRUID = 3291, PRIEST = 119, PALADIN = 270 }
+
+function A.PlayCastEffect(model, class)
+    local kit = castKits[class]
+    if (A.flavor ~= "retail" and A.flavor ~= "forever") or not kit then
+        return false
+    end
+    local target = model.nativeAppearance and model.appearanceSource
+        or model.adventureActor
+        or model
+    if target.SetParticlesEnabled then
+        target:SetParticlesEnabled(true)
+    end
+    if target.SetSpellVisualKit then
+        return pcall(target.SetSpellVisualKit, target, kit, true)
+    elseif target.ApplySpellVisualKit then
+        return pcall(target.ApplySpellVisualKit, target, kit, true)
+    end
+    return false
+end
+
 function A.SpellEffectSpec(kind, class)
-    -- Forever assets and visual API behavior have not been validated together.
-    if A.flavor ~= "retail" then
+    -- Forever uses the original holy models shared by both clients.
+    if A.flavor == "forever" then
+        if kind == "smite" or kind == "shield" or kind == "heal" then
+            return retail[kind]
+        elseif kind == "burst" and class == "PRIEST" then
+            return retail.burst
+        end
+        return nil
+    elseif A.flavor ~= "retail" then
         return nil
     end
     if kind == "burst" then

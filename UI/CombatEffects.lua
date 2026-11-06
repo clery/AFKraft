@@ -4,7 +4,7 @@ W.CombatEffects = Effects
 
 local viewportScale = 3
 
-local durations = { shield = 1.1, heal = 0.8, slash = 0.5, burst = 0.8, impact = 0.6 }
+local durations = { shield = 1.1, heal = 0.8, slash = 0.5, burst = 0.8, impact = 0.6, smite = 0.8 }
 local projectiles = { arrow = true, bolt = true, shadow = true, leaf = true, lightning = true }
 
 local function position(unit)
@@ -146,6 +146,7 @@ function Effects:Event(units, state, event)
         self:Play(source, target, class == "PRIEST" and "shield" or "heal", class)
     elseif source then
         local kind = source.melee and "slash"
+            or class == "PRIEST" and "smite"
             or class == "HUNTER" and "arrow"
             or class == "SHAMAN" and "lightning"
             or class == "DRUID" and "leaf"

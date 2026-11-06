@@ -244,10 +244,10 @@ case("Every class has two usable starter weapons in both starting zones and a re
 end)
 case("Weapon proficiencies distinguish classes and one-handed from two-handed weapons", function()
     local allowed = {
-        WARRIOR = { 2092, 2509, 13045, 12989, 25, 35, 36, 37, 1455, 13043, 13022, 13040 },
+        WARRIOR = { 2092, 13045, 12989, 25, 35, 36, 37, 1455, 13043 },
         PALADIN = { 13045, 12989, 25, 36, 37, 1455, 13043 },
         HUNTER = { 2092, 2509, 12989, 25, 35, 37, 1455, 13043, 13022, 13040 },
-        ROGUE = { 2092, 2509, 25, 36, 13022, 13040 },
+        ROGUE = { 2092, 25, 36 },
         PRIEST = { 2092, 11287, 35, 36 },
         SHAMAN = { 2092, 13045, 35, 36, 37, 1455 },
         MAGE = { 2092, 11287, 25, 35 },
@@ -298,6 +298,22 @@ case("Weapon restrictions drive equip, filters, upgrades and saved gear recovery
     assert(axe.upgrade == 5 and axe.protected and axe.count == 3 and axe.heirloom)
     assert(G.Load(s, 1000) and #s.inventory == 1)
 end)
+case("Melee companions return saved ranged weapons intact and cannot re-equip them", function()
+    for _, class in ipairs({ "WARRIOR", "ROGUE" }) do
+        local s = G.New(0)
+        G.AddHero(s, class)
+        local weapon = G.Item(s, 1, 1, 1, false, C.itemByID[2509])
+        weapon.upgrade, weapon.protected = 3, true
+        s.heroes[1].gear[1] = weapon
+        G.StartBattle(s)
+        local loaded = assert(G.Load(s, 0))
+        assert(not loaded.heroes[1].gear[1] and not loaded.battle)
+        assert(loaded.inventory[1] == weapon and weapon.upgrade == 3 and weapon.protected)
+        assert(not G.Equip(loaded, 1, 1))
+        assert(G.EquipBest(loaded, 1) and not loaded.heroes[1].gear[1])
+    end
+end)
+
 case("Every progression band offers multiple usable weapons for every class", function()
     local bands = {
         elwynn = 1,

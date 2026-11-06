@@ -86,7 +86,8 @@ local function destination(unit, target, enemy)
         local contact = 110 + (unit.id - 1) * 14
         unit.destinationX = math.max(unit.x, math.min(640, (unit.x + target.x - contact) / 2))
     else
-        unit.destinationX = unit.homeX
+        -- Close into range even when enemies are held at the melee front.
+        unit.destinationX = math.max(unit.homeX, target.x - P.rangedRange + 20)
     end
 end
 

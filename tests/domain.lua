@@ -301,11 +301,11 @@ case("Inventory combines hero requirements, quality, slot and trait filters", fu
     local s = party()
     local hero = s.heroes[1]
     hero.level = 4
-    local usable = G.Item(s, 1, 3, 3)
-    local locked = G.Item(s, 1, 9, 3)
+    local usable = G.Item(s, 1, 3, 3, false, C.itemByID[25])
+    local locked = G.Item(s, 1, 9, 3, false, C.itemByID[25])
     local legacy = G.Item(s, 2, 9, 3, true)
     usable.protected, usable.upgrade, usable.quality, usable.effect = true, 1, 3, "renewal"
-    s.inventory = { usable, locked, legacy, G.Item(s, 1, 2, 1) }
+    s.inventory = { usable, locked, legacy, G.Item(s, 1, 2, 1, false, C.itemByID[25]) }
     equal(#G.InventoryEntries(s, hero, 0, { availability = "usable" }), 3)
     equal(G.InventoryEntries(s, hero, 0, { availability = "locked" })[1].item, locked)
     equal(#G.InventoryEntries(s, hero, 1, { availability = "usable", quality = 3 }), 1)

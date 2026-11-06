@@ -1399,7 +1399,7 @@ item(
     { strength = 7, agility = 7, stamina = 8, intellect = 7, spirit = 8, armor = 153 }
 )
 
--- Classic weapon proficiencies are idle class rules, independent of the live client.
+-- Idle weapon choices follow combat roles, independent of live-client proficiencies.
 -- Training and talent requirements are simplified; each hero has one weapon slot.
 C.weaponNames = {
     sword = L.ONE_HANDED_SWORDS,
@@ -1419,7 +1419,6 @@ C.weaponNames = {
 C.classWeapons = {
     WARRIOR = {
         dagger = true,
-        gun = true,
         twoHandMace = true,
         polearm = true,
         sword = true,
@@ -1428,8 +1427,6 @@ C.classWeapons = {
         staff = true,
         twoHandSword = true,
         twoHandAxe = true,
-        bow = true,
-        crossbow = true,
     },
     PALADIN = {
         twoHandMace = true,
@@ -1452,7 +1449,7 @@ C.classWeapons = {
         bow = true,
         crossbow = true,
     },
-    ROGUE = { dagger = true, gun = true, sword = true, mace = true, bow = true, crossbow = true },
+    ROGUE = { dagger = true, sword = true, mace = true },
     PRIEST = { dagger = true, wand = true, mace = true, staff = true },
     SHAMAN = {
         dagger = true,
@@ -1884,6 +1881,7 @@ C.zoneItems = {
     },
     stranglethorn = {
         791,
+        776,
         13045,
         13138,
         13064,
@@ -1912,6 +1910,7 @@ C.zoneItems = {
     },
     desolace = {
         791,
+        776,
         13045,
         13138,
         13064,
@@ -1940,6 +1939,7 @@ C.zoneItems = {
     },
     tanaris = {
         17050,
+        6660,
         13139,
         13046,
         13059,

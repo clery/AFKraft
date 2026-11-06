@@ -46,6 +46,36 @@ local function fixture()
 end
 return {
     {
+        "Caster attacks and heals use spell sounds with spell-category controls",
+        function()
+            for class, kit in pairs({
+                MAGE = 2559,
+                WARLOCK = 2560,
+                SHAMAN = 2561,
+                DRUID = 2561,
+                PRIEST = 2562,
+            }) do
+                local n, emit, played, advance = fixture()
+                n.state.heroes = { { class = class } }
+                n.state.settings.soundCombat = false
+                emit("hit", { enemy = true, source = 1 })
+                emit("cast", { source = 1, action = "attack" })
+                n.Audio.Flush()
+                assert(played[1] == kit)
+                advance(2)
+                emit("heal", { source = 1, amount = 10 })
+                n.Audio.Flush()
+                assert(played[2] == kit)
+                advance(4)
+                n.state.settings.soundSpells = false
+                emit("hit", { enemy = true, source = 1 })
+                emit("cast", { source = 1, action = "special" })
+                n.Audio.Flush()
+                assert(#played == 2)
+            end
+        end,
+    },
+    {
         "Collection fanfare works with the window closed and Rare and Epic cues differ",
         function()
             local n, _, played, advance = fixture()
@@ -365,11 +395,11 @@ return {
             end
             emit("hit", { enemy = true, source = 1 })
             n.Audio.Flush()
-            assert(#played == 1 and played[1] == 2933)
+            assert(#played == 2 and played[1] == 2559 and played[2] == 2933)
             advance(2)
             emit("death", { enemy = false, target = 1 })
             n.Audio.Flush()
-            assert(played[2] == 2936)
+            assert(played[3] == 2936)
         end,
     },
     {

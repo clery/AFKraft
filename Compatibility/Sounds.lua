@@ -46,6 +46,7 @@ Audio.categories = {
 -- category, client sound-kit constant, priority, category cooldown (seconds).
 local cues = {
     hit = { "soundCombat", "UI_ADVENTURES_DAMAGE_SWEETENER_MEDIUM", 1, 1.2 },
+    spell = { "soundSpells", 2559, 2, 0.8 },
     special = { "soundSpells", "UI_ADVENTURES_DAMAGE_SWEETENER_LARGE", 2, 1.8 },
     heal = { "soundSpells", "UI_ADVENTURES_HEAL_FOLLOWER", 2, 1.8 },
     defense = { "soundSpells", "UI_ADVENTURES_DEFENSIVE_SWEETENER", 2, 1.8 },
@@ -423,6 +424,9 @@ function Audio.CollectionComplete(state)
     )
 end
 
+-- Native Ice, Shadow, Nature and Holy cast SoundKit IDs.
+local spellSounds = { MAGE = 2559, WARLOCK = 2560, SHAMAN = 2561, DRUID = 2561, PRIEST = 2562 }
+
 local function audible(state)
     return state == W.state
         and not W.catchup
@@ -440,8 +444,12 @@ function W.OnGameEvent(state, event)
         return
     end
     local kind = event.kind
-    if kind == "cast" then
-        kind = event.action == "special" and "special" or nil
+    local hero = state.heroes[event.source]
+    local spell = hero and spellSounds[hero.class]
+    if kind == "hit" and event.enemy and spell and not event.passive then
+        kind = "spell"
+    elseif kind == "cast" then
+        kind = not spell and event.action == "special" and "special" or nil
     elseif kind == "death" then
         kind = event.enemy and "enemyDeath" or "heroDeath"
     elseif kind == "victory" and event.boss then
@@ -466,7 +474,6 @@ function W.OnGameEvent(state, event)
                     -- Creature attacks carry their own bite/claw/exertion sound.
                     kit, voice = voice, nil
                 elseif voice then
-                    local hero = state.heroes[event.source]
                     local melee = hero
                         and (
                             hero.class == "WARRIOR"
@@ -482,6 +489,11 @@ function W.OnGameEvent(state, event)
                         kit, voice = voice, nil
                     end
                 end
+            elseif kind == "spell" then
+                kit = spell
+                voice = actorVoice(state, false, event.source, 1)
+            elseif kind == "heal" then
+                kit = spell or 2562
             elseif kind == "special" then
                 voice = actorVoice(state, false, event.source, 1)
             elseif kind == "enemyDeath" or kind == "heroDeath" then

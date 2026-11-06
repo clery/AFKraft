@@ -1324,7 +1324,7 @@ test("Native spell models wait for matching assets and reject late recycled call
     assertFalse(effect.frame:IsShown())
     local flavor = W.Client.flavor
     W.Client.flavor = "forever"
-    assertEquals(nil, W.Client.SpellEffectSpec("shield"))
+    assertEquals(166360, W.Client.SpellEffectSpec("shield").fileID)
     W.Client.flavor = flavor
 end)
 

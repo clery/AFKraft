@@ -55,10 +55,12 @@ case("Ranged fighters keep their distance and monsters pursue the current guard"
     local b = s.battle
     local mage, warrior = b.heroes[1], b.heroes[2]
     s.heroes[2].talents.guard = true
-    for _ = 1, 8 do
+    for _ = 1, 40 do
         P.Step(s, b, 0.25)
     end
-    assert(mage.x == mage.homeX)
+    assert(mage.x > mage.homeX)
+    assert(P.InRange(mage, b.enemies[1]))
+    assert(not P.InRange(b.enemies[1], mage))
     assert(warrior.x > warrior.homeX)
     for _, enemy in ipairs(b.enemies) do
         assert(enemy.targetID == 2)
@@ -70,6 +72,33 @@ case("Ranged fighters keep their distance and monsters pursue the current guard"
     b.enemies[1].x = mage.x + P.rangedRange - 10
     assert(P.InRange(mage, b.enemies[1]))
     assert(not P.InRange(b.enemies[1], mage))
+end)
+
+case("Ranged companions behind a melee guard can attack throughout the encounter", function()
+    local s = G.New(1000)
+    G.AddHero(s, "MAGE")
+    G.AddHero(s, "WARRIOR")
+    G.StartBattle(s)
+    local b = s.battle
+    for _, unit in ipairs(b.heroes) do
+        unit.hp, unit.maxHP = 100000, 100000
+    end
+    for _, enemy in ipairs(b.enemies) do
+        enemy.hp, enemy.maxHP = 100000, 100000
+    end
+    local attacks = 0
+    for _ = 1, 120 do
+        s.events = {}
+        G.Step(s, 0.25)
+        if b.elapsed > 10 then
+            for _, event in ipairs(s.events) do
+                if event.kind == "hit" and event.enemy and event.source == 1 then
+                    attacks = attacks + 1
+                end
+            end
+        end
+    end
+    assert(attacks >= 5, "Ranged companion remained outside attack range")
 end)
 
 case("Older active saves gain bounded coordinates without changing health or cooldowns", function()

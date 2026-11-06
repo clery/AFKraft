@@ -131,6 +131,7 @@ case("Encounters grow with the company and the first victory always supplies a r
     end
     G.Step(s, 0.25)
     assert(#s.inventory == 0 and G.ChestCount(s) == 1)
+    s.salvage.minQuality = 1
     assert(G.OpenChests(s, 1))
     assert(#s.inventory > 0)
     assert(s.stats.victories == 1)
