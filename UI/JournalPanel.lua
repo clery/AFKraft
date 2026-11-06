@@ -204,6 +204,13 @@ local function drawTrack(ui, parent, state, rank)
 end
 
 function P.Draw(ui, parent, state)
+    if not ui.journalBorder then
+        ui.journalBorder = U.FrameTreatment(parent)
+        ui.journalBorder:ClearAllPoints()
+        ui.journalBorder:SetPoint("TOPLEFT", -12, -126)
+        ui.journalBorder:SetSize(1320, 548)
+    end
+    ui.journalBorder:Show()
     local now = W.Client.Now()
     G.RefreshJournal(state, now)
     local j, rank = state.journal, G.JournalRank(state)
@@ -273,10 +280,11 @@ function P.Draw(ui, parent, state)
         { "track", L.JOURNAL_TRACK },
     }) do
         local id = entry[1]
-        ui.journalTabs[id] = U.Button(parent, entry[2], (index - 1) * 254, 96, 238, 34, function()
+        ui.journalTabs[id] = U.Tab(parent, entry[2], (index - 1) * 254, 96, 238, 34, function()
             ui.journalMode = id
             ui:Refresh()
         end, ui.journalMode == id)
+        ui.journalTabs[id]:SetFrameLevel(ui.journalBorder:GetFrameLevel() - 1)
     end
     ui.journalClaim = U.Button(
         parent,

@@ -208,12 +208,15 @@ test(
         ui:Refresh()
         assertEquals("Growth", tab.text:GetText())
         ui:SetTab("crafting")
-        assertTrue(ui.forgeTabs.enchanting.text:GetText():find("???", 1, true) ~= nil)
+        assertFalse(ui.forgeTabs.enchanting:IsShown())
+        assertFalse(ui.forgeTabs.titanforging:IsShown())
+        assertFalse(ui.forgeTabs.research:IsShown())
         ui.forgeTabs.enchanting:GetScript("OnClick")()
         assertEquals("crafting", W.state.ui.tab)
         W.state.heroes[1].level = 30
         ui:Refresh()
         assertEquals("Enchant", ui.forgeTabs.enchanting.text:GetText())
+        assertTrue(ui.forgeTabs.enchanting:IsShown())
     end
 )
 

@@ -67,6 +67,8 @@ function G.New(now)
             lessonLegacy = false,
             lessonMastery = false,
             lessonDevelopment = false,
+            lessonConditional = false,
+            lessonHeirlooms = false,
         },
         seed = floor(now) % 2147483646 + 1,
         heroes = {},

@@ -172,8 +172,8 @@ function UI:Layout()
     local heroPage = W.state.ui.tab == "party" or W.state.ui.tab == "talents"
     local forge = W.state.ui.tab == "crafting" or W.state.ui.tab == "workshop"
     self.forgeContainer:SetShown(not compact and forge)
-    for _, control in pairs(self.forgeTabs) do
-        control:SetShown(not compact and forge)
+    for id, control in pairs(self.forgeTabs) do
+        control:SetShown(not compact and forge and not W.Tutorial.MenuHint(W.state, id))
     end
     self.scene:Layout(compact, management)
     self.scene.frame:SetShown(compact or not management)
@@ -196,6 +196,7 @@ function UI:Layout()
     self.expanded:SetShown(not compact)
     self.compact:SetShown(compact)
     for tab, frame in pairs({
+        journal = self.journalBorder,
         chests = self.chestFrame,
         offline = self.offlineFrame,
         routes = self.routeFrame,
@@ -434,6 +435,9 @@ function UI:Refresh(redraw)
             or s.ui.tab == "workshop" and id == (self.professionTab or "enchanting")
         U.Selected(control, active)
         local hint = W.Tutorial.MenuHint(s, id)
+        control:SetShown(
+            not hint and not s.ui.compact and (s.ui.tab == "crafting" or s.ui.tab == "workshop")
+        )
         control.text:SetText(
             hint and "|TInterface\\Icons\\INV_Misc_QuestionMark:18|t ???" or control.menuLabel
         )

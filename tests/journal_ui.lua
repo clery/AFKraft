@@ -22,6 +22,7 @@ end
 test("Journal navigation, daily catch-up, tabs and frame pools stay interactive", function()
     local W, s, ui = fixture()
     assertEquals("journal", s.ui.tab)
+    assertTrue(ui.journalBorder:IsShown())
     assertFalse(ui.journalClaim:IsEnabled())
     W.Game.RefreshJournal(s, W.Client.Now() + 172800)
     ui:Refresh()
@@ -31,6 +32,7 @@ test("Journal navigation, daily catch-up, tabs and frame pools stay interactive"
     for _, id in ipairs({ "achievements", "track", "contracts" }) do
         click(ui.journalTabs[id])
         assertEquals(id, ui.journalMode)
+        assertEquals(ui.journalBorder:GetFrameLevel() - 1, ui.journalTabs[id]:GetFrameLevel())
     end
     local counts = {}
     for _, pool in pairs(ui.panel._pool) do
@@ -44,6 +46,7 @@ test("Journal navigation, daily catch-up, tabs and frame pools stay interactive"
     end
     ui:SetTab("adventure")
     assertEquals("adventure", s.ui.tab)
+    assertFalse(ui.journalBorder:IsShown())
 end)
 
 test("Journal activity refreshes progress and reward claims update their controls", function()

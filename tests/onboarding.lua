@@ -58,6 +58,75 @@ local function advanced()
 end
 
 test(
+    "Feature discoveries reopen tutorials without requiring a purchase and acknowledge once",
+    function()
+        local W, s, ui = advanced()
+        s.guide.dismissed = true
+        s.professions.bestLevel = 22
+        ui:Refresh(false)
+        assertEquals(0, s.essence)
+        assertEquals("lessonBoost", W.Tutorial.NextLesson(s).key)
+        assertEquals(ui.tabs.boosts, ui.guideTarget)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        s.guide.dismissed = true
+        ui:Refresh(false)
+        assertTrue(ui.guideTip == nil)
+        s.essence = 1
+        ui:Refresh(false)
+        assertEquals("lessonDevelopment", W.Tutorial.NextLesson(s).key)
+        assertEquals(ui.tabs.development, ui.guideTarget)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        s.guide.dismissed = true
+        s.difficulty.unlocked, s.difficulty.maxTier = true, 4
+        ui:Refresh(false)
+        for _, key in ipairs({ "lessonRoutes", "lessonPrestigePlus", "lessonHeirlooms" }) do
+            assertEquals(key, W.Tutorial.NextLesson(s).key)
+            assertNotNil(ui.guideTip)
+            HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
+        end
+        assertTrue(W.Tutorial.NextLesson(s) == nil)
+        W.state = assert(W.Game.Load(W.Game.Copy(s), W.Client.Now()))
+        ui:Refresh(false)
+        assertTrue(W.Tutorial.NextLesson(W.state) == nil)
+    end
+)
+
+test(
+    "Locked feature shortcuts stay hidden while sidebar discoveries and unaffordable actions remain",
+    function()
+        local W, s, ui = advanced()
+        ui:Refresh()
+        assertTrue(ui.tabs.boosts:IsShown())
+        assertTrue(ui.tabs.development:IsShown())
+        assertFalse(ui.boostQuick:IsShown())
+        assertFalse(ui.adventureDevelopment:IsShown())
+        assertFalse(ui.compactBoost:IsShown())
+        s.essence = 1
+        s.professions.bestLevel = 22
+        ui:Refresh()
+        assertTrue(ui.boostQuick:IsShown())
+        assertTrue(ui.adventureDevelopment:IsShown())
+        ui:SetTab("boosts")
+        local controls = ui.boostControls[ui.selectedBoost]
+        assertTrue(controls.purchase:IsShown())
+        assertFalse(controls.purchase:IsEnabled())
+        assertFalse(ui.boostAutomationPurchases.onCooldown:IsShown())
+        assertFalse(ui.boostAutomationPurchases.conditional:IsShown())
+        assertFalse(ui.boostAutomationEnabled:IsShown())
+        assertFalse(ui.boostRulesToggle:IsShown())
+        s.professions.bestLevel = 45
+        ui:Refresh(false)
+        assertTrue(ui.boostAutomationPurchases.onCooldown:IsShown())
+        assertFalse(ui.boostAutomationPurchases.onCooldown:IsEnabled())
+        ui:SetTab("crafting")
+        assertFalse(ui.craftControls.heirloom:IsShown())
+        s.difficulty.unlocked, s.difficulty.maxTier = true, 4
+        ui:Refresh()
+        assertTrue(ui.craftControls.heirloom:IsShown())
+    end
+)
+
+test(
     "Milestone lessons acknowledge individually and retain progress after reload and resets",
     function()
         local W, s, ui = advanced()
@@ -72,8 +141,14 @@ test(
         assertTrue(s.guide.lessonBoost)
         assertFalse(s.guide.dismissed)
         assertTrue(G.BuyBoost(s, "battleOrders"))
+        ui:Refresh(false)
+        assertEquals("lessonDevelopment", W.Tutorial.NextLesson(s).key)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
         s.legacy, s.prestigeUnlocked, s.prestiges = 3, true, 1
         s.professions.bestLevel = 45
+        ui:Refresh(false)
+        assertEquals("lessonLegacy", W.Tutorial.NextLesson(s).key)
+        HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
         assertEquals("lessonAutomation", W.Tutorial.NextLesson(s).key)
         ui:Refresh(false)
         HelpTip:Acknowledge(ui.guideOwner, ui.guideTip.text)
@@ -125,9 +200,11 @@ test(
         acknowledge("lessonMastery")
         h.level, h.rank = 30, 7
         G.TalentProgress(h)
+        acknowledge("lessonBoost")
         acknowledge("lessonEnchanting")
         h.level, h.rank = 50, 12
         G.TalentProgress(h)
+        acknowledge("lessonAutomation")
         acknowledge("lessonTitanforging")
         h.level, h.rank = 60, 15
         G.TalentProgress(h)
@@ -149,6 +226,7 @@ test(
         assertFalse(s.guide.lessonPrestigePlus)
         SetCVar("hideHelptips", 0)
         acknowledge("lessonPrestigePlus")
+        acknowledge("lessonConditional")
         assertTrue(W.Tutorial.NextLesson(s) == nil)
     end
 )
@@ -297,6 +375,7 @@ test(
         ui:Refresh(false)
         assertEquals(5, W.Panels.GuideStep(s, ui.selected))
         assertEquals(ui.tabs.crafting, ui.guideTarget)
+        s.difficulty.unlocked, s.difficulty.maxTier = true, 4
         ui.craftHeirloom, ui.craftSlot, ui.craftMaterial = true, 6, "ore"
         click(ui.tabs.crafting)
         assertEquals(ui.craftControls.ordinary, ui.guideTarget)

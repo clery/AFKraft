@@ -75,6 +75,9 @@ test("Locked chapters stay explorable and heirloom links preserve the chosen slo
     assertFalse(findButton(ui, "Review new chapter…"):IsEnabled())
     ui.craftSlot, ui.craftHeirloom = 3, false
     ui:SetTab("crafting")
+    assertFalse(findButton(ui, "Heirloom"):IsShown())
+    state.difficulty.unlocked, state.difficulty.maxTier = true, 4
+    ui:Refresh()
     click(findButton(ui, "Heirloom"))
     assertTrue(ui.craftHeirloom)
     click(findButton(ui, "View recipe in Heritage"))
@@ -82,7 +85,6 @@ test("Locked chapters stay explorable and heirloom links preserve the chosen slo
     assertEquals(3, ui.legacySlot)
     state.legacy = 1
     assertFalse(findButton(ui, "Unlock · Head · 1 Heritage"):IsEnabled())
-    state.difficulty.unlocked, state.difficulty.maxTier = true, 4
     ui:Refresh()
     click(findButton(ui, "Unlock · Head · 1 Heritage"))
     assertTrue(state.recipes[3])

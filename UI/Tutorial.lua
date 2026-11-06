@@ -47,6 +47,12 @@ function Tutorial.MenuHint(state, id)
         titanforging = { professions.titanforging, L.A_HERO_REACHES_IDLE_LEVEL_50 },
         research = { professions.research, L.A_HERO_REACHES_IDLE_LEVEL_60 },
         crafting = { best >= 1, L.YOU_RECRUIT_YOUR_FIRST_HERO },
+        onCooldown = { not G.FeatureHint(state, "onCooldown"), C.featureMilestones.onCooldown.hint },
+        conditional = {
+            not G.FeatureHint(state, "conditional"),
+            C.featureMilestones.conditional.hint,
+        },
+        heirlooms = { not G.FeatureHint(state, "heirlooms"), C.featureMilestones.heirlooms.hint },
     }
     local condition = conditions[id]
     if not condition then
@@ -61,44 +67,16 @@ function Tutorial.MenuHint(state, id)
     end
 end
 
-local function lesson(state, key, tab, message, eligible)
-    if eligible and not state.guide[key] then
-        return { key = key, tab = tab, message = message }
-    end
-end
-
--- Only introduce a layer when it is available; already-used layers need no tour.
+-- Introduce unlocked layers even before the player can afford their first purchase.
 function Tutorial.NextLesson(state)
     if #state.heroes == 0 then
         return nil
     end
-    local mastery, enchanted, forged, specialized = false, false, false, false
+    local mastery = false
     for _, hero in ipairs(state.heroes) do
-        mastery = mastery or (G.MasteryUnlocked(hero) and hero.mastery.rank == 0)
-        for _, item in pairs(hero.gear) do
-            enchanted = enchanted or item.enchant ~= nil
-            forged = forged or (item.forge or 0) > 0
-        end
-    end
-    for _, item in ipairs(state.inventory) do
-        enchanted = enchanted or item.enchant ~= nil
-        forged = forged or (item.forge or 0) > 0
+        mastery = mastery or G.MasteryUnlocked(hero)
     end
     local professions = G.ProfessionUnlocks(state)
-    for _, allocations in pairs(state.professions.allocations) do
-        for _, rank in pairs(allocations) do
-            specialized = specialized or rank > 0
-        end
-    end
-    local owned = next(state.boosts.owned) ~= nil
-    local affordable = owned
-    for _, boost in ipairs(C.boosts) do
-        affordable = affordable or state.essence >= boost.cost or state.legacy >= boost.legacyCost
-    end
-    local automation = state.boosts.automation
-    local collection = next(state.dungeonCollections.pieces) ~= nil
-        or next(state.outdoorCollections.pieces) ~= nil
-        or next(state.collectionBook.pieces) ~= nil
     local huntAvailable = false
     local sources = W.CollectionSources
     local profile = sources and sources.ActiveProfile("outdoor")
@@ -107,90 +85,117 @@ function Tutorial.NextLesson(state)
             huntAvailable = huntAvailable or (source.verified and C.collectionByItem[itemID] ~= nil)
         end
     end
-    return lesson(
-        state,
-        "lessonBoost",
-        "boosts",
-        L.CHOOSE_A_COMMANDER_BOOST_LEARN_IT_AND_EQUIP_IT,
-        not G.FeatureHint(state, "boosts") and affordable and (state.stats.boostUses or 0) == 0
-    ) or lesson(
-        state,
-        "lessonDevelopment",
-        "development",
-        L.SPEND_ESSENCE_IN_GROWTH_FOR_PERMANENT_PARTY_BONUSES_COMPARE,
-        state.development.invested == 0 and state.essence >= G.DevelopmentQuote(state, "might").cost
-    ) or lesson(
-        state,
-        "lessonLegacy",
-        "legacy",
-        L.REVIEW_YOUR_FIRST_CHAPTER_RESET_IN_HERITAGE_CHECK_THE,
-        state.prestigeUnlocked and state.prestiges == 0 and G.PrestigeReward(state) > 0
-    ) or lesson(
-        state,
-        "lessonAutomation",
-        "boosts",
-        L.LEARN_AUTOMATION_IN_COMMANDER_WITH_HERITAGE_TURN_ON_AUTOMATION,
-        owned
-            and not automation.enabled
-            and not G.FeatureHint(state, "onCooldown")
-            and (automation.owned.onCooldown or state.legacy >= C.boostAutomation.onCooldown.cost)
-    ) or lesson(
-        state,
-        "lessonProfiles",
-        "profiles",
-        L.SAVE_YOUR_BOOST_AUTOMATION_ROUTE_PREFERENCES_AND_SET_EFFECT,
-        next(automation.owned) ~= nil and next(state.boostProfiles.entries) == nil
-    ) or lesson(
-        state,
-        "lessonRoutes",
-        "routes",
-        L.LEARN_ROUTE_PLANNING_ADD_DESTINATIONS_AND_MILESTONES_THEN_SAVE,
-        not G.FeatureHint(state, "routes")
-            and (state.routes.owned or state.legacy >= 1)
-            and #state.routes.templates == 0
-    ) or lesson(
-        state,
-        "lessonHunt",
-        "collections",
-        L.HOVER_A_MISSING_COLLECTION_PIECE_FOR_ITS_CREATURES_LOCATION,
-        huntAvailable and state.adventure.rank >= 2 and next(state.outdoorCollections.pieces) == nil
-    ) or lesson(
-        state,
-        "lessonCollections",
-        "collections",
-        L.BROWSE_SETS_AND_HOVER_PIECES_FOR_THEIR_SOURCES_COMPLETE,
-        collection
-    ) or lesson(
-        state,
-        "lessonMastery",
-        "talents",
-        L.MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT,
-        mastery
-    ) or lesson(
-        state,
-        "lessonEnchanting",
-        "workshop",
-        L.ENCHANTING_IS_UNLOCKED_IN_FORGE_CHOOSE_A_HERO_EQUIPPED,
-        professions.enchanting and not enchanted
-    ) or lesson(
-        state,
-        "lessonTitanforging",
-        "workshop",
-        L.TITANFORGING_IS_UNLOCKED_IN_FORGE_RAISE_EQUIPPED_ITEM_POTENTIAL,
-        professions.titanforging and not forged
-    ) or lesson(
-        state,
-        "lessonResearch",
-        "workshop",
-        L.SPECIALIZATIONS_ARE_UNLOCKED_IN_FORGE_PAID_WORK_EARNS_PROFESSION,
-        professions.research and not specialized
-    ) or lesson(
-        state,
-        "lessonPrestigePlus",
-        "difficulty",
-        L.TRANSCENDENCE_IS_UNLOCKED_REVIEW_A_TIER_AND_ITS_RESET,
-        state.difficulty.unlocked and state.difficulty.ascensions == 0
-    )
+    local lessons = {
+        {
+            "lessonBoost",
+            "boosts",
+            L.CHOOSE_A_COMMANDER_BOOST_LEARN_IT_AND_EQUIP_IT,
+            not Tutorial.MenuHint(state, "boosts"),
+        },
+        {
+            "lessonDevelopment",
+            "development",
+            L.SPEND_ESSENCE_IN_GROWTH_FOR_PERMANENT_PARTY_BONUSES_COMPARE,
+            not Tutorial.MenuHint(state, "development"),
+        },
+        {
+            "lessonLegacy",
+            "legacy",
+            L.REVIEW_YOUR_FIRST_CHAPTER_RESET_IN_HERITAGE_CHECK_THE,
+            not Tutorial.MenuHint(state, "legacy"),
+        },
+        {
+            "lessonAutomation",
+            "boosts",
+            L.LEARN_AUTOMATION_IN_COMMANDER_WITH_HERITAGE_TURN_ON_AUTOMATION,
+            not Tutorial.MenuHint(state, "onCooldown"),
+        },
+        {
+            "lessonProfiles",
+            "profiles",
+            L.SAVE_YOUR_BOOST_AUTOMATION_ROUTE_PREFERENCES_AND_SET_EFFECT,
+            not Tutorial.MenuHint(state, "profiles"),
+        },
+        {
+            "lessonRoutes",
+            "routes",
+            L.LEARN_ROUTE_PLANNING_ADD_DESTINATIONS_AND_MILESTONES_THEN_SAVE,
+            not Tutorial.MenuHint(state, "routes"),
+        },
+        {
+            "lessonHunt",
+            "collections",
+            L.HOVER_A_MISSING_COLLECTION_PIECE_FOR_ITS_CREATURES_LOCATION,
+            huntAvailable
+                and state.adventure.rank >= 2
+                and next(state.outdoorCollections.pieces) == nil,
+        },
+        {
+            "lessonCollections",
+            "collections",
+            L.BROWSE_SETS_AND_HOVER_PIECES_FOR_THEIR_SOURCES_COMPLETE,
+            not Tutorial.MenuHint(state, "collections"),
+        },
+        {
+            "lessonMastery",
+            "talents",
+            L.MASTERY_UNLOCKS_PERMANENTLY_AT_HERO_LEVEL_20_WIN_AT,
+            mastery,
+        },
+        {
+            "lessonEnchanting",
+            "workshop",
+            L.ENCHANTING_IS_UNLOCKED_IN_FORGE_CHOOSE_A_HERO_EQUIPPED,
+            professions.enchanting,
+        },
+        {
+            "lessonTitanforging",
+            "workshop",
+            L.TITANFORGING_IS_UNLOCKED_IN_FORGE_RAISE_EQUIPPED_ITEM_POTENTIAL,
+            professions.titanforging,
+        },
+        {
+            "lessonResearch",
+            "workshop",
+            L.SPECIALIZATIONS_ARE_UNLOCKED_IN_FORGE_PAID_WORK_EARNS_PROFESSION,
+            professions.research,
+        },
+        {
+            "lessonPrestigePlus",
+            "difficulty",
+            L.TRANSCENDENCE_IS_UNLOCKED_REVIEW_A_TIER_AND_ITS_RESET,
+            not Tutorial.MenuHint(state, "difficulty"),
+        },
+        {
+            "lessonConditional",
+            "boosts",
+            L.UNLOCK_BOSS_ALLY_HEALTH_FARMING_PUSHING_AND_ORDERED_RULES,
+            not Tutorial.MenuHint(state, "conditional"),
+        },
+        {
+            "lessonHeirlooms",
+            "legacy",
+            L.HEIRLOOM_RECIPES_DESCRIPTION,
+            not Tutorial.MenuHint(state, "heirlooms"),
+        },
+    }
+    local nextLesson
+    for _, entry in ipairs(lessons) do
+        local key, tab, message, eligible = unpack(entry)
+        if eligible then
+            local availableKey = key .. "Available"
+            if not state.guide[availableKey] then
+                state.guide[availableKey] = true
+                if not state.guide[key] then
+                    state.guide.dismissed = false
+                end
+            end
+            if not nextLesson and not state.guide[key] then
+                nextLesson = { key = key, tab = tab, message = message }
+            end
+        end
+    end
+    return nextLesson
 end
 
 function Tutorial.Hide(ui)

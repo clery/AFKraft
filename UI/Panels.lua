@@ -263,6 +263,7 @@ function P.adventure(ui, p, s)
             end
         end
     )
+    ui.adventureDevelopment:SetShown(not developmentHint)
     local legacyHint = W.Tutorial.MenuHint(s, "legacy")
     local legacyLink = button(
         p,
@@ -282,6 +283,7 @@ function P.adventure(ui, p, s)
         legacyHint and "???" or L.HERITAGE,
         legacyHint or L.REVIEW_CHAPTER_REWARDS
     )
+    legacyLink:SetShown(not legacyHint)
     if P.GuideStep(s, ui.selected) or (W.Tutorial and W.Tutorial.NextLesson(s)) then
         button(p, s.guide.dismissed and L.SHOW_GUIDE or L.HIDE_GUIDE, 888, 173, 154, function()
             s.guide.dismissed = not s.guide.dismissed
@@ -403,6 +405,7 @@ function P.boosts(ui, p, s)
         L.RUN_PAUSE_AUTOMATION,
         L.PAUSE_AUTOMATIC_ACTIVATIONS_WITHOUT_CHANGING_SAVED_RULES_MANUAL
     )
+    ui.boostAutomationEnabled:SetShown(next(automation.owned) ~= nil)
     ui.boostTiles, ui.boostControls = {}, {}
     for index, boost in ipairs(C.boosts) do
         local id = boost.id
@@ -500,6 +503,8 @@ function P.boosts(ui, p, s)
     local mode = U.Choice(p, modeName, 220, detailY + 146, 500, modes, rule.mode, function(value)
         W.Action(G.ConfigureBoostAutomation, id, "mode", value)
     end)
+    enabled:SetShown(automation.owned.onCooldown == true and s.boosts.owned[id] == true)
+    mode:SetShown(automation.owned.onCooldown == true and s.boosts.owned[id] == true)
     mode:SetEnabled(true)
     U.Tooltip(
         mode,
@@ -553,6 +558,9 @@ function P.boosts(ui, p, s)
         ui.boostRulesToggle,
         automation.owned.conditional == true and s.boosts.owned[id] == true
     )
+    ui.boostRulesToggle:SetShown(
+        automation.owned.conditional == true and s.boosts.owned[id] == true
+    )
     if ui.boostRulesExpanded and automation.owned.conditional and s.boosts.owned[id] then
         W.BoostRulePanel.Draw(ui, p, s, id, 0, detailY + 242)
     end
@@ -590,9 +598,12 @@ function P.RefreshBoosts(ui, s, message)
             control.text:SetText(name .. (equipped and " · " .. status(equipped) or ""))
             local ready = not equipped or G.CanActivateBoost(s, equipped)
             U.Enabled(control, not W.catchup and ready)
+            control:SetShown(not hint)
         end
     end
-    ui.compactBoost:SetShown(not s.ui.locked and message == nil)
+    ui.compactBoost:SetShown(
+        not s.ui.locked and message == nil and not W.Tutorial.MenuHint(s, "boosts")
+    )
     ui.compactBoost.icon:SetTexture(
         "Interface\\Icons\\" .. (equipped and C.boostByID[equipped].icon or "INV_Misc_Book_09")
     )
@@ -616,6 +627,10 @@ function P.RefreshBoosts(ui, s, message)
             local spec = C.boostAutomation[capability]
             local owned = automation.owned[capability]
             local unlockHint = G.FeatureHint(s, capability)
+            control:SetShown(
+                not unlockHint
+                    and (capability ~= "conditional" or automation.owned.onCooldown == true)
+            )
             U.Tooltip(
                 control,
                 spec.name .. L.AUTOMATION_SUFFIX,
@@ -830,7 +845,8 @@ function P.crafting(ui, p, s)
     local h, index = selected(ui, s)
     local slot = ui.craftSlot or 1
     local material = ui.craftMaterial or "timber"
-    local heirloom = ui.craftHeirloom or false
+    local heirloom = ui.craftHeirloom and not G.FeatureHint(s, "heirlooms") or false
+    ui.craftHeirloom = heirloom
     local cost = G.Cost(s, h, heirloom)
     local preview, unavailable = G.CraftItem(h, slot, heirloom, s)
     ui.craftControls = { slots = {}, materials = {} }
@@ -925,6 +941,7 @@ function P.crafting(ui, p, s)
         ui.craftHeirloom = true
         ui:Refresh()
     end, heirloom)
+    ui.craftControls.heirloom:SetShown(not G.FeatureHint(s, "heirlooms"))
     if heirloom and not s.recipes[slot] then
         button(p, L.VIEW_RECIPE_IN_HERITAGE, 850, 325, 446, function()
             ui.legacySlot = slot
@@ -1065,6 +1082,7 @@ function P.legacy(ui, p, s)
                 or L.SPEND_1_HERITAGE_TO_PERMANENTLY_UNLOCK_THIS_RECIPE_THEN
         )
         U.Enabled(recipe, known or (not G.FeatureHint(s, "heirlooms") and s.legacy >= 1))
+        recipe:SetShown(not G.FeatureHint(s, "heirlooms"))
     end
     text(p, L.COLLECTION_TALENTS_HEADING, 0, 350, 14, T.gold)
     text(p, L.PERMANENT_RANKS_SURVIVE_BOTH_RESETS, 0, 378, 13, T.muted, 640)
@@ -1224,6 +1242,7 @@ function P.Draw(ui)
         )
     end
     for tab, frame in pairs({
+        journal = ui.journalBorder,
         chests = ui.chestFrame,
         offline = ui.offlineFrame,
         routes = ui.routeFrame,
