@@ -72,6 +72,7 @@ Compatibility\ModelFraming.lua
 Compatibility\SpellEffects.lua
 Compatibility\Maps.lua
 Compatibility\MapMasks.lua
+Compatibility\MapMasksForever.lua
 Compatibility\CollectionSources.lua
 Compatibility\Kills.lua
 Compatibility\Gathering.lua

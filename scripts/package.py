@@ -34,7 +34,7 @@ def runtime_files(root, manifest):
 
 
 def build(output, version=None, root=ROOT):
-    source = (root / "WoWIdle.toc").read_text()
+    source = (root / "AFKraft.toc").read_text()
     version = version or re.search(r"^## Version: (.+)$", source, re.M)[1]
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:[-.][A-Za-z0-9]+)*", version):
         raise ValueError("Version must look like 0.2.0 or 0.2.0-beta.1")

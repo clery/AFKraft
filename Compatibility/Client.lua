@@ -26,8 +26,8 @@ A.profiles = {
             winterspring = 83,
         },
     },
-    -- Fill verified Forever map IDs here; do not reuse Retail IDs silently.
-    forever = { mapIDs = {} },
+    -- Verified against the installed Forever 1.60.1.70790 UiMap table.
+    forever = { continents = { kalimdor = 1414, eastern = 1415 }, mapIDs = {} },
 }
 A.profile = A.profiles[A.flavor]
 

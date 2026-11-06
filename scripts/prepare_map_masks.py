@@ -31,8 +31,8 @@ def artwork(source, spec, size):
     name = spec["directory"]
     columns, rows = spec["tiles"]
     image = Image.new("RGB", tuple(spec["size"]))
-    tile_width = math.ceil(image.width / columns)
-    tile_height = math.ceil(image.height / rows)
+    tile_width, tile_height = spec.get("tileSize", [math.ceil(image.width / columns),
+                                                 math.ceil(image.height / rows)])
     for index in range(columns * rows):
         tile = source / name / (name + str(index + 1) + ".blp")
         row, column = divmod(index, columns)
@@ -196,6 +196,92 @@ def clip_click_regions(labels, names, land, inland_water):
                         for index, label in enumerate(labels)))
 
 
+def partition_boundaries(domain, seeds, boundaries, land=None):
+    """Flood reviewed border paths; reject gaps that connect different zones."""
+    width, height = domain.size
+    barrier = Image.new("L", domain.size)
+    draw = ImageDraw.Draw(barrier)
+    for path in boundaries:
+        draw.line([tuple(point) for point in path], fill=255, width=1)
+    blocked, allowed = barrier.tobytes(), domain.tobytes()
+    visible = (land if land is not None else domain).tobytes()
+    names = list(seeds)
+    markers, points = {}, []
+    for label, name in enumerate(names):
+        for x, y in seeds[name]:
+            pixel = y * width + x
+            if not (0 <= x < width and 0 <= y < height and allowed[pixel] and not blocked[pixel]):
+                raise ValueError("Marker outside its border interior: " + name + " " + str((x, y)))
+            if pixel in markers and markers[pixel] != label:
+                raise ValueError("Conflicting region markers")
+            markers[pixel] = label
+            points.append((x, y, label))
+    labels = array("h", [-1]) * (width * height)
+    visited = bytearray(width * height)
+    errors = []
+
+    def neighbors(pixel):
+        x = pixel % width
+        return (pixel - width, pixel + width,
+                pixel - 1 if x else -1, pixel + 1 if x + 1 < width else -1)
+
+    for first, value in enumerate(allowed):
+        if not value or blocked[first] or visited[first]:
+            continue
+        pending, component, owners = deque([first]), [], set()
+        visited[first] = 1
+        while pending:
+            pixel = pending.popleft()
+            component.append(pixel)
+            if pixel in markers:
+                owners.add(markers[pixel])
+            for neighbor in neighbors(pixel):
+                if (0 <= neighbor < len(labels) and allowed[neighbor]
+                        and not blocked[neighbor] and not visited[neighbor]):
+                    visited[neighbor] = 1
+                    pending.append(neighbor)
+        if len(owners) > 1:
+            errors.append("Open border joins zones: " + ", ".join(names[label] for label in sorted(owners)))
+        if owners:
+            label = next(iter(owners))
+        else:
+            touches_border = any(blocked[n] for pixel in component for n in neighbors(pixel)
+                                 if 0 <= n < len(labels))
+            if touches_border and len(component) <= 4:
+                # Acute rasterized junctions can trap single pixels; fill them with the border below.
+                continue
+            if any(visible[pixel] for pixel in component) and touches_border:
+                errors.append("Unmarked border interior at "
+                              + str((first % width, first // width))
+                              + " (" + str(len(component)) + " pixels)")
+            if sum(bool(visible[pixel]) for pixel in component) > 2000:
+                errors.append("Unmarked border interior at " + str((first % width, first // width)))
+            # Small offshore islands inherit the nearest reviewed marker.
+            cx = sum(pixel % width for pixel in component) / len(component)
+            cy = sum(pixel // width for pixel in component) / len(component)
+            label = min(points, key=lambda p: (p[0] - cx) ** 2 + (p[1] - cy) ** 2)[2]
+        for pixel in component:
+            labels[pixel] = label
+    if errors:
+        raise ValueError("\n".join(errors))
+    pending = {pixel for pixel, value in enumerate(allowed) if value and labels[pixel] < 0}
+    while pending:
+        updates = []
+        for pixel in pending:
+            owners = [labels[n] for n in neighbors(pixel) if 0 <= n < len(labels) and labels[n] >= 0]
+            if owners:
+                updates.append((pixel, max(sorted(set(owners)), key=owners.count)))
+        if not updates:
+            break
+        # Fill one layer together so a junction owner cannot spread down an unrelated border.
+        for pixel, label in updates:
+            labels[pixel] = label
+            pending.remove(pixel)
+    if any(value and labels[pixel] < 0 for pixel, value in enumerate(allowed)):
+        raise ValueError("Border has no adjacent interior")
+    return names, labels
+
+
 def native_labels(data, continent, size, expected_art):
     """Read an explicit client export; never import another client's coordinates."""
     if data.get("version") != 1 or data.get("profile") != expected_art["profile"]:
@@ -306,15 +392,18 @@ def build(data, source, output, client_data=None, preview=None):
         # Ownership propagates across inland water and decorative city/lake
         # icons. Only the final color masks are clipped to the actual coastline.
         domain = ImageChops.lighter(polygon_mask(size, data["land"][continent]), land)
-        names, labels = partition(image, domain, data["seeds"][continent])
+        boundaries = data.get("boundaries", {}).get(continent)
+        names, labels = (partition_boundaries(domain, data["seeds"][continent], boundaries, land)
+                         if boundaries else partition(image, domain, data["seeds"][continent]))
         # Remove single-pixel paths along roads/decorations without changing the
         # shared ownership invariant or erasing small offshore components.
-        indexed = Image.new("L", size)
-        indexed.putdata([label + 1 for label in labels])
-        filtered = indexed.filter(ImageFilter.ModeFilter(5)).filter(ImageFilter.ModeFilter(5)).tobytes()
-        for index, label in enumerate(labels):
-            if label >= 0 and filtered[index]:
-                labels[index] = filtered[index] - 1
+        if not boundaries:
+            indexed = Image.new("L", size)
+            indexed.putdata([label + 1 for label in labels])
+            filtered = indexed.filter(ImageFilter.ModeFilter(5)).filter(ImageFilter.ModeFilter(5)).tobytes()
+            for index, label in enumerate(labels):
+                if label >= 0 and filtered[index]:
+                    labels[index] = filtered[index] - 1
         fallbacks = []
         if client_data:
             native_names, native = native_labels(client_data, continent, size, dict(spec, profile=data["profile"]))
@@ -354,8 +443,9 @@ def build(data, source, output, client_data=None, preview=None):
                 raise ValueError("No land pixels for destination: " + name)
             # A single common blur kernel gives neighboring masks complementary
             # antialiasing; the whole continent remains the union of all regions.
-            descriptor = save_mask(output, name, ImageChops.multiply(
-                mask.filter(ImageFilter.GaussianBlur(0.4)), land))
+            feather = (ImageFilter.Kernel((3, 3), (0, 1, 0, 1, 28, 1, 0, 1, 0), 32)
+                       if boundaries else ImageFilter.GaussianBlur(0.4))
+            descriptor = save_mask(output, name, ImageChops.multiply(mask.filter(feather), land))
             metadata["masks"][name] = dict(descriptor, continent=continent)
             if preview:
                 rendered = Image.composite(image, image.convert("L").convert("RGB"), mask)

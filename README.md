@@ -46,25 +46,11 @@ Eventually, start a new chapter to earn Heritage and strengthen future runs. Reb
 
 ![AFKraft compact mode alongside normal World of Warcraft gameplay](https://github.com/clery/AFKraft/raw/refs/heads/main/Images/CompactMode.png)
 
-## Try the prototype
+## Artificial Intelligence Disclaimer
 
-**AFKraft is an early playable prototype. Forever is the only planned release target.** Retail is currently used for development and simulator testing; there is no published Retail distribution.
+This is a pet project. Yes, artificial intelligence was used extensively on this project, I unfortunately don't have enough free time to code everything by hand.
 
-Forever integration and live testing are still in progress, including maps, character visuals, reward detection, and save behavior. Collection hunting is disabled on Retail. Its Forever source profiles still need live testing, and progression pacing may change.
-
-For a development copy:
-
-1. Place the `WoWIdle` folder in your client's `Interface/AddOns` directory, with `WoWIdle.toc` directly inside it.
-2. Enable the addon and log in. Restart WoW if it was running when you installed it.
-3. Type `/afkcraft` to open the adventure and follow the starter guide. `/wowidle` and `/wi` also work.
-
-Libraries are bundled. English, French, German, and Spanish are supported. You can change the language in **Settings > Language**, then use `/reload` to apply it.
-
-## Follow development
-
-See [what's still being worked on](HANDOFF.md) and the [changelog](CHANGELOG.md). For the details behind the game, read the [design](DESIGN.md), [item rules](Content/ITEMS.md), and [balance notes](BALANCE.md). Contributor setup and release checks are in [tooling](TOOLING.md), with separate guides for [architecture](ARCHITECTURE.md) and [maps](MAPS.md).
-
-<!-- Reserved for the author's AI usage disclaimer. Add the final wording here. -->
+**But**, AI was never used to generate any art. The addon's icon was made by hand.
 
 ## License and credits
 

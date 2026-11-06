@@ -18,12 +18,12 @@ def pixels(image):
     return image.get_flattened_data() if hasattr(image, "get_flattened_data") else image.getdata()
 
 
-class MapMasks(unittest.TestCase):
+class MapGeometryChecks:
     @classmethod
     def setUpClass(cls):
-        cls.folder = ROOT / "Assets/Maps/retail"
+        cls.folder = ROOT / "Assets/Maps" / cls.profile
         cls.geometry = json.loads((cls.folder / "geometry.json").read_text())
-        cls.source = json.loads((ROOT / "Assets/Maps/regions.json").read_text())
+        cls.source = json.loads((ROOT / "Assets/Maps" / cls.manifest).read_text())
         cls.size = tuple(cls.geometry["canvas"])
         cls.fields = {}
         for continent, entry in cls.geometry["continents"].items():
@@ -110,7 +110,7 @@ class MapMasks(unittest.TestCase):
     def test_sea_and_parchment_are_unmasked(self):
         for continent, x, y in [("kalimdor", 150, 500), ("kalimdor", 20, 30),
                                 ("kalimdor", 440, 80), ("eastern", 900, 500),
-                                ("eastern", 50, 50), ("eastern", 500, 240)]:
+                                ("eastern", 50, 50)]:
             with self.subTest(continent=continent, x=x, y=y):
                 self.assertEqual(0, self.mask(continent).getpixel((x, y)))
 
@@ -139,6 +139,13 @@ class MapMasks(unittest.TestCase):
         self.assertEqual(BUILDER.rows_for_labels(labels, 32, 20),
                          BUILDER.rows_for_labels(BUILDER.partition(image, land,
                              {"west": [(5, 10)], "east": [(24, 10)]})[1], 32, 20))
+
+class MapMasks(MapGeometryChecks, unittest.TestCase):
+    profile = "retail"
+    manifest = "regions.json"
+
+    def test_retail_sea_regression(self):
+        self.assertEqual(0, self.mask("eastern").getpixel((500, 240)))
 
     def test_plaguelands_and_alterac_are_not_shifted_into_each_other(self):
         entry = self.geometry["continents"]["eastern"]
@@ -281,6 +288,246 @@ class MapMasks(unittest.TestCase):
                 self.assertAlmostEqual(4 / 19, right - left)
                 self.assertAlmostEqual(4 / 17, bottom - top)
                 self.assertEqual((0, 0, 0, 0), image.getpixel((3, 3)))
+
+
+class ForeverMapMasks(MapGeometryChecks, unittest.TestCase):
+    profile = "forever"
+    manifest = "regions-forever.json"
+
+    def test_reviewed_borders_reject_open_edges_and_keep_their_owners(self):
+        domain = Image.new("L", (12, 10), 255)
+        seeds = {"west": [(2, 5)], "east": [(9, 5)]}
+        names, owners = BUILDER.partition_boundaries(domain, seeds, [[[6, 0], [6, 9]]])
+        self.assertEqual("west", names[owners[5 * 12 + 5]])
+        self.assertEqual("east", names[owners[5 * 12 + 7]])
+        self.assertNotIn(-1, owners)
+        with self.assertRaisesRegex(ValueError, "Open border joins zones"):
+            BUILDER.partition_boundaries(domain, seeds, [[[6, 1], [6, 9]]])
+        with self.assertRaisesRegex(ValueError, "Marker outside"):
+            BUILDER.partition_boundaries(domain, {"west": [(6, 5)]}, [[[6, 0], [6, 9]]])
+        with self.assertRaisesRegex(ValueError, "Unmarked border interior"):
+            BUILDER.partition_boundaries(Image.new("L", (24, 24), 255), {"west": [(2, 5)]},
+                                         [[[12, 2], [20, 2], [20, 12], [12, 12], [12, 2]]])
+
+    def test_junction_owner_does_not_spread_down_a_neighbors_border(self):
+        names, owners = BUILDER.partition_boundaries(
+            Image.new("L", (12, 12), 255),
+            {"northwest": [(2, 2)], "southwest": [(2, 8)], "east": [(9, 6)]},
+            [[[5, 0], [5, 11]], [[0, 4], [5, 4]]],
+        )
+        for y in range(6, 12):
+            self.assertIn(names[owners[y * 12 + 5]], {"southwest", "east"})
+
+    def test_every_reviewed_marker_keeps_its_owner(self):
+        for continent, regions in self.source["seeds"].items():
+            entry = self.geometry["continents"][continent]
+            for name, points in regions.items():
+                for x, y in points:
+                    with self.subTest(name=name, point=(x, y)):
+                        owner = self.fields[continent][y * self.size[0] + x]
+                        self.assertGreaterEqual(owner, 0)
+                        self.assertEqual(name, entry["names"][owner])
+                        if not name.startswith("_"):
+                            self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+
+    def test_forever_artwork_and_coast_regressions(self):
+        for continent, map_id, texture in [("kalimdor", 1414, 8025526),
+                                            ("eastern", 1415, 8023297)]:
+            entry = self.geometry["continents"][continent]
+            self.assertEqual(map_id, entry["mapID"])
+            self.assertEqual(texture, entry["firstTexture"])
+            self.assertEqual([1002, 668], entry["artSize"])
+        for continent, x, y in [("kalimdor", 390, 170), ("kalimdor", 790, 450),
+                                 ("kalimdor", 580, 785), ("eastern", 450, 375),
+                                 ("eastern", 700, 700)]:
+            self.assertEqual(-1, self.fields[continent][y * self.size[0] + x])
+            self.assertEqual(0, self.mask(continent).getpixel((x, y)))
+
+    def test_coastal_land_is_in_the_gray_mask_without_coloring_the_sea(self):
+        for continent, name, x, y in [
+            ("kalimdor", "stonetalon", 460, 337),
+            ("kalimdor", "tanaris", 710, 734),
+            ("eastern", "eastern_plaguelands", 746, 191),
+            ("eastern", "blasted_lands", 640, 685),
+        ]:
+            with self.subTest(continent=continent, point=(x, y)):
+                entry = self.geometry["continents"][continent]
+                owner = self.fields[continent][y * self.size[0] + x]
+                self.assertEqual(name, entry["names"][owner])
+                self.assertEqual(255, self.mask(continent).getpixel((x, y)))
+                self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+
+    def test_forever_boundaries_use_the_new_geography(self):
+        probes = {
+            "kalimdor": {
+                "darkshore": [(551, 217), (547, 266), (616, 155), (616, 170)],
+                "felwood": [(587, 207), (574, 262)],
+                "moonglade": [(648, 150), (626, 155), (630, 177)],
+                "winterspring": [(691, 189), (706, 268), (697, 275), (700, 286), (690, 289)],
+                "azshara": [(718, 307), (774, 268), (700, 293), (710, 290)],
+                "durotar": [(704, 433), (695, 378)],
+                "thousand_needles": [(605, 570), (658, 593), (590, 558), (620, 576)],
+                "barrens": [(605, 550), (620, 555), (638, 570), (590, 550), (620, 569)],
+            },
+            "eastern": {
+                "elwynn": [(550, 567)], "westfall": [(498, 614)],
+                "duskwood": [(568, 619), (590, 616)], "deadwind": [(610, 615), (614, 616)],
+                "swamp_sorrows": [(662, 610)], "blasted_lands": [(648, 658)],
+                "dun_morogh": [(541, 481), (560, 434)],
+                "searing_gorge": [(574, 491)], "blackrock_mountain": [(578, 517)],
+                "burning_steppes": [(619, 529)],
+                "tirisfal": [(516, 178), (540, 220), (554, 212), (552, 225)],
+                "alterac": [(555, 231)], "silverpine": [(523, 248)],
+                "_riverglades": [(704, 527)], "_gilneas": [(481, 314)],
+                "_quelthalas": [(742, 82)],
+            },
+        }
+        for continent, regions in probes.items():
+            entry = self.geometry["continents"][continent]
+            for name, points in regions.items():
+                for x, y in points:
+                    with self.subTest(name=name, point=(x, y)):
+                        owner = self.fields[continent][y * self.size[0] + x]
+                        self.assertGreaterEqual(owner, 0)
+                        self.assertEqual(name, entry["names"][owner])
+                        if not name.startswith("_"):
+                            self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+
+    def test_forever_reported_corners_and_adjacent_regions(self):
+        probes = {
+            "eastern": {
+                "tirisfal": [(558, 216), (555, 225)],
+                "alterac": [(565, 220)],
+                "wetlands": [(680, 380), (675, 395)],
+                "loch_modan": [(685, 420), (692, 430)],
+                "duskwood": [(592, 615)],
+                "deadwind": [(604, 615)],
+                "stranglethorn": [(615, 670)],
+                "blasted_lands": [(625, 670)],
+            },
+            "kalimdor": {
+                "tanaris": [(680, 743), (688, 746), (698, 737)],
+                "thousand_needles": [(680, 630), (700, 620)],
+                "silithus": [(540, 752)],
+                "ungoro": [(580, 710)],
+                "darkshore": [(555, 240)],
+                "felwood": [(569, 240)],
+                "mulgore": [(546, 515)],
+                "feralas": [(516, 515)],
+            },
+        }
+        for continent, regions in probes.items():
+            entry = self.geometry["continents"][continent]
+            for name, points in regions.items():
+                for x, y in points:
+                    with self.subTest(name=name, point=(x, y)):
+                        owner = self.fields[continent][y * self.size[0] + x]
+                        self.assertGreaterEqual(owner, 0)
+                        self.assertEqual(name, entry["names"][owner])
+                        self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+        for continent, x, y in [("kalimdor", 700, 757), ("kalimdor", 600, 740),
+                                 ("eastern", 650, 338)]:
+            with self.subTest(continent=continent, sea=(x, y)):
+                self.assertEqual(0, self.mask(continent).getpixel((x, y)))
+                self.assertEqual(-1, self.fields[continent][y * self.size[0] + x])
+
+    def test_shendralas_does_not_borrow_mulgore_or_feralas_unlocks(self):
+        entry = self.geometry["continents"]["kalimdor"]
+        for name, x, y in [("_shendralas", 530, 510), ("mulgore", 546, 515),
+                            ("feralas", 516, 515), ("desolace", 530, 490)]:
+            with self.subTest(name=name):
+                owner = self.fields["kalimdor"][y * self.size[0] + x]
+                self.assertGreaterEqual(owner, 0)
+                self.assertEqual(name, entry["names"][owner])
+        self.assertNotIn("_shendralas", self.geometry["masks"])
+        self.assertEqual(255, self.mask("kalimdor").getpixel((530, 510)))
+        for name in ["mulgore", "feralas", "desolace"]:
+            self.assertEqual(0, self.mask(name).getpixel((530, 510)))
+
+    def test_loch_silverpine_and_hillsbrad_follow_the_painted_borders(self):
+        entry = self.geometry["continents"]["eastern"]
+        probes = {
+            "silverpine": [(524, 250), (528, 262), (523, 270)],
+            "alterac": [(533, 250), (539, 258), (556, 258)],
+            "hillsbrad": [(541, 269), (556, 267), (525, 279)],
+            "tirisfal": [(512, 213), (515, 232)],
+            "dun_morogh": [(624, 423)],
+            "loch_modan": [(636, 423), (685, 420), (694, 441), (689, 460)],
+            "wetlands": [(676, 392), (657, 402)],
+            "badlands": [(687, 475)],
+            "_eastern_mountains": [(695, 380), (695, 395), (700, 430), (711, 426)],
+        }
+        for name, points in probes.items():
+            for x, y in points:
+                with self.subTest(name=name, point=(x, y)):
+                    owner = self.fields["eastern"][y * self.size[0] + x]
+                    self.assertGreaterEqual(owner, 0)
+                    self.assertEqual(name, entry["names"][owner])
+                    self.assertEqual(255, self.mask("eastern").getpixel((x, y)))
+                    if not name.startswith("_"):
+                        self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+        self.assertNotIn("_eastern_mountains", self.geometry["masks"])
+        for x, y in probes["_eastern_mountains"]:
+            for name in ["loch_modan", "wetlands", "badlands"]:
+                self.assertLessEqual(self.mask(name).getpixel((x, y)), 127)
+        for x, y in [(746, 427), (474, 255), (563, 305)]:
+            self.assertEqual(-1, self.fields["eastern"][y * self.size[0] + x])
+
+    def test_reported_zone_edges_keep_both_neighbors_on_their_painted_sides(self):
+        probes = {
+            "kalimdor": {
+                "ashenvale": [(675, 310), (682, 308)], "azshara": [(690, 308)],
+                "darkshore": [(572, 200), (566, 216)], "felwood": [(580, 200), (575, 216)],
+                "feralas": [(510, 612), (516, 613)], "silithus": [(510, 619), (516, 619)],
+            },
+            "eastern": {
+                "dun_morogh": [(530, 500), (547, 490)], "searing_gorge": [(556, 490)],
+                "badlands": [(639, 460), (655, 462)], "loch_modan": [(646, 451)],
+                "eastern_plaguelands": [(660, 140), (634, 151)],
+                "western_plaguelands": [(610, 150)],
+                "silverpine": [(510, 269), (488, 268), (523, 274)],
+                "hillsbrad": [(525, 279)],
+            },
+        }
+        for continent, regions in probes.items():
+            entry = self.geometry["continents"][continent]
+            for name, points in regions.items():
+                for x, y in points:
+                    with self.subTest(name=name, point=(x, y)):
+                        owner = self.fields[continent][y * self.size[0] + x]
+                        self.assertGreaterEqual(owner, 0)
+                        self.assertEqual(name, entry["names"][owner])
+                        self.assertGreater(self.mask(name).getpixel((x, y)), 127)
+
+    def test_non_playable_land_does_not_borrow_neighboring_unlocks(self):
+        entry = self.geometry["continents"]["eastern"]
+        for name, zone, points in [
+            ("_western_mountains", "dun_morogh", [(530, 515), (520, 520)]),
+            ("_quelthalas", "eastern_plaguelands", [(660, 120), (640, 125)]),
+            ("_gilneas", "silverpine", [(488, 277), (510, 278)]),
+        ]:
+            for x, y in points:
+                with self.subTest(name=name, point=(x, y)):
+                    owner = self.fields["eastern"][y * self.size[0] + x]
+                    self.assertGreaterEqual(owner, 0)
+                    self.assertEqual(name, entry["names"][owner])
+                    self.assertEqual(255, self.mask("eastern").getpixel((x, y)))
+                    self.assertEqual(0, self.mask(zone).getpixel((x, y)))
+            self.assertNotIn(name, self.geometry["masks"])
+        for x, y in [(476, 250), (700, 700), (450, 375)]:
+            self.assertEqual(-1, self.fields["eastern"][y * self.size[0] + x])
+
+    def test_cropped_classic_tiles_keep_native_pixel_spacing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)
+            (source / "c60").mkdir()
+            for index in range(12):
+                Image.new("RGB", (256, 256), (index + 1, 0, 0)).save(
+                    source / "c60" / ("c60" + str(index + 1) + ".blp"), format="PNG")
+            image = BUILDER.artwork(source, {"directory": "c60", "tiles": [4, 3],
+                                            "size": [1002, 668], "tileSize": [256, 256]}, (1002, 668))
+            for point, value in [((255, 0), 1), ((256, 0), 2), ((0, 256), 5), ((1001, 667), 12)]:
+                self.assertEqual(value, image.getpixel(point)[0])
 
 
 if __name__ == "__main__":

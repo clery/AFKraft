@@ -83,6 +83,7 @@ local function adapter(version, overrides)
     setfenv(maps, environment)
     maps("WoWIdle", namespace)
     assert(loadfile("Compatibility/MapMasks.lua"))("WoWIdle", namespace)
+    assert(loadfile("Compatibility/MapMasksForever.lua"))("WoWIdle", namespace)
     local dungeons = assert(loadfile("Compatibility/Dungeons.lua"))
     setfenv(dungeons, environment)
     dungeons("WoWIdle", namespace)
@@ -1036,7 +1037,67 @@ case("A different client discovers its own map IDs without importing Retail IDs"
     assert(client.MapID("eastern") == 1415)
     assert(client.MapID("elwynn") == 1429)
     local x, y = client.ZonePosition("elwynn", "eastern")
-    assert(x == 0.5 and math.abs(y - 0.75) < 0.0001)
+    assert(client.ZoneAtPosition("eastern", x, y).id == "elwynn")
+    assert(client.MapMask("elwynn", "eastern"))
+end)
+
+case("Forever uses its own masks and hit regions with matching native artwork metadata", function()
+    local client = adapter("1.60.1", {
+        C_Map = {
+            GetMapChildrenInfo = function()
+                return {
+                    { mapID = 1414, mapType = 2, name = "Kalimdor" },
+                    { mapID = 1415, mapType = 2, name = "Eastern Kingdoms" },
+                }
+            end,
+            GetMapArtLayerTextures = function(id)
+                return { id == 1414 and 8025526 or 8023297 }
+            end,
+        },
+    })
+    local info = { layerWidth = 1002, layerHeight = 668 }
+    for _, continent in ipairs({ "kalimdor", "eastern" }) do
+        local bounds, texture = client.MapMask(continent, continent, info)
+        assert(bounds and texture:find("Maps\\forever\\", 1, true))
+    end
+    for _, zone in ipairs(W.Content.zones) do
+        local found = 0
+        for _, continent in ipairs({ "kalimdor", "eastern" }) do
+            local x, y = client.ZonePosition(zone.id, continent)
+            if x then
+                found = found + 1
+                assert(client.MapMask(zone.id, continent, info))
+                assert(client.ZoneAtPosition(continent, x, y).id == zone.id)
+            end
+        end
+        assert(found == 1, zone.id)
+    end
+    assert(not client.ZoneAtPosition("kalimdor", 536.5 / 1200, 205.5 / 800))
+    assert(not client.ZoneAtPosition("kalimdor", 530.5 / 1200, 510.5 / 800))
+    assert(not client.ZoneAtPosition("eastern", 711.5 / 1200, 426.5 / 800))
+    assert(client.ZoneAtPosition("eastern", 694.5 / 1200, 441.5 / 800).id == "loch_modan")
+    assert(client.ZoneAtPosition("eastern", 524.5 / 1200, 250.5 / 800).id == "silverpine")
+    assert(client.ZoneAtPosition("eastern", 533.5 / 1200, 250.5 / 800).id == "alterac")
+    assert(client.ZoneAtPosition("eastern", 556.5 / 1200, 267.5 / 800).id == "hillsbrad")
+    assert(client.ZoneAtPosition("kalimdor", 675.5 / 1200, 310.5 / 800).id == "ashenvale")
+    assert(client.ZoneAtPosition("eastern", 639.5 / 1200, 460.5 / 800).id == "badlands")
+    assert(not client.ZoneAtPosition("eastern", 530.5 / 1200, 515.5 / 800))
+    assert(not client.ZoneAtPosition("eastern", 660.5 / 1200, 120.5 / 800))
+    assert(not client.ZoneAtPosition("eastern", 488.5 / 1200, 277.5 / 800))
+end)
+
+case("Forever rejects mismatched artwork instead of reusing Retail geometry", function()
+    local client = adapter("1.60.1", {
+        C_Map = {
+            GetMapArtLayerTextures = function(id)
+                return { id == 1414 and 272075 or 2353944 }
+            end,
+        },
+    })
+    assert(not client.MapMask("kalimdor", "kalimdor"))
+    assert(not client.MapMask("eastern", "eastern"))
+    client = adapter("1.60.1", { C_Map = {} })
+    assert(not client.MapMask("kalimdor", "kalimdor", { layerWidth = 3840, layerHeight = 2560 }))
 end)
 
 case("Haste scales native and actor animations and resets on stance changes", function()

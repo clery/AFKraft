@@ -1,16 +1,18 @@
 # Continent maps: geometry, hit testing, and client ports
 
-Read this guide before changing map boundaries, rebuilding map assets, adding a continent, or preparing the Forever maps. The current packaged geometry targets **Retail artwork with Classic outdoor destinations**. It is an artwork-derived estimate, not a verified export of Forever boundaries. Keep stable destination IDs and gameplay progression independent of client map IDs.
+Read this guide before changing map boundaries, rebuilding map assets, or adding a continent. Forever and Retail have separate artwork-derived profiles. Forever was generated from the installed 1.60.1.70790 client; Retail's original manifest, textures and Lua descriptor are preserved unchanged for a future Retail release. Neither profile is a live native ownership export. Keep stable destination IDs and gameplay progression independent of client map IDs.
 
 ## Files and responsibilities
 
 | File | Responsibility |
 | --- | --- |
 | `Assets/Maps/regions.json` | Editable Retail manifest: artwork identity, coarse land guides, interior markers, and reviewed inland water |
+| `Assets/Maps/regions-forever.json` | Forever manifest, installed-client provenance, separate coasts, markers and exclusions |
 | `scripts/prepare_map_masks.py` | Assemble client artwork, generate one ownership partition, constrain hit areas, and produce masks, metadata, Lua, and review images |
 | `Assets/Maps/retail/*.tga` | Generated, padded RGBA masks; do not hand-edit |
 | `Assets/Maps/retail/geometry.json` | Generated audit data: masks, centers, region names, run-length rows, and provenance |
 | `Compatibility/MapMasks.lua` | Generated `W.MapGeometry.retail` runtime data; do not hand-edit |
+| `Assets/Maps/forever/`, `Compatibility/MapMasksForever.lua` | Generated Forever textures, audit metadata and `W.MapGeometry.forever` runtime data |
 | `Compatibility/Maps.lua` | Client map discovery, artwork checks, ownership lookup, texture paths, native fallback, and explicit native export |
 | `Compatibility/Client.lua` | Client detection, client-specific continent and zone IDs, and native artwork loading |
 | `UI/Atlas.lua` | Tile rendering, mask projection, mouse-coordinate conversion, tooltips, and travel |
@@ -31,10 +33,10 @@ Hover first resolves the owner through those rows, then displays that destinatio
 
 ## Generation pipeline
 
-1. Assemble the client tiles described by `artwork`. The current helper expects numbered BLP tiles, `<directory>/<directory>1.blp`, and so on. It derives tile placement from `size` and `tiles`.
+1. Assemble the client tiles described by `artwork`. The helper expects numbered BLP tiles, `<directory>/<directory>1.blp`, and so on. Explicit `tileSize` preserves Forever's 256-pixel tile spacing before cropping its 4×3 grid to 1002×668; Retail's 3840×2560 grid uses the existing inferred spacing.
 2. Match the artwork actually shown by `Client.MapTileTexture`. Retail currently replaces selected title tiles with matching unlabeled flight-map tiles. The Python helper and Lua renderer must make the same replacements. Do not assume a different client or continent has matching tile names or artwork.
 3. Classify land from the artwork palette within coarse shoreline guides. This separates land from sea and parchment. Small enclosed holes are filled and detached thin horizontal sea-hatching components are removed without discarding round offshore islands. `caps` limit the guide's search margin near warm parchment.
-4. Run a multi-source geodesic watershed from `seeds`, favoring paths that do not cross narrow dark border strokes. All zones and excluded regions compete in one field. Unseeded offshore components inherit a nearby owner. A small mode filter removes narrow decorative paths.
+4. Forever uses reviewed `boundaries` polylines to close each region, then floods from interior markers. Generation rejects open borders joining different owners, markers on borders, and unmarked visible interiors. Border pixels are filled from adjacent owners in simultaneous layers, preventing junction ownership from propagating along a neighbor’s border. Retail retains a multi-source geodesic watershed from `seeds`, favoring paths that do not cross narrow dark border strokes. All zones and excluded regions compete in one field. Unseeded offshore components inherit a nearby owner. A small mode filter removes narrow decorative paths.
 5. If `--client-data` is supplied, import native ownership from the matching client/artwork. Native owners take precedence. Classic subdivisions missing from that export retain artwork-derived ownership; `fallbackZones` records them.
 6. Clip the final **click field** to classified land plus reviewed `inlandWater` polygons for the *same owner*. The coarse propagation domain deliberately spans icon holes and shore margins; it must never become the hit box. Open sea and parchment remain unclickable. Retail's flooded Thousand Needles needs explicit water support; a dry Forever map may not.
 7. Clip each color mask to land. Water can be clickable without becoming desaturated. Apply a shared antialiasing kernel, pad to power-of-two dimensions, and generate the Lua and JSON descriptors from that same partition.
@@ -51,6 +53,7 @@ A marker must lie inside its intended zone and away from lake icons, city symbol
 | `land[continent]` | Lists of coarse closed shoreline guide polygons, including offshore islands |
 | `caps[continent]` | Rectangles limiting guide expansion near decorations/parchment |
 | `seeds[continent][zone]` | One or more `[x, y]` interior markers; use stable content IDs or `_excluded_name` |
+| `boundaries[continent]` | Reviewed Forever border polylines sharing exact junctions; coast endpoints must cross the propagation domain |
 | `inlandWater[continent][zone]` | Lists of closed water polygons that may remain clickable only when that pixel's owner is this zone |
 
 Keep inland-water polygons tight. They are explicit exceptions to land-only hit eligibility, not a way to enlarge a destination across a coastline. An unknown water owner is an error. Do not add ocean polygons to make a bad marker or boundary appear selectable.
@@ -113,11 +116,56 @@ The export contains `version`, `profile`, `build`, and `continents`. Each contin
 
 Check split, renamed, localized, and phased native maps before trusting an export. The current exporter starts with one verified native ID per destination and walks native ancestors; it does not automatically recognize every renamed sibling map as the same Classic zone. Add verified client-specific aliases where necessary, then check every destination in the exported result. A partially recognized split region can otherwise become an excluded `_map_<ID>` area.
 
+The live Forever 1.60.1 export uses stepped ownership areas that cross the painted borders, including city overrides and missing land. Use it to verify artwork identity and identify regions; do not import it as precise painted-mask geometry without reviewing every edge.
+
 Check `source` and `fallbackZones` in the generated audit metadata. A native export is not proof that every Classic boundary exists as a separate native region. Merged regions still need review. Do not use `GetMapRectOnMap` world rectangles as painted borders. Current simulator builds do not implement every native map query; a successful mock export or simulator screenshot is not a live-client export.
 
 ## Rendering constraints and live checks
 
-The runtime selects `W.MapGeometry[Client.flavor]` and checks the continent ID, artwork dimensions, and first texture before using its masks. Mismatched artwork does not receive a stale partition; native map lookup remains the fallback. Client IDs are discovered from that client's hierarchy or verified compatibility tables, never copied blindly between clients.
+The runtime selects `W.MapGeometry[Client.flavor]` and checks the continent ID, artwork dimensions, and first texture before using its masks. There is no cross-client geometry fallback. Mismatched artwork uses native map lookup. Client IDs are discovered from that client's hierarchy or verified compatibility tables, never copied blindly between clients.
+
+## Current Forever profile
+
+The installed `wowf` CASC tables `UiMap`, `UiMapXMapArt`, `UiMapArt`,
+`UiMapArtStyleLayer` and `UiMapArtTile` identify Kalimdor as map 1414/art 2142
+and Eastern Kingdoms as map 1415/art 2140. Their first textures are 8025526 and
+8023297. Both use 1002×668 artwork with 256×256 tiles, sourced from
+`kalimdor_c60` and `easternkingdoms_c60`. Extract those tables and all 12 tiles
+per continent from the matching installation, not the old Classic paths or
+Retail artwork. Tools, extracted tiles and CSVs stay outside this repository.
+
+Regenerate without touching the retained Retail profile:
+
+```sh
+python3 scripts/prepare_map_masks.py \
+  --regions Assets/Maps/regions-forever.json \
+  --source-dir "$FOREVER_MAP_ART_SOURCE_DIR" \
+  --preview-dir "$FOREVER_MAP_REVIEW_DIR" \
+  --lua-output Compatibility/MapMasksForever.lua
+stylua Compatibility/MapMasksForever.lua
+python3 tests/map_masks.py
+lua5.1 scripts/test.lua
+```
+
+Forever borders follow an explicit reviewed network on the installed artwork, rather than inferring ownership from dark strokes. A complementary integer feather kernel keeps adjacent mask coverage consistent at junctions. Coastal land stays covered; corrections change its owner rather than shrinking the shoreline.
+
+The 41 destinations share one partition for clicks and visible masks. Hyjal,
+Gilneas, Quel'Thalas, Shen'dralas and Riverglades remain excluded from travel because this
+addon's destination catalog does not include them. The unnamed eastern mountain strip
+beyond the painted Wetlands and Loch Modan borders is also excluded; it must not
+borrow either destination's unlock or click area. The western land below Dun Morogh's
+painted boundary is likewise excluded, as is the northern wedge above the
+Plaguelands' painted border. The Forever manifest has no
+Retail flooded-Thousand-Needles water exception. Review both overview images,
+all destination sheets and all hit-region sheets after regeneration.
+
+`tests/forever_maps_ui.lua` supplies the installed native map artwork records
+missing from the simulator and checks all destinations, lock coloring and scaled
+travel in both window sizes. Simulator texture-ID resolution is also incomplete;
+visual review used an external temporary addon containing only the extracted
+tiles, substituting those identical images for the unresolved IDs. This verifies
+layout/projection, not live native API delivery. Restart WoW to discover new TGA
+files, then confirm coastlines, hover and travel in the actual client.
 
 Masks use full texture coordinates, transparent-black clamping, and identical RGB/alpha channels. Their complete padded texture is positioned at the source pixel scale. **Do not restore cropped mask UVs.** Cropped-mask projection previously looked correct in the simulator while shifting gray regions over the sea in the live client. Keep all channels zero outside the shape and preserve the padding/placement tests.
 

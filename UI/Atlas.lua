@@ -30,21 +30,6 @@ local function describe(self, zone)
     zone = zone or C.zoneByID[W.state.zone]
     self.focus = zone
     self.title:SetText(zone.name)
-    GameTooltip:AddLine(
-        C.zoneComponents[zone.id].name
-            .. L.FRAGMENT_OWNED
-            .. (W.state.professions.components[zone.id] or 0),
-        1,
-        0.82,
-        0
-    )
-    GameTooltip:AddLine(
-        L.IDLE_BOSSES_GUARANTEE_1_TROPHY_FOR_ENCHANTING_OR_TITANFORGING,
-        0.8,
-        0.8,
-        0.7,
-        true
-    )
     local spoils = familySpoils(zone)
     self.detail:SetText(
         C.materials[zone.material]
@@ -68,12 +53,14 @@ end
 
 local function zoneTooltip(map, zone)
     GameTooltip:SetOwner(map, "ANCHOR_CURSOR")
+    U.SetTooltipWidth(340)
     GameTooltip:SetText(zone.name, unpack(T.gold))
     GameTooltip:AddLine(
         C.materials[zone.material] .. L.FRAGMENT_FRONTIER_2 .. zone.level,
         0.8,
         0.8,
-        0.7
+        0.7,
+        true
     )
     GameTooltip:AddLine(string.format(L.HERO_XP_CEILING, zone.heroLevelCap), 0.8, 0.8, 0.7, true)
     GameTooltip:AddLine(
@@ -89,7 +76,8 @@ local function zoneTooltip(map, zone)
             .. (W.state.professions.components[zone.id] or 0),
         1,
         0.82,
-        0
+        0,
+        true
     )
     GameTooltip:AddLine(
         L.IDLE_BOSSES_GUARANTEE_1_TROPHY_FOR_ENCHANTING_OR_TITANFORGING,
@@ -100,7 +88,7 @@ local function zoneTooltip(map, zone)
     )
     local spoils = familySpoils(zone)
     if spoils then
-        GameTooltip:AddLine(L.FAMILY_SPOILS_PREFIX .. spoils, 0.8, 0.8, 0.7)
+        GameTooltip:AddLine(L.FAMILY_SPOILS_PREFIX .. spoils, 0.8, 0.8, 0.7, true)
         GameTooltip:AddLine(
             L.UP_TO_25_ADDITIONAL_IDLE_MATERIALS_SHARED_ACROSS_THE,
             0.7,
@@ -113,7 +101,8 @@ local function zoneTooltip(map, zone)
         G.IsUnlocked(W.state, zone) and L.CLICK_TO_TRAVEL or unlockText(zone),
         0.8,
         0.8,
-        0.7
+        0.7,
+        true
     )
     GameTooltip:Show()
 end

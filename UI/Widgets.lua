@@ -347,6 +347,22 @@ end
 local tooltipWidth, tooltipWidthForce
 local tooltipWidthHooked = false
 
+function U.SetTooltipWidth(width)
+    if not tooltipWidthHooked then
+        GameTooltip:HookScript("OnHide", function()
+            if tooltipWidth then
+                GameTooltip:SetMinimumWidth(tooltipWidth, tooltipWidthForce)
+                tooltipWidth, tooltipWidthForce = nil, nil
+            end
+        end)
+        tooltipWidthHooked = true
+    end
+    if not tooltipWidth then
+        tooltipWidth, tooltipWidthForce = GameTooltip:GetMinimumWidth()
+    end
+    GameTooltip:SetMinimumWidth(width)
+end
+
 function U.Tooltip(frame, title, text, width)
     resetTooltip(frame)
     if not frame.tooltipHideHooked then
@@ -368,17 +384,7 @@ function U.Tooltip(frame, title, text, width)
         end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         if width then
-            if not tooltipWidthHooked then
-                GameTooltip:HookScript("OnHide", function()
-                    if tooltipWidth then
-                        GameTooltip:SetMinimumWidth(tooltipWidth, tooltipWidthForce)
-                        tooltipWidth, tooltipWidthForce = nil, nil
-                    end
-                end)
-                tooltipWidthHooked = true
-            end
-            tooltipWidth, tooltipWidthForce = GameTooltip:GetMinimumWidth()
-            GameTooltip:SetMinimumWidth(width)
+            U.SetTooltipWidth(width)
         end
         GameTooltip:SetText(title, unpack(T.gold))
         local description = type(text) == "function" and text() or text
