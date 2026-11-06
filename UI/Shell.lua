@@ -57,6 +57,7 @@ function UI:SetTab(tab)
         return
     end
     W.state.ui.tab = tab
+    W.Minimap.Review(tab)
     if self.map then
         self.map:Hide()
     end
@@ -371,6 +372,7 @@ function UI:Refresh(redraw)
         nextLesson and nextLesson.key or "",
         chestCount,
     }, ":")
+    local attention = W.Panels.Attention(s)
     for id, button in pairs(self.tabs) do
         local active = s.ui.tab == id or (id == "crafting" and s.ui.tab == "workshop")
         U.Selected(button, active)
@@ -380,6 +382,7 @@ function UI:Refresh(redraw)
             "Interface\\Icons\\" .. (hint and "INV_Misc_QuestionMark" or tabIcons[id])
         )
         button.notice:SetShown(not hint)
+        button.bubble:SetShown(not hint and attention[id] == true)
         if button.menuHint ~= hint then
             U.Tooltip(
                 button,
@@ -703,6 +706,7 @@ function W.CreateUI()
         tab.icon = U.Icon(tab.content or tab, tabIcons[id], 12, 10, 20)
         tab.notice = U.SingleLine(U.Text(tab, "", 42, 25, 10, T.gold), 170, 12)
         U.Tooltip(tab, entry[2], L.OPEN_PREFIX .. entry[2])
+        tab.bubble = W.Minimap.CreateBubble(tab, -9, -9)
         ui.tabs[id] = tab
         y = y + 40
     end

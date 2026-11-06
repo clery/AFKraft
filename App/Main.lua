@@ -48,7 +48,14 @@ function W.Toggle()
     if not W.UI then
         W.CreateUI()
     end
-    W.UI.frame:SetShown(not W.UI.frame:IsShown())
+    local _, attentionTab = W.Panels.Attention(W.state)
+    if
+        not W.UI.frame:IsShown() and (attentionTab or type(W.state.ui.minimapNotice) == "string")
+    then
+        W.Minimap.Open()
+    else
+        W.UI.frame:SetShown(not W.UI.frame:IsShown())
+    end
 end
 
 local function startingHero(state)

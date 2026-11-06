@@ -40,6 +40,20 @@ function M.Record(message, noticeType)
     M.Refresh()
 end
 
+function M.Review(tab)
+    local unread = W.state.ui.minimapNotices
+    if type(unread) ~= "table" then
+        return
+    end
+    local kind = ({ party = "party", atlas = "progress", adventure = "combat" })[tab]
+    if kind then
+        unread[kind] = nil
+    end
+    if not next(unread) then
+        W.state.ui.minimapNotices = nil
+    end
+end
+
 function M.Open()
     if not W.state then
         return
@@ -50,14 +64,19 @@ function M.Open()
     local notice = W.state.ui.minimapNotice
     W.UI:SaveGeometry()
     W.state.ui.compact = false
-    W.state.ui.tab = "adventure"
+    local _, tab, hero = W.Panels.Attention(W.state)
+    W.state.ui.tab = tab or "adventure"
+    W.UI.recruiting = tab == "party" and #W.state.heroes < W.Game.CompanionSlots(W.state)
+    if hero then
+        W.UI.selected = hero
+    end
+    M.Review(W.state.ui.tab)
     W.UI:ApplyMode()
     W.UI.frame:Show()
     if type(notice) == "string" then
         W.Notify(notice)
     end
     W.state.ui.minimapNotice = nil
-    W.state.ui.minimapNotices = nil
     M.Refresh()
 end
 
@@ -113,11 +132,14 @@ function M.Create()
     icons:Register("AFKraft", M.launcher, saved)
     local button = icons:GetMinimapButton("AFKraft")
     M.button = button
-    -- The library owns the launcher; this overlay represents addon-specific unread notices.
+    M.bubble = M.CreateBubble(button, -6, -6)
+    M.Refresh()
+end
+
+function M.CreateBubble(button, x, y)
     local bubble = CreateFrame("Frame", nil, button)
-    M.bubble = bubble
     bubble:SetSize(12, 12)
-    bubble:SetPoint("CENTER", button, "TOPRIGHT", -6, -6)
+    bubble:SetPoint("CENTER", button, "TOPRIGHT", x, y)
     -- A dark edge, antique-gold rim and highlighted red inset echo the launcher frame.
     local layers = {
         { size = 12, x = 0, y = 0, color = { 0.12, 0.07, 0.03 } },
@@ -135,5 +157,5 @@ function M.Create()
         mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
         texture:AddMaskTexture(mask)
     end
-    M.Refresh()
+    return bubble
 end

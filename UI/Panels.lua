@@ -41,6 +41,31 @@ function P.Opportunities(s)
     return points, talentHero, cappedHero, routes
 end
 
+-- Keep opening priority and menu badges tied to the same actionable state.
+function P.Attention(s)
+    local points, talentHero, _, routes = P.Opportunities(s)
+    local attention = {
+        party = #s.heroes < G.CompanionSlots(s),
+        journal = G.JournalRewardsWaiting(s) > 0,
+        talents = points > 0,
+        chests = G.ChestCount(s) > 0,
+        atlas = routes > 0,
+        legacy = s.prestigeUnlocked and G.PrestigeReward(s) > 0,
+    }
+    local unread = s.ui.minimapNotices
+    if type(unread) == "table" then
+        attention.party = attention.party or unread.party == true
+        attention.atlas = attention.atlas or unread.progress == true
+        attention.adventure = unread.combat == true
+    end
+    for _, tab in ipairs({ "party", "journal", "talents", "chests", "atlas", "legacy", "adventure" }) do
+        if attention[tab] and not W.Tutorial.MenuHint(s, tab) then
+            return attention, tab, tab == "talents" and talentHero or nil
+        end
+    end
+    return attention
+end
+
 -- Return only lessons that can be acted on now; unavailable lessons never block others.
 function P.GuideStep(s, selectedHero)
     local craftHero = s.guide.craftHero
