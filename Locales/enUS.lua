@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.enUS = {
+    SCROLL_HORIZONTAL_HINT = "Scroll sideways to browse",
+    SCROLL_VERTICAL_HINT = "Scroll to browse",
+
     COLLECTION_COMPLETE = "Collection complete!",
     COLLECTION_EFFECT_UNLOCKED = "Unlocked effect: %s",
 

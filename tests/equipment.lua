@@ -50,7 +50,7 @@ test("Party equipment buttons enforce class armor restrictions", function()
     ui.selected, ui.bagFilter, ui.bagView, ui.bagPage = 1, 0, {}, 0
     ui:SetTab("party")
     local mailButton, clothButton
-    for button in ui.panel._pool.selection:EnumerateActive() do
+    for button in ui.bagCarousel.currentPane._pool.selection:EnumerateActive() do
         if button._pool and button._pool.text then
             for label in button._pool.text:EnumerateActive() do
                 if label:GetText() == mail.name then
@@ -62,15 +62,21 @@ test("Party equipment buttons enforce class armor restrictions", function()
             end
         end
     end
-    assertNotNil(mailButton)
+    assertEquals(nil, mailButton)
     assertNotNil(clothButton)
-    assertFalse(mailButton:IsEnabled())
     assertTrue(clothButton:IsEnabled())
+    assertEquals("usable", ui.bagView.availability)
     -- A direct callback also goes through the domain restriction.
-    mailButton:GetScript("OnClick")(mailButton)
+    W.Game.Equip(s, 1, 1)
     assertEquals(nil, s.heroes[1].gear[2])
     clothButton:GetScript("OnClick")(clothButton)
     assertEquals(cloth, s.heroes[1].gear[2])
+    ui.bagView.availability = "all"
+    ui:Refresh()
+    assertEquals(1, #W.Game.InventoryEntries(s, s.heroes[1], 0, ui.bagView))
+    local unavailable = ui.bagCarousel.currentPane._pool.selection:EnumerateActive()()
+    assertNotNil(unavailable)
+    assertFalse(unavailable:IsEnabled())
 end)
 
 test("Party stat guide restores the shared tooltip width when hidden", function()
@@ -94,4 +100,40 @@ test("Party stat guide restores the shared tooltip width when hidden", function(
     local restored, restoredForce = GameTooltip:GetMinimumWidth()
     assertEquals(width, restored)
     assertEquals(force, restoredForce)
+end)
+
+test("Equipped items expose their own upgrade button on the right", function()
+    local W = AFKraft
+    local state = W.Game.New(W.Client.Now())
+    W.Game.AddHero(state, "WARRIOR")
+    local hero = state.heroes[1]
+    hero.level = 60
+    state.guide.dismissed = true
+    state.gold = 100000
+    for _, material in ipairs(W.Content.materialOrder) do
+        state.materials[material] = 100000
+    end
+    hero.gear[1] = W.Game.Item(state, 1, 1, 2)
+    hero.gear[2] = W.Game.Item(state, 2, 1, 2)
+    W.state = state
+    local ui = W.UI
+    ui.selected, ui.gearSlot = 1, 2
+    ui.frame:Show()
+    ui:SetTab("party")
+    local buttons = {}
+    for box in ui.panel._pool.selection:EnumerateActive() do
+        if box._pool and box._pool.selection then
+            for button in box._pool.selection:EnumerateActive() do
+                if button.text:GetText() == "+" then
+                    buttons[#buttons + 1] = button
+                    local _, _, _, x = button:GetPoint()
+                    assertEquals(242, x)
+                    assertNotNil(button:GetScript("OnEnter"))
+                end
+            end
+        end
+    end
+    assertEquals(2, #buttons)
+    buttons[1]:GetScript("OnClick")(buttons[1])
+    assertEquals(1, (hero.gear[1].upgrade or 0) + (hero.gear[2].upgrade or 0))
 end)

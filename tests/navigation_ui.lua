@@ -81,17 +81,17 @@ test("Inventory fills the management workspace and filters retain valid paginati
     ui:SetTab("party")
     local function rows()
         local count = 0
-        for control in ui.panel._pool.selection:EnumerateActive() do
-            if control:GetWidth() == 688 and control:GetHeight() == 46 then
+        for control in ui.bagCarousel.currentPane._pool.selection:EnumerateActive() do
+            if control:GetWidth() == 312 and control:GetHeight() == 62 then
                 count = count + 1
             end
         end
         return count
     end
-    assertEquals(9, rows())
+    assertEquals(12, rows())
     ui.bagFiltersOpen = true
     ui:Refresh()
-    assertEquals(8, rows())
+    assertEquals(10, rows())
     ui.bagPage = 99
     state.inventory = {}
     ui:Refresh()
@@ -214,5 +214,44 @@ test(
         W.state.heroes[1].level = 30
         ui:Refresh()
         assertEquals("Enchant", ui.forgeTabs.enchanting.text:GetText())
+    end
+)
+
+test(
+    "Sidebar scrolls independently, separates section headings and keeps footer actions fixed",
+    function()
+        local _, state, ui = setup()
+        local menu, content = ui.menuScroll, ui.menuContent
+        assertTrue(content:GetHeight() > menu:GetHeight())
+        ui:SetMenuOffset(0)
+        menu:GetScript("OnMouseWheel")(menu, -1)
+        assertTrue(menu:GetVerticalScroll() > 0)
+        local offset = menu:GetVerticalScroll()
+        ui:Refresh()
+        assertEquals(offset, menu:GetVerticalScroll())
+        assertEquals(content, ui.tabs.party:GetParent())
+        assertEquals(ui.expanded, ui.settingsLink:GetParent())
+        assertEquals(ui.expanded, ui.reportLink:GetParent())
+        local _, _, _, _, settingsY = ui.settingsLink:GetPoint(1)
+        assertEquals(-850, settingsY)
+        local _, _, _, _, companyY = ui.menuHeadings[2]:GetPoint(1)
+        assertEquals(-(ui.tabs.routes.menuY + 40 + 16), companyY)
+        menu:GetScript("OnMouseWheel")(menu, -100)
+        assertEquals(content:GetHeight() - menu:GetHeight(), menu:GetVerticalScroll())
+        ui:SetTab("difficulty")
+        assertTrue(
+            ui.tabs.difficulty.menuY + ui.tabs.difficulty:GetHeight()
+                <= menu:GetVerticalScroll() + menu:GetHeight()
+        )
+        ui:SetTab("adventure")
+        assertTrue(ui.tabs.adventure.menuY >= menu:GetVerticalScroll())
+        ui.tabs.party:GetScript("OnMouseWheel")(ui.tabs.party, -1)
+        assertTrue(menu:GetVerticalScroll() > 0)
+        state.ui.compact = true
+        ui:ApplyMode()
+        assertFalse(menu:IsVisible())
+        state.ui.compact = false
+        ui:ApplyMode()
+        assertTrue(menu:IsVisible())
     end
 )

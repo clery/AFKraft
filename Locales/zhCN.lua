@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.zhCN = {
+    SCROLL_HORIZONTAL_HINT = "横向滚动以浏览",
+    SCROLL_VERTICAL_HINT = "滚动以浏览",
+
     COLLECTION_COMPLETE = "收藏已集齐！",
     COLLECTION_EFFECT_UNLOCKED = "已解锁效果：%s",
 

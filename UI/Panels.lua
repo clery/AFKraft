@@ -1215,6 +1215,14 @@ end
 function P.Draw(ui)
     local s = W.state
     local p = ui.panel
+    if ui.journalTrack then
+        ui.journalTrack:SetShown(
+            s.ui.tab == "journal"
+                and ui.journalMode == "track"
+                and not s.ui.compact
+                and not W.catchup
+        )
+    end
     for tab, frame in pairs({
         chests = ui.chestFrame,
         offline = ui.offlineFrame,

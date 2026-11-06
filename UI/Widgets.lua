@@ -526,3 +526,134 @@ function U.Bar(parent, x, y, w, h, color, nameplate)
 end
 
 U.Number = AbbreviateNumbers
+
+function U.ScrollEdges(parent, height)
+    local overlay = CreateFrame("Frame", nil, parent)
+    overlay:SetAllPoints()
+    overlay:SetFrameLevel(parent:GetFrameLevel() + 30)
+    local edges = {}
+    for side = 1, 2 do
+        local edge = CreateFrame("Frame", nil, overlay)
+        edge:SetPoint(side == 1 and "TOPLEFT" or "TOPRIGHT")
+        edge:SetSize(24, height)
+        for index = 0, 3 do
+            local shade = U.Rect(
+                edge,
+                index * 6,
+                0,
+                6,
+                height,
+                T.bg,
+                (side == 1 and 4 - index or index + 1) * 0.17,
+                "OVERLAY"
+            )
+            shade:SetPoint("BOTTOMLEFT", edge, "BOTTOMLEFT", index * 6, 0)
+        end
+        edges[side] = edge
+    end
+    return edges[1], edges[2]
+end
+
+function U.CarouselItem(control, carousel)
+    control:EnableMouseWheel(true)
+    control:SetScript("OnMouseWheel", carousel.wheel)
+end
+
+local function animateCarousel(self, dt)
+    local motion = self.motion
+    motion.elapsed = math.min(0.24, motion.elapsed + dt)
+    local t = motion.elapsed / 0.24
+    motion.current = motion.from + (motion.destination - motion.from) * (1 - (1 - t) ^ 3)
+    self.scroll:SetHorizontalScroll(motion.current)
+    if motion.elapsed >= 0.24 then
+        self.motion = nil
+        self:SetScript("OnUpdate", nil)
+        self.changed(motion.target)
+    end
+end
+
+function U.Carousel(parent, x, y, width, height, page, pages, drawPage, changed)
+    local frame = pooled(parent, "carousel", function()
+        local outer = CreateFrame("Frame", nil, parent)
+        outer.scroll = CreateFrame("ScrollFrame", nil, outer)
+        outer.scroll:SetPoint("TOPLEFT")
+        outer.scroll:SetClipsChildren(true)
+        outer.content = CreateFrame("Frame", nil, outer.scroll)
+        outer.scroll:SetScrollChild(outer.content)
+        outer.hint = U.SingleLine(U.Text(outer, "", 0, 0, 12, T.muted), 1, 24, "CENTER")
+        outer.left, outer.right = U.ScrollEdges(outer, 1)
+        outer:SetScript("OnHide", function(self)
+            self:SetScript("OnUpdate", nil)
+        end)
+        return outer
+    end)
+    frame:SetPoint("TOPLEFT", x, -y)
+    frame:SetSize(width, height)
+    frame.scroll:SetSize(width, height - 28)
+    local first, last = math.max(0, page - 1), math.min(pages - 1, page + 1)
+    local stride, start = width - 32, (page - first) * (width - 32)
+    frame.content:SetSize((last - first + 1) * stride + 32, height - 28)
+    if
+        frame.pageIndex ~= page
+        or frame.totalPages ~= pages
+        or frame.carouselWidth ~= width
+        or frame.carouselHeight ~= height
+    then
+        frame.motion = nil
+    end
+    frame.pageIndex, frame.totalPages, frame.carouselWidth, frame.carouselHeight =
+        page, pages, width, height
+    frame.changed = changed
+    frame.scroll:SetHorizontalScroll(frame.motion and frame.motion.current or start)
+    frame.hint:ClearAllPoints()
+    frame.hint:SetPoint("TOPLEFT", 0, -(height - 26))
+    frame.hint:SetWidth(width)
+    frame.hint:SetText(
+        pages > 1 and (W.L.SCROLL_HORIZONTAL_HINT .. "  ·  " .. (page + 1) .. " / " .. pages) or ""
+    )
+    frame.left:SetHeight(height - 28)
+    frame.right:ClearAllPoints()
+    frame.right:SetPoint("TOPRIGHT")
+    frame.right:SetHeight(height - 28)
+    frame.left:SetShown(page > 0)
+    frame.right:SetShown(page < pages - 1)
+    frame.targetPage = frame.motion and frame.motion.target or page
+    frame.wheel = function(_, delta)
+        local target =
+            math.max(first, math.min(last, page - (delta > 0 and 1 or delta < 0 and -1 or 0)))
+        if target == frame.targetPage then
+            return
+        end
+        frame.targetPage = target
+        frame.motion = {
+            from = frame.scroll:GetHorizontalScroll(),
+            current = frame.scroll:GetHorizontalScroll(),
+            elapsed = 0,
+            destination = (target - first) * stride,
+            target = target,
+        }
+        GameTooltip:Hide()
+        frame:SetScript("OnUpdate", animateCarousel)
+    end
+    if frame.motion then
+        frame:SetScript("OnUpdate", animateCarousel)
+    end
+    U.CarouselItem(frame.scroll, frame)
+    U.Begin(frame.content)
+    for index = first, last do
+        local pane = pooled(frame.content, "carouselPage", function()
+            return CreateFrame("Frame", nil, frame.content)
+        end)
+        pane:SetPoint("TOPLEFT", (index - first) * stride, 0)
+        pane:SetSize(width - 40, height - 28)
+        if index == page then
+            frame.currentPane = pane
+        end
+        U.CarouselItem(pane, frame)
+        U.Begin(pane)
+        drawPage(pane, index, index == page, frame)
+        U.EndBuild(pane)
+    end
+    U.EndBuild(frame.content)
+    return frame
+end

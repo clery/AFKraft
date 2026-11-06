@@ -164,3 +164,48 @@ test("Name inputs share focus behavior and retain draft text when hidden", funct
     assertFalse(input:HasFocus())
     assertEquals("My route", input:GetText())
 end)
+
+test("Carousels smoothly snap through bounded nearby pages with discoverable overflow", function()
+    local parent, U = parentFrame()
+    local page, pages, draws = 0, 1000, 0
+    local function build()
+        draws = 0
+        U.Begin(parent)
+        local strip = U.Carousel(parent, 0, 0, 500, 250, page, pages, function(pane, index)
+            draws = draws + 1
+            U.Text(pane, tostring(index), 0, 0, 14, AFKraft.Theme.text, 400)
+        end, function(value)
+            page = value
+            build()
+        end)
+        U.EndBuild(parent)
+        return strip
+    end
+    local strip = build()
+    assertEquals(2, draws)
+    assertFalse(strip.left:IsShown())
+    assertTrue(strip.right:IsShown())
+    assertTrue(strip.hint:GetText():find(AFKraft.L.SCROLL_HORIZONTAL_HINT, 1, true) ~= nil)
+    strip.wheel(strip.scroll, -1)
+    strip:GetScript("OnUpdate")(strip, 0.1)
+    assertTrue(strip.scroll:GetHorizontalScroll() > 0)
+    assertTrue(strip.scroll:GetHorizontalScroll() < 468)
+    strip:GetScript("OnUpdate")(strip, 1)
+    assertEquals(1, page)
+    assertEquals(3, draws)
+    assertEquals(nil, strip:GetScript("OnUpdate"))
+    local children = strip.content:GetNumChildren()
+    for index = 2, 20 do
+        page = index
+        build()
+    end
+    assertEquals(children, strip.content:GetNumChildren())
+    assertEquals(3, draws)
+    page, pages = 0, 1
+    build()
+    assertFalse(strip.left:IsShown())
+    assertFalse(strip.right:IsShown())
+    assertEquals("", strip.hint:GetText())
+    assertEquals(1, draws)
+    parent:Hide()
+end)

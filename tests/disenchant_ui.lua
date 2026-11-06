@@ -33,7 +33,7 @@ local function find(ui, label)
 end
 
 local function selectItem(ui, item)
-    for b in ui.panel._pool.selection:EnumerateActive() do
+    for b in ui.disenchantCarousel.currentPane._pool.selection:EnumerateActive() do
         if b._pool and b._pool.text then
             for label in b._pool.text:EnumerateActive() do
                 if label:GetText() == item.name .. " ×" .. (item.count or 1) then
@@ -134,7 +134,8 @@ test("Workbench pagination clamps after bulk deletion and heirlooms remain safe"
     heirloom.heirloom = true
     ui:Refresh()
     click(find(ui, "Disenchant…"))
-    click(find(ui, "Next"))
+    ui.disenchantCarousel.wheel(ui.disenchantCarousel.scroll, -1)
+    ui.disenchantCarousel:GetScript("OnUpdate")(ui.disenchantCarousel, 1)
     assertEquals(1, ui.disenchantPage)
     selectItem(ui, heirloom)
     assertFalse(ui.disenchantProtect:IsEnabled())
@@ -143,6 +144,6 @@ test("Workbench pagination clamps after bulk deletion and heirlooms remain safe"
     assertEquals(1, #s.inventory)
     assertTrue(s.inventory[1] == heirloom)
     assertEquals(0, ui.disenchantPage)
-    assertFalse(find(ui, "Next"):IsEnabled())
+    assertFalse(ui.disenchantCarousel.right:IsShown())
     click(find(ui, "Back to equipment"))
 end)

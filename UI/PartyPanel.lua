@@ -202,16 +202,38 @@ local function equipment(ui, p, s, hero, index)
         U.Begin(b)
         U.Icon(b, item and item.icon or slotIcons[slot], 10, 6, rowStep - 20)
             :SetParent(b.content or b)
-        line(b, name, 48, 2, 220, 12, slot == selectedSlot and T.gold or T.text)
+        line(b, name, 48, 2, item and 184 or 220, 12, slot == selectedSlot and T.gold or T.text)
         line(
             b,
             item and G.ItemName(item) or (outfit[slot] and L.BASIC_CLOTHING or L.EMPTY_SLOT),
             48,
             rowStep - 22,
-            220,
+            item and 184 or 220,
             11,
             item and T.text or T.muted
         )
+        if item then
+            local cost = G.UpgradeCost(item, s)
+            local upgrade = U.Button(b, "+", 242, 7, 30, 30, function()
+                if W.Action(G.Upgrade, index, id) then
+                    W.Notify(hero.name .. "’s " .. name .. L.GAINED_10_BASE_STATS_SUFFIX)
+                end
+            end, false, "selection")
+            U.Enabled(upgrade, affordable(s, cost))
+            upgrade:SetMotionScriptsWhileDisabled(true)
+            U.Tooltip(
+                upgrade,
+                L.IMPROVE_THIS_ITEM,
+                L.ADDS_10_OF_THE_BASE_ITEM_STATS_THE_POWER
+                    .. "\n\n"
+                    .. G.ItemPower(item, hero)
+                    .. L.FRAGMENT_TO
+                    .. G.ItemPower(item, hero, 1)
+                    .. L.FRAGMENT_POWER_2
+                    .. costText(s, cost),
+                360
+            )
+        end
         U.EndBuild(b)
         U.Tooltip(
             b,
@@ -227,31 +249,7 @@ local function equipment(ui, p, s, hero, index)
     end
 
     local item = hero.gear[selectedSlot]
-    if item then
-        local cost = G.UpgradeCost(item, s)
-        line(p, L.UPGRADE_PREFIX .. C.slots[selectedSlot], 0, 351, 320, 16, T.gold)
-        line(
-            p,
-            G.ItemPower(item, hero)
-                .. L.FRAGMENT_TO
-                .. G.ItemPower(item, hero, 1)
-                .. L.FRAGMENT_POWER_2
-                .. costText(s, cost),
-            0,
-            381,
-            572,
-            12
-        )
-        local upgrade = U.Button(p, L.UPGRADE_10_STATS, 332, 346, 240, 34, function()
-            if W.Action(G.Upgrade, index, selectedSlot) then
-                W.Notify(
-                    hero.name .. "’s " .. C.slots[selectedSlot] .. L.GAINED_10_BASE_STATS_SUFFIX
-                )
-            end
-        end, false, "primary")
-        U.Enabled(upgrade, affordable(s, cost))
-        U.Tooltip(upgrade, L.IMPROVE_THIS_ITEM, L.ADDS_10_OF_THE_BASE_ITEM_STATS_THE_POWER)
-    else
+    if not item then
         line(
             p,
             outfit[selectedSlot] and L.BASIC_CLOTHING_PREFIX .. C.slots[selectedSlot]
@@ -291,6 +289,7 @@ local function inventory(ui, p, s, hero, index)
         options[#options + 1] = { id = slot, name = C.slots[slot] }
     end
     local view = ui.bagView or {}
+    view.availability = view.availability or "usable"
     ui.bagView = view
     entries = G.InventoryEntries(s, hero, filter, view)
     local active, summary = 0, {}
@@ -303,8 +302,8 @@ local function inventory(ui, p, s, hero, index)
     describe(filter, 0, C.slots[filter])
     local availabilityNames = {
         all = L.ANY_AVAILABILITY,
-        usable = L.EQUIPPABLE_NOW,
         locked = L.CANNOT_EQUIP,
+        usable = L.EQUIPPABLE_NOW,
         upgrades = L.USABLE_UPGRADES,
     }
     local traitNames = {
@@ -314,7 +313,7 @@ local function inventory(ui, p, s, hero, index)
         effect = L.WITH_EFFECT,
         upgraded = L.UPGRADED,
     }
-    describe(view.availability or "all", "all", availabilityNames[view.availability])
+    describe(view.availability, "usable", availabilityNames[view.availability])
     describe(view.quality or 0, 0, C.qualityNames[view.quality])
     describe(view.trait or "all", "all", traitNames[view.trait])
     local function reset()
@@ -396,10 +395,10 @@ local function inventory(ui, p, s, hero, index)
         choice("slot", L.EQUIPMENT, options, 0, 608)
         choice("availability", L.AVAILABILITY, {
             { id = "all", name = L.ANY_AVAILABILITY },
-            { id = "usable", name = L.EQUIPPABLE_NOW },
             { id = "locked", name = L.CANNOT_EQUIP },
+            { id = "usable", name = L.EQUIPPABLE_NOW },
             { id = "upgrades", name = L.USABLE_UPGRADES },
-        }, "all", 784)
+        }, "usable", 784)
         local qualities = { { id = 0, name = L.ANY_QUALITY } }
         for quality, name in ipairs(C.qualityNames) do
             qualities[#qualities + 1] = { id = quality, name = name }
@@ -433,100 +432,113 @@ local function inventory(ui, p, s, hero, index)
 
     local bottom = p:GetHeight() - 34
     local top = ui.bagFiltersOpen and 160 or 104
-    local pageSize = math.max(1, math.floor((bottom - top) / 50))
+    local pageSize = math.max(1, math.floor((bottom - top) / 68) * 2)
     local pages = math.max(1, math.ceil(#entries / pageSize))
     local page = math.max(0, math.min(ui.bagPage or 0, pages - 1))
     ui.bagPage = page
-    for row = 1, pageSize do
-        local entry = entries[page * pageSize + row]
-        if entry then
-            local n, item = entry.index, entry.item
-            local y = top + (row - 1) * 50
-            local power = G.ItemPower(item, hero)
-            local previous = hero.gear[item.slot]
-            local delta = power - G.ItemPower(previous, hero)
-            local levelOK, restriction = G.CanEquip(hero, item)
-            local b = U.SelectButton(p, "", 608, y, 688, 46, function()
-                if not levelOK then
-                    return
-                end
-                ui.gearSlot = item.slot
-                if W.Action(G.Equip, index, n) then
-                    W.Notify(
-                        L.EQUIPPED_PREFIX .. G.ItemName(item) .. L.FRAGMENT_ON .. hero.name .. "."
+    ui.bagCarousel = U.Carousel(
+        p,
+        608,
+        top,
+        688,
+        bottom - top + 28,
+        page,
+        pages,
+        function(pane, pageIndex, current, carousel)
+            for row = 1, pageSize do
+                local entry = entries[pageIndex * pageSize + row]
+                if entry then
+                    local n, item = entry.index, entry.item
+                    local x, y = (row - 1) % 2 * 328, math.floor((row - 1) / 2) * 68
+                    local power = G.ItemPower(item, hero)
+                    local previous = hero.gear[item.slot]
+                    local delta = power - G.ItemPower(previous, hero)
+                    local usable, restriction = G.CanEquip(hero, item)
+                    local b = U.SelectButton(pane, "", x, y, 312, 62, function()
+                        if not G.CanEquip(hero, item) then
+                            return
+                        end
+                        ui.gearSlot = item.slot
+                        if W.Action(G.Equip, index, n) then
+                            W.Notify(
+                                L.EQUIPPED_PREFIX
+                                    .. G.ItemName(item)
+                                    .. L.FRAGMENT_ON
+                                    .. hero.name
+                                    .. "."
+                            )
+                        end
+                    end)
+                    U.CarouselItem(b, carousel)
+                    b:EnableMouse(current)
+                    if current and usable and item.uid == s.guide.craftItem then
+                        ui.guideCraftEquipTarget = b
+                    end
+                    if current and usable and not ui.guideEquipTarget then
+                        ui.guideEquipTarget = b
+                    end
+                    b.text:Hide()
+                    U.Begin(b)
+                    U.Enabled(b, usable)
+                    b:SetMotionScriptsWhileDisabled(true)
+                    U.Icon(b, item.icon or slotIcons[item.slot], 10, 10, 32)
+                        :SetParent(b.content or b)
+                    line(
+                        b,
+                        G.ItemName(item) .. ((item.count or 1) > 1 and "  ×" .. item.count or ""),
+                        52,
+                        4,
+                        250,
+                        13,
+                        C.qualityColors[item.quality]
+                    )
+                    line(
+                        b,
+                        C.slots[item.slot]
+                            .. "  ·  "
+                            .. (item.heirloom and L.HEIRLOOM or L.LEVEL_PREFIX .. item.level)
+                            .. "  ·  "
+                            .. power
+                            .. L.POWER_SUFFIX,
+                        52,
+                        25,
+                        250,
+                        11,
+                        T.muted
+                    )
+                    line(
+                        b,
+                        (delta > 0 and "+" or "") .. delta,
+                        212,
+                        43,
+                        90,
+                        12,
+                        delta > 0 and T.green or T.muted
+                    ):SetJustifyH("RIGHT")
+                    U.EndBuild(b)
+                    U.Tooltip(
+                        b,
+                        G.ItemName(item),
+                        qualityText(item)
+                            .. " · "
+                            .. power
+                            .. L.FRAGMENT_POWER
+                            .. G.ItemDescription(item, hero, true)
+                            .. "\n\n"
+                            .. (
+                                usable and L.CLICK_TO_EQUIP_ON_PREFIX .. hero.name .. "."
+                                or "|cffff6060" .. restriction .. "|r"
+                            ),
+                        320
                     )
                 end
-            end)
-            if levelOK and item.uid == s.guide.craftItem then
-                ui.guideCraftEquipTarget = b
             end
-            if levelOK and not ui.guideEquipTarget then
-                ui.guideEquipTarget = b
-            end
-            b.text:Hide()
-            U.Begin(b)
-            U.Enabled(b, levelOK)
-            b:SetMotionScriptsWhileDisabled(true)
-            U.Icon(b, item.icon or slotIcons[item.slot], 12, 7, 32):SetParent(b.content or b)
-            line(
-                b,
-                G.ItemName(item) .. ((item.count or 1) > 1 and "  ×" .. item.count or ""),
-                58,
-                5,
-                360,
-                13,
-                C.qualityColors[item.quality]
-            )
-            line(
-                b,
-                C.slots[item.slot]
-                    .. "  ·  "
-                    .. (item.heirloom and L.HEIRLOOM or L.LEVEL_PREFIX .. item.level)
-                    .. "  ·  "
-                    .. power
-                    .. L.POWER_SUFFIX,
-                58,
-                27,
-                360,
-                11,
-                levelOK and T.muted or { 1, 0.55, 0.51 }
-            )
-            line(
-                b,
-                (delta > 0 and "+" or "") .. delta,
-                476,
-                14,
-                90,
-                15,
-                levelOK and delta > 0 and T.green or T.muted
-            ):SetJustifyH("RIGHT")
-            line(
-                b,
-                not levelOK and L.LOCKED or L.EQUIP,
-                584,
-                15,
-                90,
-                12,
-                levelOK and T.gold or T.muted
-            ):SetJustifyH("CENTER")
-            U.EndBuild(b)
-            U.Tooltip(
-                b,
-                G.ItemName(item),
-                qualityText(item)
-                    .. " · "
-                    .. power
-                    .. L.FRAGMENT_POWER
-                    .. G.ItemDescription(item, hero, true)
-                    .. "\n\n"
-                    .. (
-                        not levelOK and ("|cffff6060" .. restriction .. "|r")
-                        or L.CLICK_TO_EQUIP_ON_PREFIX .. hero.name .. "."
-                    ),
-                320
-            )
+        end,
+        function(value)
+            ui.bagPage = value
+            ui:Refresh()
         end
-    end
+    )
     if #entries == 0 then
         line(
             p,
@@ -564,36 +576,9 @@ local function inventory(ui, p, s, hero, index)
             end
         )
     end
-    local previous = U.Button(p, L.PREVIOUS, 608, bottom, 116, 32, function()
-        ui.bagPage = page - 1
-        ui:Refresh()
-    end)
-    local nextPage = U.Button(p, L.NEXT, 1180, bottom, 116, 32, function()
-        ui.bagPage = page + 1
-        ui:Refresh()
-    end)
-    U.Enabled(previous, page > 0)
-    U.Enabled(nextPage, page < pages - 1)
-    if not ui.guideInventoryTarget then
-        ui.guideInventoryTarget = page < pages - 1 and nextPage or page > 0 and previous or nil
-        ui.guideInventoryLabel = page < pages - 1 and L.NEXT or L.PREVIOUS
+    if not ui.guideInventoryTarget and pages > 1 then
+        ui.guideInventoryTarget, ui.guideInventoryLabel = ui.bagCarousel, L.SCROLL_HORIZONTAL_HINT
     end
-    previous.text:SetJustifyH("CENTER")
-    nextPage.text:SetJustifyH("CENTER")
-    line(
-        p,
-        L.PAGE_PREFIX
-            .. (page + 1)
-            .. L.FRAGMENT_OF
-            .. pages
-            .. L.FRAGMENT_POWER_COMPARED_WITH
-            .. hero.name,
-        742,
-        bottom + 5,
-        420,
-        12,
-        T.muted
-    ):SetJustifyH("CENTER")
 end
 
 local function disenchant(ui, p, s)
@@ -617,60 +602,79 @@ local function disenchant(ui, p, s)
     end)
     line(p, L.TURN_SPARE_EQUIPMENT_INTO_GOLD_AND_RELIC_DUST_EQUIPPED, 0, 36, 1296, 14, T.muted)
     line(p, L.STORED_EQUIPMENT_HEADING, 0, 76, 792, 12, T.gold)
-    for row = 1, 5 do
-        local entry = entries[page * 5 + row]
-        if entry then
-            local item = entry.item
-            local b = U.SelectButton(p, "", 0, 102 + (row - 1) * 50, 792, 46, function()
-                ui.disenchantItem = item
-                ui:Refresh()
-            end, item == selected)
-            b.text:Hide()
-            U.Begin(b)
-            U.Icon(b, item.icon or slotIcons[item.slot], 12, 7, 32):SetParent(b.content or b)
-            line(
-                b,
-                G.ItemName(item) .. " ×" .. (item.count or 1),
-                62,
-                4,
-                580,
-                14,
-                C.qualityColors[item.quality]
-            )
-            line(
-                b,
-                C.slots[item.slot]
-                    .. " · "
-                    .. (item.heirloom and L.HEIRLOOM or L.LEVEL_PREFIX .. item.level)
-                    .. " · "
-                    .. C.qualityNames[item.quality],
-                62,
-                23,
-                580,
-                11,
-                T.muted
-            )
-            line(
-                b,
-                item.heirloom and L.HEIRLOOM
-                    or item.protected and L.PROTECTED
-                    or item == selected and L.SELECTED
-                    or L.SELECT,
-                656,
-                14,
-                120,
-                12,
-                (item.protected or item.heirloom) and T.gold or T.muted
-            ):SetJustifyH("RIGHT")
-            U.EndBuild(b)
-            U.Tooltip(
-                b,
-                G.ItemName(item),
-                G.ItemDescription(item, s.heroes[ui.selected], true),
-                360
-            )
+    ui.disenchantCarousel = U.Carousel(
+        p,
+        0,
+        102,
+        792,
+        278,
+        page,
+        pages,
+        function(pane, pageIndex, current, carousel)
+            for row = 1, 5 do
+                local entry = entries[pageIndex * 5 + row]
+                if entry then
+                    local item = entry.item
+                    local b = U.SelectButton(pane, "", 0, (row - 1) * 50, 752, 46, function()
+                        ui.disenchantItem = item
+                        ui:Refresh()
+                    end, item == selected)
+                    U.CarouselItem(b, carousel)
+                    b:EnableMouse(current)
+                    b.text:Hide()
+                    U.Begin(b)
+                    U.Enabled(b, true)
+                    U.Icon(b, item.icon or slotIcons[item.slot], 12, 7, 32)
+                        :SetParent(b.content or b)
+                    line(
+                        b,
+                        G.ItemName(item) .. " ×" .. (item.count or 1),
+                        62,
+                        4,
+                        540,
+                        14,
+                        C.qualityColors[item.quality]
+                    )
+                    line(
+                        b,
+                        C.slots[item.slot]
+                            .. " · "
+                            .. (item.heirloom and L.HEIRLOOM or L.LEVEL_PREFIX .. item.level)
+                            .. " · "
+                            .. C.qualityNames[item.quality],
+                        62,
+                        23,
+                        540,
+                        11,
+                        T.muted
+                    )
+                    line(
+                        b,
+                        item.heirloom and L.HEIRLOOM
+                            or item.protected and L.PROTECTED
+                            or item == selected and L.SELECTED
+                            or L.SELECT,
+                        616,
+                        14,
+                        120,
+                        12,
+                        (item.protected or item.heirloom) and T.gold or T.muted
+                    ):SetJustifyH("RIGHT")
+                    U.EndBuild(b)
+                    U.Tooltip(
+                        b,
+                        G.ItemName(item),
+                        G.ItemDescription(item, s.heroes[ui.selected], true),
+                        360
+                    )
+                end
+            end
+        end,
+        function(value)
+            ui.disenchantPage = value
+            ui:Refresh()
         end
-    end
+    )
     if #entries == 0 then
         line(p, L.NO_STORED_EQUIPMENT, 12, 133, 760, 20)
         U.Text(
@@ -683,31 +687,6 @@ local function disenchant(ui, p, s)
             740
         )
     end
-    local previous = U.Button(p, L.PREVIOUS, 0, 376, 116, 32, function()
-        ui.disenchantPage = page - 1
-        ui:Refresh()
-    end)
-    local nextPage = U.Button(p, L.NEXT, 676, 376, 116, 32, function()
-        ui.disenchantPage = page + 1
-        ui:Refresh()
-    end)
-    U.Enabled(previous, page > 0)
-    U.Enabled(nextPage, page < pages - 1)
-    line(
-        p,
-        L.PAGE_PREFIX
-            .. (page + 1)
-            .. L.FRAGMENT_OF
-            .. pages
-            .. " · "
-            .. #entries
-            .. L.STACKS_SUFFIX,
-        136,
-        383,
-        520,
-        13,
-        T.muted
-    ):SetJustifyH("CENTER")
 
     line(p, L.SELECTED_STACK_HEADING, 848, 76, 448, 12, T.gold)
     line(

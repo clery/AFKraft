@@ -131,3 +131,114 @@ test("Journal bonus progress remains visible after pooled redraws", function()
         assertEquals(510, ui.journalProgress:GetWidth())
     end
 end)
+
+test("Monthly rewards scroll horizontally and reopen at the latest earned rank", function()
+    local W, s, ui = fixture()
+    s.journal.xp = 8 * W.Content.journal.xpPerRank
+    s.journal.claimed = 3
+    click(ui.journalTabs.contracts)
+    click(ui.journalTabs.track)
+    local track = ui.journalTrack
+    assertEquals(20, #track.nodes)
+    assertEquals(7 * 208, track.scroll:GetHorizontalScroll())
+    assertEquals(W.L.AVAILABLE, track.nodes[8].status:GetText())
+    assertEquals(W.L.COMPLETE, track.nodes[3].status:GetText())
+    assertFalse(track.nodes[8].icon:IsDesaturated())
+    assertTrue(track.nodes[9].icon:IsDesaturated())
+    track.scroll:GetScript("OnMouseWheel")(track.scroll, 1)
+    assertEquals(7 * 208, track.scroll:GetHorizontalScroll())
+    track:GetScript("OnUpdate")(track, 0.08)
+    assertTrue(track.scroll:GetHorizontalScroll() > 6 * 208)
+    assertTrue(track.scroll:GetHorizontalScroll() < 7 * 208)
+    ui:Refresh()
+    track:GetScript("OnUpdate")(track, 0.3)
+    assertEquals(6 * 208, track.scroll:GetHorizontalScroll())
+    track.scroll:GetScript("OnMouseWheel")(track.scroll, 1)
+    track:GetScript("OnUpdate")(track, 0.3)
+    assertEquals(5 * 208, track.scroll:GetHorizontalScroll())
+    track.scroll:GetScript("OnMouseWheel")(track.scroll, -1)
+    track:GetScript("OnUpdate")(track, 0.3)
+    assertEquals(6 * 208, track.scroll:GetHorizontalScroll())
+    click(ui.journalTabs.contracts)
+    assertFalse(track:IsShown())
+    click(ui.journalTabs.track)
+    assertEquals(7 * 208, track.scroll:GetHorizontalScroll())
+    local function count(frame)
+        local total = select("#", frame:GetRegions()) + 1
+        for _, child in ipairs({ frame:GetChildren() }) do
+            total = total + count(child)
+        end
+        return total
+    end
+    local before = count(track)
+    for _ = 1, 10 do
+        ui:Refresh()
+    end
+    assertEquals(before, count(track))
+    ui:SetTab("adventure")
+    assertFalse(track:IsShown())
+    ui:SetTab("journal")
+    assertEquals(7 * 208, track.scroll:GetHorizontalScroll())
+    ui.frame:Hide()
+    track.scroll:SetHorizontalScroll(0)
+    ui.frame:Show()
+    assertEquals(7 * 208, track.scroll:GetHorizontalScroll())
+end)
+
+test("Reward track aligns the first and final ranks and respects compact mode", function()
+    local W, s, ui = fixture()
+    ui.journalMode = "contracts"
+    ui:Refresh()
+    click(ui.journalTabs.track)
+    local track = ui.journalTrack
+    assertEquals(0, track.scroll:GetHorizontalScroll())
+    assertFalse(track.left:IsShown())
+    click(ui.journalTabs.contracts)
+    s.journal.xp = W.Content.journal.ranks * W.Content.journal.xpPerRank
+    click(ui.journalTabs.track)
+    assertEquals(19 * 208, track.scroll:GetHorizontalScroll())
+    assertFalse(track.right:IsShown())
+    local _, _, _, offset = track.nodes[20]:GetPoint(1)
+    assertEquals(offset, track.scroll:GetHorizontalScroll())
+    s.ui.compact = true
+    ui:ApplyMode()
+    assertFalse(track:IsShown())
+    s.ui.compact = false
+    ui:ApplyMode()
+    assertTrue(track:IsShown())
+    assertEquals(19 * 208, track.scroll:GetHorizontalScroll())
+end)
+
+test(
+    "Smooth reward scrolling accumulates bursts, reverses immediately and stops at boundaries",
+    function()
+        local W, s, ui = fixture()
+        s.journal.xp = 8 * W.Content.journal.xpPerRank
+        click(ui.journalTabs.contracts)
+        click(ui.journalTabs.track)
+        local track = ui.journalTrack
+        assertEquals(nil, track.slider)
+        local wheel = track.scroll:GetScript("OnMouseWheel")
+        wheel(track.scroll, -1)
+        wheel(track.scroll, -1)
+        assertEquals(9 * 208, track.target)
+        track:GetScript("OnUpdate")(track, 0.08)
+        local before = track.scroll:GetHorizontalScroll()
+        wheel(track.scroll, 1)
+        track:GetScript("OnUpdate")(track, 0.04)
+        assertTrue(track.scroll:GetHorizontalScroll() < before)
+        wheel(track.scroll, 100)
+        track:GetScript("OnUpdate")(track, 1)
+        assertEquals(0, track.scroll:GetHorizontalScroll())
+        assertEquals(nil, track:GetScript("OnUpdate"))
+        wheel(track.scroll, -100)
+        track:GetScript("OnUpdate")(track, 1)
+        assertEquals(19 * 208, track.scroll:GetHorizontalScroll())
+        assertEquals(nil, track:GetScript("OnUpdate"))
+        wheel(track.scroll, 1)
+        click(ui.journalTabs.contracts)
+        assertEquals(nil, track:GetScript("OnUpdate"))
+        click(ui.journalTabs.track)
+        assertEquals(7 * 208, track.scroll:GetHorizontalScroll())
+    end
+)

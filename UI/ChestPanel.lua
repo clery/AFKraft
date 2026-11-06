@@ -93,7 +93,7 @@ end
 local function scene(ui, parent)
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetPoint("TOPLEFT", 0, -128)
-    frame:SetSize(1296, 170)
+    frame:SetSize(960, 170)
     frame.glow = frame:CreateTexture(nil, "BACKGROUND")
     frame.glow:SetTexture("Interface\\Cooldown\\star4")
     frame.glow:SetBlendMode("ADD")
@@ -127,7 +127,7 @@ local function scene(ui, parent)
         spark:SetSize(18, 50)
         frame.sparks[i] = spark
     end
-    frame.label = U.SingleLine(U.Text(frame, "", 340, 143, 18, T.gold), 616, 26, "CENTER")
+    frame.label = U.SingleLine(U.Text(frame, "", 172, 143, 18, T.gold), 616, 26, "CENTER")
     frame:SetScript("OnUpdate", function(self, dt)
         if ui.chestResultElapsed and ui.chestResultElapsed < 1 then
             ui.chestResultElapsed = math.min(1, ui.chestResultElapsed + dt)
@@ -242,9 +242,11 @@ end
 function P.Draw(ui, parent, state)
     if not ui.chestFrame then
         local frame = CreateFrame("Frame", nil, ui.workspace)
-        frame:SetAllPoints(parent)
+        frame:SetPoint("TOP", parent, "TOP", 0, 0)
+        frame:SetSize(960, parent:GetHeight())
         frame:SetScript("OnHide", function()
             reveal(ui, true)
+            ui.chestReport, ui.chestPage, ui.chestResultElapsed = nil, 0, 1
         end)
         ui.chestFrame = frame
         ui.chestScene = scene(ui, frame)
@@ -260,8 +262,8 @@ function P.Draw(ui, parent, state)
     end
     U.Begin(frame)
     local total = G.ChestCount(state, ui.chestZone)
-    U.Text(frame, string.format(L.CHESTS_WAITING, total), 0, 0, 23, T.gold, 1100)
-    U.Help(frame, L.CHESTS, 1258, 0, L.CHESTS_DESCRIPTION)
+    U.Text(frame, string.format(L.CHESTS_WAITING, total), 0, 0, 23, T.gold, 470)
+    U.Help(frame, L.CHESTS, 922, 0, L.CHESTS_DESCRIPTION)
     local sources = { { id = "any", name = L.ALL_CHEST_SOURCES } }
     local counts = {}
     for _, chest in ipairs(state.chests) do
@@ -277,7 +279,7 @@ function P.Draw(ui, parent, state)
         ui.chestZone and C.zoneByID[ui.chestZone].name or L.ALL_CHEST_SOURCES,
         0,
         48,
-        330,
+        240,
         sources,
         ui.chestZone or "any",
         function(value)
@@ -292,7 +294,7 @@ function P.Draw(ui, parent, state)
         { "all", L.OPEN_ALL_CHESTS },
     }) do
         local quantity = entry[1]
-        local control = U.Button(frame, entry[2], 350 + (index - 1) * 180, 48, 164, 32, function()
+        local control = U.Button(frame, entry[2], 256 + (index - 1) * 144, 48, 132, 32, function()
             open(ui, quantity)
         end, false, index == 3 and "primary" or nil)
         U.Enabled(control, total > 0)
@@ -301,9 +303,9 @@ function P.Draw(ui, parent, state)
     ui.chestInstant = U.Checkbox(
         frame,
         L.INSTANT_CHEST_REVEAL,
-        920,
+        700,
         48,
-        370,
+        260,
         state.settings.instantChestReveal,
         function(value)
             state.settings.instantChestReveal = value
@@ -319,7 +321,7 @@ function P.Draw(ui, parent, state)
         L.CHEST_AUTO_EQUIP,
         0,
         88,
-        1250,
+        960,
         state.settings.chestAutoEquip,
         function(value)
             state.settings.chestAutoEquip = value
@@ -361,7 +363,7 @@ function P.Draw(ui, parent, state)
     ui.chestResultButtons, ui.chestHighlights = {}, {}
     ui.chestSkip = nil
     if opening then
-        ui.chestSkip = U.Button(frame, L.REVEAL_NOW, 1030, 0, 200, 32, function()
+        ui.chestSkip = U.Button(frame, L.REVEAL_NOW, 704, 0, 200, 32, function()
             finish(ui)
         end, false, "primary")
     end
@@ -390,121 +392,130 @@ function P.Draw(ui, parent, state)
                 15,
                 T.muted
             ),
-            1296,
+            960,
             24
         )
-        local pages = math.max(1, math.ceil(#report.entries / 6))
+        local pages = math.max(1, math.ceil(#report.entries / 9))
         ui.chestPage = math.max(0, math.min(ui.chestPage or 0, pages - 1))
-        for position = 1, 6 do
-            local entry = report.entries[ui.chestPage * 6 + position]
-            if entry then
-                local x, y = (position - 1) % 3 * 440, 347 + math.floor((position - 1) / 3) * 140
-                local item = entry.item
-                local stored = entry.uid and storedItem(state, entry.uid)
-                local recipient, gain
-                if stored then
-                    recipient, gain = G.UpgradeRecipient(state, stored)
-                end
-                local card = U.Card(frame, x, y, 416, 128)
-                U.Begin(card)
-                local color = C.qualityColors[item.quality]
-                U.Rect(card, 0, 0, 3, 128, color)
-                local highlight = U.Rect(card, 3, 0, 413, 128, color, 0.2)
-                highlight:SetAlpha(0)
-                ui.chestHighlights[#ui.chestHighlights + 1] = highlight
-                U.Icon(card, item.icon, 14, 14, 40):SetParent(card.content or card)
-                U.SingleLine(
-                    U.Text(
-                        card,
-                        G.ItemName(item) .. " ×" .. entry.count,
-                        68,
-                        12,
-                        14,
-                        C.qualityColors[item.quality]
-                    ),
-                    332,
-                    24
-                )
-                U.SingleLine(
-                    U.Text(
-                        card,
-                        C.zoneByID[entry.zone].name .. " · " .. C.qualityNames[item.quality],
-                        68,
-                        40,
-                        12,
-                        T.muted
-                    ),
-                    332,
-                    22
-                )
-                U.SingleLine(
-                    U.Text(
-                        card,
-                        recipient
-                                and string.format(
-                                    L.UPGRADE_SPOTLIGHT_GAIN,
-                                    state.heroes[recipient].name,
-                                    gain
-                                )
-                            or entry.equipped and string.format(
-                                L.CHEST_AUTO_ITEM,
-                                entry.equipped,
-                                entry.disenchanted or 0
-                            )
-                            or entry.disenchanted and L.CHEST_ITEM_DISENCHANTED
-                            or not entry.kept and L.CHEST_ITEM_SALVAGED
-                            or stored and L.CHEST_ITEM_STORED
-                            or L.CHEST_ITEM_COLLECTED,
-                        14,
-                        83,
-                        12,
-                        recipient and T.green or T.muted
-                    ),
-                    recipient and 254 or 386,
-                    28
-                )
-                if recipient then
-                    local equip = U.Button(card, L.EQUIP, 282, 83, 118, 28, function()
-                        local current, inventoryIndex = storedItem(state, entry.uid)
-                        local hero = state.heroes[recipient]
-                        if
-                            current
-                            and G.CanEquip(hero, current)
-                            and G.ItemPower(current, hero)
-                                > G.ItemPower(hero.gear[current.slot], hero)
-                        then
-                            W.Action(G.Equip, recipient, inventoryIndex)
+        ui.chestCarousel = U.Carousel(
+            frame,
+            0,
+            347,
+            960,
+            308,
+            ui.chestPage,
+            pages,
+            function(pane, pageIndex, visiblePage, carousel)
+                for position = 1, 9 do
+                    local entry = report.entries[pageIndex * 9 + position]
+                    if entry then
+                        local x, y = (position - 1) % 3 * 308, math.floor((position - 1) / 3) * 92
+                        local item = entry.item
+                        local stored = entry.uid and storedItem(state, entry.uid)
+                        local recipient, gain
+                        if stored then
+                            recipient, gain = G.UpgradeRecipient(state, stored)
                         end
-                    end)
-                    ui.chestResultButtons[#ui.chestResultButtons + 1] = equip
+                        local card = U.Card(pane, x, y, 292, 84)
+                        U.CarouselItem(card, carousel)
+                        card:EnableMouse(visiblePage)
+                        U.Begin(card)
+                        local color = C.qualityColors[item.quality]
+                        U.Rect(card, 0, 0, 3, 84, color)
+                        local highlight = U.Rect(card, 3, 0, 289, 84, color, 0.2)
+                        highlight:SetAlpha(0)
+                        ui.chestHighlights[#ui.chestHighlights + 1] = highlight
+                        U.Icon(card, item.icon, 10, 10, 32):SetParent(card.content or card)
+                        U.SingleLine(
+                            U.Text(
+                                card,
+                                G.ItemName(item) .. " ×" .. entry.count,
+                                52,
+                                5,
+                                14,
+                                C.qualityColors[item.quality]
+                            ),
+                            230,
+                            24
+                        )
+                        U.SingleLine(
+                            U.Text(
+                                card,
+                                C.zoneByID[entry.zone].name
+                                    .. " · "
+                                    .. C.qualityNames[item.quality],
+                                52,
+                                27,
+                                12,
+                                T.muted
+                            ),
+                            230,
+                            22
+                        )
+                        U.SingleLine(
+                            U.Text(
+                                card,
+                                recipient
+                                        and string.format(
+                                            L.UPGRADE_SPOTLIGHT_GAIN,
+                                            state.heroes[recipient].name,
+                                            gain
+                                        )
+                                    or entry.equipped and string.format(
+                                        L.CHEST_AUTO_ITEM,
+                                        entry.equipped,
+                                        entry.disenchanted or 0
+                                    )
+                                    or entry.disenchanted and L.CHEST_ITEM_DISENCHANTED
+                                    or not entry.kept and L.CHEST_ITEM_SALVAGED
+                                    or stored and L.CHEST_ITEM_STORED
+                                    or L.CHEST_ITEM_COLLECTED,
+                                10,
+                                53,
+                                12,
+                                recipient and T.green or T.muted
+                            ),
+                            recipient and 192 or 272,
+                            28
+                        )
+                        if recipient then
+                            local equip = U.Button(card, L.EQUIP, 210, 50, 72, 28, function()
+                                local current, inventoryIndex = storedItem(state, entry.uid)
+                                local hero = state.heroes[recipient]
+                                if
+                                    current
+                                    and G.CanEquip(hero, current)
+                                    and G.ItemPower(current, hero)
+                                        > G.ItemPower(hero.gear[current.slot], hero)
+                                then
+                                    W.Action(G.Equip, recipient, inventoryIndex)
+                                end
+                            end)
+                            U.CarouselItem(equip, carousel)
+                            equip:EnableMouse(visiblePage)
+                            ui.chestResultButtons[#ui.chestResultButtons + 1] = equip
+                        end
+                        U.EndBuild(card)
+                        U.Tooltip(
+                            card,
+                            G.ItemName(item),
+                            G.ItemDescription(
+                                item,
+                                recipient and state.heroes[recipient] or nil,
+                                recipient ~= nil
+                            ),
+                            370
+                        )
+                    end
                 end
-                U.EndBuild(card)
-                U.Tooltip(
-                    card,
-                    G.ItemName(item),
-                    G.ItemDescription(
-                        item,
-                        recipient and state.heroes[recipient] or nil,
-                        recipient ~= nil
-                    ),
-                    370
-                )
+            end,
+            function(value)
+                ui.chestPage = value
+                ui:Refresh()
             end
-        end
-        if pages > 1 then
-            local previous = U.Button(frame, L.PREVIOUS, 0, 644, 170, 30, function()
-                ui.chestPage = ui.chestPage - 1
-                ui:Refresh()
-            end)
-            local nextPage = U.Button(frame, L.NEXT, 1126, 644, 170, 30, function()
-                ui.chestPage = ui.chestPage + 1
-                ui:Refresh()
-            end)
-            U.Enabled(previous, ui.chestPage > 0)
-            U.Enabled(nextPage, ui.chestPage < pages - 1)
-        end
+        )
     else
-        U.Text(frame, L.CHESTS_DESCRIPTION, 280, 340, 17, T.muted, 736)
+        U.Text(frame, L.CHESTS_DESCRIPTION, 112, 340, 17, T.muted, 736)
     end
     U.EndBuild(frame)
 end

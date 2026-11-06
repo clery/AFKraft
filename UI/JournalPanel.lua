@@ -53,6 +53,156 @@ local function contract(parent, entry, id, x, y)
     progress(parent, x + 14, y + 76, 594, value, target)
 end
 
+local rankSpacing = 208
+
+local function circle(parent, size, layer, color)
+    local texture = parent:CreateTexture(nil, layer)
+    texture:SetSize(size, size)
+    texture:SetPoint("TOPLEFT", (192 - size) / 2, -140 + size / 2)
+    texture:SetColorTexture(unpack(color))
+    local mask = parent:CreateMaskTexture()
+    mask:SetAllPoints(texture)
+    mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+    texture:AddMaskTexture(mask)
+    return texture
+end
+
+local function rewardIcon(rank)
+    if rank == 20 then
+        return C.journalTitles[4].icon
+    end
+    if rank % 5 == 0 then
+        return "INV_Misc_Book_09"
+    end
+    if rank % 4 == 0 then
+        return "INV_Misc_TreasureChest01a"
+    end
+    return rank % 2 == 0 and "Trade_BlackSmithing" or "INV_Misc_Coin_01"
+end
+
+local function scrollTrack(frame, value, instant)
+    value = math.max(0, math.min((C.journal.ranks - 1) * rankSpacing, value))
+    if not instant and value == frame.target then
+        return
+    end
+    frame.target = value
+    frame.left:SetShown(value > 0)
+    frame.right:SetShown(value < (C.journal.ranks - 1) * rankSpacing)
+    GameTooltip:Hide()
+    frame:SetScript("OnUpdate", nil)
+    if instant then
+        frame.scroll:SetHorizontalScroll(value)
+        frame.direction = nil
+        return
+    end
+    local start, elapsed = frame.scroll:GetHorizontalScroll(), 0
+    frame:SetScript("OnUpdate", function(self, dt)
+        elapsed = math.min(0.28, elapsed + dt)
+        local t = elapsed / 0.28
+        self.scroll:SetHorizontalScroll(start + (value - start) * (1 - (1 - t) ^ 3))
+        if elapsed >= 0.28 then
+            self.scroll:SetHorizontalScroll(value)
+            self.direction = nil
+            self:SetScript("OnUpdate", nil)
+        end
+    end)
+end
+
+local function createTrack(parent)
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetPoint("TOPLEFT", 0, -160)
+    frame:SetSize(1296, 410)
+    frame.scroll = CreateFrame("ScrollFrame", nil, frame)
+    frame.scroll:SetPoint("TOPLEFT")
+    frame.scroll:SetSize(1296, 352)
+    frame.scroll:SetClipsChildren(true)
+    local maximum = (C.journal.ranks - 1) * rankSpacing
+    frame.content = CreateFrame("Frame", nil, frame.scroll)
+    -- Trailing space lets the final earned rank align left, too.
+    frame.content:SetSize(maximum + 1296, 352)
+    frame.scroll:SetScrollChild(frame.content)
+    U.Rect(frame.content, 96, 136, maximum, 8, T.line)
+    frame.progress = U.Rect(frame.content, 96, 136, 1, 8, T.gold, 1, "ARTWORK")
+    local function move(delta)
+        if delta == 0 then
+            return
+        end
+        local base = frame.target or frame.scroll:GetHorizontalScroll()
+        if frame.direction and frame.direction * delta < 0 then
+            base = frame.scroll:GetHorizontalScroll()
+        end
+        frame.direction = delta
+        scrollTrack(frame, base + delta)
+    end
+    frame.left, frame.right = U.ScrollEdges(frame, 352)
+    U.SingleLine(U.Text(frame, L.SCROLL_HORIZONTAL_HINT, 0, 372, 12, T.muted), 1296, 26, "CENTER")
+    local function wheel(_, delta)
+        move(-delta * rankSpacing)
+    end
+    frame.scroll:EnableMouseWheel(true)
+    frame.scroll:SetScript("OnMouseWheel", wheel)
+    frame.nodes = {}
+    for rank = 1, C.journal.ranks do
+        local node = CreateFrame("Frame", nil, frame.content)
+        node:SetPoint("TOPLEFT", (rank - 1) * rankSpacing, 0)
+        node:SetSize(192, 336)
+        node:EnableMouse(true)
+        node:EnableMouseWheel(true)
+        node:SetScript("OnMouseWheel", wheel)
+        circle(node, 108, "BACKGROUND", T.bg)
+        node.rim = circle(node, 100, "BORDER", { 1, 1, 1 })
+        circle(node, 90, "ARTWORK", T.bg)
+        node.icon = circle(node, 82, "OVERLAY", { 1, 1, 1 })
+        node.icon:SetTexture("Interface\\Icons\\" .. rewardIcon(rank))
+        node.rank =
+            U.SingleLine(U.Text(node, L.RANK_PREFIX .. rank, 0, 40, 18, T.gold), 192, 30, "CENTER")
+        node.reward = U.Text(node, "", 0, 208, 14, T.text, 192)
+        node.reward:SetHeight(64)
+        node.reward:SetJustifyH("CENTER")
+        node.status = U.SingleLine(U.Text(node, "", 0, 292, 12, T.muted), 192, 26, "CENTER")
+        frame.nodes[rank] = node
+    end
+    frame:SetScript("OnHide", function()
+        frame.focusState, frame.target, frame.direction = nil, nil, nil
+        frame:SetScript("OnUpdate", nil)
+    end)
+    return frame
+end
+
+local function drawTrack(ui, parent, state, rank)
+    ui.journalTrack = ui.journalTrack or createTrack(parent)
+    local frame, j = ui.journalTrack, state.journal
+    frame:Show()
+    local partial = rank < C.journal.ranks and j.xp % C.journal.xpPerRank / C.journal.xpPerRank or 0
+    frame.progress:SetWidth(math.max(0.01, (rank - 1 + partial) * rankSpacing))
+    for rewardRank, node in ipairs(frame.nodes) do
+        local claimed, earned = rewardRank <= j.claimed, rewardRank <= rank
+        local color = claimed and T.green or earned and T.gold or T.muted
+        node.rim:SetVertexColor(unpack(color))
+        node.icon:SetDesaturated(not earned)
+        node.icon:SetAlpha(earned and 1 or 0.45)
+        node.rank:SetTextColor(unpack(color))
+        node.reward:SetText(G.JournalReward(rewardRank, state, ui.journalHero))
+        node.reward:SetTextColor(unpack(earned and T.text or T.muted))
+        node.status:SetText(
+            claimed and L.COMPLETE
+                or earned and L.AVAILABLE
+                or rewardRank * C.journal.xpPerRank .. " " .. L.JOURNAL_XP
+        )
+        node.status:SetTextColor(unpack(color))
+        U.Tooltip(
+            node,
+            L.RANK_PREFIX .. rewardRank,
+            node.reward:GetText() .. "\n\n" .. node.status:GetText(),
+            320
+        )
+    end
+    if frame.focusState ~= state or frame.focusMonth ~= j.month then
+        scrollTrack(frame, (math.max(1, rank) - 1) * rankSpacing, true)
+        frame.focusState, frame.focusMonth = state, j.month
+    end
+end
+
 function P.Draw(ui, parent, state)
     local now = W.Client.Now()
     G.RefreshJournal(state, now)
@@ -60,6 +210,9 @@ function P.Draw(ui, parent, state)
     local nextReward, saved = G.JournalRewardRank(state)
     local _, nextMonth = G.JournalCalendar(j.day * 86400)
     ui.journalMode = ui.journalMode or "contracts"
+    if ui.journalTrack then
+        ui.journalTrack:SetShown(ui.journalMode == "track")
+    end
     local heroes, slots = {}, {}
     ui.journalHero = state.heroes[ui.journalHero] and ui.journalHero or 1
     ui.journalSlot = ui.journalSlot or 1
@@ -229,29 +382,7 @@ function P.Draw(ui, parent, state)
             progress(parent, x + 14, y + 94, 388, value, achievement.target)
         end
     else
-        for rewardRank = 1, C.journal.ranks do
-            local x, y = (rewardRank - 1) % 5 * 262, 160 + math.floor((rewardRank - 1) / 5) * 112
-            local claimed = rewardRank <= j.claimed
-            U.Rect(parent, x, y, 246, 100, T.panel, 0.8)
-            line(
-                parent,
-                L.RANK_PREFIX .. rewardRank .. (claimed and " · " .. L.COMPLETE or ""),
-                x + 12,
-                y + 10,
-                12,
-                claimed and T.green or T.gold,
-                222
-            )
-            U.Text(
-                parent,
-                G.JournalReward(rewardRank, state, ui.journalHero),
-                x + 12,
-                y + 40,
-                14,
-                rewardRank <= rank and T.text or T.muted,
-                222
-            )
-        end
+        drawTrack(ui, parent, state, rank)
         ui.journalHeroChoice = U.Choice(
             parent,
             state.heroes[ui.journalHero].name,

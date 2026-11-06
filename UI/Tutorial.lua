@@ -324,9 +324,10 @@ function Tutorial.Refresh(ui)
             show(
                 ui,
                 ui.guideInventoryTarget,
-                L.CLICK_PREFIX
-                    .. (ui.guideInventoryLabel or L.CLEAR_FILTERS)
-                    .. L.TO_FIND_EQUIPMENT_THIS_HERO_CAN_USE_SUFFIX
+                ui.guideInventoryLabel == L.SCROLL_HORIZONTAL_HINT and L.SCROLL_HORIZONTAL_HINT
+                    or L.CLICK_PREFIX
+                        .. (ui.guideInventoryLabel or L.CLEAR_FILTERS)
+                        .. L.TO_FIND_EQUIPMENT_THIS_HERO_CAN_USE_SUFFIX
             )
         end
     elseif step == 3 then

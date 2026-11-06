@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.esES = {
+    SCROLL_HORIZONTAL_HINT = "Desplázate horizontalmente para explorar",
+    SCROLL_VERTICAL_HINT = "Desplázate para explorar",
+
     COLLECTION_COMPLETE = "¡Colección completada!",
     COLLECTION_EFFECT_UNLOCKED = "Efecto desbloqueado: %s",
 

@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.ruRU = {
+    SCROLL_HORIZONTAL_HINT = "Прокручивайте вбок для просмотра",
+    SCROLL_VERTICAL_HINT = "Прокручивайте для просмотра",
+
     COLLECTION_COMPLETE = "Коллекция собрана!",
     COLLECTION_EFFECT_UNLOCKED = "Открыт эффект: %s",
 

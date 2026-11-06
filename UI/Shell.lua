@@ -70,6 +70,30 @@ function UI:SetTab(tab)
         self:Layout()
     end
     self:Refresh()
+    self:RevealMenu(tab)
+end
+
+function UI:SetMenuOffset(value)
+    local maximum = math.max(0, self.menuContent:GetHeight() - self.menuScroll:GetHeight())
+    value = math.max(0, math.min(maximum, value))
+    self.menuScroll:SetVerticalScroll(value)
+    self.menuTopCue:SetShown(value > 0)
+    self.menuBottomCue:SetShown(value < maximum)
+    GameTooltip:Hide()
+end
+
+function UI:RevealMenu(tab)
+    local control = self.tabs[tab == "workshop" and "crafting" or tab]
+    if not control or not self.menuScroll then
+        return
+    end
+    local offset = self.menuScroll:GetVerticalScroll()
+    local bottom = control.menuY + control:GetHeight()
+    if control.menuY < offset then
+        self:SetMenuOffset(control.menuY)
+    elseif bottom > offset + self.menuScroll:GetHeight() then
+        self:SetMenuOffset(bottom - self.menuScroll:GetHeight())
+    end
 end
 
 function UI:SaveGeometry()
@@ -182,6 +206,14 @@ function UI:Layout()
         if frame then
             frame:SetShown(not compact and W.state.ui.tab == tab and not W.catchup)
         end
+    end
+    if self.journalTrack then
+        self.journalTrack:SetShown(
+            not compact
+                and W.state.ui.tab == "journal"
+                and self.journalMode == "track"
+                and not W.catchup
+        )
     end
     self.adventureCompact.frame:EnableMouse(not W.state.ui.locked)
     self.grip:SetShown(not self.fullscreen or compact)
@@ -685,18 +717,43 @@ function W.CreateUI()
         return ui.sectionDetail:GetText()
     end)
     ui.battleState = U.SingleLine(U.Text(workspace, "", 790, 113, 14, T.muted), 220, 22, "RIGHT")
-    local y = 118
+    local menu = CreateFrame("ScrollFrame", nil, expanded)
+    menu:SetPoint("TOPLEFT", 20, -108)
+    menu:SetSize(228, 668)
+    menu:SetClipsChildren(true)
+    ui.menuScroll = menu
+    local menuContent = CreateFrame("Frame", nil, menu)
+    menuContent:SetSize(228, 680)
+    menu:SetScrollChild(menuContent)
+    ui.menuContent = menuContent
+    ui.menuTopCue = U.Rect(menu, 0, 0, 228, 2, T.gold, 0.4, "OVERLAY")
+    ui.menuBottomCue = U.Rect(menu, 0, 666, 228, 2, T.gold, 0.4, "OVERLAY")
+    U.SingleLine(U.Text(expanded, L.SCROLL_VERTICAL_HINT, 24, 786, 11, T.muted), 220, 18, "CENTER")
+    local function wheel(_, delta)
+        ui:SetMenuOffset(menu:GetVerticalScroll() - delta * 64)
+    end
+    menu:EnableMouseWheel(true)
+    menu:SetScript("OnMouseWheel", wheel)
+    local y = 10
+    ui.menuHeadings = {}
     for _, entry in ipairs(tabs) do
         local id = entry[1]
         if entry[3] then
-            U.Text(expanded, entry[3], 32, y, 12, T.muted, 204)
+            if y > 10 then
+                y = y + 16
+            end
+            ui.menuHeadings[#ui.menuHeadings + 1] =
+                U.Text(menuContent, entry[3], 12, y, 12, T.muted, 204)
             y = y + 26
         end
-        local tab = U.SelectButton(expanded, "", 24, y, 220, 38, function()
+        local tab = U.SelectButton(menuContent, "", 4, y, 220, 38, function()
             if not W.Tutorial.MenuHint(W.state, id) then
                 ui:SetTab(id)
             end
         end)
+        tab.menuY = y
+        tab:EnableMouseWheel(true)
+        tab:SetScript("OnMouseWheel", wheel)
         tab.text:ClearAllPoints()
         tab.text:SetPoint("TOPLEFT", 42, -2)
         tab.text:SetFont(W.font, 14, "")
@@ -710,6 +767,8 @@ function W.CreateUI()
         ui.tabs[id] = tab
         y = y + 40
     end
+    menuContent:SetHeight(y + 4)
+    ui:SetMenuOffset(0)
     ui.forgeContainer = CreateFrame("Frame", nil, workspace)
     ui.forgeContainer:SetPoint("TOPLEFT", -12, -185)
     ui.forgeContainer:SetSize(1320, 674)

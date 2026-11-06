@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.deDE = {
+    SCROLL_HORIZONTAL_HINT = "Zum Durchsehen seitlich scrollen",
+    SCROLL_VERTICAL_HINT = "Zum Durchsehen scrollen",
+
     COLLECTION_COMPLETE = "Sammlung vollständig!",
     COLLECTION_EFFECT_UNLOCKED = "Effekt freigeschaltet: %s",
 

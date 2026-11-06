@@ -193,9 +193,17 @@ test("Selecting equipment is free and upgrading uses the displayed quote", funct
     assertEquals(1000, state.essence)
     local quote, power = W.Game.UpgradeCost(hero.gear[1]), W.Game.ItemPower(hero.gear[1], hero, 1)
     local upgrade
-    for button in ui.panel._pool.primary:EnumerateActive() do
-        if button:IsShown() and button.text:GetText() == "Upgrade +10% stats" then
-            upgrade = button
+    for box in ui.panel._pool.selection:EnumerateActive() do
+        if box._pool and box._pool.selection then
+            for button in box._pool.selection:EnumerateActive() do
+                if button:IsShown() and button.text:GetText() == "+" then
+                    upgrade = button
+                    break
+                end
+            end
+        end
+        if upgrade then
+            break
         end
     end
     assertNotNil(upgrade)

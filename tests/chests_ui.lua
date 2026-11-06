@@ -59,6 +59,8 @@ test("Instant reveal commits once and closing mid-animation never loses rewards"
     assertNotNil(ui.chestOpening)
     ui.frame:Hide()
     assertEquals(nil, ui.chestOpening)
+    assertEquals(nil, ui.chestReport)
+    assertEquals(0, ui.chestPage)
     assertEquals(2, state.inventory[1].count)
     W.state = assert(W.Game.Load(W.Game.Copy(state), 1100))
     ui.frame:Show()
@@ -132,7 +134,7 @@ test(
 test("Chest result pages retain all rewards and frame pools stabilize on refresh", function()
     local W, state, ui = fixture()
     state.settings.instantChestReveal = true
-    for index = 1, 9 do
+    for index = 1, 12 do
         local template = W.Content.items[index + 5]
         W.Game.StoreChest(
             state,
@@ -141,7 +143,9 @@ test("Chest result pages retain all rewards and frame pools stabilize on refresh
     end
     ui:Refresh()
     ui.chestControls.all:GetScript("OnClick")()
-    assertEquals(9, #ui.chestReport.entries)
+    assertEquals(12, #ui.chestReport.entries)
+    assertEquals(960, ui.chestFrame:GetWidth())
+    assertEquals(960, ui.chestCarousel:GetWidth())
     ui.chestPage = 1
     ui:Refresh()
     assertEquals(1, ui.chestPage)
@@ -313,7 +317,7 @@ test(
         ui.chestControls[1]:GetScript("OnClick")()
         assertEquals(0, ui.chestElapsed)
         ui.frame:Hide()
-        assertEquals(6, ui.chestReport.count)
+        assertEquals(nil, ui.chestReport)
         assertEquals(6, state.inventory[1].count)
     end
 )
@@ -364,3 +368,50 @@ test(
         assertTrue(rotations[4] > 0)
     end
 )
+
+test("Leaving chest results clears salvaged history and finishes pending openings", function()
+    local W, state, ui = fixture()
+    state.salvage.minQuality, state.salvage.keepUpgrades, state.salvage.keepEffects =
+        4, false, false
+    state.settings.instantChestReveal = true
+    drop(W, state, 4, 2)
+    ui.chestControls[1]:GetScript("OnClick")()
+    assertTrue(ui.chestReport.salvaged > 0)
+    local gold, ore, inventory = state.gold, state.materials.ore, #state.inventory
+    ui:SetTab("party")
+    ui:SetTab("chests")
+    assertEquals(nil, ui.chestReport)
+    assertEquals(0, #ui.chestResultButtons)
+    assertEquals(gold, state.gold)
+    assertEquals(ore, state.materials.ore)
+    assertEquals(inventory, #state.inventory)
+    assertEquals(3, W.Game.ChestCount(state))
+    ui.chestControls[1]:GetScript("OnClick")()
+    state.settings.instantChestReveal = false
+    ui.chestControls[1]:GetScript("OnClick")()
+    ui.chestScene:GetScript("OnUpdate")(ui.chestScene, 0.3)
+    ui:SetTab("party")
+    ui:SetTab("chests")
+    assertEquals(nil, ui.chestOpening)
+    assertEquals(nil, ui.chestReport)
+    assertEquals(1, W.Game.ChestCount(state))
+end)
+
+test("Leaving chest results clears the session without consuming unopened chests", function()
+    local W, state, ui = fixture()
+    drop(W, state, 3, 3)
+    state.settings.instantChestReveal = true
+    ui.chestControls[1]:GetScript("OnClick")()
+    assertNotNil(ui.chestReport)
+    ui:SetTab("party")
+    assertEquals(nil, ui.chestReport)
+    assertEquals(nil, ui.chestOpening)
+    assertEquals(0, ui.chestPage)
+    assertEquals(2, W.Game.ChestCount(state))
+    assertEquals(1, state.inventory[1].count or 1)
+    ui:SetTab("chests")
+    assertEquals(nil, ui.chestReport)
+    ui.chestControls[1]:GetScript("OnClick")()
+    assertEquals(1, ui.chestReport.count)
+    assertEquals(2, state.inventory[1].count)
+end)

@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.frFR = {
+    SCROLL_HORIZONTAL_HINT = "Faites défiler horizontalement pour parcourir",
+    SCROLL_VERTICAL_HINT = "Faites défiler pour parcourir",
+
     COLLECTION_COMPLETE = "Collection complète !",
     COLLECTION_EFFECT_UNLOCKED = "Effet débloqué : %s",
 
