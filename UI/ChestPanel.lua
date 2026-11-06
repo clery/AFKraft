@@ -11,14 +11,70 @@ local function storedItem(state, uid)
     end
 end
 
-local function reveal(ui)
+local function mergeReport(previous, report)
+    if not previous then
+        return report
+    end
+    for _, key in ipairs({
+        "count",
+        "salvaged",
+        "duplicates",
+        "gold",
+        "ore",
+        "equipped",
+        "disenchanted",
+        "relic",
+        "powerGain",
+    }) do
+        if previous[key] or report[key] then
+            previous[key] = (previous[key] or 0) + (report[key] or 0)
+        end
+    end
+    previous.quality = math.max(previous.quality, report.quality)
+    for _, entry in ipairs(report.entries) do
+        local matched
+        for _, old in ipairs(previous.entries) do
+            if
+                old.uid == entry.uid
+                and old.zone == entry.zone
+                and old.kept == entry.kept
+                and (old.equipped ~= nil) == (entry.equipped ~= nil)
+                and (old.disenchanted ~= nil) == (entry.disenchanted ~= nil)
+                and old.item.slot == entry.item.slot
+                and old.item.level == entry.item.level
+                and old.item.quality == entry.item.quality
+                and G.SameItem(old.item, entry.item)
+            then
+                old.count = old.count + entry.count
+                if entry.equipped then
+                    old.equipped = old.equipped + entry.equipped
+                end
+                if entry.disenchanted then
+                    old.disenchanted = old.disenchanted + entry.disenchanted
+                end
+                matched = true
+                break
+            end
+        end
+        if not matched then
+            previous.entries[#previous.entries + 1] = entry
+        end
+    end
+    return previous
+end
+
+local function reveal(ui, silent)
     local report = ui.chestOpening
     if not report then
         return
     end
     ui.chestOpening = nil
-    if ui.chestState == W.state then
-        W.Audio.ChestReveal(W.state, report.quality)
+    ui.chestResultElapsed = silent and 1 or 0
+    ui.chestReport = mergeReport(ui.chestReport, report)
+    if not silent and ui.chestState == W.state then
+        if not ui.chestImpact then
+            W.Audio.ChestReveal(W.state, report.quality)
+        end
         for _, entry in ipairs(report.entries) do
             local item = entry.uid and storedItem(W.state, entry.uid)
             if item then
@@ -30,6 +86,7 @@ end
 
 local function finish(ui)
     reveal(ui)
+    ui.chestResultElapsed = 1
     ui:Refresh()
 end
 
@@ -53,16 +110,32 @@ local function scene(ui, parent)
         model:SetPoint("CENTER", i == 1 and 0 or i == 2 and -180 or 180, 18)
         frame.models[i] = model
     end
+    local effects = CreateFrame("Frame", nil, frame)
+    effects:SetAllPoints()
+    effects:SetFrameLevel(frame.models[1]:GetFrameLevel() + 1)
+    frame.flash = effects:CreateTexture(nil, "OVERLAY")
+    frame.flash:SetTexture("Interface\\Cooldown\\star4")
+    frame.flash:SetBlendMode("ADD")
+    frame.flash:SetPoint("CENTER", 0, 8)
+    frame.flash:SetSize(260, 150)
+    frame.flash:SetAlpha(0)
     frame.sparks = {}
-    for i = 1, 8 do
-        local spark = frame:CreateTexture(nil, "OVERLAY")
+    for i = 1, 12 do
+        local spark = effects:CreateTexture(nil, "OVERLAY")
         spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
         spark:SetBlendMode("ADD")
-        spark:SetSize(12, 24)
+        spark:SetSize(18, 50)
         frame.sparks[i] = spark
     end
     frame.label = U.SingleLine(U.Text(frame, "", 340, 143, 18, T.gold), 616, 26, "CENTER")
     frame:SetScript("OnUpdate", function(self, dt)
+        if ui.chestResultElapsed and ui.chestResultElapsed < 1 then
+            ui.chestResultElapsed = math.min(1, ui.chestResultElapsed + dt)
+            for index, highlight in ipairs(ui.chestHighlights or {}) do
+                local age = ui.chestResultElapsed - (index - 1) * 0.07
+                highlight:SetAlpha(age > 0 and math.max(0, 1 - age / 0.45) * 0.65 or 0)
+            end
+        end
         local report = ui.chestOpening
         if not report then
             return
@@ -74,33 +147,53 @@ local function scene(ui, parent)
         end
         ui.chestElapsed = ui.chestElapsed + dt
         local quality = report.quality
-        local duration = 1.2 + quality * 0.35
-        local progress = math.min(1, ui.chestElapsed / duration)
+        local charge = ui.chestCharge
+        local release = math.max(0, ui.chestElapsed - charge)
+        local burst = math.max(0, release - 0.95)
+        local progress = math.min(1, ui.chestElapsed / ui.chestDuration)
         local color = C.qualityColors[quality]
-        for _, model in ipairs(self.models) do
-            W.Client.ChestLight(model, color, progress * quality * 0.4)
+        local pose = release == 0 and "closed" or burst == 0 and "opening" or "opened"
+        local energy = release == 0 and ui.chestElapsed / charge * 0.45
+            or burst == 0 and 0.45 + release / 0.95 * 0.55
+            or math.max(0, 1 - burst / (ui.chestDuration - charge - 0.95))
+        if burst > 0 and not ui.chestImpact then
+            ui.chestImpact = true
+            W.Audio.ChestReveal(W.state, quality)
         end
+        for index, model in ipairs(self.models) do
+            W.Client.ChestPose(model, pose)
+            W.Client.ChestLight(model, color, energy * quality * 0.6)
+            model:ClearAllPoints()
+            model:SetPoint(
+                "CENTER",
+                (index == 1 and 0 or index == 2 and -180 or 180)
+                    + (release == 0 and math.sin(ui.chestElapsed * 70) * energy * 3 or 0),
+                18
+            )
+        end
+        self.flash:SetVertexColor(unpack(color))
+        self.flash:SetAlpha(burst > 0 and math.max(0, 1 - burst / 0.25) or 0)
         self.glow:SetVertexColor(unpack(color))
-        self.glow:SetRotation(progress * (0.4 + quality * 0.2))
-        self.glow:SetSize(120 + progress * quality * 55, 90 + progress * quality * 30)
-        self.glow:SetAlpha(
-            (0.12 + progress * 0.18 * quality) * (0.8 + 0.2 * math.sin(progress * 20))
-        )
-        self.chests[1]:SetSize(100 + progress * quality * 5, 100 + progress * quality * 5)
+        self.glow:SetRotation(ui.chestElapsed * 0.7)
+        self.glow:SetSize(180 + energy * quality * 90, 100 + energy * quality * 45)
+        self.glow:SetAlpha(math.min(1, energy * (0.35 + quality * 0.16)))
+        self.chests[1]:SetSize(100 + energy * 12, 100 + energy * 12)
         for i, spark in ipairs(self.sparks) do
-            local angle = i * math.pi / 4
-            local distance = 35 + progress * (40 + quality * 13)
+            local angle = i * math.pi / 6
+            local distance = burst > 0 and 45 + burst * (220 + quality * 45) or 35 + energy * 30
             spark:ClearAllPoints()
             spark:SetPoint(
                 "CENTER",
                 math.cos(angle) * distance,
-                8 + math.sin(angle) * distance * 0.5
+                8 + math.sin(angle) * distance * 0.45
             )
+            spark:SetRotation(angle - math.pi / 2)
             spark:SetVertexColor(unpack(color))
-            spark:SetAlpha(quality >= 2 and progress * (0.3 + quality * 0.15) or 0)
+            spark:SetAlpha(burst > 0 and energy * (0.4 + quality * 0.15) or energy * 0.15)
         end
         if progress >= 1 then
-            finish(ui)
+            reveal(ui)
+            ui:Refresh()
         end
     end)
     return frame
@@ -110,12 +203,17 @@ local function open(ui, quantity)
     W.Action(function(state)
         local ok, message, report = G.OpenChests(state, quantity, ui.chestZone)
         if ok then
-            ui.chestState, ui.chestReport, ui.chestOpening = state, report, report
-            ui.chestStorage = state.chests
-            ui.chestElapsed, ui.chestPage = 0, 0
+            ui.chestState, ui.chestStorage = state, state.chests
+            if not ui.chestOpening then
+                ui.chestElapsed, ui.chestPage, ui.chestImpact = 0, 0, false
+                ui.chestCharge = 0.35 + report.quality * 0.08
+                ui.chestDuration = ui.chestCharge + 0.95 + 0.22 + report.quality * 0.06
+            end
+            ui.chestOpening = mergeReport(ui.chestOpening, report)
             if state.settings.instantChestReveal then
                 -- Rewards are already committed; skipping only changes presentation.
                 reveal(ui)
+                ui.chestResultElapsed = 1
             end
         end
         return ok, message
@@ -127,7 +225,7 @@ function P.Draw(ui, parent, state)
         local frame = CreateFrame("Frame", nil, ui.workspace)
         frame:SetAllPoints(parent)
         frame:SetScript("OnHide", function()
-            ui.chestOpening = nil
+            reveal(ui, true)
         end)
         ui.chestFrame = frame
         ui.chestScene = scene(ui, frame)
@@ -218,25 +316,37 @@ function P.Draw(ui, parent, state)
         local model = display.models[index]
         model:SetShown(shown == true)
         icon:SetShown(shown == true and not model.chestReady)
-        W.Client.ChestPose(model, opening and "opening" or report and "opened" or "closed")
+        W.Client.ChestPose(
+            model,
+            opening
+                    and (ui.chestElapsed < ui.chestCharge and "closed" or ui.chestElapsed < ui.chestCharge + 0.95 and "opening" or "opened")
+                or report and "opened"
+                or "closed"
+        )
     end
-    display.glow:SetAlpha(0)
-    for _, spark in ipairs(display.sparks) do
-        spark:SetAlpha(0)
+    if not opening then
+        display.flash:SetAlpha(0)
+        display.glow:SetAlpha(report and 0.18 or 0)
+        for _, spark in ipairs(display.sparks) do
+            spark:SetAlpha(0)
+        end
     end
     display.label:SetText(
         opening and string.format(L.OPENING_CHESTS, opening.count)
             or report and string.format(L.CHESTS_OPENED, report.count)
             or L.YOUR_NEXT_TREASURE
     )
-    display.label:SetTextColor(unpack(report and C.qualityColors[report.quality] or T.gold))
-    ui.chestResultButtons = {}
+    display.label:SetTextColor(
+        unpack((opening or report) and C.qualityColors[(opening or report).quality] or T.gold)
+    )
+    ui.chestResultButtons, ui.chestHighlights = {}, {}
     ui.chestSkip = nil
     if opening then
-        ui.chestSkip = U.Button(frame, L.REVEAL_NOW, 548, 306, 200, 32, function()
+        ui.chestSkip = U.Button(frame, L.REVEAL_NOW, 1030, 0, 200, 32, function()
             finish(ui)
         end, false, "primary")
-    elseif report then
+    end
+    if report then
         U.SingleLine(
             U.Text(
                 frame,
@@ -278,6 +388,11 @@ function P.Draw(ui, parent, state)
                 end
                 local card = U.Card(frame, x, y, 416, 128)
                 U.Begin(card)
+                local color = C.qualityColors[item.quality]
+                U.Rect(card, 0, 0, 3, 128, color)
+                local highlight = U.Rect(card, 3, 0, 413, 128, color, 0.2)
+                highlight:SetAlpha(0)
+                ui.chestHighlights[#ui.chestHighlights + 1] = highlight
                 U.Icon(card, item.icon, 14, 14, 40):SetParent(card.content or card)
                 U.SingleLine(
                     U.Text(

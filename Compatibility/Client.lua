@@ -67,6 +67,12 @@ function A.Now()
     return GetServerTime and GetServerTime() or time()
 end
 
+function A.ChestNotificationsAllowed()
+    local combat = InCombatLockdown and InCombatLockdown()
+    local inside = IsInInstance and IsInInstance()
+    return readable(combat) and readable(inside) and not combat and not inside
+end
+
 function A.Identity()
     local _, class = UnitClass("player")
     return {

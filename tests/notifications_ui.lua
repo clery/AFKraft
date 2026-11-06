@@ -171,3 +171,74 @@ test(
         assertEquals(0, #N.queue)
     end
 )
+
+test("Chest reminders start at ten, defer unsafe contexts and persist their cooldown", function()
+    local W, state, N = fixture()
+    local originalNow, originalCombat, originalInstance =
+        W.Client.Now, InCombatLockdown, IsInInstance
+    local now, combat, inside = 10000, false, false
+    local ok, message = pcall(function()
+        W.Client.Now = function()
+            return now
+        end
+        InCombatLockdown = function()
+            return combat
+        end
+        IsInInstance = function()
+            return inside, inside and "party" or "none"
+        end
+        local function chest()
+            W.Game.StoreChest(state, W.Game.Item(state, 1, 1, 2, false, W.Content.itemByID[25]))
+        end
+        for _ = 1, 9 do
+            chest()
+        end
+        N.Flush()
+        assertEquals(nil, N.current)
+        combat = true
+        chest()
+        N.Flush()
+        assertEquals(nil, N.current)
+        now, combat, inside = now + 1, false, true
+        N.Flush()
+        assertEquals(nil, N.current)
+        now, inside = now + 1, false
+        N.Flush()
+        assertEquals("chest", N.current.kind)
+        assertEquals(now, state.ui.lastChestToastTime)
+        N.frame.close:GetScript("OnClick")()
+        chest()
+        N.Flush()
+        assertEquals(nil, N.current)
+        N.Clear()
+        assertEquals(state.ui.lastChestToastTime, W.Game.Copy(state).ui.lastChestToastTime)
+        now = now + 1799
+        N.Flush()
+        assertEquals(nil, N.current)
+        now, inside = now + 1, true
+        N.Flush()
+        assertEquals(nil, N.current)
+        now, inside = now + 1, false
+        N.Flush()
+        assertEquals("chest", N.current.kind)
+        now, combat = now + 1, true
+        N.Flush()
+        assertEquals(nil, N.current)
+        assertFalse(N.frame:IsShown())
+        combat = false
+        assertTrue(W.Game.OpenChests(state, "all"))
+        now = now + 1800
+        N.Flush()
+        assertEquals(nil, N.current)
+        state.settings.rewardToasts = false
+        for _ = 1, 10 do
+            chest()
+        end
+        now = now + 1800
+        N.Flush()
+        assertEquals(nil, N.current)
+    end)
+    W.Client.Now, InCombatLockdown, IsInInstance = originalNow, originalCombat, originalInstance
+    N.Clear()
+    assert(ok, message)
+end)

@@ -1,6 +1,16 @@
 local _, W = ...
 
 W.Locales.esES = {
+    RETURN_MASTERY = "%s ha ganado %d rangos de maestría.",
+    RETURN_WELCOME = "Te damos la bienvenida, comandante",
+    RETURN_AWAY = "Tu grupo siguió de aventuras durante %s.",
+    RETURN_EQUIP = "%s puede equipar %s.",
+    RETURN_ENHANCE = "Ya puedes mejorar el equipo de %s: %s.",
+    RETURN_LEVEL = "%s ha alcanzado el nivel %d.",
+    RETURN_TALENTS = "Tienes %d puntos de talento disponibles.",
+    RETURN_READY = "Tu grupo está listo para su próxima aventura.",
+    RETURN_CREDITED = "Todo lo obtenido ya es tuyo.",
+
     HERO_XP_CEILING = "Límite de EXP de héroe: nivel %d",
     WEAPON = "Arma",
     ARMOR = "Armadura",

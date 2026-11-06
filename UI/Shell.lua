@@ -170,6 +170,7 @@ function UI:Layout()
     self.compact:SetShown(compact)
     for tab, frame in pairs({
         chests = self.chestFrame,
+        offline = self.offlineFrame,
         routes = self.routeFrame,
         profiles = self.profileFrame,
         collections = self.collectionFrame,
@@ -248,6 +249,15 @@ function UI:Refresh(redraw)
     local s = W.state
     if not s then
         return
+    end
+    if self.returnReportPending then
+        if self.returnReportPending ~= s.lastOfflineSummary then
+            self.returnReportPending = nil
+        elseif not W.catchup and self.frame:IsShown() and not s.ui.compact then
+            self.returnReportPending = nil
+            self:SetTab("offline")
+            return
+        end
     end
     self.selected = math.min(self.selected or 1, #s.heroes)
     self.currencies.essence:SetText(U.Number(s.essence))

@@ -81,6 +81,7 @@ function W.Initialize()
     end
     W.state = state
     AFKraftDB = state
+    state.ui.tab = "offline"
     startingHero(state)
     G.BeginHuntSession(state, A.Now())
     W.catchup = G.BeginCatchup(state, A.Now())
@@ -217,6 +218,10 @@ function root.Update(_, dt)
         if G.CatchupBatch(W.catchup, 1200) then
             G.FinishCatchup(W.state, W.catchup)
             W.catchup = nil
+            local summary = W.state.lastOfflineSummary
+            if summary and summary.seconds >= 60 then
+                W.UI.returnReportPending = summary
+            end
             W.UI:Refresh()
         end
         return

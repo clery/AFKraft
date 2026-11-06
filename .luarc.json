@@ -64,6 +64,7 @@
     "CanLootUnit",
     "GetInstanceInfo",
     "IsInInstance",
+    "InCombatLockdown",
     "C_EventUtils",
     "C_Loot",
     "GetLFGDungeonInfo",

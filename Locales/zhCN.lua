@@ -1,6 +1,16 @@
 local _, W = ...
 
 W.Locales.zhCN = {
+    RETURN_MASTERY = "%s获得了%d级精通。",
+    RETURN_WELCOME = "欢迎归来，指挥官",
+    RETURN_AWAY = "你的队伍已继续冒险%s。",
+    RETURN_EQUIP = "%s可以装备%s。",
+    RETURN_ENHANCE = "现在可以强化%s的%s。",
+    RETURN_LEVEL = "%s已达到%d级。",
+    RETURN_TALENTS = "有%d点天赋点可分配。",
+    RETURN_READY = "你的队伍已准备好迎接下一次冒险。",
+    RETURN_CREDITED = "所有收益均已自动入账。",
+
     HERO_XP_CEILING = "英雄经验上限：%d级",
     WEAPON = "武器",
     ARMOR = "护甲",

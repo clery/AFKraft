@@ -327,4 +327,30 @@ case("Live dungeon discoveries survive catch-up without manufacturing outdoor pr
     assert(G.ValidateCollections(s))
 end)
 
+case(
+    "Return highlights retain personal milestones and only newly affordable enhancements",
+    function()
+        local s = party()
+        s.safe.elwynn = 1
+        local item = G.Item(s, 1, 1, 2, false, C.itemByID[25])
+        s.heroes[1].gear[1] = item
+        local job = assert(G.BeginCatchup(s, 60))
+        job.state.heroes[1].level = 2
+        job.state.gold, job.state.materials.ore = 100, 20
+        job.remaining = 0
+        assert(G.FinishCatchup(s, job))
+        local summary = s.lastOfflineSummary
+        assert(summary.heroGains[1].hero == 1 and summary.heroGains[1].level == 2)
+        assert(summary.heroGains[1].levels == 1 and summary.heroGains[1].masteryRanks == 0)
+        assert(summary.enhancement.uid == item.uid and summary.enhancement.slot == 1)
+        assert(s.gold == 100 and s.materials.ore == 20)
+        local loaded = assert(G.Load(G.Copy(s), 60))
+        assert(loaded.lastOfflineSummary.enhancement.uid == item.uid)
+        job = assert(G.BeginCatchup(s, 120))
+        job.remaining = 0
+        assert(G.FinishCatchup(s, job))
+        assert(s.lastOfflineSummary.enhancement == nil and #s.lastOfflineSummary.heroGains == 0)
+    end
+)
+
 return cases

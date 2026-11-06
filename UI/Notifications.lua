@@ -5,7 +5,7 @@ W.Notifications = N
 
 function N.Clear()
     N.queue = {}
-    N.current, N.state = nil, nil
+    N.current, N.state, N.chestCheckTime = nil, nil, nil
     if N.frame then
         N.frame:Hide()
     end
@@ -23,7 +23,7 @@ local function prepare(entry)
     local state = W.state
     if entry.kind == "chest" then
         local count = G.ChestCount(state)
-        if count == 0 then
+        if count < 10 or not W.Client.ChestNotificationsAllowed() then
             return false
         end
         entry.title = string.format(L.CHESTS_WAITING, count)
@@ -113,10 +113,54 @@ local function create()
     frame:Hide()
 end
 
+local function chestReminder(state)
+    local now = W.Client.Now()
+    if N.chestCheckTime == now then
+        return
+    end
+    N.chestCheckTime = now
+    local count = G.ChestCount(state)
+    local reviewing = W.UI
+        and W.UI.frame:IsShown()
+        and not state.ui.compact
+        and (state.ui.tab == "chests" or state.ui.tab == "offline")
+    local allowed = count >= 10 and not reviewing and W.Client.ChestNotificationsAllowed()
+    if N.current and N.current.kind == "chest" then
+        if not allowed then
+            dismiss()
+        else
+            N.current.title = string.format(L.CHESTS_WAITING, count)
+            N.frame.title:SetText(N.current.title)
+        end
+    end
+    if not allowed or N.current or #N.queue > 0 then
+        return
+    end
+    local last = state.ui.lastChestToastTime
+    if type(last) == "number" and last <= now and now - last < 1800 then
+        return
+    end
+    N.queue[#N.queue + 1] = {
+        kind = "chest",
+        key = "chest",
+        heading = L.CHEST_FOUND,
+        title = string.format(L.CHESTS_WAITING, count),
+        detail = L.CHEST_READY_DETAIL,
+        icon = "INV_Misc_TreasureChest01a",
+        tab = "chests",
+    }
+end
+
 function N.Flush()
     if N.state and (N.state ~= W.state or W.catchup or not W.state.settings.rewardToasts) then
         N.Clear()
     end
+    local state = W.state
+    if not state or W.catchup or not state.settings.rewardToasts then
+        return
+    end
+    N.state = state
+    chestReminder(state)
     if N.current then
         return
     end
@@ -128,6 +172,9 @@ function N.Flush()
             end
             local frame = N.frame
             N.current, N.age = entry, 0
+            if entry.kind == "chest" then
+                state.ui.lastChestToastTime = W.Client.Now()
+            end
             frame.heading:SetText("AFKraft · " .. entry.heading)
             frame.title:SetText(entry.title)
             frame.title:SetTextColor(unpack(entry.color or T.text))
@@ -192,30 +239,8 @@ function W.OnGameEvent(state, event)
                 color = C.qualityColors[event.item.quality],
             })
         end
-    elseif event.kind == "chestOpened" and N.current and N.current.kind == "chest" then
-        local count = G.ChestCount(state)
-        if count == 0 then
-            dismiss()
-        else
-            N.current.title = string.format(L.CHESTS_WAITING, count)
-            N.frame.title:SetText(N.current.title)
-        end
-    elseif event.kind == "chest" then
-        local count = G.ChestCount(state)
-        if N.current and N.current.kind == "chest" then
-            N.current.title = string.format(L.CHESTS_WAITING, count)
-            N.frame.title:SetText(N.current.title)
-        elseif count == 1 then
-            enqueue({
-                kind = "chest",
-                key = "chest",
-                heading = L.CHEST_FOUND,
-                title = string.format(L.CHESTS_WAITING, count),
-                detail = L.CHEST_READY_DETAIL,
-                icon = "INV_Misc_TreasureChest01a",
-                tab = "chests",
-            })
-        end
+    elseif event.kind == "chestOpened" or event.kind == "chest" then
+        N.chestCheckTime = nil
     elseif hero and (event.kind == "levelup" or event.kind == "recruit") then
         enqueue({
             kind = event.kind,

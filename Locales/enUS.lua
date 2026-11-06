@@ -1,6 +1,16 @@
 local _, W = ...
 
 W.Locales.enUS = {
+    RETURN_MASTERY = "%s gained %d Mastery ranks.",
+    RETURN_WELCOME = "Welcome back, commander",
+    RETURN_AWAY = "Your party kept adventuring for %s.",
+    RETURN_EQUIP = "%s can equip %s.",
+    RETURN_ENHANCE = "You can now enhance %s’s %s.",
+    RETURN_LEVEL = "%s reached level %d.",
+    RETURN_TALENTS = "%d talent points are ready to spend.",
+    RETURN_READY = "Your party is ready for its next adventure.",
+    RETURN_CREDITED = "Everything earned is already yours.",
+
     HERO_XP_CEILING = "Hero XP ceiling: level %d",
     WEAPON = "Weapon",
     ARMOR = "Armor",

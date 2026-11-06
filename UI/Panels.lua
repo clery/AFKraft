@@ -1188,6 +1188,7 @@ function P.Draw(ui)
     local p = ui.panel
     for tab, frame in pairs({
         chests = ui.chestFrame,
+        offline = ui.offlineFrame,
         routes = ui.routeFrame,
         profiles = ui.profileFrame,
         collections = ui.collectionFrame,

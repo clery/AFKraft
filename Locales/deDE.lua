@@ -1,6 +1,16 @@
 local _, W = ...
 
 W.Locales.deDE = {
+    RETURN_MASTERY = "%s hat %d Meisterschaftsränge gewonnen.",
+    RETURN_WELCOME = "Willkommen zurück, Kommandant",
+    RETURN_AWAY = "Eure Gruppe war %s lang auf Abenteuer.",
+    RETURN_EQUIP = "%s kann %s anlegen.",
+    RETURN_ENHANCE = "Ihr könnt jetzt %s verbessern: %s.",
+    RETURN_LEVEL = "%s hat Stufe %d erreicht.",
+    RETURN_TALENTS = "%d Talentpunkte können verteilt werden.",
+    RETURN_READY = "Eure Gruppe ist bereit für das nächste Abenteuer.",
+    RETURN_CREDITED = "Alle Erträge gehören euch bereits.",
+
     HERO_XP_CEILING = "Helden-EP bis Stufe %d",
     WEAPON = "Waffe",
     ARMOR = "Rüstung",

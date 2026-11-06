@@ -1,6 +1,16 @@
 local _, W = ...
 
 W.Locales.frFR = {
+    RETURN_MASTERY = "%s a gagné %d rangs de maîtrise.",
+    RETURN_WELCOME = "Bon retour, commandant",
+    RETURN_AWAY = "Votre groupe a poursuivi son aventure pendant %s.",
+    RETURN_EQUIP = "%s peut équiper %s.",
+    RETURN_ENHANCE = "Vous pouvez maintenant améliorer %s : %s.",
+    RETURN_LEVEL = "%s a atteint le niveau %d.",
+    RETURN_TALENTS = "%d points de talent sont prêts à être dépensés.",
+    RETURN_READY = "Votre groupe est prêt pour sa prochaine aventure.",
+    RETURN_CREDITED = "Tous les gains vous appartiennent déjà.",
+
     HERO_XP_CEILING = "Plafond d’EXP des héros : niveau %d",
     WEAPON = "Arme",
     ARMOR = "Armure",

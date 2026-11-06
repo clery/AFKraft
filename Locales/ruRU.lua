@@ -1,6 +1,16 @@
 local _, W = ...
 
 W.Locales.ruRU = {
+    RETURN_MASTERY = "%s получил рангов мастерства: %d.",
+    RETURN_WELCOME = "С возвращением, командир",
+    RETURN_AWAY = "Ваш отряд продолжал приключение %s.",
+    RETURN_EQUIP = "%s может надеть %s.",
+    RETURN_ENHANCE = "Теперь можно улучшить снаряжение героя %s: %s.",
+    RETURN_LEVEL = "%s достиг уровня %d.",
+    RETURN_TALENTS = "Доступно очков талантов: %d.",
+    RETURN_READY = "Ваш отряд готов к следующему приключению.",
+    RETURN_CREDITED = "Всё заработанное уже ваше.",
+
     HERO_XP_CEILING = "Предел опыта героев: уровень %d",
     WEAPON = "Оружие",
     ARMOR = "Броня",

@@ -129,6 +129,7 @@ function G.FinishCatchup(state, job)
         interrupted = job.remaining > 0,
         heroXP = 0,
         heroLevels = 0,
+        heroGains = {},
         chests = max(0, G.ChestCount(state) - (job.chestCount or 0)),
         itemsKept = max(0, inventoryCount(state) - (job.inventoryCount or inventoryCount(state))),
         boostUses = (state.stats.boostUses or 0) - (job.boostUses or 0),
@@ -169,6 +170,38 @@ function G.FinishCatchup(state, job)
             end
             summary.heroXP = summary.heroXP + max(0, gainedXP)
             summary.heroLevels = summary.heroLevels + max(0, hero.level - previous.level)
+        end
+        if
+            previous and (hero.level > previous.level or hero.mastery.rank > previous.mastery.rank)
+        then
+            summary.heroGains[#summary.heroGains + 1] = {
+                hero = index,
+                level = hero.level,
+                levels = max(0, hero.level - previous.level),
+                masteryRanks = max(0, hero.mastery.rank - previous.mastery.rank),
+            }
+        end
+        for _, slot in ipairs(W.Content.equipmentSlots) do
+            local item = hero.gear[slot]
+            if item then
+                local cost = G.UpgradeCost(item, state)
+                if
+                    state.gold >= cost.gold
+                    and state.materials.ore >= cost.materials.ore
+                    and (job.gold < cost.gold or job.materials.ore < cost.materials.ore)
+                then
+                    local gain = G.ItemPower(item, hero, 1) - G.ItemPower(item, hero)
+                    if not summary.enhancement or gain > summary.enhancement.gain then
+                        summary.enhancement = {
+                            hero = index,
+                            slot = slot,
+                            uid = item.uid,
+                            upgrade = item.upgrade or 0,
+                            gain = gain,
+                        }
+                    end
+                end
+            end
         end
         summary.masteryRanks = summary.masteryRanks
             + math.max(
