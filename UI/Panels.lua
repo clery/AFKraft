@@ -163,7 +163,6 @@ function P.adventure(ui, p, s)
         end
     end
     text(p, L.NEXT_STEP_HEADING, 0, 0, 12, T.gold)
-    text(p, title, 0, 27, 23, T.text, 640)
     if s.farming then
         detail = (s.lastDefeat or L.YOUR_PARTY_IS_FARMING_A_SAFE_ENCOUNTER)
             .. (
@@ -173,6 +172,11 @@ function P.adventure(ui, p, s)
                 or L.IMPROVE_YOUR_HEROES_THEN_USE_RETRY_SUFFIX
             )
     end
+    if G.ChestCount(s) > 0 and label ~= L.RECRUIT_COMPANIONS then
+        title, detail, label, tab =
+            L.YOUR_NEXT_TREASURE, L.CHESTS_DESCRIPTION, L.OPEN_CHESTS, "chests"
+    end
+    text(p, title, 0, 27, 23, T.text, 640)
     U.Help(p, title, 652, 0, detail)
     ui.adventureNext = button(p, label, 0, 128, 240, function()
         ui.recruiting = label == L.RECRUIT_COMPANIONS
@@ -294,6 +298,10 @@ end
 
 function P.party(ui, p, s)
     W.PartyPanel.Draw(ui, p, s)
+end
+
+function P.chests(ui, p, s)
+    W.ChestPanel.Draw(ui, p, s)
 end
 
 function P.offline(ui, p, s)
@@ -1179,6 +1187,7 @@ function P.Draw(ui)
     local s = W.state
     local p = ui.panel
     for tab, frame in pairs({
+        chests = ui.chestFrame,
         routes = ui.routeFrame,
         profiles = ui.profileFrame,
         collections = ui.collectionFrame,

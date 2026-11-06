@@ -48,6 +48,7 @@ function G.BeginCatchup(state, now)
         salvaged = snapshot.stats.salvaged,
         materials = copy(snapshot.materials),
         inventoryCount = inventoryCount(snapshot),
+        chestCount = G.ChestCount(snapshot),
     }
 end
 
@@ -78,6 +79,7 @@ function G.FinishCatchup(state, job)
     for _, key in ipairs({
         "heroes",
         "inventory",
+        "chests",
         "nextItem",
         "gold",
         "materials",
@@ -127,6 +129,7 @@ function G.FinishCatchup(state, job)
         interrupted = job.remaining > 0,
         heroXP = 0,
         heroLevels = 0,
+        chests = max(0, G.ChestCount(state) - (job.chestCount or 0)),
         itemsKept = max(0, inventoryCount(state) - (job.inventoryCount or inventoryCount(state))),
         boostUses = (state.stats.boostUses or 0) - (job.boostUses or 0),
         fragments = max(

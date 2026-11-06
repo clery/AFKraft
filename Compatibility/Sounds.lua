@@ -378,6 +378,33 @@ function Audio.Stop()
     levelUpQuietUntil = -math.huge
 end
 
+function Audio.ChestReveal(state, quality)
+    if
+        state ~= W.state
+        or W.catchup
+        or not state.settings.soundEnabled
+        or not state.settings.soundEquipment
+        or not W.UI
+        or not W.UI.frame:IsShown()
+    then
+        return
+    end
+    local names = {
+        "LOOT_WINDOW_COIN_SOUND",
+        "IG_ABILITY_ICON_DROP",
+        "UI_GARRISON_FOLLOWER_LEARN_TRAIT",
+        "UI_ADVENTURES_ADVENTURE_SUCCESS_COMPLETE",
+    }
+    local kit = SOUNDKIT and SOUNDKIT[names[quality]]
+    if type(kit) == "number" and kit > 0 and PlaySound then
+        Audio.Stop()
+        local ok, played, handle = pcall(PlaySound, kit, "SFX", false)
+        if ok and played and handle then
+            handles[#handles + 1] = handle
+        end
+    end
+end
+
 local function audible(state)
     return state == W.state
         and not W.catchup
@@ -470,6 +497,18 @@ function Audio.Flush()
     end
     cue = batch[1]
     if not audible(W.state) then
+        local state = W.state
+        if
+            state
+            and not W.catchup
+            and state.ui.tab == "chests"
+            and state.settings.soundEnabled
+            and state.settings.soundEquipment
+            and W.UI
+            and W.UI.frame:IsShown()
+        then
+            return
+        end
         Audio.Stop()
         return
     end

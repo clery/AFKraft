@@ -178,6 +178,27 @@ function G.IsUpgrade(state, item)
     return false
 end
 
+-- Spotlight only finds that beat both equipped gear and already available alternatives.
+function G.UpgradeRecipient(state, item)
+    local recipient, gain
+    for index, hero in ipairs(state.heroes) do
+        if G.CanEquip(hero, item) then
+            local power = G.ItemPower(item, hero)
+            local previous = G.ItemPower(hero.gear[item.slot], hero)
+            local best = previous
+            for _, stored in ipairs(state.inventory) do
+                if stored ~= item and stored.slot == item.slot and G.CanEquip(hero, stored) then
+                    best = math.max(best, G.ItemPower(stored, hero))
+                end
+            end
+            if power > best and (not gain or power - previous > gain) then
+                recipient, gain = index, power - previous
+            end
+        end
+    end
+    return recipient, gain
+end
+
 function G.Salvage(state, item)
     if item.heirloom or item.protected then
         return false
@@ -222,7 +243,7 @@ function G.DisenchantReward(item, quantity)
     }
 end
 
-function G.Disenchant(state, item, quantity)
+function G.Disenchant(state, item, quantity, silent)
     local reward = G.DisenchantReward(item, quantity)
     if not reward then
         return false, L.HEIRLOOMS_AND_PROTECTED_ITEMS_CANNOT_BE_DISENCHANTED
@@ -250,7 +271,7 @@ function G.Disenchant(state, item, quantity)
                 .. L.GOLD_SUFFIX
                 .. reward.relic
                 .. L.RELIC_DUST_SUFFIX
-            G.Log(state, message, nil, "items")
+            G.Log(state, message, silent, "items")
             return true, message
         end
     end
@@ -299,8 +320,8 @@ function G.DisenchantAll(state)
     return true, message
 end
 
-function G.Loot(state, item)
-    if item.quality >= 3 then
+function G.Loot(state, item, silent)
+    if item.quality >= 3 and not silent then
         G.Emit(state, "loot")
     end
     local newEffect = item.effect and not state.discoveries["effect:" .. item.effect]
@@ -328,11 +349,15 @@ function G.Loot(state, item)
                     and (existing.upgrade or 0) == (item.upgrade or 0)
                 then
                     existing.count = (existing.count or 1) + (item.count or 1)
-                    return
+                    return existing
                 end
             end
         end
         state.inventory[#state.inventory + 1] = item
+        if not silent then
+            G.Emit(state, "item", { item = item })
+        end
+        return item
     else
         G.Salvage(state, item)
     end
@@ -576,7 +601,7 @@ function G.Craft(state, index, slot, material, heirloom)
         nil,
         "items"
     )
-    G.Emit(state, "craft")
+    G.Emit(state, "craft", { item = item })
     return true
 end
 

@@ -46,6 +46,35 @@ local function fixture()
 end
 return {
     {
+        "Chest reveals play quality cues on their panel and respect mutes",
+        function()
+            local n, _, played, advance, env = fixture()
+            n.state.ui.tab = "chests"
+            local stopped = {}
+            env.StopSound = function(handle)
+                stopped[#stopped + 1] = handle
+            end
+            for quality = 1, 4 do
+                n.Audio.ChestReveal(n.state, quality)
+                n.Audio.Flush()
+                assert(#played == quality)
+            end
+            assert(#stopped == 3)
+            n.state.settings.soundEquipment = false
+            n.Audio.ChestReveal(n.state, 4)
+            n.Audio.Flush()
+            assert(#played == 4 and #stopped == 4)
+            n.state.settings.soundEquipment = true
+            advance(4, false)
+            n.Audio.ChestReveal(n.state, 4)
+            assert(#played == 4)
+            advance(5)
+            n.catchup = {}
+            n.Audio.ChestReveal(n.state, 4)
+            assert(#played == 4)
+        end,
+    },
+    {
         "Every rendered creature and boss has native attack, wound, entrance and death audio",
         function()
             local assets = { Content = W.Content }

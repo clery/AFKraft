@@ -8,6 +8,7 @@ local tabs = {
     { "atlas", L.WORLD_MAP },
     { "routes", L.ROUTES },
     { "party", L.PARTY_EQUIPMENT, L.COMPANY_HEADING },
+    { "chests", L.CHESTS },
     { "talents", L.TALENTS_PRIORITIES },
     { "crafting", L.FORGE },
     { "boosts", L.COMMANDER, L.STRATEGY_HEADING },
@@ -21,6 +22,7 @@ local tabs = {
 local tabIcons = {
     adventure = "INV_Misc_Map_01",
     party = "Achievement_GuildPerk_EverybodysFriend",
+    chests = "INV_Misc_TreasureChest02a",
     talents = "Ability_Marksmanship",
     crafting = "Trade_BlackSmithing",
     atlas = "INV_Misc_Map02",
@@ -167,6 +169,7 @@ function UI:Layout()
     self.expanded:SetShown(not compact)
     self.compact:SetShown(compact)
     for tab, frame in pairs({
+        chests = self.chestFrame,
         routes = self.routeFrame,
         profiles = self.profileFrame,
         collections = self.collectionFrame,
@@ -332,6 +335,8 @@ function UI:Refresh(redraw)
     self.tabs.talents.notice:SetText(
         points > 0 and (points .. (points == 1 and L.POINT_SUFFIX_2 or L.POINTS_SUFFIX_2)) or ""
     )
+    local chestCount = W.Game.ChestCount(s)
+    self.tabs.chests.notice:SetText(chestCount > 0 and tostring(chestCount) or "")
     self.tabs.party.notice:SetText(#s.heroes < W.Game.CompanionSlots(s) and L.RECRUIT or "")
     self.tabs.atlas.notice:SetText(routes > 0 and (routes .. L.DESTINATIONS_SUFFIX) or "")
     self.tabs.legacy.notice:SetText(
@@ -350,6 +355,7 @@ function UI:Refresh(redraw)
         tostring(s.guide.dismissed),
         W.Game.CompanionSlots(s),
         nextLesson and nextLesson.key or "",
+        chestCount,
     }, ":")
     for id, button in pairs(self.tabs) do
         local active = s.ui.tab == id or (id == "crafting" and s.ui.tab == "workshop")
@@ -416,6 +422,7 @@ function UI:Refresh(redraw)
             or s.ui.tab == "talents" and L.SHAPE_A_COMPANION_S_TALENTS_AND_COMBAT_PRIORITIES
             or s.ui.tab == "crafting" and L.FORGE_PANEL_DESCRIPTION
             or s.ui.tab == "legacy" and L.PERMANENT_REWARDS_HEIRLOOMS_AND_CHAPTER_RESETS
+            or s.ui.tab == "chests" and L.CHESTS_DESCRIPTION
             or s.ui.tab == "loot" and L.CHOOSE_WHAT_TO_KEEP_FROM_FUTURE_DROPS
             or s.ui.tab == "boosts" and L.PERMANENT_ABILITIES_FOR_TEMPORARY_PARTY_SUPPORT
             or s.ui.tab == "profiles" and L.PROFILES_PANEL_DESCRIPTION

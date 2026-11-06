@@ -24,6 +24,7 @@ for _, file in ipairs({
     "Domain/Resources.lua",
     "Domain/Mastery.lua",
     "Domain/Inventory.lua",
+    "Domain/Chests.lua",
     "Domain/Collections.lua",
     "Domain/Routes.lua",
     "Domain/Profiles.lua",

@@ -82,15 +82,22 @@ function P.Draw(ui, parent, state)
                 .. count(report.masteryRanks, "rank", "ranks"),
             L.XP_RETAINED_ACROSS_THE_PARTY_INCLUDES_LEVEL_AND_MASTERY
         )
+        local chestReport = type(report.chests) == "number"
+            and report.chests >= 0
+            and report.chests < math.huge
+            and report.chests == math.floor(report.chests)
         cards.equipment = card(
             parent,
-            L.EQUIPMENT,
-            "INV_Misc_Bag_10",
+            chestReport and L.CHESTS or L.EQUIPMENT,
+            chestReport and "INV_Misc_TreasureChest01a" or "INV_Misc_Bag_10",
             880,
             100,
-            count(report.itemsKept, L.ITEM_KEPT, L.ITEMS_KEPT),
-            number(report.salvaged) .. L.AUTOMATICALLY_SALVAGED_SUFFIX,
-            L.ITEMS_ADDED_TO_YOUR_SHARED_INVENTORY_INCLUDING_STACKED_COPIES
+            chestReport and string.format(L.CHESTS_EARNED, report.chests)
+                or count(report.itemsKept, L.ITEM_KEPT, L.ITEMS_KEPT),
+            chestReport and L.CHEST_READY_DETAIL
+                or number(report.salvaged) .. L.AUTOMATICALLY_SALVAGED_SUFFIX,
+            chestReport and L.CHESTS_DESCRIPTION
+                or L.ITEMS_ADDED_TO_YOUR_SHARED_INVENTORY_INCLUDING_STACKED_COPIES
         )
         local materials = {}
         for _, id in ipairs(C.materialOrder) do
@@ -143,6 +150,11 @@ function P.Draw(ui, parent, state)
                 ),
             L.ENABLED_BOOSTS_USE_NORMAL_COOLDOWNS_OPTIONAL_OFFLINE_ROUTES_VISIT
         )
+    end
+    if W.Game.ChestCount(state) > 0 then
+        ui.offlineChests = U.Button(parent, L.OPEN_CHESTS, 880, 552, 416, 34, function()
+            ui:SetTab("chests")
+        end, false, "primary")
     end
     U.Help(parent, L.OFFLINE_PROGRESS, 1258, 0, L.OFFLINE_PROGRESS_DESCRIPTION)
     ui.offlineBack = U.Button(parent, L.BACK_TO_ADVENTURE, 0, 552, 280, 34, function()

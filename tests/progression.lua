@@ -34,6 +34,9 @@ case("Every starting class can reach the first companion by fighting and equippi
         G.AddHero(s, class.id)
         for _ = 1, 7200 do
             G.Step(s, 0.25)
+            if G.ChestCount(s) > 0 then
+                assert(G.OpenChests(s, "all"))
+            end
             G.EquipBest(s, 1)
             if s.farming then
                 G.Retry(s)
@@ -127,6 +130,8 @@ case("Encounters grow with the company and the first victory always supplies a r
         enemy.hp = 0
     end
     G.Step(s, 0.25)
+    assert(#s.inventory == 0 and G.ChestCount(s) == 1)
+    assert(G.OpenChests(s, 1))
     assert(#s.inventory > 0)
     assert(s.stats.victories == 1)
 end)

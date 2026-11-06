@@ -1,0 +1,281 @@
+if not test then
+    return
+end
+local function fixture()
+    local W = AFKraft
+    W.Initialize()
+    W.Notifications.Clear()
+    W.catchup = nil
+    local s = W.Game.New(1000)
+    W.Game.AddHero(s, "WARRIOR")
+    s.heroes[1].level = 60
+    s.guide.dismissed = true
+    W.state = s
+    W.UI.frame:Show()
+    W.UI:SetTab("chests")
+    return W, s, W.UI
+end
+local function drop(W, state, count, quality)
+    for _ = 1, count do
+        local item = W.Game.Item(state, 1, 1, 2, false, W.Content.itemByID[25])
+        item.quality, item.stats = quality or 2, { strength = 10 }
+        W.Game.StoreChest(state, item)
+    end
+    W.UI:Refresh()
+end
+
+test("Chests panel opens batches, skips presentation and equips revealed upgrades", function()
+    local W, state, ui = fixture()
+    drop(W, state, 12, 3)
+    assertTrue(ui.chestFrame:IsVisible())
+    assertEquals("12", ui.tabs.chests.notice:GetText())
+    ui.chestControls[10]:GetScript("OnClick")()
+    assertEquals(2, W.Game.ChestCount(state))
+    assertEquals(10, ui.chestReport.count)
+    assertNotNil(ui.chestOpening)
+    assertEquals(0, #ui.chestResultButtons)
+    assertNotNil(ui.chestSkip)
+    ui.chestSkip:GetScript("OnClick")()
+    assertEquals(nil, ui.chestOpening)
+    assertEquals(1, #ui.chestResultButtons)
+    local uid = state.inventory[1].uid
+    table.insert(state.inventory, 1, W.Game.Item(state, 2, 1, 2))
+    ui.chestResultButtons[1]:GetScript("OnClick")()
+    assertNotNil(state.heroes[1].gear[1])
+    assertTrue(state.heroes[1].gear[1].uid ~= uid) -- One copy equipped from a stack.
+    assertEquals(9, state.inventory[2].count)
+    assertEquals(2, W.Game.ChestCount(state))
+end)
+
+test("Instant reveal commits once and closing mid-animation never loses rewards", function()
+    local W, state, ui = fixture()
+    drop(W, state, 3, 4)
+    state.settings.instantChestReveal = true
+    ui.chestControls[1]:GetScript("OnClick")()
+    assertEquals(nil, ui.chestOpening)
+    assertEquals(1, #state.inventory)
+    state.settings.instantChestReveal = false
+    ui.chestControls[1]:GetScript("OnClick")()
+    assertNotNil(ui.chestOpening)
+    ui.frame:Hide()
+    assertEquals(nil, ui.chestOpening)
+    assertEquals(2, state.inventory[1].count)
+    W.state = assert(W.Game.Load(W.Game.Copy(state), 1100))
+    ui.frame:Show()
+    ui:SetTab("chests")
+    assertEquals(nil, ui.chestReport)
+    assertEquals(1, W.Game.ChestCount(W.state))
+    assertEquals(2, W.state.inventory[1].count)
+end)
+
+test("Reveal duration and effects scale with the actual highest reward quality", function()
+    for quality = 1, 4 do
+        local W, state, ui = fixture()
+        drop(W, state, 1, quality)
+        ui.chestControls[1]:GetScript("OnClick")()
+        local update = ui.chestScene:GetScript("OnUpdate")
+        update(ui.chestScene, 0.5)
+        assertNotNil(ui.chestOpening)
+        assertTrue(ui.chestScene.glow:GetAlpha() > 0)
+        assertEquals(quality, ui.chestReport.quality)
+        update(ui.chestScene, 1.1)
+        assertEquals(quality == 1, ui.chestOpening == nil)
+        if ui.chestOpening then
+            update(ui.chestScene, 2)
+        end
+        assertEquals(nil, ui.chestOpening)
+        assertEquals(0, W.Game.ChestCount(state))
+    end
+end)
+
+test("Chest notifications group earned drops and navigate from compact mode", function()
+    local W, state, ui = fixture()
+    ui.frame:Hide()
+    drop(W, state, 3)
+    W.Notifications.Flush()
+    assertEquals("chest", W.Notifications.current.kind)
+    assertEquals(string.format(W.L.CHESTS_WAITING, 3), W.Notifications.current.title)
+    state.ui.compact = true
+    ui:ApplyMode()
+    W.Notifications.frame.action:GetScript("OnClick")()
+    assertTrue(ui.frame:IsShown())
+    assertFalse(state.ui.compact)
+    assertEquals("chests", state.ui.tab)
+    assertTrue(ui.chestFrame:IsVisible())
+    ui:SetTab("party")
+    assertFalse(ui.chestFrame:IsShown())
+end)
+
+test(
+    "Opening is unavailable during catch-up and source selection preserves other chests",
+    function()
+        local W, state, ui = fixture()
+        drop(W, state, 2)
+        state.zone = "durotar"
+        drop(W, state, 2)
+        ui.chestZone = "elwynn"
+        ui:Refresh()
+        state.settings.instantChestReveal = true
+        local action = ui.chestControls.all:GetScript("OnClick")
+        W.catchup = {}
+        action()
+        assertEquals(4, W.Game.ChestCount(state))
+        W.catchup = nil
+        ui:Refresh()
+        ui.chestControls.all:GetScript("OnClick")()
+        assertEquals(2, W.Game.ChestCount(state))
+        assertEquals("durotar", state.chests[1].zone)
+        assertEquals(2, ui.chestReport.count)
+    end
+)
+
+test("Chest result pages retain all rewards and frame pools stabilize on refresh", function()
+    local W, state, ui = fixture()
+    state.settings.instantChestReveal = true
+    for index = 1, 9 do
+        local template = W.Content.items[index + 5]
+        W.Game.StoreChest(
+            state,
+            W.Game.Item(state, template.slot, 1, template.quality, false, template)
+        )
+    end
+    ui:Refresh()
+    ui.chestControls.all:GetScript("OnClick")()
+    assertEquals(9, #ui.chestReport.entries)
+    ui.chestPage = 1
+    ui:Refresh()
+    assertEquals(1, ui.chestPage)
+    local function count(frame)
+        local total = select("#", frame:GetRegions()) + 1
+        for _, child in ipairs({ frame:GetChildren() }) do
+            total = total + count(child)
+        end
+        return total
+    end
+    ui.chestPage = 0
+    ui:Refresh()
+    local before = count(ui.chestFrame)
+    for _ = 1, 10 do
+        ui:Refresh()
+    end
+    assertEquals(before, count(ui.chestFrame))
+    assertTrue(W.Game.ResetAdventure(state, false))
+    ui:Refresh()
+    assertEquals(nil, ui.chestReport)
+    assertEquals(0, W.Game.ChestCount(state))
+end)
+
+test("Return reports show earned chests and safely handle malformed older summaries", function()
+    local W, state, ui = fixture()
+    drop(W, state, 3)
+    state.lastOfflineSummary = { chests = 3, materials = {} }
+    ui:SetTab("offline")
+    assertNotNil(ui.offlineChests)
+    assertTrue(ui.offlineChests:IsShown())
+    ui.offlineChests:GetScript("OnClick")()
+    assertEquals("chests", state.ui.tab)
+    state.lastOfflineSummary.chests = "invalid"
+    ui:SetTab("offline")
+    assertNotNil(ui.offlineCards.equipment)
+end)
+
+test(
+    "Chest auto equip toggle applies to the batch before its reveal and survives closing",
+    function()
+        local W, state, ui = fixture()
+        drop(W, state, 3, 3)
+        ui.chestAutoEquip:SetChecked(true)
+        ui.chestAutoEquip:GetScript("OnClick")(ui.chestAutoEquip)
+        assertTrue(state.settings.chestAutoEquip)
+        ui.chestControls.all:GetScript("OnClick")()
+        assertNotNil(ui.chestOpening)
+        assertNotNil(state.heroes[1].gear[1])
+        assertEquals(1, ui.chestReport.equipped)
+        assertEquals(2, ui.chestReport.disenchanted)
+        ui.frame:Hide()
+        assertNotNil(state.heroes[1].gear[1])
+        assertEquals(0, #state.inventory)
+    end
+)
+
+test(
+    "Chest models use load callbacks, native poses, rarity lighting and a safe icon fallback",
+    function()
+        local W, state, ui = fixture()
+        local model = ui.chestScene.models[1]
+        local file, has, animate, light =
+            model.GetModelFileID, model.HasAnimation, model.SetAnimation, model.SetLight
+        local animations, lights = {}, {}
+        model.GetModelFileID = function()
+            return 1100065
+        end
+        model.HasAnimation = function()
+            return true
+        end
+        model.SetAnimation = function(_, animation)
+            animations[#animations + 1] = animation
+        end
+        model.SetLight = function(_, enabled, spec)
+            assert(enabled)
+            lights[#lights + 1] =
+                { r = spec.diffuseColor.r, g = spec.diffuseColor.g, b = spec.diffuseColor.b }
+        end
+        local ok, message = pcall(function()
+            model.chestReady, model.chestAnimation = nil, nil
+            model:GetScript("OnModelLoaded")(model)
+            assertTrue(model.chestReady)
+            assertFalse(ui.chestScene.chests[1]:IsShown())
+            drop(W, state, 1, 4)
+            ui.chestControls[1]:GetScript("OnClick")()
+            assertEquals(148, animations[#animations])
+            ui.chestScene:GetScript("OnUpdate")(ui.chestScene, 0.5)
+            local color = W.Content.qualityColors[4]
+            assertEquals(color[1], lights[#lights].r)
+            assertEquals(color[2], lights[#lights].g)
+            ui.chestSkip:GetScript("OnClick")()
+            assertEquals(149, animations[#animations])
+        end)
+        model.GetModelFileID, model.HasAnimation, model.SetAnimation, model.SetLight =
+            file, has, animate, light
+        model.chestReady, model.chestAnimation = nil, nil
+        ui:Refresh()
+        assertTrue(ui.chestScene.chests[1]:IsShown())
+        assert(ok, message)
+    end
+)
+
+test("Forever requests its verified chest model instead of forcing the icon fallback", function()
+    local W, _, ui = fixture()
+    local create, flavor = CreateFrame, W.Client.flavor
+    local requested, model
+    local fallback = W.Widgets.Icon(ui.chestFrame, "INV_Misc_TreasureChest01a", 0, 0, 32)
+    local ok, message = pcall(function()
+        W.Client.flavor = "forever"
+        CreateFrame = function(...)
+            local frame = create(...)
+            frame.SetModel = function(_, fileID)
+                requested = fileID
+            end
+            return frame
+        end
+        model = W.Client.CreateChestModel(ui.chestFrame, fallback)
+        assertEquals(1100065, requested)
+        assertNotNil(model:GetScript("OnUpdate"))
+        model.GetModelFileID = function()
+            return requested
+        end
+        model.HasAnimation = function()
+            return true
+        end
+        model:GetScript("OnModelLoaded")(model)
+        assertTrue(model.chestReady)
+        assertFalse(fallback:IsShown())
+        assertEquals(1, model:GetAlpha())
+    end)
+    CreateFrame, W.Client.flavor = create, flavor
+    if model then
+        model:Hide()
+    end
+    fallback:Hide()
+    assert(ok, message)
+end)

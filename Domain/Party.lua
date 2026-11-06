@@ -123,7 +123,7 @@ function G.AddHero(state, classID, identity)
     G.MasteryProgress(hero)
     state.heroes[#state.heroes + 1] = hero
     hero.appearanceSeed = state.seed
-    G.Emit(state, "recruit")
+    G.Emit(state, "recruit", { target = hero.id })
     G.Log(
         state,
         hero.name

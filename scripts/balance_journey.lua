@@ -267,6 +267,9 @@ local function checkin(second)
             B.talents(s, index, hero.class == "PRIEST" and 2 or 1)
             G.ConfigurePreset(s, index, hero.class == "PRIEST" and "support" or "offense")
         end
+        if G.ChestCount(s) > 0 then
+            assert(G.OpenChests(s, "all"))
+        end
         G.EquipBest(s, index)
         if plan.spend then
             for _ = 1, math.max(1, math.floor(plan.cadence / 600)) do

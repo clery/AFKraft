@@ -33,6 +33,8 @@ function W.RegisterSettings()
                     unit.floatAnimation:Stop()
                     unit.floating:SetAlpha(0)
                 end
+            elseif key == "rewardToasts" and not value then
+                W.Notifications.Clear()
             elseif key:find("^sound") and not value then
                 W.Audio.Stop()
             end
@@ -59,6 +61,7 @@ function W.RegisterSettings()
             L.CHAT_ANNOUNCEMENTS,
             L.CHAT_ANNOUNCEMENTS_DESCRIPTION,
         },
+        { "rewardToasts", L.REWARD_TOASTS, L.REWARD_TOASTS_DESCRIPTION },
         {
             "combatText",
             L.FLOATING_COMBAT_TEXT,

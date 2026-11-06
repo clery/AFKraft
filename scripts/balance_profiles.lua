@@ -24,6 +24,7 @@ for _, file in ipairs({
     "Domain/Resources.lua",
     "Domain/Mastery.lua",
     "Domain/Inventory.lua",
+    "Domain/Chests.lua",
     "Domain/Collections.lua",
     "Domain/HuntSession.lua",
     "Compatibility/CollectionSources.lua",
@@ -82,6 +83,9 @@ local function checkin(state)
             if G.TalentRank(hero, talent) < talent.maxRanks then
                 G.Talent(state, index, talent.id)
             end
+        end
+        if G.ChestCount(state) > 0 then
+            assert(G.OpenChests(state, "all"))
         end
         G.EquipBest(state, index)
         local opportunity = G.CraftingOpportunity(state, index)

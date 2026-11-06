@@ -52,6 +52,7 @@ Domain\Party.lua
 Domain\Resources.lua
 Domain\Mastery.lua
 Domain\Inventory.lua
+Domain\Chests.lua
 Domain\Collections.lua
 Domain\HuntSession.lua
 Domain\Routes.lua
@@ -70,6 +71,7 @@ Compatibility\Equipment.lua
 Compatibility\ModelFraming.xml
 Compatibility\ModelFraming.lua
 Compatibility\SpellEffects.lua
+Compatibility\Chests.lua
 Compatibility\Maps.lua
 Compatibility\MapMasks.lua
 Compatibility\MapMasksForever.lua
@@ -80,6 +82,7 @@ Compatibility\Dungeons.lua
 Compatibility\SceneryAssets.lua
 Compatibility\Sounds.lua
 UI\Widgets.lua
+UI\Notifications.lua
 UI\AdventureBar.lua
 UI\Scenery.lua
 UI\Backdrop.lua
@@ -95,6 +98,7 @@ UI\ProfessionPanel.lua
 UI\DifficultyPanel.lua
 UI\BoostRulePanel.lua
 UI\OfflinePanel.lua
+UI\ChestPanel.lua
 UI\DevelopmentPanel.lua
 UI\Panels.lua
 UI\Tutorial.lua

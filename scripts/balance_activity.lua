@@ -17,6 +17,7 @@ for _, file in ipairs({
     "Domain/Boosts.lua",
     "Domain/Party.lua",
     "Domain/Inventory.lua",
+    "Domain/Chests.lua",
     "Domain/Professions.lua",
     "Domain/Adventure.lua",
 }) do

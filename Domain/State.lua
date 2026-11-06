@@ -70,6 +70,7 @@ function G.New(now)
         seed = floor(now) % 2147483646 + 1,
         heroes = {},
         inventory = {},
+        chests = {},
         nextItem = 1,
         essence = 0,
         adventure = { rank = 1, xp = 0, totalXP = 0, sources = {} },
@@ -161,6 +162,9 @@ function G.New(now)
         ui = { compact = false, locked = false, tab = "adventure" },
         settings = {
             chatAnnouncements = true,
+            rewardToasts = true,
+            instantChestReveal = false,
+            chestAutoEquip = false,
             combatText = true,
             soundEnabled = true,
             soundCombat = true,
@@ -501,6 +505,14 @@ function G.Load(db, now)
             end
         end
         return true
+    end
+    if not G.ValidateChests(db) then
+        return nil, L.INVALID_CHEST_SAVE
+    end
+    for _, chest in ipairs(db.chests) do
+        if not validModifications(chest.item) then
+            return nil, L.INVALID_CHEST_SAVE
+        end
     end
     for _, item in ipairs(db.inventory) do
         if not validModifications(item) then

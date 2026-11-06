@@ -378,7 +378,7 @@ local function victory(state, battle)
     then
         local item = G.ZoneLoot(state, battle.level)
         if item then
-            G.Loot(state, item)
+            G.StoreChest(state, item)
         end
     end
     local previousSafe = state.safe[state.zone] or 0

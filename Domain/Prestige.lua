@@ -39,6 +39,7 @@ function G.ResetAdventure(state, deep)
         end
     end
     state.inventory = retained
+    state.chests = {}
     for _, hero in ipairs(state.heroes) do
         G.ReturnUnusableGear(state, hero)
     end

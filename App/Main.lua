@@ -106,6 +106,7 @@ function W.ResetAdventure()
     W.state, AFKraftDB = state, state
     G.BeginHuntSession(state, A.Now())
     startingHero(state)
+    W.Notifications.Clear()
     local ui = W.UI
     for _, key in ipairs({
         "craftSlot",
@@ -169,6 +170,7 @@ function root:OnDisable()
         W.UI.frame:Hide()
     end
     W.Audio.Stop()
+    W.Notifications.Clear()
 end
 
 function root:Save()
@@ -236,4 +238,5 @@ function root.Update(_, dt)
         end
     end
     W.Audio.Flush()
+    W.Notifications.Flush()
 end
