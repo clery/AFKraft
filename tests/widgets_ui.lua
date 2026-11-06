@@ -8,6 +8,49 @@ local function parentFrame()
     return frame, AFKraft.Widgets
 end
 
+test("Gold and standard buttons keep matching bounds and fonts across states and reuse", function()
+    local parent, U = parentFrame()
+    local function build(y, height)
+        U.Begin(parent)
+        local standard = U.Button(parent, "Retry", 0, y, 160, height, function() end)
+        local gold = U.Button(
+            parent,
+            "World map",
+            180,
+            y,
+            160,
+            height,
+            function() end,
+            nil,
+            "primary"
+        )
+        U.EndBuild(parent)
+        local _, _, _, _, standardY = standard:GetPoint()
+        local _, _, _, _, goldY = gold:GetPoint()
+        local _, _, _, _, standardTextY = standard.text:GetPoint()
+        local _, _, _, _, goldTextY = gold.text:GetPoint()
+        assertEquals(standardY, goldY)
+        assertEquals(standardY + standardTextY, goldY + goldTextY)
+        assertEquals(height, gold:GetHeight())
+        for _, button in ipairs({ standard, gold }) do
+            for _, enabled in ipairs({ false, true }) do
+                button:SetEnabled(enabled)
+                button:LockHighlight()
+                local font, size, flags = button.text:GetFont()
+                assertEquals(AFKraft.font, font)
+                assertEquals(13, size)
+                assertEquals("", flags)
+                assertFalse(button.text == button:GetFontString())
+                button:UnlockHighlight()
+            end
+        end
+        return gold
+    end
+    local gold = build(20, 32)
+    assertTrue(gold == build(60, 34))
+    parent:Hide()
+end)
+
 test("Commands, selections, tabs and passive cards keep distinct behaviors", function()
     local parent, U = parentFrame()
     U.Begin(parent)

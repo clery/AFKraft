@@ -189,7 +189,15 @@ function U.Button(parent, text, x, y, w, h, fn, active, variant)
             local ok, button = pcall(CreateFrame, "Button", nil, parent, template)
             if ok then
                 button.native = true
-                button.text = button:GetFontString()
+                -- Keep native hover/disabled fonts from changing the shared label size.
+                button:GetFontString():Hide()
+                button.text = U.Text(button, "", 0, 0, 13)
+                if variant == "primary" then
+                    -- Crop the gold texture's extra bottom shadow to match standard button borders.
+                    for _, texture in ipairs({ button.Left, button.Middle, button.Right }) do
+                        texture:SetTexCoord(0, 1, 0, 0.875)
+                    end
+                end
                 return button
             end
         end
@@ -216,7 +224,7 @@ function U.Button(parent, text, x, y, w, h, fn, active, variant)
         b.selection:SetHeight(math.max(1, h - 12))
     end
     b.text:ClearAllPoints()
-    b.text:SetPoint("CENTER", b, "CENTER", 0, variant == "primary" and b.native and 3 or 0)
+    b.text:SetPoint("CENTER", b, "CENTER")
     b.text:SetFont(W.font, 13, "")
     U.SingleLine(b.text, w - 24, h - 8, selection and "LEFT" or "CENTER")
     b.text:SetText(text)
