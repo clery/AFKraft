@@ -64,6 +64,10 @@ local function activate()
             W.Action(G.Equip, entry.target, index)
         end
     else
+        if entry.completed then
+            W.UI.collectionSelected = entry.setID
+            W.CollectionPanel.Celebrate(W.state, entry.setID, entry.itemID)
+        end
         W.UI.selected = entry.target or W.UI.selected
         W.UI.frame:Show()
         W.UI:SetTab(entry.tab)
@@ -87,7 +91,8 @@ local function create()
         edgeSize = 16,
         insets = { left = 4, right = 4, top = 4, bottom = 4 },
     })
-    U.Rect(frame, 4, 4, 372, 124, T.bg)
+    frame.fill = U.Rect(frame, 4, 4, 372, 124, T.bg)
+    frame.pieces, frame.pieceGlows = {}, {}
     frame.icon = U.Icon(frame, "INV_Misc_Bag_10", 18, 41, 44)
     frame.heading = U.SingleLine(U.Text(frame, "", 18, 13, 12, T.gold), 310, 20)
     frame.title = U.SingleLine(U.Text(frame, "", 74, 39, 14), 286, 24)
@@ -104,6 +109,20 @@ local function create()
             N.age = N.age + dt
         else
             N.age = math.min(N.age, 7.2)
+        end
+        if N.current and N.current.completed then
+            local collection = C.collectionByID[N.current.setID]
+            for index, icon in ipairs(self.pieces) do
+                local itemID = collection.pieces[index]
+                local settle = itemID == N.current.itemID and math.min(1, N.age / 0.4) or 1
+                icon:ClearAllPoints()
+                icon:SetPoint("TOPLEFT", 24 + (index - 1) * 66 - (1 - settle) * 20, -98)
+                icon:SetSize(40 + (1 - settle) * 24, 40 + (1 - settle) * 24)
+                icon:SetAlpha(settle)
+                self.pieceGlows[index]:SetAlpha(
+                    math.max(0, 1 - math.abs(N.age - 0.65) / 0.65) * 0.85
+                )
+            end
         end
         self:SetAlpha(math.min(1, N.age / 0.2, math.max(0, (8 - N.age) / 0.4)))
         if N.age >= 8 then
@@ -175,9 +194,41 @@ function N.Flush()
             if entry.kind == "chest" then
                 state.ui.lastChestToastTime = W.Client.Now()
             end
+            local height = entry.completed and 200 or 132
+            frame:SetHeight(height)
+            frame.fill:SetHeight(height - 8)
+            frame.action:ClearAllPoints()
+            frame.action:SetPoint("TOPLEFT", 246, -(height - 36))
+            for _, icon in ipairs(frame.pieces) do
+                icon:Hide()
+            end
+            for _, glow in ipairs(frame.pieceGlows) do
+                glow:Hide()
+            end
+            if entry.completed then
+                for index, itemID in ipairs(C.collectionByID[entry.setID].pieces) do
+                    if not frame.pieces[index] then
+                        frame.pieces[index] = U.Icon(frame, "INV_Misc_Bag_10", 0, 0, 40)
+                        local glow = frame:CreateTexture(nil, "ARTWORK")
+                        glow:SetTexture("Interface\\Cooldown\\star4")
+                        glow:SetBlendMode("ADD")
+                        glow:SetVertexColor(unpack(T.gold))
+                        glow:SetPoint("CENTER", frame.pieces[index], "CENTER")
+                        glow:SetSize(70, 70)
+                        frame.pieceGlows[index] = glow
+                    end
+                    frame.pieces[index]:SetTexture(
+                        "Interface\\Icons\\" .. G.CollectionItem(itemID).icon
+                    )
+                    frame.pieces[index]:Show()
+                    frame.pieceGlows[index]:Show()
+                    frame.pieceGlows[index]:SetAlpha(0)
+                end
+            end
             frame.heading:SetText("AFKraft · " .. entry.heading)
             frame.title:SetText(entry.title)
             frame.title:SetTextColor(unpack(entry.color or T.text))
+            frame.detail.fitSize = entry.completed and 14 or 12
             frame.detail:SetText(entry.detail)
             frame.icon:SetTexture("Interface\\Icons\\" .. entry.icon)
             frame:SetBackdropBorderColor(unpack(entry.color or T.gold))
@@ -190,6 +241,9 @@ function N.Flush()
             )
             frame:SetAlpha(0)
             frame:Show()
+            if entry.completed then
+                W.Audio.CollectionComplete(state)
+            end
             return
         end
     end
@@ -203,9 +257,23 @@ local function enqueue(entry)
         end
     end
     if #N.queue >= 5 then
-        table.remove(N.queue, 1)
+        local index = 1
+        while N.queue[index] and N.queue[index].completed do
+            index = index + 1
+        end
+        if index > #N.queue then
+            if not entry.completed then
+                return
+            end
+            index = #N.queue
+        end
+        table.remove(N.queue, index)
     end
-    N.queue[#N.queue + 1] = entry
+    if entry.completed then
+        table.insert(N.queue, 1, entry)
+    else
+        N.queue[#N.queue + 1] = entry
+    end
 end
 
 local previousEvent = W.OnGameEvent
@@ -265,16 +333,41 @@ function W.OnGameEvent(state, event)
         })
     elseif event.kind == "collection" then
         local item = G.CollectionItem(event.itemID)
+        local collection = C.collectionByID[event.setID]
+        local completed = event.completed
+            and collection
+            and G.CollectionProgress(state, collection.id).complete
         if item then
+            if completed then
+                for index = #N.queue, 1, -1 do
+                    if N.queue[index].setID == collection.id then
+                        table.remove(N.queue, index)
+                    end
+                end
+                if
+                    N.current
+                    and N.current.kind == "collection"
+                    and N.current.setID == collection.id
+                then
+                    dismiss()
+                end
+            end
             enqueue({
                 kind = "collection",
-                key = "collection:" .. event.itemID,
-                heading = L.COLLECTION_DISCOVERED,
-                title = G.ItemName(item),
-                detail = L.COLLECTIONS,
+                completed = completed,
+                setID = event.setID,
+                itemID = event.itemID,
+                key = completed and "collectionComplete:" .. collection.id
+                    or "collection:" .. event.itemID,
+                heading = completed and L.COLLECTION_COMPLETE or L.COLLECTION_DISCOVERED,
+                title = completed and collection.name or G.ItemName(item),
+                detail = completed and string.format(
+                    L.COLLECTION_EFFECT_UNLOCKED,
+                    W.CollectionPanel.EffectText(collection)
+                ) or L.COLLECTIONS,
                 icon = item.icon or "INV_Misc_TreasureChest01a",
                 tab = "collections",
-                color = C.qualityColors[item.quality],
+                color = completed and T.gold or C.qualityColors[item.quality],
             })
         end
     end

@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.ruRU = {
+    COLLECTION_COMPLETE = "Коллекция собрана!",
+    COLLECTION_EFFECT_UNLOCKED = "Открыт эффект: %s",
+
     JOURNAL_BONUS_DELIVERED = "Дополнительные припасы журнала получены",
     JOURNAL_RESET_NOTICE = "Начался новый месяц журнала. Заработанные награды сохранены.",
 

@@ -340,3 +340,27 @@ test(
         assertEquals(0, ui.chestHighlights[2]:GetAlpha())
     end
 )
+
+test(
+    "Rare rays and Epic orbiting motes use distinct shapes and lighting without restarting",
+    function()
+        local sizes, rotations = {}, {}
+        for quality = 3, 4 do
+            local W, state, ui = fixture()
+            drop(W, state, 2, quality)
+            ui.chestControls[1]:GetScript("OnClick")()
+            ui.chestScene:GetScript("OnUpdate")(ui.chestScene, 0.3)
+            local spark = ui.chestScene.sparks[1]
+            sizes[quality] = { spark:GetWidth(), spark:GetHeight() }
+            rotations[quality] = ui.chestScene.glow:GetRotation()
+            ui.chestControls[1]:GetScript("OnClick")()
+            assertEquals(0.3, ui.chestElapsed)
+            assertEquals(2, ui.chestOpening.count)
+            ui.chestSkip:GetScript("OnClick")()
+        end
+        assertTrue(sizes[3][1] < sizes[3][2])
+        assertEquals(sizes[4][1], sizes[4][2])
+        assertEquals(0, rotations[3])
+        assertTrue(rotations[4] > 0)
+    end
+)

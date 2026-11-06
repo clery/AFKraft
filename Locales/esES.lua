@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.esES = {
+    COLLECTION_COMPLETE = "¡Colección completada!",
+    COLLECTION_EFFECT_UNLOCKED = "Efecto desbloqueado: %s",
+
     JOURNAL_BONUS_DELIVERED = "Suministros extra del diario entregados",
     JOURNAL_RESET_NOTICE = "Comienza un nuevo mes del diario. Se conservan las recompensas ganadas.",
 

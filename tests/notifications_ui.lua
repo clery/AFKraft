@@ -242,3 +242,59 @@ test("Chest reminders start at ten, defer unsafe contexts and persist their cool
     N.Clear()
     assert(ok, message)
 end)
+
+test(
+    "Completed collections replace piece toasts with a set reveal and the real selectable effect",
+    function()
+        local W, state, N = fixture()
+        local collection = W.Content.collections[1]
+        for index, itemID in ipairs(collection.pieces) do
+            state.outdoorCollections.pieces[itemID] = true
+            W.Game.Emit(
+                state,
+                "collection",
+                { itemID = itemID, setID = collection.id, completed = index == #collection.pieces }
+            )
+        end
+        assertEquals(1, #N.queue)
+        for _, itemID in ipairs(W.Content.collections[2].pieces) do
+            W.Game.Emit(state, "collection", { itemID = itemID })
+        end
+        assertTrue(N.queue[1].completed)
+        N.Flush()
+        assertTrue(N.current.completed)
+        assertEquals(collection.name, N.current.title)
+        assertEquals(
+            string.format(W.L.COLLECTION_EFFECT_UNLOCKED, W.CollectionPanel.EffectText(collection)),
+            N.current.detail
+        )
+        assertEquals(200, N.frame:GetHeight())
+        assertEquals(nil, W.Game.ActiveCollectionEffect(state))
+        N.frame:GetScript("OnUpdate")(N.frame, 0.2)
+        assertTrue(N.frame.pieces[#collection.pieces]:GetWidth() > 40)
+        N.frame:GetScript("OnUpdate")(N.frame, 0.5)
+        assertEquals(40, N.frame.pieces[#collection.pieces]:GetWidth())
+        assertTrue(N.frame.pieceGlows[1]:GetAlpha() > 0)
+        N.frame.action:GetScript("OnClick")()
+        assertEquals("collections", state.ui.tab)
+        assertEquals(collection.id, W.UI.collectionSelected)
+        local update = W.UI.collectionFrame:GetScript("OnUpdate")
+        update(W.UI.collectionFrame, 0.2)
+        assertTrue(W.UI.collectionCards[collection.pieces[1]].completionGlow:GetAlpha() > 0)
+        update(W.UI.collectionFrame, 2)
+        assertEquals(nil, W.UI.collectionCelebration)
+        assertEquals(
+            48,
+            W.UI.collectionCards[collection.pieces[#collection.pieces]].icon:GetWidth()
+        )
+        W.UI.collectionEffect:GetScript("OnClick")()
+        assertEquals(collection.id, W.Game.ActiveCollectionEffect(state))
+        W.Game.Emit(state, "levelup", { target = 1 })
+        N.Flush()
+        assertEquals(132, N.frame:GetHeight())
+        for _, icon in ipairs(N.frame.pieces) do
+            assertFalse(icon:IsShown())
+        end
+        N.Clear()
+    end
+)

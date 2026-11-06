@@ -485,4 +485,30 @@ case(
     end
 )
 
+case("A multi-piece discovery celebrates each newly completed set exactly once", function()
+    fixture(function(sources)
+        local s = state()
+        for index = 1, 3 do
+            s.outdoorCollections.pieces[pieces[index]] = true
+        end
+        sources.profiles.syntheticA.chance = 100
+        local previous, events = W.OnGameEvent, {}
+        W.OnGameEvent = function(_, event)
+            if event.kind == "collection" then
+                events[#events + 1] = event
+            end
+        end
+        local ok, problem = pcall(function()
+            assert(G.CollectionKill(s, context(1, 104)))
+            assert(not G.CollectionKill(s, context(1, 104)))
+            assert(not G.CollectionKill(s, context(2, 104)))
+        end)
+        W.OnGameEvent = previous
+        assert(ok, problem)
+        assert(#events == 2 and not events[1].completed and events[2].completed)
+        assert(events[2].itemID == pieces[5] and events[2].setID == setID)
+        assert(G.ActiveCollectionEffect(s) == nil)
+    end)
+end)
+
 return cases

@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.frFR = {
+    COLLECTION_COMPLETE = "Collection complète !",
+    COLLECTION_EFFECT_UNLOCKED = "Effet débloqué : %s",
+
     JOURNAL_BONUS_DELIVERED = "Fournitures bonus du carnet reçues",
     JOURNAL_RESET_NOTICE = "Un nouveau mois du carnet commence. Les récompenses gagnées sont conservées.",
 

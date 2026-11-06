@@ -15,6 +15,23 @@ function P.SourceProfile(kind)
     return sources and sources.ActiveProfile and sources.ActiveProfile(kind or "outdoor") or nil
 end
 
+function P.EffectText(collection)
+    return collection.effect.damageTaken
+            and string.format(
+                L.LESS_DAMAGE_FROM,
+                (1 - collection.effect.damageTaken) * 100,
+                collection.effect.family
+            )
+        or string.format(L.BASIC_ATTACK_DAMAGE, (collection.effect.basicAttack or 0) * 100)
+end
+
+function P.Celebrate(state, setID, itemID)
+    if state ~= W.state or W.catchup or not W.UI then
+        return
+    end
+    W.UI.collectionCelebration = { state = state, setID = setID, itemID = itemID, age = 0 }
+end
+
 local function createBrowser(parent)
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetAllPoints(parent)
@@ -46,6 +63,28 @@ local function createBrowser(parent)
     frame.detail = CreateFrame("Frame", nil, frame)
     frame.detail:SetPoint("TOPLEFT", 366, -48)
     frame.detail:SetSize(930, 540)
+    frame:SetScript("OnUpdate", function(_, dt)
+        local celebration = W.UI.collectionCelebration
+        if
+            not celebration
+            or celebration.state ~= W.state
+            or W.UI.collectionSelected ~= celebration.setID
+        then
+            return
+        end
+        celebration.age = math.min(1.6, celebration.age + dt)
+        for itemID, card in pairs(W.UI.collectionCards or {}) do
+            local pulse = math.max(0, 1 - math.abs(celebration.age - 0.55) / 0.65)
+            card.completionGlow:SetAlpha(pulse * 0.8)
+            if itemID == celebration.itemID then
+                local settle = math.min(1, celebration.age / 0.35)
+                card.icon:SetSize(48 + (1 - settle) * 20, 48 + (1 - settle) * 20)
+            end
+        end
+        if celebration.age >= 1.6 then
+            W.UI.collectionCelebration = nil
+        end
+    end)
     return frame
 end
 
@@ -127,6 +166,8 @@ function P.Draw(ui, parent, state)
         card.icon:SetDesaturated(not found)
         card.icon:SetAlpha(found and 1 or 0.45)
         U.Text(card, G.ItemName(item), 74, 25, 15, found and T.gold or T.muted, 210)
+        card.completionGlow = U.Rect(card, 0, 0, 296, 92, T.gold, 0.35)
+        card.completionGlow:SetAlpha(0)
         U.EndBuild(card)
         local details = P.SourceLabel(source)
         if profile and profile.enabled and profile.verified and source and source.verified then
@@ -187,13 +228,7 @@ function P.Draw(ui, parent, state)
         end
     )
     U.Enabled(ui.collectionEffect, progress.complete)
-    local effectText = collection.effect.damageTaken
-            and string.format(
-                L.LESS_DAMAGE_FROM,
-                (1 - collection.effect.damageTaken) * 100,
-                collection.effect.family
-            )
-        or string.format(L.BASIC_ATTACK_DAMAGE, (collection.effect.basicAttack or 0) * 100)
+    local effectText = P.EffectText(collection)
     U.Tooltip(
         ui.collectionEffect,
         L.ONE_ACTIVE_COLLECTION_EFFECT,
@@ -221,12 +256,13 @@ function P.Draw(ui, parent, state)
     ui.collectionEffectStatus = U.Text(
         parent,
         active and L.ACTIVE_EFFECT_PREFIX .. collection.name
+            or progress.complete and string.format(L.COLLECTION_EFFECT_UNLOCKED, effectText)
             or L.ACTIVE_EFFECT_PREFIX
                 .. (effectID and C.collectionByID[effectID].name or L.NONE),
         0,
         466,
-        14,
-        active and T.green or T.muted,
+        progress.complete and 18 or 14,
+        active and T.green or progress.complete and T.gold or T.muted,
         930
     )
     local legacy = {}
@@ -270,4 +306,23 @@ function P.Draw(ui, parent, state)
         )
     end
     U.EndBuild(parent)
+end
+
+local previousEvent = W.OnGameEvent
+function W.OnGameEvent(state, event)
+    if previousEvent then
+        previousEvent(state, event)
+    end
+    if
+        event.kind == "collection"
+        and event.completed
+        and state == W.state
+        and not W.catchup
+        and W.UI
+        and state.ui.tab == "collections"
+        and W.UI.collectionSelected == event.setID
+    then
+        P.Celebrate(state, event.setID, event.itemID)
+        W.UI:Refresh()
+    end
 end

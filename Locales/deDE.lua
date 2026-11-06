@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.deDE = {
+    COLLECTION_COMPLETE = "Sammlung vollständig!",
+    COLLECTION_EFFECT_UNLOCKED = "Effekt freigeschaltet: %s",
+
     JOURNAL_BONUS_DELIVERED = "Bonusvorräte des Journals zugestellt",
     JOURNAL_RESET_NOTICE = "Ein neuer Journalmonat beginnt. Verdiente Belohnungen bleiben erhalten.",
 

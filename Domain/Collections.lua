@@ -499,6 +499,13 @@ function G.CollectionKill(state, context)
     end
     book.stats.kills = book.stats.kills + 1
     book.stats.discoveries = book.stats.discoveries + #discoveries
+    local completed = {}
+    for _, itemID in ipairs(discoveries) do
+        local setID = C.collectionByItem[itemID]
+        if G.CollectionProgress(state, setID).complete then
+            completed[setID] = itemID
+        end
+    end
     for _, itemID in ipairs(discoveries) do
         local item = G.CollectionItem(itemID)
         G.Log(
@@ -509,7 +516,11 @@ function G.CollectionKill(state, context)
                 .. L.COLLECTION_SUFFIX,
             true
         )
-        G.Emit(state, "collection", { itemID = itemID, setID = C.collectionByItem[itemID] })
+        G.Emit(state, "collection", {
+            itemID = itemID,
+            setID = C.collectionByItem[itemID],
+            completed = completed[C.collectionByItem[itemID]] == itemID,
+        })
     end
     return true, { discoveries = discoveries, progressed = #pending }
 end

@@ -46,6 +46,38 @@ local function fixture()
 end
 return {
     {
+        "Collection fanfare works with the window closed and Rare and Epic cues differ",
+        function()
+            local n, _, played, advance = fixture()
+            local shown = true
+            n.Notifications = {
+                state = n.state,
+                current = { completed = true },
+                frame = {
+                    IsShown = function()
+                        return shown
+                    end,
+                },
+            }
+            advance(0, false)
+            n.Audio.CollectionComplete(n.state)
+            assert(#played == 1)
+            n.Audio.Flush()
+            assert(#played == 1)
+            n.state.settings.soundEquipment = false
+            n.Audio.CollectionComplete(n.state)
+            assert(#played == 1)
+            n.state.settings.soundEquipment = true
+            shown = false
+            n.Audio.CollectionComplete(n.state)
+            assert(#played == 1)
+            advance(2, true)
+            n.Audio.ChestReveal(n.state, 3)
+            n.Audio.ChestReveal(n.state, 4)
+            assert(played[2] ~= played[3])
+        end,
+    },
+    {
         "Chest reveals play quality cues on their panel and respect mutes",
         function()
             local n, _, played, advance, env = fixture()

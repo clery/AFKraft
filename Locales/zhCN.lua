@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.zhCN = {
+    COLLECTION_COMPLETE = "收藏已集齐！",
+    COLLECTION_EFFECT_UNLOCKED = "已解锁效果：%s",
+
     JOURNAL_BONUS_DELIVERED = "日志额外补给已发放",
     JOURNAL_RESET_NOTICE = "新的日志月份开始，已获得的奖励保留。",
 

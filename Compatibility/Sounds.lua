@@ -367,6 +367,7 @@ local pendingHits = {}
 local quietUntil = -math.huge
 local handles = {}
 local levelUpQuietUntil = -math.huge
+local rewardQuietUntil = -math.huge
 
 function Audio.Stop()
     pending = nil
@@ -377,34 +378,49 @@ function Audio.Stop()
         end
         handles[i] = nil
     end
-    levelUpQuietUntil = -math.huge
+    levelUpQuietUntil, rewardQuietUntil = -math.huge, -math.huge
 end
 
-function Audio.ChestReveal(state, quality)
+local function rewardSound(state, name, visible)
     if
         state ~= W.state
         or W.catchup
         or not state.settings.soundEnabled
         or not state.settings.soundEquipment
-        or not W.UI
-        or not W.UI.frame:IsShown()
+        or not visible
     then
         return
     end
-    local names = {
-        "LOOT_WINDOW_COIN_SOUND",
-        "IG_ABILITY_ICON_DROP",
-        "UI_GARRISON_FOLLOWER_LEARN_TRAIT",
-        "UI_ADVENTURES_ADVENTURE_SUCCESS_COMPLETE",
-    }
-    local kit = SOUNDKIT and SOUNDKIT[names[quality]]
+    local kit = SOUNDKIT and SOUNDKIT[name]
     if type(kit) == "number" and kit > 0 and PlaySound then
         Audio.Stop()
         local ok, played, handle = pcall(PlaySound, kit, "SFX", false)
         if ok and played and handle then
             handles[#handles + 1] = handle
         end
+        if ok and played then
+            rewardQuietUntil = GetTime() + 1.6
+        end
     end
+end
+
+function Audio.ChestReveal(state, quality)
+    local names = {
+        "LOOT_WINDOW_COIN_SOUND",
+        "IG_ABILITY_ICON_DROP",
+        "UI_GARRISON_FOLLOWER_LEARN_TRAIT",
+        "UI_ADVENTURES_ADVENTURE_SUCCESS_COMPLETE",
+    }
+    rewardSound(state, names[quality], W.UI and W.UI.frame:IsShown())
+end
+
+function Audio.CollectionComplete(state)
+    local notifications = W.Notifications
+    rewardSound(
+        state,
+        "UI_ADVENTURES_ADVENTURE_SUCCESS_COMPLETE",
+        notifications and notifications.frame and notifications.frame:IsShown()
+    )
 end
 
 local function audible(state)
@@ -498,6 +514,20 @@ function Audio.Flush()
         batch[2] = mobHit
     end
     cue = batch[1]
+    local toast = W.Notifications
+    if
+        GetTime() < rewardQuietUntil
+        and toast
+        and toast.current
+        and toast.current.completed
+        and toast.state == W.state
+        and not W.catchup
+        and W.state.settings.soundEnabled
+        and W.state.settings.soundEquipment
+        and toast.frame:IsShown()
+    then
+        return
+    end
     if not audible(W.state) then
         local state = W.state
         if

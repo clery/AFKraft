@@ -162,7 +162,10 @@ local function scene(ui, parent)
         end
         for index, model in ipairs(self.models) do
             W.Client.ChestPose(model, pose)
-            W.Client.ChestLight(model, color, energy * quality * 0.6)
+            local light = quality == 4 and energy * (1.6 + 0.5 * math.sin(release * 18))
+                or quality == 3 and energy * (burst > 0 and 2.2 or 0.7)
+                or energy * quality * 0.6
+            W.Client.ChestLight(model, color, light)
             model:ClearAllPoints()
             model:SetPoint(
                 "CENTER",
@@ -172,15 +175,29 @@ local function scene(ui, parent)
             )
         end
         self.flash:SetVertexColor(unpack(color))
-        self.flash:SetAlpha(burst > 0 and math.max(0, 1 - burst / 0.25) or 0)
+        self.flash:SetAlpha(
+            burst > 0 and math.max(0, 1 - burst / (quality == 4 and 0.4 or 0.18)) or 0
+        )
+        self.flash:SetSize(quality == 4 and 420 or 260, quality == 4 and 190 or 150)
         self.glow:SetVertexColor(unpack(color))
-        self.glow:SetRotation(ui.chestElapsed * 0.7)
+        self.glow:SetRotation(quality == 4 and ui.chestElapsed * 1.8 or 0)
         self.glow:SetSize(180 + energy * quality * 90, 100 + energy * quality * 45)
         self.glow:SetAlpha(math.min(1, energy * (0.35 + quality * 0.16)))
         self.chests[1]:SetSize(100 + energy * 12, 100 + energy * 12)
         for i, spark in ipairs(self.sparks) do
             local angle = i * math.pi / 6
-            local distance = burst > 0 and 45 + burst * (220 + quality * 45) or 35 + energy * 30
+            local distance
+            if quality == 4 then
+                angle = angle + ui.chestElapsed * 2.4
+                distance = burst > 0 and 55 + burst * 360 or 100 - energy * 55
+                spark:SetSize(14, 14)
+            elseif quality == 3 then
+                distance = burst > 0 and 35 + burst * 580 or 28 + energy * 15
+                spark:SetSize(8, burst > 0 and 72 or 22)
+            else
+                distance = burst > 0 and 45 + burst * 220 or 35 + energy * 30
+                spark:SetSize(12, 30)
+            end
             spark:ClearAllPoints()
             spark:SetPoint(
                 "CENTER",
@@ -207,7 +224,9 @@ local function open(ui, quantity)
             if not ui.chestOpening then
                 ui.chestElapsed, ui.chestPage, ui.chestImpact = 0, 0, false
                 ui.chestCharge = 0.35 + report.quality * 0.08
-                ui.chestDuration = ui.chestCharge + 0.95 + 0.22 + report.quality * 0.06
+                ui.chestDuration = ui.chestCharge
+                    + 0.95
+                    + (report.quality == 4 and 0.85 or 0.22 + report.quality * 0.06)
             end
             ui.chestOpening = mergeReport(ui.chestOpening, report)
             if state.settings.instantChestReveal then

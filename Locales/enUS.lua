@@ -1,6 +1,9 @@
 local _, W = ...
 
 W.Locales.enUS = {
+    COLLECTION_COMPLETE = "Collection complete!",
+    COLLECTION_EFFECT_UNLOCKED = "Unlocked effect: %s",
+
     JOURNAL_BONUS_DELIVERED = "Bonus Journal supplies delivered",
     JOURNAL_RESET_NOTICE = "A new Journal month begins. Earned rewards are retained.",
 
