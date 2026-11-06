@@ -43,7 +43,9 @@ Content\Resources.lua
 Content\Collections.lua
 Content\Professions.lua
 Content\Development.lua
+Content\Journal.lua
 Domain\State.lua
+Domain\Journal.lua
 Domain\Development.lua
 Domain\Economy.lua
 Domain\Boosts.lua
@@ -100,6 +102,7 @@ UI\BoostRulePanel.lua
 UI\OfflinePanel.lua
 UI\ChestPanel.lua
 UI\DevelopmentPanel.lua
+UI\JournalPanel.lua
 UI\Panels.lua
 UI\Tutorial.lua
 UI\Shell.lua

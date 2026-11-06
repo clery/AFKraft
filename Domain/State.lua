@@ -35,6 +35,7 @@ function G.Emit(state, kind, data)
     if #state.events > 60 then
         table.remove(state.events, 1)
     end
+    G.JournalEvent(state, data)
 end
 
 function G.New(now)
@@ -74,6 +75,7 @@ function G.New(now)
         nextItem = 1,
         essence = 0,
         adventure = { rank = 1, xp = 0, totalXP = 0, sources = {} },
+        journal = G.NewJournal(now),
         gold = 0,
         legacy = 0,
         collectionTalents = {},
@@ -349,6 +351,9 @@ function G.Load(db, now)
     end
     if db.routes.offlineEnabled == nil then
         db.routes.offlineEnabled = false
+    end
+    if not G.ValidateJournal(db) then
+        return nil, L.JOURNAL_INVALID_SAVE
     end
     if not G.ValidateRoutes(db) then
         return nil, L.THE_SAVED_ROUTES_ARE_INVALID_YOUR_ADVENTURE_HAS_NOT

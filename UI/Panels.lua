@@ -296,6 +296,10 @@ function P.adventure(ui, p, s)
     U.SingleLine(text(p, s.log[#s.log] or "", 0, 210, 13, T.muted, 1290), 1290, 24)
 end
 
+function P.journal(ui, p, s)
+    W.JournalPanel.Draw(ui, p, s)
+end
+
 function P.party(ui, p, s)
     W.PartyPanel.Draw(ui, p, s)
 end

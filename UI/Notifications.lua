@@ -252,6 +252,17 @@ function W.OnGameEvent(state, event)
             icon = class.icon,
             tab = event.kind == "levelup" and "talents" or "party",
         })
+    elseif event.kind == "journal" or event.kind == "journalReward" then
+        enqueue({
+            kind = event.kind,
+            key = event.kind .. ":" .. event.title,
+            heading = event.heading,
+            title = event.title,
+            detail = L.JOURNAL_NAME,
+            icon = "INV_Misc_Book_09",
+            tab = "journal",
+            color = T.gold,
+        })
     elseif event.kind == "collection" then
         local item = G.CollectionItem(event.itemID)
         if item then

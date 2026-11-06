@@ -15,12 +15,14 @@ local tabs = {
     { "profiles", L.PROFILES },
     { "loot", L.LOOT_RULES },
     { "development", L.GROWTH, L.PROGRESSION_HEADING },
+    { "journal", L.JOURNAL_NAME },
     { "collections", L.COLLECTIONS },
     { "legacy", L.HERITAGE },
     { "difficulty", L.TRANSCENDENCE },
 }
 local tabIcons = {
     adventure = "INV_Misc_Map_01",
+    journal = "INV_Misc_Book_11",
     party = "Achievement_GuildPerk_EverybodysFriend",
     chests = "INV_Misc_TreasureChest02a",
     talents = "Ability_Marksmanship",
@@ -347,6 +349,8 @@ function UI:Refresh(redraw)
     )
     local chestCount = W.Game.ChestCount(s)
     self.tabs.chests.notice:SetText(chestCount > 0 and tostring(chestCount) or "")
+    local journalRewards = W.Game.JournalRewardsWaiting(s)
+    self.tabs.journal.notice:SetText(journalRewards > 0 and tostring(journalRewards) or "")
     self.tabs.party.notice:SetText(#s.heroes < W.Game.CompanionSlots(s) and L.RECRUIT or "")
     self.tabs.atlas.notice:SetText(routes > 0 and (routes .. L.DESTINATIONS_SUFFIX) or "")
     self.tabs.legacy.notice:SetText(
@@ -413,6 +417,10 @@ function UI:Refresh(redraw)
     if s.ui.tab == "offline" then
         self.section:SetText(L.RETURN_REPORT)
     end
+    if s.ui.tab == "adventure" and s.journal.title > 0 then
+        local title = C.journalTitles[s.journal.title / 5]
+        self.section:SetText("|TInterface\\Icons\\" .. title.icon .. ":24|t " .. title.name)
+    end
     self.sectionDetail:Hide()
     self.sectionHelp:SetShown(
         s.ui.tab == "profiles" or s.ui.tab == "crafting" or s.ui.tab == "workshop"
@@ -428,6 +436,7 @@ function UI:Refresh(redraw)
     self.reportLink:SetShown(s.lastOfflineSummary ~= nil)
     self.sectionDetail:SetText(
         s.ui.tab == "adventure" and L.YOUR_COMPANY_S_JOURNEY_THROUGH_AZEROTH
+            or s.ui.tab == "journal" and L.JOURNAL_DESCRIPTION
             or s.ui.tab == "party" and L.SELECT_A_COMPANION_TO_MANAGE_EQUIPMENT_AND_GROWTH
             or s.ui.tab == "talents" and L.SHAPE_A_COMPANION_S_TALENTS_AND_COMBAT_PRIORITIES
             or s.ui.tab == "crafting" and L.FORGE_PANEL_DESCRIPTION
@@ -465,6 +474,24 @@ function UI:Refresh(redraw)
             tostring(s.lastOfflineSummary),
             tostring(s.farming),
             s.lastDefeat or "",
+        }, ":")
+    elseif s.ui.tab == "journal" then
+        W.Game.RefreshJournal(s, W.Client.Now())
+        local j, totals = s.journal, s.journal.totals
+        featureState = table.concat({
+            j.xp,
+            j.claimed,
+            j.title,
+            j.day,
+            j.bonusXP,
+            j.titles,
+            W.Game.JournalRewardsWaiting(s),
+            totals.quest or 0,
+            totals.kill or 0,
+            totals.gather or 0,
+            totals.explore or 0,
+            totals.boss or 0,
+            totals.dungeon or 0,
         }, ":")
     elseif s.ui.tab == "development" then
         local d = s.development

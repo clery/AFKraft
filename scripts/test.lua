@@ -19,7 +19,9 @@ local files = {
     "Content/Collections.lua",
     "Content/Professions.lua",
     "Content/Development.lua",
+    "Content/Journal.lua",
     "Domain/State.lua",
+    "Domain/Journal.lua",
     "Domain/Development.lua",
     "Domain/Economy.lua",
     "Domain/Boosts.lua",
@@ -82,6 +84,7 @@ for _, file in ipairs({
     "tests/boost_rules.lua",
     "tests/balance.lua",
     "tests/development.lua",
+    "tests/journal.lua",
     "tests/economy.lua",
 }) do
     for _, spec in ipairs(assert(loadfile(file))("AFKraft", W)) do

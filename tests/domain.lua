@@ -616,6 +616,9 @@ case("Milestone logs notify once while routine XP stays quiet", function()
     end
     local ok, message = pcall(function()
         local s = party()
+        for _, achievement in ipairs(C.journalAchievements) do
+            s.journal.achievements[achievement.id] = true
+        end
         notices = {}
         G.AdventureXP(s, 1, "test", "Test")
         equal(#notices, 0)

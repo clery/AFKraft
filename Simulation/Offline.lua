@@ -248,6 +248,8 @@ function G.FinishCatchup(state, job)
         nil,
         "offline"
     )
+    G.CheckJournalAchievements(state)
+    G.DeliverJournalSupplies(state)
     job.finished = true
     return true
 end

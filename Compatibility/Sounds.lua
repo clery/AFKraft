@@ -57,6 +57,8 @@ local cues = {
     defeat = { "soundEncounters", "UI_ADVENTURES_ADVENTURE_FAILURE_COMPLETE", 4, 8 },
     -- Native character level-up fanfare (SoundKit 888, sound/spells/levelup.ogg).
     levelup = { "soundProgression", 888, 5, 4 },
+    journal = { "soundProgression", "IG_QUEST_LIST_COMPLETE", 3, 4 },
+    journalReward = { "soundProgression", "UI_GARRISON_FOLLOWER_LEARN_TRAIT", 5, 2 },
     unlock = { "soundProgression", "UI_GARRISON_FOLLOWER_LEARN_TRAIT", 5, 2 },
     train = { "soundProgression", "UI_GARRISON_FOLLOWER_LEARN_TRAIT", 5, 2 },
     prestige = { "soundProgression", "UI_SCENARIO_ENDING", 6, 2 },

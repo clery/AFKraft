@@ -83,6 +83,8 @@ function W.Initialize()
     AFKraftDB = state
     state.ui.tab = "offline"
     startingHero(state)
+    G.RefreshJournal(state, A.Now())
+    G.CheckJournalAchievements(state)
     G.BeginHuntSession(state, A.Now())
     W.catchup = G.BeginCatchup(state, A.Now())
     W.CreateUI()
@@ -105,6 +107,8 @@ function W.ResetAdventure()
     elapsed = 0
     W.Audio.Stop()
     W.state, AFKraftDB = state, state
+    G.RefreshJournal(state, A.Now())
+    G.CheckJournalAchievements(state)
     G.BeginHuntSession(state, A.Now())
     startingHero(state)
     W.Notifications.Clear()
@@ -205,8 +209,11 @@ function root:RefreshScene()
 end
 
 function root:RefreshUI()
-    if W.state and not W.catchup and W.UI.frame:IsShown() then
-        W.UI:Refresh(false)
+    if W.state and not W.catchup then
+        G.RefreshJournal(W.state, A.Now())
+        if W.UI.frame:IsShown() then
+            W.UI:Refresh(false)
+        end
     end
 end
 

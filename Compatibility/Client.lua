@@ -270,6 +270,7 @@ function A.Register(frame)
     -- pcall. Subscribe only to public reward signals; never probe combat-log access.
     for _, event in ipairs({
         "QUEST_TURNED_IN",
+        "ZONE_CHANGED_NEW_AREA",
         "PLAYER_LEVEL_UP",
         "BOSS_KILL",
         "CHAT_MSG_COMBAT_XP_GAIN",
@@ -302,13 +303,17 @@ function A.Event(s, event, ...)
     if W.DungeonRewards then
         W.DungeonRewards.Event(s, event, ...)
     end
-    if event == "QUEST_TURNED_IN" then
+    if event == "ZONE_CHANGED_NEW_AREA" then
+        A.JournalZone(s)
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        A.journalMap = nil
+    elseif event == "QUEST_TURNED_IN" then
         local questID = ...
         if readable(questID) and type(questID) == "number" then
             -- Repeatable quests can reward again; suppress only duplicate delivery.
             G.ActivityReward(
                 s,
-                "quest:" .. questID .. ":" .. math.floor(A.Now() / 2),
+                "quest:" .. A.Identity().guid .. ":" .. questID .. ":" .. math.floor(A.Now() / 2),
                 "quest",
                 L.QUEST_COMPLETED
             )
@@ -353,6 +358,44 @@ function A.Event(s, event, ...)
             "kill",
             L.COMBAT_EXPERIENCE
         )
+    end
+end
+
+-- Normalize child maps to outdoor zones; instance floors never count as travel.
+function A.JournalZone(state)
+    if not C_Map or not C_Map.GetBestMapForUnit or not C_Map.GetMapInfo then
+        return
+    end
+    local inside = IsInInstance and IsInInstance()
+    if not readable(inside) or inside then
+        return
+    end
+    local id = C_Map.GetBestMapForUnit("player")
+    for _ = 1, 8 do
+        if
+            not readable(id)
+            or type(id) ~= "number"
+            or id <= 0
+            or id >= math.huge
+            or id ~= math.floor(id)
+        then
+            return
+        end
+        local info = C_Map.GetMapInfo(id)
+        if not readable(info) or type(info) ~= "table" or not readable(info.mapType) then
+            return
+        end
+        if info.mapType == 3 then
+            if A.journalMap ~= id then
+                A.journalMap = id
+                W.Game.JournalActivity(state, "explore", A.Now(), id)
+            end
+            return
+        end
+        if info.mapType ~= 5 and info.mapType ~= 6 then
+            return
+        end
+        id = info.parentMapID
     end
 end
 

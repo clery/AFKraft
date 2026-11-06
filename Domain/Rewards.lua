@@ -29,7 +29,10 @@ function G.ActivityReward(state, key, kind, label)
     if not reward or not claim(state, key) then
         return false
     end
-    return G.AdventureXP(state, reward.xp, kind, label)
+    local result, essence = G.AdventureXP(state, reward.xp, kind, label)
+    local now = W.Client and W.Client.Now() or state.lastTime
+    G.JournalActivity(state, kind == "skinning" and "gather" or kind, now)
+    return result, essence
 end
 
 -- Base destination output plus a bounded share from explicitly tagged enemies.
