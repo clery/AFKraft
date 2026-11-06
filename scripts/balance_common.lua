@@ -1,14 +1,14 @@
 -- Shared fixture helpers for standalone balance checks, never loaded by the addon.
 local W = {}
-assert(loadfile("Localization.lua"))("WoWIdle", W)
-assert(loadfile("Locales/enUS.lua"))("WoWIdle", W)
-for line in io.lines("WoWIdle.toc") do
+assert(loadfile("Localization.lua"))("AFKraft", W)
+assert(loadfile("Locales/enUS.lua"))("AFKraft", W)
+for line in io.lines("AFKraft.toc") do
     local file = line:gsub("\\", "/")
     if file:match("^Content") or file:match("^Domain/") or file:match("^Simulation/") then
-        assert(loadfile(file))("WoWIdle", W)
+        assert(loadfile(file))("AFKraft", W)
     end
 end
-assert(loadfile("Compatibility/CollectionSources.lua"))("WoWIdle", W)
+assert(loadfile("Compatibility/CollectionSources.lua"))("AFKraft", W)
 local G, C = W.Game, W.Content
 local B = { G = G, C = C, W = W }
 B.classes = { "WARRIOR", "PRIEST", "MAGE", "ROGUE", "SHAMAN" }

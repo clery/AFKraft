@@ -3,7 +3,7 @@ if not test then
 end
 
 local function setup()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")

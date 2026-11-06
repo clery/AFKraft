@@ -6,7 +6,7 @@ local function click(control)
     control:GetScript("OnClick")(control)
 end
 local function workshop(level)
-    local W = WoWIdle
+    local W = AFKraft
     local s = W.Game.New(W.Client.Now())
     for _, zone in ipairs(W.Content.zones) do
         s.professions.components[zone.id] = 1000

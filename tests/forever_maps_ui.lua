@@ -38,7 +38,7 @@ local textures = {
 test(
     "Forever masks align with native tiles and travel uses the same regions in both window sizes",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         W.Initialize()
         local client, ui = W.Client, W.UI
         local flavor, profile, state = client.flavor, client.profile, W.state

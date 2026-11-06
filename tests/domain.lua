@@ -30,7 +30,7 @@ case("Content uses unique stable IDs and valid references", function()
         assert(C.biomes[z.biome])
         equal(
             C.backdrops[z.id],
-            "Interface\\AddOns\\WoWIdle\\Assets\\Backdrops\\" .. z.id .. ".tga"
+            "Interface\\AddOns\\AFKraft\\Assets\\Backdrops\\" .. z.id .. ".tga"
         )
         assert(#z.enemies > 0)
     end

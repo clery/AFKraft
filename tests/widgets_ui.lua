@@ -5,7 +5,7 @@ end
 local function parentFrame()
     local frame = CreateFrame("Frame", nil, UIParent)
     frame:SetSize(500, 300)
-    return frame, WoWIdle.Widgets
+    return frame, AFKraft.Widgets
 end
 
 test("Commands, selections, tabs and passive cards keep distinct behaviors", function()
@@ -59,15 +59,15 @@ test("Selection hover survives refreshes and clears on leave, hide and reuse", f
     end
     button:GetScript("OnEnter")(button)
     U.Selected(button, false)
-    assertColor(WoWIdle.Theme.hover)
+    assertColor(AFKraft.Theme.hover)
     U.Selected(button, true)
-    assertColor(WoWIdle.Theme.hover)
+    assertColor(AFKraft.Theme.hover)
     button:GetScript("OnLeave")(button)
-    assertColor(WoWIdle.Theme.selected)
+    assertColor(AFKraft.Theme.selected)
     button:GetScript("OnEnter")(button)
     parent:Hide()
     assertFalse(button.hovered)
-    assertColor(WoWIdle.Theme.selected)
+    assertColor(AFKraft.Theme.selected)
     parent:Show()
     button:GetScript("OnEnter")(button)
     U.Begin(parent)
@@ -75,7 +75,7 @@ test("Selection hover survives refreshes and clears on leave, hide and reuse", f
     U.EndBuild(parent)
     assertTrue(reused == button)
     assertFalse(reused.hovered)
-    assertColor(WoWIdle.Theme.panel)
+    assertColor(AFKraft.Theme.panel)
     parent:Hide()
 end)
 

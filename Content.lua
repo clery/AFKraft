@@ -1,6 +1,6 @@
 local _, W = ...
 local L = W.L
-WoWIdle = W
+AFKraft = W
 W.Content = {}
 local C = W.Content
 -- Additional companions are discovered by defeating these milestone boss levels.

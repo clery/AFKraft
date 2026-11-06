@@ -3,7 +3,7 @@ if not test then
 end
 
 test("Live player models play once without per-frame timeline seeking", function()
-    local client = WoWIdle.Client
+    local client = AFKraft.Client
     local starts, seeks = 0, 0
     local model = {
         nativeAppearance = true,
@@ -30,7 +30,7 @@ test("Live player models play once without per-frame timeline seeking", function
 end)
 
 test("Passive damage does not create repeated weapon impacts", function()
-    local effects = WoWIdle.UI.scene.effects
+    local effects = AFKraft.UI.scene.effects
     local play = effects.Play
     local calls = 0
     effects.Play = function()

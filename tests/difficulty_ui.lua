@@ -7,7 +7,7 @@ local function click(control)
 end
 
 test("Prestige+ tier selection previews retention before an explicit deeper reset", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local G, ui = W.Game, W.UI
     local state = G.New(W.Client.Now())
@@ -45,7 +45,7 @@ test("Prestige+ tier selection previews retention before an explicit deeper rese
 end)
 
 test("Difficulty previews expose tier affixes without changing the active adventure", function()
-    local W = WoWIdle
+    local W = AFKraft
     local G, ui = W.Game, W.UI
     local s = G.New(W.Client.Now())
     G.AddHero(s, "WARRIOR")

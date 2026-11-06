@@ -205,7 +205,7 @@ function A.CreateAdventureModel(parent, loaded)
     scene:SetLightDiffuseColor(0.6, 0.6, 0.6)
     scene:SetLightDirection(-1, -1, -1)
     scene:SetLightVisible(true)
-    local actor = scene:CreateActor(nil, "WoWIdleAdventureActorTemplate")
+    local actor = scene:CreateActor(nil, "AFKraftAdventureActorTemplate")
     model.adventureScene, model.adventureActor = scene, actor
     actor:SetAlpha(0)
     source:SetScript("OnModelLoaded", function()

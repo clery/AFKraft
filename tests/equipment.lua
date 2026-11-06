@@ -5,7 +5,7 @@ end
 test(
     "Wearable recipes craft into their selected slot and retired slots stay unavailable",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         W.Initialize()
         local state = W.Game.New(W.Client.Now())
         W.Game.AddHero(state, "WARRIOR")
@@ -37,7 +37,7 @@ test(
 )
 
 test("Party equipment buttons enforce class armor restrictions", function()
-    local W = WoWIdle
+    local W = AFKraft
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "MAGE")
     s.heroes[1].level = 39
@@ -74,7 +74,7 @@ test("Party equipment buttons enforce class armor restrictions", function()
 end)
 
 test("Party stat guide restores the shared tooltip width when hidden", function()
-    local W = WoWIdle
+    local W = AFKraft
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")
     s.guide.dismissed = true

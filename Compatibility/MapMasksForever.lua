@@ -2,7 +2,7 @@
 local _, W = ...
 W.MapGeometry = W.MapGeometry or {}
 W.MapGeometry.forever = {
-    textureRoot = "Interface\\AddOns\\WoWIdle\\Assets\\Maps\\forever\\",
+    textureRoot = "Interface\\AddOns\\AFKraft\\Assets\\Maps\\forever\\",
     masks = {
         alterac = {
             continent = "eastern",

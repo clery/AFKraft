@@ -15,7 +15,7 @@ local function test(name, run)
 end
 
 local function opening()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")

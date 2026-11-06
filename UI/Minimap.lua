@@ -80,7 +80,7 @@ function M.Create()
     saved.lock = saved.lock == true
     saved.showInCompartment = saved.showInCompartment == true
 
-    M.launcher = LibStub("LibDataBroker-1.1"):NewDataObject("WoWIdle", {
+    M.launcher = LibStub("LibDataBroker-1.1"):NewDataObject("AFKraft", {
         type = "launcher",
         label = "AFKcraft",
         icon = "Interface\\Icons\\INV_Misc_Map_01",
@@ -110,8 +110,8 @@ function M.Create()
             end
         end,
     })
-    icons:Register("WoWIdle", M.launcher, saved)
-    local button = icons:GetMinimapButton("WoWIdle")
+    icons:Register("AFKraft", M.launcher, saved)
+    local button = icons:GetMinimapButton("AFKraft")
     M.button = button
     -- The library owns the launcher; this overlay represents addon-specific unread notices.
     local bubble = CreateFrame("Frame", nil, button)

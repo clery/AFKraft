@@ -3,7 +3,7 @@ if not test then
 end
 
 test("Legacy collection talents purchase ranks and show active conditional drop chances", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local G, ui, U = W.Game, W.UI, W.Widgets
     local s = G.New(W.Client.Now())

@@ -171,7 +171,7 @@ case("Trivial outdoor collection kills remain separate from Adventure XP eligibi
         end,
     }, { __index = _G })
     local chunk = assert(loadfile("Compatibility/Kills.lua"))
-    setfenv(chunk, env)("WoWIdle", ns)
+    setfenv(chunk, env)("AFKraft", ns)
     ns.KillRewards.Observe({}, "target")
     host.dead = true
     ns.KillRewards.Observe({}, "target")

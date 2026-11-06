@@ -26,6 +26,6 @@ jobs:
         run: python3 scripts/package.py
       - uses: actions/upload-artifact@v4
         with:
-          name: WoWIdle-forever
+          name: AFKraft-forever
           path: artifacts/AFKcraft-*-forever.zip
           if-no-files-found: error

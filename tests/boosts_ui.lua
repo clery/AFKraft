@@ -8,7 +8,7 @@ local function click(button)
 end
 
 test("Commander controls buy once, equip, activate, and refresh timers without redraw", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")
@@ -45,7 +45,7 @@ test("Commander controls buy once, equip, activate, and refresh timers without r
 end)
 
 test("Adventure and compact boost controls share readiness and respect window locking", function()
-    local W = WoWIdle
+    local W = AFKraft
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")
     s.essence, s.guide.dismissed = 30, true
@@ -78,7 +78,7 @@ test("Adventure and compact boost controls share readiness and respect window lo
 end)
 
 test("Commander automation purchases, rules and pause remain inspectable", function()
-    local W = WoWIdle
+    local W = AFKraft
     local G, U = W.Game, W.Widgets
     local s = G.New(W.Client.Now())
     s.professions.bestLevel = 60
@@ -142,7 +142,7 @@ test("Commander automation purchases, rules and pause remain inspectable", funct
 end)
 
 test("Commander selectors recover enabled state across redraws and pooled reuse", function()
-    local W = WoWIdle
+    local W = AFKraft
     local G, U = W.Game, W.Widgets
     local s = G.New(W.Client.Now())
     s.professions.bestLevel = 60
@@ -175,7 +175,7 @@ test("Commander selectors recover enabled state across redraws and pooled reuse"
 end)
 
 test("Boost automation runs while the addon window is hidden", function()
-    local W = WoWIdle
+    local W = AFKraft
     local G = W.Game
     local s = G.New(W.Client.Now())
     s.professions.bestLevel = 60
@@ -197,7 +197,7 @@ test("Boost automation runs while the addon window is hidden", function()
 end)
 
 test("Commander icon grid selects ten boosts and reuses its controls", function()
-    local W = WoWIdle
+    local W = AFKraft
     local C, G, ui = W.Content, W.Game, W.UI
     local s = G.New(W.Client.Now())
     G.AddHero(s, "WARRIOR")

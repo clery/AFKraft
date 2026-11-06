@@ -2,7 +2,7 @@ local _, W = ...
 
 W.Locales = {}
 local supported = { enUS = true, frFR = true, deDE = true, esES = true, ruRU = true, zhCN = true }
-local preferences = type(WoWIdlePreferencesDB) == "table" and WoWIdlePreferencesDB.global
+local preferences = type(AFKraftPreferencesDB) == "table" and AFKraftPreferencesDB.global
 local selected = type(preferences) == "table" and preferences.locale or "auto"
 local client = GetLocale and GetLocale() or "enUS"
 if client == "esMX" then

@@ -43,7 +43,7 @@ local files = {
     "Simulation/Offline.lua",
 }
 for _, file in ipairs(files) do
-    assert(loadfile(file))("WoWIdle", W)
+    assert(loadfile(file))("AFKraft", W)
 end
 local cases = {}
 for _, file in ipairs({
@@ -82,7 +82,7 @@ for _, file in ipairs({
     "tests/development.lua",
     "tests/economy.lua",
 }) do
-    for _, spec in ipairs(assert(loadfile(file))("WoWIdle", W)) do
+    for _, spec in ipairs(assert(loadfile(file))("AFKraft", W)) do
         cases[#cases + 1] = spec
     end
 end

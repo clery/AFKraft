@@ -2,7 +2,7 @@ local _, W = ...
 local L = W.L
 local G, A = W.Game, W.Client
 local root =
-    LibStub("AceAddon-3.0"):NewAddon("WoWIdle", "AceEvent-3.0", "AceConsole-3.0", "AceTimer-3.0")
+    LibStub("AceAddon-3.0"):NewAddon("AFKraft", "AceEvent-3.0", "AceConsole-3.0", "AceTimer-3.0")
 local update = CreateFrame("Frame")
 W.Controller = root
 local elapsed = 0
@@ -68,7 +68,7 @@ function W.Initialize()
     if W.state then
         return
     end
-    local state, errorMessage = G.Load(WoWIdleDB, A.Now())
+    local state, errorMessage = G.Load(AFKraftDB, A.Now())
     if not state then
         print("|cffffcc66AFKcraft:|r " .. errorMessage)
         return
@@ -80,7 +80,7 @@ function W.Initialize()
         return
     end
     W.state = state
-    WoWIdleDB = state
+    AFKraftDB = state
     startingHero(state)
     G.BeginHuntSession(state, A.Now())
     W.catchup = G.BeginCatchup(state, A.Now())
@@ -103,7 +103,7 @@ function W.ResetAdventure()
     W.catchup = nil
     elapsed = 0
     W.Audio.Stop()
-    W.state, WoWIdleDB = state, state
+    W.state, AFKraftDB = state, state
     G.BeginHuntSession(state, A.Now())
     startingHero(state)
     local ui = W.UI
@@ -144,7 +144,7 @@ end
 
 function root:OnInitialize()
     self:RegisterChatCommand("afkcraft", W.Toggle, false)
-    self:RegisterChatCommand("wowidle", W.Toggle, false)
+    self:RegisterChatCommand("afkraft", W.Toggle, false)
     self:RegisterChatCommand("wi", W.Toggle, false)
 end
 

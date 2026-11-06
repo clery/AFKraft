@@ -7,7 +7,7 @@ local function click(control)
 end
 
 test("Route editor drafts steps, saves, selects and pauses independently", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local G, ui = W.Game, W.UI
     local state = G.New(W.Client.Now())
@@ -50,7 +50,7 @@ test("Route editor drafts steps, saves, selects and pauses independently", funct
 end)
 
 test("Route editor configures material stock and outdoor discovery milestones", function()
-    local W = WoWIdle
+    local W = AFKraft
     local G, U, ui = W.Game, W.Widgets, W.UI
     local s = G.New(W.Client.Now())
     s.difficulty.unlocked, s.difficulty.maxTier = true, 3

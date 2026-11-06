@@ -55,13 +55,13 @@ case("Client language, supported locales and explicit overrides resolve safely",
     }) do
         local namespace = {}
         local environment = setmetatable({
-            WoWIdlePreferencesDB = { global = { locale = example[2] } },
+            AFKraftPreferencesDB = { global = { locale = example[2] } },
             GetLocale = function()
                 return example[1]
             end,
         }, { __index = _G })
         local chunk = assert(loadfile("Localization.lua"))
-        setfenv(chunk, environment)("WoWIdle", namespace)
+        setfenv(chunk, environment)("AFKraft", namespace)
         namespace.Locales = W.Locales
         assert(namespace.locale == example[3])
         local fonts = { ruRU = "Fonts\\ARIALN.TTF", zhCN = "Fonts\\ARKai_T.ttf" }
@@ -73,7 +73,7 @@ end)
 
 case("Named keys fall back to the explicit English catalog", function()
     local namespace = {}
-    assert(loadfile("Localization.lua"))("WoWIdle", namespace)
+    assert(loadfile("Localization.lua"))("AFKraft", namespace)
     namespace.Locales = { enUS = W.Locales.enUS, frFR = { CLOSE = "Fermer" } }
     namespace.locale = "frFR"
     assert(namespace.L.CLOSE == "Fermer")
@@ -83,7 +83,7 @@ case("Named keys fall back to the explicit English catalog", function()
 end)
 
 case("Runtime lookups use defined named keys instead of English prose", function()
-    for line in io.lines("WoWIdle.toc") do
+    for line in io.lines("AFKraft.toc") do
         local file = line:gsub("\\", "/")
         if file:match("%.lua$") and not file:match("^Libs/") then
             local handle = assert(io.open(file))
@@ -119,7 +119,7 @@ case("Every language loads content with stable IDs and translated talent sentenc
             "Content/Professions.lua",
             "Content/Development.lua",
         }) do
-            assert(loadfile(file))("WoWIdle", namespace)
+            assert(loadfile(file))("AFKraft", namespace)
         end
         assert(namespace.Content.classByID.WARRIOR.id == "WARRIOR")
         assert(namespace.Content.zoneByID.elwynn.id == "elwynn")
@@ -131,7 +131,7 @@ case("Every language loads content with stable IDs and translated talent sentenc
             end
         end
     end
-    WoWIdle = W
+    AFKraft = W
 end)
 
 case("Item display names follow the locale without changing saved names", function()

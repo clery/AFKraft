@@ -46,7 +46,7 @@ From the repository root, run:
 
 ```sh
 lua scripts/test.lua
-wow-sim-retail --addons-path "$ADDON_ROOT" --no-saved-vars run-tests WoWIdle
+wow-sim-retail --addons-path "$ADDON_ROOT" --no-saved-vars run-tests AFKraft
 stylua --check .
 lua-language-server --check=. --checklevel=Hint --logpath="$LUALS_LOG_DIR" --metapath="$LUALS_META_DIR"
 ```
@@ -87,7 +87,7 @@ python3 scripts/package.py --version 0.2.0
 ```
 
 The result is `artifacts/AFKcraft-0.2.0-forever.zip`, containing a single
-`WoWIdle/` folder. Extract it into the client's `Interface/AddOns` directory.
+`AFKraft/` folder. Extract it into the client's `Interface/AddOns` directory.
 The version defaults to the source TOC version; `--output` selects another output
 directory. The packaged TOC declares Forever interface `16001` and retains the
 source load order and SavedVariables. The source TOC keeps both client versions

@@ -3,7 +3,7 @@ if not test then
 end
 
 test("Every outdoor destination supports continent-map travel in both window sizes", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
@@ -48,7 +48,7 @@ test("Every outdoor destination supports continent-map travel in both window siz
 end)
 
 test("Padded continent masks use native full-texture coordinates at frontier nine", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     state.runBest, state.best, state.guide.dismissed = 9, 9, true
@@ -94,7 +94,7 @@ test("Padded continent masks use native full-texture coordinates at frontier nin
 end)
 
 test("Scaled coastal clicks select Darkshore and ignore its offshore margin", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     state.runBest, state.best, state.guide.dismissed = 9, 9, true
@@ -150,7 +150,7 @@ test("Scaled coastal clicks select Darkshore and ignore its offshore margin", fu
 end)
 
 test("Eastern Kingdoms hover and travel use the visible zone masks", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     state.runBest, state.best, state.guide.dismissed = 60, 60, true

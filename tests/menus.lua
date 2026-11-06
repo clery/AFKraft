@@ -3,7 +3,7 @@ if not test then
 end
 
 local function menuState()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     W.state = W.Game.New(W.Client.Now())
     for _, class in ipairs({ "WARRIOR", "PRIEST", "MAGE", "HUNTER", "DRUID" }) do

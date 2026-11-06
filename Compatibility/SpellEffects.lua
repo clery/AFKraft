@@ -59,7 +59,7 @@ function A.CreateSpellEffectModel(parent, loaded)
     scene:SetLightAmbientColor(1, 1, 1)
     scene:SetLightDiffuseColor(0, 0, 0)
     scene:SetLightVisible(true)
-    local actor = scene:CreateActor(nil, "WoWIdleAdventureActorTemplate")
+    local actor = scene:CreateActor(nil, "AFKraftAdventureActorTemplate")
     scene.spellActor = actor
     actor.onModelLoaded = function()
         loaded(scene)

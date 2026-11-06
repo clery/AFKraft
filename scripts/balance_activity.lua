@@ -1,8 +1,8 @@
 -- Run from the repository root: lua scripts/balance_activity.lua
 -- Activity counts include travel and downtime; these are playtest hypotheses.
 local W = {}
-assert(loadfile("Localization.lua"))("WoWIdle", W)
-assert(loadfile("Locales/enUS.lua"))("WoWIdle", W)
+assert(loadfile("Localization.lua"))("AFKraft", W)
+assert(loadfile("Locales/enUS.lua"))("AFKraft", W)
 for _, file in ipairs({
     "Content.lua",
     "Content/Encounters.lua",
@@ -20,7 +20,7 @@ for _, file in ipairs({
     "Domain/Professions.lua",
     "Domain/Adventure.lua",
 }) do
-    assert(loadfile(file))("WoWIdle", W)
+    assert(loadfile(file))("AFKraft", W)
 end
 local C, G = W.Content, W.Game
 local profiles = {

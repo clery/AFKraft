@@ -4,8 +4,8 @@ end
 
 -- Retail exposes this actor loader, but the simulator has no implementation.
 -- Stub missing actor APIs; asset completion remains explicit in each test.
-local loadSpellEffect = WoWIdle.Client.LoadSpellEffect
-WoWIdle.Client.LoadSpellEffect = function(model, spec)
+local loadSpellEffect = AFKraft.Client.LoadSpellEffect
+AFKraft.Client.LoadSpellEffect = function(model, spec)
     if model.spellActor then
         for _, method in ipairs({
             "SetModelByFileID",
@@ -62,18 +62,18 @@ local function poolSize(frame, objects)
 end
 
 test("Addon initializes a saved party and window", function()
-    WoWIdle.Initialize()
-    assertNotNil(WoWIdle.state)
-    assertNotNil(WoWIdleWindow)
-    assertTrue(#WoWIdle.state.heroes >= 1)
-    local scenery = WoWIdle.UI.scene.scenery
+    AFKraft.Initialize()
+    assertNotNil(AFKraft.state)
+    assertNotNil(AFKraftWindow)
+    assertTrue(#AFKraft.state.heroes >= 1)
+    local scenery = AFKraft.UI.scene.scenery
     assertTrue(type(scenery.supported) == "boolean")
     if not scenery.supported then
         assertTrue(type(scenery.lastError) == "string")
     end
 end)
 test("Hero level-up effects play once and clear when hidden or expired", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
@@ -105,7 +105,7 @@ test("Hero level-up effects play once and clear when hidden or expired", functio
 end)
 
 test("Management views reuse frames and preserve simulation state", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     for _, id in ipairs({ "WARRIOR", "PRIEST", "MAGE", "HUNTER", "DRUID" }) do
@@ -139,7 +139,7 @@ end)
 test(
     "Management gets more building space and compact lock leaves only unlock interactive",
     function()
-        local ui, state = WoWIdle.UI, WoWIdle.state
+        local ui, state = AFKraft.UI, AFKraft.state
         state.ui.compact, state.ui.locked = false, false
         ui:SetTab("adventure")
         local stageHeight, panelHeight = ui.scene.frame:GetHeight(), ui.panel:GetHeight()
@@ -165,7 +165,7 @@ test(
 )
 
 test("Selecting equipment is free and upgrading uses the displayed quote", function()
-    local W = WoWIdle
+    local W = AFKraft
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
     state.paused, state.essence, state.gold = true, 1000, 1000
@@ -206,7 +206,7 @@ test("Selecting equipment is free and upgrading uses the displayed quote", funct
 end)
 
 test("Full and compact Adventure bars share rank rewards without granting hero XP", function()
-    local W = WoWIdle
+    local W = AFKraft
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
     W.state = state
@@ -230,8 +230,8 @@ test("Full and compact Adventure bars share rank rewards without granting hero X
 end)
 
 test("Every destination has a screenshot backdrop and missing assets fall back safely", function()
-    local renderer = WoWIdle.UI.scene.scenery
-    for _, zone in ipairs(WoWIdle.Content.zones) do
+    local renderer = AFKraft.UI.scene.scenery
+    for _, zone in ipairs(AFKraft.Content.zones) do
         renderer:SetZone(zone.id)
         assertTrue(renderer.supported)
         assertTrue(renderer.lastError == nil)
@@ -240,13 +240,13 @@ test("Every destination has a screenshot backdrop and missing assets fall back s
     renderer:SetZone("unknown-destination")
     assertFalse(renderer.supported)
     assertFalse(renderer.image:IsShown())
-    renderer:SetZone(WoWIdle.state.zone)
+    renderer:SetZone(AFKraft.state.zone)
 end)
 
 test(
     "Continent regions travel during combat and locked destinations preserve the encounter",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local state = W.Game.New(W.Client.Now())
         W.Game.AddHero(state, "WARRIOR")
         W.state = state
@@ -287,7 +287,7 @@ test(
 )
 
 test("Only land is gray while sea, parchment and accessible regions retain color", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.state = W.Game.New(W.Client.Now())
     W.Game.AddHero(W.state, "WARRIOR")
     W.UI:SetTab("atlas")
@@ -326,7 +326,7 @@ test("Only land is gray while sea, parchment and accessible regions retain color
 end)
 
 test("Hovering and clicking painted regions uses tooltips and travel at UI scale", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.state = W.Game.New(W.Client.Now())
     W.Game.AddHero(W.state, "WARRIOR")
     W.UI:SetTab("atlas")
@@ -366,7 +366,7 @@ test("Hovering and clicking painted regions uses tooltips and travel at UI scale
 end)
 
 test("Defeated models play death and damage text rises with a frame-rate fade", function()
-    local W = WoWIdle
+    local W = AFKraft
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
     W.state = state
@@ -410,7 +410,7 @@ test("Defeated models play death and damage text rises with a frame-rate fade", 
 end)
 
 test("Minimap notices ignore snapshots and open the expanded adventure", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
@@ -439,7 +439,7 @@ test("Minimap notices ignore snapshots and open the expanded adventure", functio
 end)
 
 test("Minimap tooltips bound and deduplicate notifications and reflect the drag lock", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     W.state = W.Game.New(W.Client.Now())
     W.UI.frame:Hide()
@@ -501,36 +501,36 @@ test("Minimap tooltips bound and deduplicate notifications and reflect the drag 
 end)
 
 test("Minimap launcher uses shared libraries and persists its display settings", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local icons = LibStub("LibDBIcon-1.0")
-    local button = icons:GetMinimapButton("WoWIdle")
+    local button = icons:GetMinimapButton("AFKraft")
     assertEquals(button, W.Minimap.button)
-    assertEquals(W.Minimap.launcher, LibStub("LibDataBroker-1.1"):GetDataObjectByName("WoWIdle"))
+    assertEquals(W.Minimap.launcher, LibStub("LibDataBroker-1.1"):GetDataObjectByName("AFKraft"))
     assertEquals("launcher", W.Minimap.launcher.type)
     W.Minimap.Create()
     assertEquals(button, W.Minimap.button)
 
     local saved = { minimapPos = 120, hide = true, lock = true }
-    icons:Refresh("WoWIdle", saved)
+    icons:Refresh("AFKraft", saved)
     assertEquals(saved, button.db)
     assertFalse(button:IsShown())
     saved.hide = false
-    icons:Refresh("WoWIdle", saved)
+    icons:Refresh("AFKraft", saved)
     assertTrue(button:IsShown())
     assertEquals(120, saved.minimapPos)
-    icons:Refresh("WoWIdle", W.state.ui.minimap)
+    icons:Refresh("AFKraft", W.state.ui.minimap)
 end)
 
 test("Preferences migrate once and AceConfig updates state with immediate effects", function()
-    local W = WoWIdle
-    local previousDB, previousPreferences = WoWIdlePreferencesDB, W.preferences
+    local W = AFKraft
+    local previousDB, previousPreferences = AFKraftPreferencesDB, W.preferences
     local state = W.Game.New(W.Client.Now())
     state.ui.compact = true
     state.ui.expandedGeometry = { w = 1200, h = 760, x = 20, y = 800 }
     state.ui.minimap = { minimapPos = 120, hide = false }
     state.settings.soundEnabled = false
-    WoWIdlePreferencesDB = nil
+    AFKraftPreferencesDB = nil
     local ok, message = pcall(function()
         assertTrue(W.BindPreferences(state))
         assertTrue(state.ui.compact)
@@ -543,15 +543,15 @@ test("Preferences migrate once and AceConfig updates state with immediate effect
         assertFalse(later.settings.soundEnabled)
         assertEquals(later.ui, W.preferences.global.ui)
         local invalid = { global = { settings = "invalid" } }
-        WoWIdlePreferencesDB = invalid
+        AFKraftPreferencesDB = invalid
         assertFalse(W.BindPreferences(W.Game.New(0)))
-        assertEquals(invalid, WoWIdlePreferencesDB)
+        assertEquals(invalid, AFKraftPreferencesDB)
     end)
-    WoWIdlePreferencesDB, W.preferences = previousDB, previousPreferences
+    AFKraftPreferencesDB, W.preferences = previousDB, previousPreferences
     assertTrue(ok, message)
 
     local options = W.settingsOptions
-    local info = { "WoWIdle", "locked" }
+    local info = { "AFKraft", "locked" }
     options.set(info, true)
     assertTrue(W.state.ui.locked)
     assertTrue(options.get(info))
@@ -566,14 +566,14 @@ test("Preferences migrate once and AceConfig updates state with immediate effect
 end)
 
 test("Ace lifecycle re-enables without duplicate timers, commands or reward delivery", function()
-    local W = WoWIdle
+    local W = AFKraft
     local root = W.Controller
-    assertEquals(root, LibStub("AceAddon-3.0"):GetAddon("WoWIdle"))
+    assertEquals(root, LibStub("AceAddon-3.0"):GetAddon("AFKraft"))
     local commands = {}
     for command in LibStub("AceConsole-3.0"):IterateChatCommands() do
         commands[command] = true
     end
-    assertTrue(commands.afkcraft and commands.wowidle and commands.wi)
+    assertTrue(commands.afkcraft and commands.afkraft and commands.wi)
     local state = W.state
     local timers = LibStub("AceTimer-3.0").activeTimers
     local function timerCount()
@@ -603,7 +603,7 @@ test("Ace lifecycle re-enables without duplicate timers, commands or reward deli
 end)
 
 test("AceDB shutdown saves gameplay before removing preference defaults", function()
-    local W = WoWIdle
+    local W = AFKraft
     local state = W.state
     state.events = { { kind = "test" } }
     state.lastTime = 0
@@ -615,7 +615,7 @@ test("AceDB shutdown saves gameplay before removing preference defaults", functi
 end)
 
 test("Talent icons preserve choices and scroll through expanded trees", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     W.state = W.Game.New(W.Client.Now())
     W.Game.AddHero(W.state, "WARRIOR")
@@ -652,7 +652,7 @@ test("Talent icons preserve choices and scroll through expanded trees", function
 end)
 
 test("Adventure models follow combat positions with roomy transparent viewports", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     for _, id in ipairs({ "WARRIOR", "PRIEST", "MAGE", "HUNTER", "ROGUE" }) do
@@ -729,7 +729,7 @@ test("Adventure models follow combat positions with roomy transparent viewports"
 end)
 
 test("Character render layers stay ordered when depth lanes swap", function()
-    local scene = WoWIdle.Scene.Create(UIParent)
+    local scene = AFKraft.Scene.Create(UIParent)
     for i, unit in ipairs(scene.units) do
         unit.x, unit.y = 100 + i * 40, 96 + i * 4
         unit:Show()
@@ -761,7 +761,7 @@ end)
 test(
     "Model bounds separate opposing bodies and their plates without changing combat coordinates",
     function()
-        local scene = WoWIdle.Scene.Create(UIParent)
+        local scene = AFKraft.Scene.Create(UIParent)
         for _, unit in ipairs(scene.units) do
             unit:Hide()
         end
@@ -798,7 +798,7 @@ test(
 )
 
 test("Player and enemy nameplates follow their displayed models vertically", function()
-    local scene = WoWIdle.Scene.Create(UIParent)
+    local scene = AFKraft.Scene.Create(UIParent)
     for _, unit in ipairs(scene.units) do
         unit:Hide()
     end
@@ -843,7 +843,7 @@ test("Player and enemy nameplates follow their displayed models vertically", fun
 end)
 
 test("Nameplates only change height when health bars overlap", function()
-    local scene = WoWIdle.Scene.Create(UIParent)
+    local scene = AFKraft.Scene.Create(UIParent)
     for _, unit in ipairs(scene.units) do
         unit:Hide()
     end
@@ -868,7 +868,7 @@ test("Nameplates only change height when health bars overlap", function()
 end)
 
 test("Talent trees change with class and keep class selections independent", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
@@ -901,7 +901,7 @@ test("Talent trees change with class and keep class selections independent", fun
 end)
 
 test("Class effects follow recipients, stay bounded and clear across scene transitions", function()
-    local W = WoWIdle
+    local W = AFKraft
     local state = W.Game.New(W.Client.Now())
     for _, class in ipairs({ "MAGE", "HUNTER", "PRIEST" }) do
         W.Game.AddHero(state, class)
@@ -949,7 +949,7 @@ test("Class effects follow recipients, stay bounded and clear across scene trans
 end)
 
 test("Hunter poses fall back without requiring bow animations on companion models", function()
-    local W = WoWIdle
+    local W = AFKraft
     assertEquals(47, W.Client.AttackAnimation("HUNTER", false))
     assertEquals(53, W.Client.AttackAnimation("HUNTER", false, "heal"))
     assertEquals(16, W.Client.AttackAnimation("WARRIOR", true))
@@ -969,7 +969,7 @@ end)
 test(
     "Movement keeps velocity across simulation ticks and converges at different frame rates",
     function()
-        local move = WoWIdle.Scene.MoveUnit
+        local move = AFKraft.Scene.MoveUnit
         local slow = { x = 0, y = 100, targetX = 80, targetY = 110 }
         local fast = { x = 0, y = 100, targetX = 80, targetY = 110 }
         for _ = 1, 15 do
@@ -1003,7 +1003,7 @@ test(
 )
 
 test("Combat effects reuse projectiles for impacts without level-up flashes on victory", function()
-    local W = WoWIdle
+    local W = AFKraft
     local state = W.Game.New(W.Client.Now())
     for _, class in ipairs({ "WARRIOR", "SHAMAN", "DRUID", "WARLOCK" }) do
         W.Game.AddHero(state, class)
@@ -1057,7 +1057,7 @@ end)
 test(
     "Model reactions leave encounter coordinates alone and victory does not trigger level-up",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local state = W.Game.New(W.Client.Now())
         W.Game.AddHero(state, "WARRIOR")
         W.state = state
@@ -1102,7 +1102,7 @@ test(
 test(
     "Hunter shooting completion restores combat stance and the watchdog covers missing callbacks",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local state = W.Game.New(W.Client.Now())
         W.Game.AddHero(state, "HUNTER")
         W.state = state
@@ -1154,8 +1154,8 @@ test(
 )
 
 test("Melee impacts follow the scaled creature viewport center", function()
-    local scene = WoWIdle.UI.scene
-    WoWIdle.UI:SetTab("adventure")
+    local scene = AFKraft.UI.scene
+    AFKraft.UI:SetTab("adventure")
     local source, target = scene.units[1], scene.units[6]
     source:Show()
     target:Show()
@@ -1179,7 +1179,7 @@ end)
 test(
     "Native effect framing follows viewport sizing and melee attacks retain both directions",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local scene = W.UI.scene
         W.UI:SetTab("adventure")
         local effects = scene.effects
@@ -1226,7 +1226,7 @@ test(
 )
 
 test("Spell scenes keep model axes horizontal and padding preserves projected size", function()
-    local W = WoWIdle
+    local W = AFKraft
     local distance, yaw, axes
     local noop = function() end
     local actor = {
@@ -1284,7 +1284,7 @@ test("Spell scenes keep model axes horizontal and padding preserves projected si
 end)
 
 test("Native spell models wait for matching assets and reject late recycled callbacks", function()
-    local W = WoWIdle
+    local W = AFKraft
     local scene = W.UI.scene
     W.UI:SetTab("adventure")
     scene.effects:Clear()
@@ -1318,7 +1318,7 @@ end)
 test(
     "Cached native missiles complete loading without a callback and callbacks do not rewind flight",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local scene = W.UI.scene
         W.UI:SetTab("adventure")
         local effects = scene.effects
@@ -1359,7 +1359,7 @@ test(
 )
 
 test("Render motion advances each OnUpdate frame even when GetTime is unchanged", function()
-    local W = WoWIdle
+    local W = AFKraft
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
     W.state = state
@@ -1406,7 +1406,7 @@ end)
 test(
     "The live controller supplies render elapsed and the fixed-step interpolation fraction",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local state = W.Game.New(W.Client.Now())
         W.Game.AddHero(state, "WARRIOR")
         W.state = state
@@ -1434,7 +1434,7 @@ test(
 test(
     "Level-up models enable their native particles and glow alongside the animated mesh",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local spec = W.Client.SpellEffectSpec("levelup")
         local particles, glow, loaded, customCamera, roll, facing, pitch
         local model = {
@@ -1489,7 +1489,7 @@ test(
 test(
     "The party slides into formation together and keeps a synchronized run through travel",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local state = W.Game.New(W.Client.Now())
         for _, class in ipairs({ "WARRIOR", "HUNTER", "ROGUE", "PRIEST", "MAGE" }) do
             W.Game.AddHero(state, class)
@@ -1563,7 +1563,7 @@ test(
 test(
     "Dead friendly and enemy models stay opaque before being hidden and do not reappear on refresh",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         local state = W.Game.New(W.Client.Now())
         W.Game.AddHero(state, "WARRIOR")
         W.Game.AddHero(state, "MAGE")
@@ -1596,7 +1596,7 @@ test(
 )
 
 test("Passive damage does not replay the source attack animation", function()
-    local W = WoWIdle
+    local W = AFKraft
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")
     W.Game.StartBattle(state)

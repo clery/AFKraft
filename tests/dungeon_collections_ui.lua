@@ -3,7 +3,7 @@ if not test then
 end
 
 test("Dungeon collections expose independent progress and a globally shared effect", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local G, C, ui = W.Game, W.Content, W.UI
     local state = G.New(W.Client.Now())
@@ -36,7 +36,7 @@ end)
 test(
     "Dungeon book reports current and saved dungeon sessions without borrowing outdoor totals",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         W.Initialize()
         local G, ui = W.Game, W.UI
         local state = G.New(W.Client.Now())

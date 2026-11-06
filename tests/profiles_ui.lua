@@ -10,7 +10,7 @@ end
 test(
     "Profiles save named setups, apply without resetting timers, and hide native inputs",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         W.Initialize()
         local G, ui = W.Game, W.UI
         local state = G.New(W.Client.Now())

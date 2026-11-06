@@ -139,7 +139,7 @@ case(
                 return false, host.loot
             end,
         }, { __index = _G })
-        setfenv(assert(loadfile("Compatibility/Kills.lua")), env)("WoWIdle", ns)
+        setfenv(assert(loadfile("Compatibility/Kills.lua")), env)("AFKraft", ns)
         ns.KillRewards.Observe({}, "target")
         host.dead = true
         ns.KillRewards.Observe({}, "target")

@@ -133,7 +133,7 @@ function W.RegisterSettings()
         width = "full",
     }
     W.settingsOptions = options
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("WoWIdle", options)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("AFKraft", options)
     W.settingsFrame, W.settingsCategory =
-        LibStub("AceConfigDialog-3.0"):AddToBlizOptions("WoWIdle", "AFKraft : WoW Idle Game")
+        LibStub("AceConfigDialog-3.0"):AddToBlizOptions("AFKraft", "AFKraft : WoW Idle Game")
 end

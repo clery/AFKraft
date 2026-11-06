@@ -12,9 +12,9 @@
     "PlaySound",
     "StopSound",
     "SOUNDKIT",
-    "WoWIdle",
-    "WoWIdleDB",
-    "WoWIdleWindow",
+    "AFKraft",
+    "AFKraftDB",
+    "AFKraftWindow",
     "CreateFrame",
     "Settings",
     "UIParent",
@@ -71,7 +71,7 @@
     "UnitEffectiveLevel",
     "UnitExists",
     "LibStub",
-    "WoWIdlePreferencesDB",
+    "AFKraftPreferencesDB",
     "CreateObjectPool",
     "AbbreviateNumbers"
   ]

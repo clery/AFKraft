@@ -7,7 +7,7 @@ local function click(control)
     control:GetScript("OnClick")(control)
 end
 local function board()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local s = W.Game.New(W.Client.Now())
     W.Game.AddHero(s, "WARRIOR")
@@ -82,7 +82,7 @@ test("Development controls cap ranks and reuse the management frame pools", func
 end)
 
 test("Adventure cards preview affordable development without spending", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local G, ui = W.Game, W.UI
     local s = G.New(W.Client.Now())

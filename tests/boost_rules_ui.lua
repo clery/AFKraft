@@ -8,7 +8,7 @@ local function click(button)
 end
 
 test("Ordered boost rule drafts reorder four rows and save only on request", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local G, ui = W.Game, W.UI
     local state = G.New(W.Client.Now())
@@ -57,7 +57,7 @@ test("Ordered boost rule drafts reorder four rows and save only on request", fun
 end)
 
 test("Ordered boost rule editor respects ownership and survives tab pooling", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state, ui = W.Game.New(W.Client.Now()), W.UI
     W.Game.AddHero(state, "WARRIOR")

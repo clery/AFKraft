@@ -160,7 +160,7 @@ local function dungeonAdapter()
     for _, file in ipairs({ "Compatibility/Client.lua", "Compatibility/Dungeons.lua" }) do
         local chunk = assert(loadfile(file))
         setfenv(chunk, host)
-        chunk("WoWIdle", n)
+        chunk("AFKraft", n)
     end
     return n, function(value)
         now = value

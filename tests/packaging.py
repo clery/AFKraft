@@ -11,26 +11,26 @@ spec.loader.exec_module(package)
 
 with tempfile.TemporaryDirectory() as directory:
     output = Path(directory)
-    source = (ROOT / "WoWIdle.toc").read_text()
+    source = (ROOT / "AFKraft.toc").read_text()
     archive = package.build(output, "0.2.0-beta.1")
     with ZipFile(archive) as zipped:
         names = set(zipped.namelist())
-        manifest = zipped.read("WoWIdle/WoWIdle.toc").decode()
+        manifest = zipped.read("AFKraft/AFKraft.toc").decode()
         assert "## Interface: 16001\n" in manifest
         assert "## Version: 0.2.0-beta.1\n" in manifest
         assert manifest.split("\n\n", 1)[1] == source.split("\n\n", 1)[1]
-        assert "## SavedVariables: WoWIdleDB, WoWIdlePreferencesDB" in manifest
-        assert all(name.startswith("WoWIdle/") for name in names)
+        assert "## SavedVariables: AFKraftDB, AFKraftPreferencesDB" in manifest
+        assert all(name.startswith("AFKraft/") for name in names)
         for path in package.runtime_files(ROOT, manifest):
-            assert "WoWIdle/" + path.relative_to(ROOT).as_posix() in names
+            assert "AFKraft/" + path.relative_to(ROOT).as_posix() in names
         for name in ("LICENSE", "CHANGELOG.md", "Libs/Ace3-LICENSE.txt",
                      "Libs/LibDataBroker-1.1/README.textile", "Assets/Backdrops/SOURCES.md",
                      "Assets/Backdrops/elwynn.tga", "Libs/AceGUI-3.0/widgets/AceGUIWidget-Button.lua"):
-            assert "WoWIdle/" + name in names, name
-        assert not any(name.startswith(("WoWIdle/scripts/", "WoWIdle/tests/", "WoWIdle/."))
+            assert "AFKraft/" + name in names, name
+        assert not any(name.startswith(("AFKraft/scripts/", "AFKraft/tests/", "AFKraft/."))
                        for name in names)
         assert zipped.testzip() is None
-    assert (ROOT / "WoWIdle.toc").read_text() == source
+    assert (ROOT / "AFKraft.toc").read_text() == source
     for version in ("../bad", "v0.2.0", "0.2.0/escape"):
         try:
             package.build(output, version)

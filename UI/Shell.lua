@@ -546,7 +546,7 @@ function W.CreateUI()
     end
     local ui = setmetatable({ selected = 1, tabs = {}, cards = {} }, UI)
     W.UI = ui
-    local f = CreateFrame("Frame", "WoWIdleWindow", UIParent)
+    local f = CreateFrame("Frame", "AFKraftWindow", UIParent)
     ui.frame = f
     f:SetFrameStrata("DIALOG")
     f:SetToplevel(true)
@@ -701,7 +701,7 @@ function W.CreateUI()
         ui.forgeTabs[id]:SetFrameLevel(forgeBorder:GetFrameLevel() - 1)
     end
     ui.settingsLink = U.Button(expanded, L.SETTINGS, 24, 850, 220, 34, function()
-        LibStub("AceConfigDialog-3.0"):Open("WoWIdle")
+        LibStub("AceConfigDialog-3.0"):Open("AFKraft")
     end)
     ui.reportLink = U.Button(expanded, L.RETURN_REPORT, 24, 808, 220, 34, function()
         ui:SetTab("offline")
@@ -821,7 +821,7 @@ function W.CreateUI()
             ui.map:Hide()
         end
     end)
-    UISpecialFrames[#UISpecialFrames + 1] = "WoWIdleWindow"
+    UISpecialFrames[#UISpecialFrames + 1] = "AFKraftWindow"
     ui:ApplyMode()
     f:Hide()
 end

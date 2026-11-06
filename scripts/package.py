@@ -52,9 +52,9 @@ def build(output, version=None, root=ROOT):
     output.mkdir(parents=True, exist_ok=True)
     archive = output / f"AFKcraft-{version}-forever.zip"
     with ZipFile(archive, "w", compression=ZIP_DEFLATED) as package:
-        package.writestr("WoWIdle/WoWIdle.toc", manifest)
+        package.writestr("AFKraft/AFKraft.toc", manifest)
         for path in sorted(files):
-            package.write(path, "WoWIdle/" + path.relative_to(root.resolve()).as_posix())
+            package.write(path, "AFKraft/" + path.relative_to(root.resolve()).as_posix())
     return archive
 
 

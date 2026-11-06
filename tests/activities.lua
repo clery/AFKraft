@@ -76,7 +76,7 @@ local function fixture()
     }) do
         local chunk = assert(loadfile(file))
         setfenv(chunk, environment)
-        chunk("WoWIdle", namespace)
+        chunk("AFKraft", namespace)
     end
     local state = W.Game.New(1000)
     W.Game.AddHero(state, "WARRIOR")

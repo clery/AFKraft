@@ -84,7 +84,7 @@ For a reported boundary defect, locate the cursor point on this raster, inspect 
 For a read-only runtime probe, convert a reviewed pixel to its normalized pixel center. For example, the current Retail Darkshore regression uses:
 
 ```lua
-/run local z=WoWIdle.Client.ZoneAtPosition("kalimdor",545.5/1200,190.5/800); print(z and z.name or "none")
+/run local z=AFKraft.Client.ZoneAtPosition("kalimdor",545.5/1200,190.5/800); print(z and z.name or "none")
 ```
 
 Use that manifest's canvas dimensions for other profiles. A probe in an ocean margin should print `none`. The query does not travel or alter state.
@@ -96,7 +96,7 @@ Review the changed destinations and their neighbors, as one marker can move seve
 In the actual supported client:
 
 ```lua
-/run WoWIdle.Client.ExportMapGeometry()
+/run AFKraft.Client.ExportMapGeometry()
 ```
 
 This explicit developer action samples `C_Map.GetMapInfoAtPosition` at pixel centers over multiple frames, resolves known destinations through their native map ancestry, and opens a copyable JSON result. Close the window to cancel. It neither sends data nor changes SavedVariables. An optional callback and dimensions are available for tests/developer tools: `ExportMapGeometry(onDone, width, height)`, with dimensions bounded to `16..1200` by `16..800`.

@@ -5,7 +5,7 @@ end
 test(
     "Full reset replaces account progress and discards pending catch-up without rebuilding UI",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         W.Initialize()
         local old = W.Game.New(W.Client.Now())
         W.Game.AddHero(old, "WARRIOR")
@@ -30,8 +30,8 @@ test(
         assertTrue(action.confirm)
         assertTrue(action.confirmText:find("ALL account-wide", 1, true) ~= nil)
         local dialog = LibStub("AceConfigDialog-3.0")
-        dialog:Open("WoWIdle")
-        dialog:SelectGroup("WoWIdle", "adventure")
+        dialog:Open("AFKraft")
+        dialog:SelectGroup("AFKraft", "adventure")
         local function request(widget)
             if widget.type == "Button" and widget.text and widget.text:GetText() == action.name then
                 widget:Fire("OnClick")
@@ -43,18 +43,18 @@ test(
                 end
             end
         end
-        assertTrue(request(dialog.OpenFrames.WoWIdle))
+        assertTrue(request(dialog.OpenFrames.AFKraft))
         assertTrue(dialog.popup:IsShown())
         assertTrue(W.state == old and W.catchup ~= nil)
         dialog.popup.cancel:GetScript("OnClick")(dialog.popup.cancel)
         assertTrue(W.state == old and W.catchup ~= nil)
         assertEquals(900, old.gold)
-        assertTrue(request(dialog.OpenFrames.WoWIdle))
+        assertTrue(request(dialog.OpenFrames.AFKraft))
         dialog.popup.accept:GetScript("OnClick")(dialog.popup.accept)
-        dialog:Close("WoWIdle")
+        dialog:Close("AFKraft")
         local state = W.state
         assertTrue(state ~= old)
-        assertTrue(WoWIdleDB == state)
+        assertTrue(AFKraftDB == state)
         assertEquals(0, state.gold)
         assertEquals(0, state.essence)
         assertEquals(0, state.legacy)

@@ -3,7 +3,7 @@ if not test then
 end
 
 test("Localized button labels fit and pooled font sizes recover for short labels", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local parent = CreateFrame("Frame", nil, UIParent)
     parent:SetSize(400, 100)
@@ -34,7 +34,7 @@ test("Localized button labels fit and pooled font sizes recover for short labels
 end)
 
 test("Language settings preserve gameplay and validate saved choices", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local setting = W.settingsOptions.args.locale
     local previous = W.preferences.global.locale
@@ -58,7 +58,7 @@ test("Language settings preserve gameplay and validate saved choices", function(
 end)
 
 test("Pooled wrapping labels do not inherit single-line font fitting", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local parent = CreateFrame("Frame", nil, UIParent)
     W.Widgets.Begin(parent)

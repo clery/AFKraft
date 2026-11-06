@@ -29,7 +29,7 @@ local function fixture()
     }, { __index = _G })
     local chunk = assert(loadfile("Compatibility/Sounds.lua"))
     setfenv(chunk, env)
-    chunk("WoWIdle", namespace)
+    chunk("AFKraft", namespace)
     local function emit(kind, data)
         data = data or {}
         data.kind = kind
@@ -49,7 +49,7 @@ return {
         "Every rendered creature and boss has native attack, wound, entrance and death audio",
         function()
             local assets = { Content = W.Content }
-            assert(loadfile("Compatibility/Models.lua"))("WoWIdle", assets)
+            assert(loadfile("Compatibility/Models.lua"))("AFKraft", assets)
             local creatures = {}
             for _, zone in pairs(assets.ModelAssets.zones) do
                 creatures[zone.boss] = true

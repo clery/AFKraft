@@ -1,8 +1,8 @@
 -- Run from the repository root: lua scripts/balance_profiles.lua
 -- Fixed-seed feasibility checks, not a substitute for supported-client playtests.
 local W = {}
-assert(loadfile("Localization.lua"))("WoWIdle", W)
-assert(loadfile("Locales/enUS.lua"))("WoWIdle", W)
+assert(loadfile("Localization.lua"))("AFKraft", W)
+assert(loadfile("Locales/enUS.lua"))("AFKraft", W)
 for _, file in ipairs({
     "Content.lua",
     "Content/Encounters.lua",
@@ -38,7 +38,7 @@ for _, file in ipairs({
     "Simulation/Combat.lua",
     "Simulation/Offline.lua",
 }) do
-    assert(loadfile(file))("WoWIdle", W)
+    assert(loadfile(file))("AFKraft", W)
 end
 local G, C = W.Game, W.Content
 local hours = tonumber(arg and arg[1]) or 6

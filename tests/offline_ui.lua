@@ -3,7 +3,7 @@ if not test then
 end
 
 local function report()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local state = W.Game.New(W.Client.Now())
     W.Game.AddHero(state, "WARRIOR")

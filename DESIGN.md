@@ -380,7 +380,7 @@ Return and session summaries separate idle earnings, Essence actually earned thr
 
 Target World of Warcraft: Forever, with Retail used for initial development and visual testing. Keep client-specific APIs and asset identifiers behind compatibility adapters. Confirm interface metadata against each supported client build.
 
-- Use account-wide, versioned `WoWIdleDB` SavedVariables for heroes, inventory, currencies, discoveries, run state, random seed, timestamps, and preferences.
+- Use account-wide, versioned `AFKraftDB` SavedVariables for heroes, inventory, currencies, discoveries, run state, random seed, timestamps, and preferences.
 - Account-wide means the local WoW account installation; cross-computer synchronization is outside the first release.
 - Separate pure Lua simulation, data-driven content, WoW event adapters, persistence, and rendering.
 - Normalize WoW activity into one reward interface with source identifiers and duplicate suppression.

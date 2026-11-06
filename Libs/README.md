@@ -15,8 +15,8 @@ AceAddon, AceEvent, AceConsole, AceTimer, AceDB, AceGUI, and AceConfig are embed
 
 LibDBIcon snapshot SHA-256: `cafa823dfb9f216eb476af4bcd2fad4c25c718f39b7565fa1c924dbebac41f91`.
 
-The minimap launcher uses LibDataBroker callbacks for clicks and tooltips. LibDBIcon owns its button, drag handling, positioning, and visibility. Position, visibility, and lock settings live in `WoWIdleDB.ui.minimap`; unread adventure notices remain addon presentation state.
+The minimap launcher uses LibDataBroker callbacks for clicks and tooltips. LibDBIcon owns its button, drag handling, positioning, and visibility. Position, visibility, and lock settings live in `AFKraftDB.ui.minimap`; unread adventure notices remain addon presentation state.
 
-AceAddon owns initialization/enabling, AceEvent owns event dispatch, AceConsole owns slash commands, and AceTimer owns activity sampling and slow UI refresh. The fixed-step combat/offline scheduler retains its elapsed-time accounting. AceDB stores account-wide preferences in `WoWIdlePreferencesDB.global`, importing existing settings and UI state once from `WoWIdleDB`. Existing gameplay save fields remain available as aliases. AceConfig/AceGUI generate the settings panel from an options table.
+AceAddon owns initialization/enabling, AceEvent owns event dispatch, AceConsole owns slash commands, and AceTimer owns activity sampling and slow UI refresh. The fixed-step combat/offline scheduler retains its elapsed-time accounting. AceDB stores account-wide preferences in `AFKraftPreferencesDB.global`, importing existing settings and UI state once from `AFKraftDB`. Existing gameplay save fields remain available as aliases. AceConfig/AceGUI generate the settings panel from an options table.
 
 Blizzard object pools own management widget reuse. Native number formatting, dropdowns, tooltips, button templates, and animation groups supply presentation utilities. Gameplay rules, reward validation, save migrations, and bespoke scene layouts remain addon code.

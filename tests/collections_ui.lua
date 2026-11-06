@@ -5,7 +5,7 @@ end
 test(
     "Collection book renders discoveries and source tooltips without retaining native inputs",
     function()
-        local W = WoWIdle
+        local W = AFKraft
         W.Initialize()
         local G, C, ui = W.Game, W.Content, W.UI
         local state = G.New(W.Client.Now())
@@ -36,7 +36,7 @@ test(
 )
 
 test("Outdoor collections browse individual pieces and select one completed effect", function()
-    local W = WoWIdle
+    local W = AFKraft
     local G, C, ui = W.Game, W.Content, W.UI
     local state = G.New(W.Client.Now())
     G.AddHero(state, "WARRIOR")
@@ -63,7 +63,7 @@ test("Outdoor collections browse individual pieces and select one completed effe
 end)
 
 test("Collection selector reaches every set and uses each set's milestone counts", function()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     local ui, G, C = W.UI, W.Game, W.Content
     local state = G.New(W.Client.Now())

@@ -3,11 +3,11 @@ local L = W.L
 
 -- Account-wide preferences use AceDB; keep gameplay saves and migrations independent.
 function W.BindPreferences(state)
-    if WoWIdlePreferencesDB == nil then
-        WoWIdlePreferencesDB =
+    if AFKraftPreferencesDB == nil then
+        AFKraftPreferencesDB =
             { global = { ui = W.Game.Copy(state.ui), settings = W.Game.Copy(state.settings) } }
     end
-    local saved = WoWIdlePreferencesDB
+    local saved = AFKraftPreferencesDB
     if type(saved) ~= "table" or (saved.global ~= nil and type(saved.global) ~= "table") then
         return nil, L.THE_SAVED_PREFERENCES_ARE_INVALID_THEY_HAVE_NOT_BEEN
     end
@@ -16,7 +16,7 @@ function W.BindPreferences(state)
             return nil, L.THE_SAVED_PREFERENCES_ARE_INVALID_THEY_HAVE_NOT_BEEN
         end
     end
-    W.preferences = LibStub("AceDB-3.0"):New("WoWIdlePreferencesDB", {
+    W.preferences = LibStub("AceDB-3.0"):New("AFKraftPreferencesDB", {
         global = {
             ui = { compact = false, locked = false, fullscreen = true, tab = "adventure" },
             settings = W.Game.New(0).settings,

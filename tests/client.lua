@@ -70,23 +70,23 @@ local function adapter(version, overrides)
         environment[name] = value
     end
     local chunk = assert(loadfile("Compatibility/Client.lua"))
-    assert(loadfile("Compatibility/Models.lua"))("WoWIdle", namespace)
+    assert(loadfile("Compatibility/Models.lua"))("AFKraft", namespace)
     setfenv(chunk, environment)
-    chunk("WoWIdle", namespace)
+    chunk("AFKraft", namespace)
     local equipment = assert(loadfile("Compatibility/Equipment.lua"))
     setfenv(equipment, environment)
-    equipment("WoWIdle", namespace)
+    equipment("AFKraft", namespace)
     local framing = assert(loadfile("Compatibility/ModelFraming.lua"))
     setfenv(framing, environment)
-    framing("WoWIdle", namespace)
+    framing("AFKraft", namespace)
     local maps = assert(loadfile("Compatibility/Maps.lua"))
     setfenv(maps, environment)
-    maps("WoWIdle", namespace)
-    assert(loadfile("Compatibility/MapMasks.lua"))("WoWIdle", namespace)
-    assert(loadfile("Compatibility/MapMasksForever.lua"))("WoWIdle", namespace)
+    maps("AFKraft", namespace)
+    assert(loadfile("Compatibility/MapMasks.lua"))("AFKraft", namespace)
+    assert(loadfile("Compatibility/MapMasksForever.lua"))("AFKraft", namespace)
     local dungeons = assert(loadfile("Compatibility/Dungeons.lua"))
     setfenv(dungeons, environment)
-    dungeons("WoWIdle", namespace)
+    dungeons("AFKraft", namespace)
     return namespace.Client, secret
 end
 
@@ -347,7 +347,7 @@ case("Actor loading binds through its XML template without frame script methods"
         methods[name] = function() end
     end
     methods.CreateActor = function(_, name, template)
-        assert(name == nil and template == "WoWIdleAdventureActorTemplate")
+        assert(name == nil and template == "AFKraftAdventureActorTemplate")
         return actor
     end
     methods.SetKeepModelOnHide = function(self, keep)

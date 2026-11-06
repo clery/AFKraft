@@ -74,7 +74,7 @@ def main():
             texture.paste(image)
             texture.save(output / (key + ".tga"), compression=None)
         descriptor.append(
-            f'    {key} = "Interface\\\\AddOns\\\\WoWIdle\\\\Assets\\\\Backdrops\\\\{key}.tga",'
+            f'    {key} = "Interface\\\\AddOns\\\\AFKraft\\\\Assets\\\\Backdrops\\\\{key}.tga",'
         )
         credits.append(
             f'| {entry["name"]} | [Source]({entry["source_page"]}) '

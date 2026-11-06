@@ -1,8 +1,8 @@
 -- Run from the repository root: lua scripts/balance_builds.lua
 -- Synthetic retained-work snapshots; no elapsed acquisition-time estimates.
 local W = {}
-assert(loadfile("Localization.lua"))("WoWIdle", W)
-assert(loadfile("Locales/enUS.lua"))("WoWIdle", W)
+assert(loadfile("Localization.lua"))("AFKraft", W)
+assert(loadfile("Locales/enUS.lua"))("AFKraft", W)
 for _, file in ipairs({
     "Content.lua",
     "Content/Encounters.lua",
@@ -36,7 +36,7 @@ for _, file in ipairs({
     "Simulation/Combat.lua",
     "Simulation/Offline.lua",
 }) do
-    assert(loadfile(file))("WoWIdle", W)
+    assert(loadfile(file))("AFKraft", W)
 end
 local G, C = W.Game, W.Content
 

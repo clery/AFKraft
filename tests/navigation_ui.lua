@@ -3,7 +3,7 @@ if not test then
 end
 
 local function setup()
-    local W = WoWIdle
+    local W = AFKraft
     W.Initialize()
     W.state = W.Game.New(W.Client.Now())
     W.Game.AddHero(W.state, "WARRIOR")
@@ -147,7 +147,7 @@ test("Forge keeps crafting and profession actions under one navigation entry", f
 end)
 
 test("Help is readable, separates paragraphs and reuses pooled controls", function()
-    local W = WoWIdle
+    local W = AFKraft
     local U = W.Widgets
     local parent = CreateFrame("Frame", nil, UIParent)
     parent:SetSize(400, 200)

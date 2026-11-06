@@ -1,5 +1,5 @@
 -- Optional visual fixture. Not loaded by the addon or written into a player save.
-local W = WoWIdle
+local W = AFKraft
 W.Initialize()
 local s = W.Game.New(W.Client.Now())
 local names = { "Arden", "Liora", "Caelis", "Briar", "Mira" }
