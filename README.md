@@ -46,6 +46,10 @@ Eventually, start a new chapter to earn Heritage and strengthen future runs. Reb
 
 ![AFKraft compact mode alongside normal World of Warcraft gameplay](https://github.com/clery/AFKraft/raw/refs/heads/main/Images/CompactMode.png)
 
+## Inspiration
+
+[Curator](https://www.curseforge.com/wow/addons/curator), by **hudson_tv**, was a major inspiration for AFKraft. Its approach to making a game within WoW helped inspire this project. Thank you to its creator for that inspiration; AFKraft's similarities are intended as appreciation for that work, with its influence openly acknowledged here.
+
 ## Artificial Intelligence Disclaimer
 
 This is a pet project. Yes, artificial intelligence was used extensively on this project, I unfortunately don't have enough free time to code everything by hand.
