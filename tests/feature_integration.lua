@@ -182,9 +182,11 @@ case(
         local quote, before = G.Cost(s, hero, false), s.essence
         local xp = s.professions.xp.crafting
         assert(G.Craft(s, 1, 1, "ore", false))
-        local actual = s.inventory[#s.inventory]
+        local actual = hero.gear[1]
         assert(G.ItemPower(actual, hero) == G.ItemPower(preview, hero))
         assert(s.essence == before - quote.essence and s.professions.xp.crafting == xp + 10)
+        hero.gear[1] = nil
+        s.inventory[#s.inventory + 1] = actual
         assert(G.Disenchant(s, actual, 1))
         assert(s.essence == before - quote.essence)
     end

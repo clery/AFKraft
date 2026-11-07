@@ -23,7 +23,7 @@ test(
             control:GetScript("OnClick")(control)
             assertEquals(slot, ui.craftSlot)
             ui.craftControls.craft:GetScript("OnClick")(ui.craftControls.craft)
-            assertEquals(slot, state.inventory[#state.inventory].slot)
+            assertEquals(slot, state.heroes[1].gear[slot].slot)
         end
         assertEquals(nil, ui.craftControls.slots[5])
         assertEquals(nil, ui.craftControls.slots[6])

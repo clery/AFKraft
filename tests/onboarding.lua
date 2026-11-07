@@ -365,7 +365,7 @@ test(
 )
 
 test(
-    "Crafting lesson waits for an upgrade and follows mode, slot, material, craft and equip",
+    "Crafting lesson waits for an upgrade and follows mode, slot, material and automatic equipment",
     function()
         local W, s, ui = opening()
         s.guide.equipped, s.guide.talent, s.guide.traveled = true, true, true
@@ -387,19 +387,12 @@ test(
         assertEquals(ui.craftControls.craft, ui.guideTarget)
         click(ui.guideTarget)
         assertTrue(s.guide.crafted)
-        local uid = s.guide.craftItem
-        assertEquals(6, W.Panels.GuideStep(s, ui.selected))
-        assertEquals(ui.tabs.party, ui.guideTarget)
-        W.state = assert(W.Game.Load(s, W.Client.Now()))
-        ui.bagFilter = 7
-        click(ui.tabs.party)
-        assertEquals(ui.guideInventoryTarget, ui.guideTarget)
-        click(ui.guideTarget)
-        assertEquals(ui.guideCraftEquipTarget, ui.guideTarget)
-        click(ui.guideTarget)
-        assertEquals(uid, s.heroes[1].gear[1].uid)
+        local uid = s.heroes[1].gear[1].uid
         assertTrue(s.guide.craftItem == nil)
         assertTrue(W.Panels.GuideStep(s, ui.selected) == nil)
+        W.state = assert(W.Game.Load(s, W.Client.Now()))
+        ui:Refresh(false)
+        assertEquals(uid, W.state.heroes[1].gear[1].uid)
         local nextLesson = W.Tutorial.NextLesson(s)
         assertNotNil(nextLesson)
         assertEquals(nextLesson.message, ui.guideTip.text)

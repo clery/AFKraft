@@ -155,14 +155,15 @@ test("Toast lifetime fades, pauses on hover and reuses a single frame", function
 end)
 
 test(
-    "Crafted upgrades use the same spotlight and notification settings clear immediately",
+    "Automatically equipped crafts clear their upgrade spotlight and notification settings clear immediately",
     function()
         local W, state, N = fixture()
         state.gold, state.materials.ore = 100000, 10000
         assertTrue(W.Game.Craft(state, 1, 1, "ore", false))
         N.Flush()
         assertNotNil(N.current)
-        assertEquals("upgrade", N.current.kind)
+        assertTrue(N.current.kind ~= "upgrade")
+        assertNotNil(state.heroes[1].gear[1])
         local option = W.settingsOptions.args.rewardToasts
         assertNotNil(option)
         W.settingsOptions.set({ "rewardToasts" }, false)

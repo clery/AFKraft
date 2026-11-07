@@ -607,6 +607,9 @@ function G.Craft(state, index, slot, material, heirloom)
         "items"
     )
     G.Emit(state, "craft", { item = item })
+    if G.ItemPower(item, hero) > G.ItemPower(hero.gear[slot], hero) then
+        G.Equip(state, index, #state.inventory)
+    end
     return true
 end
 

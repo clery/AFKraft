@@ -642,9 +642,9 @@ case(
         assert(s.essence == 100 and s.gold == 100 and s.materials.timber == 100)
         assert(not G.CraftItem(hero, 5, false))
         assert(G.Craft(s, 1, craft.slot, craft.material, craft.heirloom))
-        assert(s.inventory[1].itemID == craft.item.itemID)
-        assert(G.ItemPower(s.inventory[1], hero) == G.ItemPower(craft.item, hero))
-        assert(s.inventory[1].uid == nextItem and s.nextItem == nextItem + 1)
+        assert(hero.gear[craft.slot].itemID == craft.item.itemID)
+        assert(G.ItemPower(hero.gear[craft.slot], hero) == G.ItemPower(craft.item, hero))
+        assert(hero.gear[craft.slot].uid == nextItem and s.nextItem == nextItem + 1)
     end
 )
 
@@ -673,6 +673,29 @@ case(
     end
 )
 
+case(
+    "Crafted upgrades replace only the selected hero's gear and preserve equal or weaker gear",
+    function()
+        for _, heirloom in ipairs({ false, true }) do
+            local s = state()
+            local hero = s.heroes[2]
+            s.gold, s.materials.ore, s.recipes[1] = 10000, 10000, true
+            local previous = assert(G.CraftItem(hero, 1, heirloom, s))
+            previous.stats = { weaponDPS = 0.01 }
+            hero.gear[1] = previous
+            assert(G.Craft(s, 2, 1, "ore", heirloom))
+            local equipped = hero.gear[1]
+            assert(equipped ~= previous and s.inventory[1] == previous)
+            assert(s.heroes[1].gear[1] == nil)
+            assert(G.Craft(s, 2, 1, "ore", heirloom))
+            assert(hero.gear[1] == equipped and #s.inventory == 2)
+            equipped.stats = { weaponDPS = 100000 }
+            assert(G.Craft(s, 2, 1, "ore", heirloom))
+            assert(hero.gear[1] == equipped and #s.inventory == 3)
+        end
+    end
+)
+
 case("Heirloom crafting guidance requires a known recipe and its exact affordable cost", function()
     local s = state()
     s.heroes[1].level = 30
@@ -685,7 +708,7 @@ case("Heirloom crafting guidance requires a known recipe and its exact affordabl
     assert(not G.CraftingOpportunity(s, 1))
 end)
 
-case("Crafting lesson progress and the exact reward survive reload until equipped", function()
+case("Crafting automatically completes equipment guidance and survives reload", function()
     local s = state()
     s.guide.crafted = nil
     s.guide.craftItem, s.guide.craftHero = "bad", -1
@@ -695,11 +718,10 @@ case("Crafting lesson progress and the exact reward survive reload until equippe
     assert(not s.guide.crafted)
     s.essence, s.gold, s.materials.ore = 100, 100, 100
     assert(G.Craft(s, 1, 1, "ore", false))
-    local uid = s.inventory[1].uid
-    assert(s.guide.crafted and s.guide.craftItem == uid and s.guide.craftHero == 1)
+    local uid = s.heroes[1].gear[1].uid
+    assert(#s.inventory == 0 and s.guide.equipped)
+    assert(s.guide.crafted and s.guide.craftItem == nil and s.guide.craftHero == nil)
     assert(G.Load(s, 1000))
-    assert(s.guide.crafted and s.guide.craftItem == uid)
-    assert(G.Equip(s, 1, 1))
     assert(s.heroes[1].gear[1].uid == uid)
     assert(s.guide.crafted and s.guide.craftItem == nil and s.guide.craftHero == nil)
 end)

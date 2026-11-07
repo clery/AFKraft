@@ -237,12 +237,13 @@ case("Craft specialization previews match paid output and credit work only once"
     assert(G.AllocateProfession(s, "crafting", "quality"))
     assert(G.AllocateProfession(s, "crafting", "quality"))
     assert(G.AllocateProfession(s, "crafting", "quality"))
+    hero.gear[1] = nil
     local preview = assert(G.CraftItem(hero, 1, false, s))
     local cost = G.Cost(s, hero, false)
     local gold, essence, material = s.gold, s.essence, s.materials.ore
     assert(cost.gold < hero.level * 8)
     assert(G.Craft(s, 1, 1, "ore", false))
-    local item = s.inventory[#s.inventory]
+    local item = hero.gear[1]
     assert(
         G.ItemPower(item, hero) == G.ItemPower(preview, hero) and item.quality == preview.quality
     )

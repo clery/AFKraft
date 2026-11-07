@@ -26,7 +26,7 @@ case("Routine equipment and heirlooms need no Essence at every production step",
     end
     assert(state.essence == 0 and G.LevelCap(hero) == 60)
     assert(G.Craft(state, 1, 1, "ore", false))
-    assert(G.Equip(state, 1, 1))
+    assert(hero.gear[1])
     local cost = G.UpgradeCost(hero.gear[1], state)
     assert(cost.essence == 0 and cost.gold > 0 and cost.materials.ore > 0)
     assert(G.Upgrade(state, 1, 1))
@@ -36,7 +36,7 @@ case("Routine equipment and heirlooms need no Essence at every production step",
     state.difficulty.unlocked, state.difficulty.maxTier = true, 4
     assert(G.UnlockRecipe(state, 1))
     assert(G.Craft(state, 1, 1, "timber", true))
-    assert(state.inventory[#state.inventory].heirloom)
+    assert(hero.gear[1].heirloom or state.inventory[#state.inventory].heirloom)
     assert(state.essence == 0 and state.gold < 100000 and state.materials.relic < 100000)
 end)
 
@@ -56,8 +56,9 @@ case(
         local essence, gold, ore = state.essence, state.gold, state.materials.ore
         for _ = 1, 20 do
             assert(G.Craft(state, 1, 1, "ore", false))
-            local index = #state.inventory
-            local item = state.inventory[index]
+            local item = hero.gear[1]
+            hero.gear[1] = nil
+            state.inventory[#state.inventory + 1] = item
             local cost = G.Cost(state, hero, false)
             assert(cost.gold > 0 and cost.material > item.quality)
             assert(G.Disenchant(state, item))
