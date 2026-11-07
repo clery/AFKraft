@@ -52,3 +52,25 @@ function G.EncounterMaterials(zone, battle)
     end
     return result
 end
+
+-- Income follows successful encounter time, so faster trivial fights cannot raise its rate.
+function G.AccrueEncounterRewards(state, zone, battle, difficulty, materials)
+    local seconds = battle.elapsed + 2.25 -- Two seconds of rest and one simulation tick to start.
+    local gold = (3 + zone.level * 2) * seconds / 10 * difficulty.gold + state.combatGoldRemainder
+    state.combatGoldRemainder = gold % 1
+    local pending = state.chestRewardProgress[zone.id] or { gold = 0, relic = 0 }
+    state.chestRewardProgress[zone.id] = pending
+    pending.gold = pending.gold + (1 + zone.level) * seconds / 10 * difficulty.gold
+    pending.relic = pending.relic + (1 + zone.level) * seconds / 40 * materials
+    local relic = (1 + zone.level) * seconds / 40 * materials
+        + (state.materialRemainders.relic or 0)
+    state.materialRemainders.relic = relic % 1
+    state.materials.relic = state.materials.relic + math.floor(relic)
+    return math.floor(gold)
+end
+
+function G.ClaimChestRewards(state, item)
+    local pending = state.chestRewardProgress[state.zone]
+    item.disenchantGold, item.disenchantRelic = math.floor(pending.gold), math.floor(pending.relic)
+    pending.gold, pending.relic = pending.gold % 1, pending.relic % 1
+end

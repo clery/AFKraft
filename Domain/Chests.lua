@@ -56,6 +56,7 @@ function G.ValidateChests(state)
             or item.slot ~= template.slot
             or not whole(item.uid, 1)
             or not whole(item.level, 1)
+            or not G.ValidDisenchantValue(item)
             or not C.qualityNames[item.quality]
             or type(item.name) ~= "string"
             or type(item.icon) ~= "string"
@@ -274,7 +275,7 @@ function G.OpenChests(state, quantity, zone)
         ore = 0,
     }
     local autoEquip = state.settings.chestAutoEquip == true
-    local gold, ore = state.gold, state.materials.ore
+    local gold, ore, relic = state.gold, state.materials.ore, state.materials.relic
     local retained = {}
     for _, chest in ipairs(state.chests) do
         local amount = (not zone or chest.zone == zone) and math.min(chest.count, remaining) or 0
@@ -321,6 +322,7 @@ function G.OpenChests(state, quantity, zone)
         equipOpening(state, report)
     end
     report.gold, report.ore = state.gold - gold, state.materials.ore - ore
+    report.relic = state.materials.relic - relic
     table.sort(report.entries, function(a, b)
         if a.item.quality ~= b.item.quality then
             return a.item.quality > b.item.quality

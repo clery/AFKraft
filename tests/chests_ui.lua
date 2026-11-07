@@ -461,3 +461,33 @@ test("Chest results replace disenchanted copies with one leading materials slot"
     assertEquals(4, ui.chestReport.disenchanted)
     check()
 end)
+
+test("Timed chest rewards use the detected client and show dust from automatic salvage", function()
+    local W, state, ui = fixture()
+    local version = GetBuildInfo()
+    assertEquals(version:match("^1%.60%.") and "forever" or "retail", W.Client.flavor)
+    local G, zone = W.Game, W.Content.zoneByID.winterspring
+    state.zone = zone.id
+    local modifiers = G.DifficultyModifiers(state)
+    local gold =
+        G.AccrueEncounterRewards(state, zone, { elapsed = 57.75 }, modifiers, modifiers.materials)
+    state.gold = state.gold + gold
+    local item = G.ZoneLoot(state, zone.level)
+    G.ClaimChestRewards(state, item)
+    local reward = G.DisenchantReward(item)
+    assertTrue(reward.gold > 0 and reward.relic > 0)
+    G.StoreChest(state, item)
+    state.zone = "elwynn"
+    state = G.Load(G.Copy(state), 1000)
+    W.state = state
+    state.settings.instantChestReveal = true
+    state.salvage.minQuality, state.salvage.keepUpgrades, state.salvage.keepEffects =
+        4, false, false
+    ui.chestZone = nil
+    ui:SetTab("chests")
+    ui:Refresh(true)
+    ui.chestControls.all:GetScript("OnClick")()
+    assertEquals(reward.gold, ui.chestReport.gold)
+    assertEquals(reward.relic, ui.chestReport.relic)
+    assertEquals(0, ui.chestReport.ore)
+end)

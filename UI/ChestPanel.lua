@@ -382,12 +382,13 @@ function P.Draw(ui, parent, state)
                             report.relic
                         )
                     or string.format(
-                        L.CHEST_RESULTS_SUMMARY,
-                        report.duplicates,
-                        report.salvaged,
-                        report.gold,
-                        report.ore
-                    ),
+                            L.CHEST_RESULTS_SUMMARY,
+                            report.duplicates,
+                            report.salvaged,
+                            report.gold,
+                            report.relic or 0
+                        )
+                        .. ((report.ore or 0) > 0 and " · +" .. report.ore .. L.ORE_SUFFIX or ""),
                 0,
                 300,
                 15,

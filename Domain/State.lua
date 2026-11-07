@@ -74,6 +74,8 @@ function G.New(now)
         heroes = {},
         inventory = {},
         chests = {},
+        chestRewardProgress = {},
+        combatGoldRemainder = 0,
         nextItem = 1,
         essence = 0,
         adventure = { rank = 1, xp = 0, totalXP = 0, sources = {} },
@@ -463,7 +465,7 @@ function G.Load(db, now)
         item.power = nil
     end
     local function validModifications(item)
-        if type(item) ~= "table" then
+        if not G.ValidDisenchantValue(item) then
             return false
         end
         local forge = item.forge or 0
@@ -512,6 +514,24 @@ function G.Load(db, now)
             end
         end
         return true
+    end
+    if
+        db.combatGoldRemainder < 0
+        or db.combatGoldRemainder >= 1
+        or db.combatGoldRemainder ~= db.combatGoldRemainder
+    then
+        return nil, L.INVALID_CHEST_SAVE
+    end
+    for zone, pending in pairs(db.chestRewardProgress) do
+        if not C.zoneByID[zone] or type(pending) ~= "table" then
+            return nil, L.INVALID_CHEST_SAVE
+        end
+        for _, key in ipairs({ "gold", "relic" }) do
+            local value = pending[key]
+            if type(value) ~= "number" or value < 0 or value > 1000000000 or value ~= value then
+                return nil, L.INVALID_CHEST_SAVE
+            end
+        end
     end
     if not G.ValidateChests(db) then
         return nil, L.INVALID_CHEST_SAVE

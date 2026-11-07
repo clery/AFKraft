@@ -278,4 +278,129 @@ case("Chest auto equip can transfer existing gear to improve the whole party", f
     assert(s.heroes[2].gear[4] == flexible and s.heroes[1].gear[4].stats.strength == 9)
     assert(#s.inventory == 0)
 end)
+case(
+    "Every zone rolls equipment near its encounter level without changing catalog stats",
+    function()
+        for _, zone in ipairs(C.zones) do
+            for _, level in ipairs({ zone.level, zone.level + math.floor((zone.maxStage - 1) / 5) }) do
+                local s, closest = state(), 0
+                s.zone = zone.id
+                for _, id in ipairs(C.zoneItems[zone.id]) do
+                    local requirement = C.itemByID[id].level
+                    if requirement <= level then
+                        closest = math.max(closest, requirement)
+                    end
+                end
+                for _ = 1, 50 do
+                    local item = assert(G.ZoneLoot(s, level))
+                    assert(
+                        item.level <= level and item.level >= math.min(closest, level - 4),
+                        zone.id
+                    )
+                    assert(G.SameItem(item, C.itemByID[item.itemID]))
+                end
+            end
+        end
+    end
+)
+
+case("Higher source zones pay more gold and dust per minute even with slower victories", function()
+    local rates = {}
+    for _, zone in ipairs(C.zones) do
+        for _, elapsed in ipairs({ 0.25, 7.75, 57.75, 177.75 }) do
+            local s, total = state(), 0
+            s.zone = zone.id
+            local modifiers = G.DifficultyModifiers(s)
+            for victory = 1, 120 do
+                s.gold = s.gold
+                    + G.AccrueEncounterRewards(
+                        s,
+                        zone,
+                        { elapsed = elapsed },
+                        modifiers,
+                        modifiers.materials
+                    )
+                total = total + elapsed + 2.25
+                -- A dry spell holds its value until the next chest instead of losing it.
+                if victory % 5 == 0 then
+                    local item = assert(G.ZoneLoot(s, zone.level))
+                    G.ClaimChestRewards(s, item)
+                    G.StoreChest(s, item)
+                end
+            end
+            local pending = s.chestRewardProgress[zone.id]
+            local gold = s.gold + s.combatGoldRemainder + pending.gold
+            local dust = s.materials.relic + (s.materialRemainders.relic or 0) + pending.relic
+            for _, chest in ipairs(s.chests) do
+                local reward = G.DisenchantReward(chest.item)
+                gold, dust = gold + reward.gold * chest.count, dust + reward.relic * chest.count
+            end
+            local rate = { gold = gold / total, relic = dust / total }
+            if rates[zone.level] then
+                assert(math.abs(rate.gold - rates[zone.level].gold) < 0.000001)
+                assert(math.abs(rate.relic - rates[zone.level].relic) < 0.000001)
+            end
+            rates[zone.level] = rate
+            assert(G.Load(G.Copy(s), 1000))
+        end
+    end
+    for low, lower in pairs(rates) do
+        for high, higher in pairs(rates) do
+            if high > low then
+                assert(higher.gold > lower.gold and higher.relic > lower.relic)
+            end
+        end
+    end
+end)
+
+case("Earned chest value survives travel, reload, stacking and every disenchant path", function()
+    local s = state()
+    s.zone = "winterspring"
+    local zone, modifiers = C.zoneByID[s.zone], G.DifficultyModifiers(s)
+    G.AccrueEncounterRewards(s, zone, { elapsed = 57.75 }, modifiers, modifiers.materials)
+    local item = assert(G.ZoneLoot(s, zone.level))
+    G.ClaimChestRewards(s, item)
+    G.StoreChest(s, item)
+    local quote = G.DisenchantReward(item)
+    s.zone = "elwynn"
+    s = assert(G.Load(G.Copy(s), 1000))
+    local automatic = G.Copy(s)
+    s.salvage.minQuality = 1
+    assert(G.OpenChests(s, "all"))
+    local gold, dust = s.gold, s.materials.relic
+    assert(G.Disenchant(s, s.inventory[1]))
+    assert(s.gold == gold + quote.gold and s.materials.relic == dust + quote.relic)
+    automatic.salvage.minQuality, automatic.salvage.keepUpgrades, automatic.salvage.keepEffects =
+        4, false, false
+    local ok, _, report = G.OpenChests(automatic, "all")
+    assert(ok and report.gold == quote.gold and report.relic == quote.relic and report.ore == 0)
+    assert(s.gold == automatic.gold and s.materials.relic == automatic.materials.relic)
+    local a, b = G.Copy(item), G.Copy(item)
+    a.count, b.count, b.disenchantGold = 10, 10, quote.gold + 1
+    assert(not G.SameItem(a, b))
+    assert(G.DisenchantReward(a, 10).gold == quote.gold * 10)
+    s.chestRewardProgress.elwynn = { gold = 0.5, relic = 0.5 }
+    assert(G.ResetAdventure(s, false))
+    assert(next(s.chestRewardProgress) == nil and s.combatGoldRemainder == 0)
+end)
+
+case("Invalid stored reward budgets cannot mint currency or bypass save validation", function()
+    for _, value in ipairs({ -1, 0.5, math.huge, 0 / 0, "4", false }) do
+        local s = state()
+        drop(s, 1)
+        s.chests[1].item.disenchantGold, s.chests[1].item.disenchantRelic = value, 1
+        assert(not G.DisenchantReward(s.chests[1].item))
+        assert(not G.Load(s, 1000))
+    end
+    for _, value in ipairs({ -1, math.huge, 0 / 0, "4", false }) do
+        local s = state()
+        s.chestRewardProgress.elwynn = { gold = value, relic = 1 }
+        assert(not G.Load(s, 1000))
+    end
+    local s = state()
+    s.chestRewardProgress, s.combatGoldRemainder = nil, nil
+    local loaded = assert(G.Load(s, 1000))
+    assert(next(loaded.chestRewardProgress) == nil and loaded.combatGoldRemainder == 0)
+end)
+
 return cases

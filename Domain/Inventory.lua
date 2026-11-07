@@ -120,10 +120,17 @@ end
 
 function G.ZoneLoot(state, level)
     local pool = C.zoneItems[state.zone]
+    local closest = 0
+    for _, id in ipairs(pool) do
+        local requirement = C.itemByID[id].level
+        if requirement <= level then
+            closest = math.max(closest, requirement)
+        end
+    end
     local candidates = {}
     for _, id in ipairs(pool) do
         local template = C.itemByID[id]
-        if template.level <= level then
+        if template.level <= level and template.level >= math.min(closest, level - 4) then
             -- Uncommon finds are more frequent than rare finds.
             local weight = template.quality == 3 and 1 or 4
             for _ = 1, weight do
@@ -139,7 +146,12 @@ function G.ZoneLoot(state, level)
 end
 
 function G.SameItem(a, b)
-    if a.itemID ~= b.itemID or a.name ~= b.name then
+    if
+        a.itemID ~= b.itemID
+        or a.name ~= b.name
+        or a.disenchantGold ~= b.disenchantGold
+        or a.disenchantRelic ~= b.disenchantRelic
+    then
         return false
     end
     if (a.forge or 0) ~= (b.forge or 0) or (a.forgePower or 0) ~= (b.forgePower or 0) then
@@ -203,6 +215,16 @@ function G.Salvage(state, item)
     if item.heirloom or item.protected then
         return false
     end
+    if item.disenchantGold ~= nil or item.disenchantRelic ~= nil then
+        local reward = G.DisenchantReward(item)
+        if not reward then
+            return false
+        end
+        state.gold = state.gold + reward.gold
+        state.materials.relic = state.materials.relic + reward.relic
+        state.stats.salvaged = state.stats.salvaged + reward.count
+        return true
+    end
     local count = item.count or 1
     state.gold = state.gold + item.level * item.quality * 2 * count
     state.materials.ore = state.materials.ore + item.quality * count
@@ -210,9 +232,36 @@ function G.Salvage(state, item)
     return true
 end
 
+function G.ValidDisenchantValue(item)
+    if type(item) ~= "table" then
+        return false
+    end
+    if item.disenchantGold == nil and item.disenchantRelic == nil then
+        return true
+    end
+    for _, key in ipairs({ "disenchantGold", "disenchantRelic" }) do
+        local value = item[key]
+        if
+            type(value) ~= "number"
+            or value < 0
+            or value > 1000000000
+            or value ~= math.floor(value)
+        then
+            return false
+        end
+    end
+    return true
+end
+
 -- Manual disenchanting uses item identity so a refreshed/sorted view cannot destroy a neighbor.
 function G.DisenchantReward(item, quantity)
-    if not item or item.heirloom or item.protected or not C.slots[item.slot] then
+    if
+        not item
+        or item.heirloom
+        or item.protected
+        or not C.slots[item.slot]
+        or not G.ValidDisenchantValue(item)
+    then
         return nil
     end
     local count = item.count or 1
@@ -237,8 +286,10 @@ function G.DisenchantReward(item, quantity)
         count = math.min(count, quantity)
     end
     return {
-        gold = math.floor(item.level * item.quality) * count,
-        relic = math.max(1, item.quality - 1) * count,
+        gold = (item.disenchantGold or math.floor(item.level * item.quality)) * count,
+        relic = (
+            item.disenchantRelic or math.max(1, item.quality - 1) * math.ceil(item.level / 10)
+        ) * count,
         count = count,
     }
 end

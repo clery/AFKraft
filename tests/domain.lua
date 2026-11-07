@@ -127,7 +127,7 @@ case("Mid-fight recruits join the next encounter without duplicating rewards", f
         enemy.hp = 0
     end
     G.Step(state, 0.25)
-    equal(state.gold, 5)
+    equal(state.gold, 1)
     equal(state.stats.victories, 1)
     equal(state.heroes[1].xp, 11)
     equal(state.heroes[2].xp, 11)
@@ -137,12 +137,12 @@ case("Mid-fight recruits join the next encounter without duplicating rewards", f
     end
     G.Advance(state, 2.25)
     equal(#state.battle.heroes, 5)
-    equal(state.gold, 5)
+    equal(state.gold, 1)
     for _, enemy in ipairs(state.battle.enemies) do
         enemy.hp = 0
     end
     G.Step(state, 0.25)
-    equal(state.gold, 10)
+    equal(state.gold, 2)
     equal(state.stats.victories, 2)
     equal(state.heroes[1].xp, 22)
     equal(state.heroes[3].xp, 11)

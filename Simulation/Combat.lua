@@ -290,7 +290,6 @@ function G.CombatVictory(state, battle)
     local development = G.DevelopmentModifiers(state)
     local xp = floor((8 + battle.level * 3) * difficulty.heroXP * development.heroXP)
     local masteryXP = floor((8 + battle.level * 3) * difficulty.masteryXP)
-    local gold = floor((3 + battle.level * 2) * difficulty.gold)
     local results = {}
     -- Recruitment may extend the party during combat. Only the encounter's
     -- original participants fought; newcomers join when the next battle starts.
@@ -367,17 +366,27 @@ function G.CombatVictory(state, battle)
             )
         end
     end
-    state.gold = state.gold + gold
     local collection = G.CollectionBonuses(state)
+    local gold = G.AccrueEncounterRewards(
+        state,
+        z,
+        battle,
+        difficulty,
+        collection.materials * difficulty.materials * development.materials
+    )
+    state.gold = state.gold + gold
+    -- Relic dust shares the timed income budget across all source zones.
     for material, amount in pairs(G.EncounterMaterials(z, battle)) do
-        local materialGain = amount
-                * collection.materials
-                * difficulty.materials
-                * development.materials
-            + (state.materialRemainders[material] or 0)
-        local materialWhole = floor(materialGain + 0.000000001)
-        state.materialRemainders[material] = max(0, materialGain - materialWhole)
-        state.materials[material] = state.materials[material] + materialWhole
+        if material ~= "relic" then
+            local materialGain = amount
+                    * collection.materials
+                    * difficulty.materials
+                    * development.materials
+                + (state.materialRemainders[material] or 0)
+            local materialWhole = floor(materialGain + 0.000000001)
+            state.materialRemainders[material] = max(0, materialGain - materialWhole)
+            state.materials[material] = state.materials[material] + materialWhole
+        end
     end
     state.stats.victories = state.stats.victories + 1
     state.stats.kills = state.stats.kills + #battle.enemies
@@ -388,6 +397,7 @@ function G.CombatVictory(state, battle)
     then
         local item = G.ZoneLoot(state, battle.level)
         if item then
+            G.ClaimChestRewards(state, item)
             G.StoreChest(state, item)
         end
     end
