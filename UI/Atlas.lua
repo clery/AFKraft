@@ -10,8 +10,8 @@ local function unlockText(zone)
         .. L.OR_HIGHER_MILESTONE_BOSS_SUFFIX
 end
 
-local function familySpoils(zone)
-    local spoils, seen = {}, {}
+local function zoneSpoils(zone)
+    local spoils, seen = { C.materials[zone.material] }, { [zone.material] = true }
     local function include(family)
         local material = C.familyMaterials[family]
         if material and not seen[material] then
@@ -23,23 +23,18 @@ local function familySpoils(zone)
         include(family)
     end
     include(zone.bossFamily)
-    return #spoils > 0 and table.concat(spoils, ", ") or nil
+    return table.concat(spoils, ", ")
 end
 
 local function describe(self, zone)
     zone = zone or C.zoneByID[W.state.zone]
     self.focus = zone
     self.title:SetText(zone.name)
-    local spoils = familySpoils(zone)
     self.detail:SetText(
-        C.materials[zone.material]
-            .. L.FRAGMENT_FRONTIER
-            .. zone.level
-            .. "  ·  "
-            .. string.format(L.HERO_XP_CEILING, zone.heroLevelCap)
+        L.ZONE_SPOILS_PREFIX
+            .. zoneSpoils(zone)
             .. "  ·  "
             .. (G.IsUnlocked(W.state, zone) and L.AVAILABLE or unlockText(zone))
-            .. (spoils and (L.FRAGMENT_SECONDARY_SPOILS .. spoils .. L.UP_TO_25_SUFFIX) or "")
     )
 end
 
@@ -56,22 +51,10 @@ local function zoneTooltip(map, zone)
     U.SetTooltipWidth(340)
     GameTooltip:SetText(zone.name, unpack(T.gold))
     GameTooltip:AddLine(
-        C.materials[zone.material] .. L.FRAGMENT_FRONTIER_2 .. zone.level,
-        0.8,
-        0.8,
-        0.7,
-        true
-    )
-    GameTooltip:AddLine(string.format(L.HERO_XP_CEILING, zone.heroLevelCap), 0.8, 0.8, 0.7, true)
-    GameTooltip:AddLine(
-        #zone.enemies .. L.CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX,
-        0.8,
-        0.8,
-        0.7,
-        true
-    )
-    GameTooltip:AddLine(
-        C.zoneComponents[zone.id].name
+        L.ZONE_SPOILS_PREFIX
+            .. zoneSpoils(zone)
+            .. "\n"
+            .. C.zoneComponents[zone.id].name
             .. L.FRAGMENT_OWNED
             .. (W.state.professions.components[zone.id] or 0),
         1,
@@ -80,28 +63,10 @@ local function zoneTooltip(map, zone)
         true
     )
     GameTooltip:AddLine(
-        L.IDLE_BOSSES_GUARANTEE_1_TROPHY_FOR_ENCHANTING_OR_TITANFORGING,
-        0.8,
-        0.8,
-        0.7,
-        true
-    )
-    local spoils = familySpoils(zone)
-    if spoils then
-        GameTooltip:AddLine(L.FAMILY_SPOILS_PREFIX .. spoils, 0.8, 0.8, 0.7, true)
-        GameTooltip:AddLine(
-            L.UP_TO_25_ADDITIONAL_IDLE_MATERIALS_SHARED_ACROSS_THE,
-            0.7,
-            0.7,
-            0.7,
-            true
-        )
-    end
-    GameTooltip:AddLine(
         G.IsUnlocked(W.state, zone) and L.CLICK_TO_TRAVEL or unlockText(zone),
-        0.8,
-        0.8,
-        0.7,
+        1,
+        1,
+        1,
         true
     )
     GameTooltip:Show()

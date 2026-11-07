@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.esES = {
+    ZONE_SPOILS_PREFIX = "Botín: ",
     ZONE_COMPLETE = "Zona completada",
     WAITING_FOR_ZONE_COMPLETE = "Esperando a superar el último encuentro de la zona actual.",
     THIS_HEIRLOOM_IS_ALREADY_OWNED = "Esta reliquia ya está en tus bolsas o equipada por este héroe.",
@@ -2393,8 +2394,8 @@ W.Locales.esES = {
     JOINS_NEXT_ENCOUNTER = "Se une al próximo encuentro",
     HP_HEADING = " caballos de fuerza",
     DEFEATED = "Derrotado",
-    UNLOCK_DEFEAT_A_LEVEL_PREFIX = "Desbloquear: superar un nivel ",
-    OR_HIGHER_MILESTONE_BOSS_SUFFIX = " o jefe de hito superior.",
+    UNLOCK_DEFEAT_A_LEVEL_PREFIX = "Para desbloquear: derrota a un jefe de hito de nivel ",
+    OR_HIGHER_MILESTONE_BOSS_SUFFIX = " o superior.",
     FRAGMENT_FRONTIER = " · Primer encuentro: ",
     AVAILABLE = "Disponible",
     FRAGMENT_SECONDARY_SPOILS = "\nBotín secundario: ",
@@ -2404,7 +2405,7 @@ W.Locales.esES = {
     CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX = " encuentros con criaturas; nuevos oponentes en las fronteras 20, 40 y 60.",
     FAMILY_SPOILS_PREFIX = "Botín familiar: ",
     UP_TO_25_ADDITIONAL_IDLE_MATERIALS_SHARED_ACROSS_THE = "Hasta un 25% de materiales del minijuego adicionales, compartidos entre los enemigos del encuentro.",
-    CLICK_TO_TRAVEL = "Haga clic para viajar",
+    CLICK_TO_TRAVEL = "Haz clic para viajar",
     CONTINENT_ARTWORK_IS_UNAVAILABLE_IN_THIS_CLIENT = "La obra de arte del continente no está disponible en este cliente.",
     HOVER_A_REGION_TO_INSPECT_ITS_REWARDS_AND_REQUIREMENTS = "Haz clic en una región desbloqueada para viajar. Las grises están bloqueadas.\n\nViajar abandona el combate sin recompensas y conserva la salud. Tu personaje de WoW no se mueve.",
     KALIMDOR = "Kalimdor",

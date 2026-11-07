@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.enUS = {
+    ZONE_SPOILS_PREFIX = "Spoils: ",
     ZONE_COMPLETE = "Zone complete",
     WAITING_FOR_ZONE_COMPLETE = "Waiting to clear the current zone’s final encounter.",
     THIS_HEIRLOOM_IS_ALREADY_OWNED = "This heirloom is already in your bags or equipped by this hero.",

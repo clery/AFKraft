@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.ruRU = {
+    ZONE_SPOILS_PREFIX = "Добыча: ",
     ZONE_COMPLETE = "Зона пройдена",
     WAITING_FOR_ZONE_COMPLETE = "Ожидание победы в последнем бою текущей зоны.",
     THIS_HEIRLOOM_IS_ALREADY_OWNED = "Эта реликвия уже в сумках или надета на этого героя.",
@@ -2393,7 +2394,7 @@ W.Locales.ruRU = {
     JOINS_NEXT_ENCOUNTER = "Вступит в следующем бою",
     HP_HEADING = " ЗДР",
     DEFEATED = "Побеждено",
-    UNLOCK_DEFEAT_A_LEVEL_PREFIX = "Открытие: победите босса этапа ",
+    UNLOCK_DEFEAT_A_LEVEL_PREFIX = "Для открытия победите босса этапа ",
     OR_HIGHER_MILESTONE_BOSS_SUFFIX = "-го уровня или выше.",
     FRAGMENT_FRONTIER = " · Начало с боя ",
     AVAILABLE = "Доступно",
@@ -2404,7 +2405,7 @@ W.Locales.ruRU = {
     CREATURE_ENCOUNTERS_NEW_OPPONENTS_AT_FRONTIERS_20_40_AND_SUFFIX = " боев с существами; новые противники на рубежах 20, 40 и 60.",
     FAMILY_SPOILS_PREFIX = "Добыча семейства: ",
     UP_TO_25_ADDITIONAL_IDLE_MATERIALS_SHARED_ACROSS_THE = "До 25% дополнительных материалов мини-игры, общих для врагов боя.",
-    CLICK_TO_TRAVEL = "Нажмите для путешествия",
+    CLICK_TO_TRAVEL = "Нажмите, чтобы отправиться в путь",
     CONTINENT_ARTWORK_IS_UNAVAILABLE_IN_THIS_CLIENT = "Изображение континента недоступно в этом клиенте.",
     HOVER_A_REGION_TO_INSPECT_ITS_REWARDS_AND_REQUIREMENTS = "Нажмите на открытый регион для перехода. Серые регионы закрыты.\n\nПереход прерывает бой без наград и сохраняет здоровье. Персонаж WoW остаётся на месте.",
     KALIMDOR = "Калимдор",

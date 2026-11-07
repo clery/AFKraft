@@ -1,8 +1,9 @@
 local _, W = ...
 
 W.Locales.frFR = {
+    ZONE_SPOILS_PREFIX = "Butin : ",
     ZONE_COMPLETE = "Zone terminée",
-    WAITING_FOR_ZONE_COMPLETE = "En attente de la victoire au dernier combat de la zone actuelle.",
+    WAITING_FOR_ZONE_COMPLETE = "En attente de la victoire lors du dernier combat de la zone actuelle.",
     THIS_HEIRLOOM_IS_ALREADY_OWNED = "Cet héritage est déjà dans vos sacs ou équipé par ce héros.",
     SCROLL_HORIZONTAL_HINT = "Faites défiler horizontalement pour parcourir",
     SCROLL_VERTICAL_HINT = "Faites défiler pour parcourir",
@@ -2393,8 +2394,8 @@ W.Locales.frFR = {
     JOINS_NEXT_ENCOUNTER = "Rejoint la prochaine rencontre",
     HP_HEADING = " HP",
     DEFEATED = "Vaincu",
-    UNLOCK_DEFEAT_A_LEVEL_PREFIX = "Débloquer : vaincre un niveau ",
-    OR_HIGHER_MILESTONE_BOSS_SUFFIX = " ou un boss d'étape supérieur.",
+    UNLOCK_DEFEAT_A_LEVEL_PREFIX = "Débloquer : vaincre un boss d’étape de niveau ",
+    OR_HIGHER_MILESTONE_BOSS_SUFFIX = " ou supérieur.",
     FRAGMENT_FRONTIER = " · Premier affrontement : ",
     AVAILABLE = "Disponible",
     FRAGMENT_SECONDARY_SPOILS = "\nButins secondaires : ",
