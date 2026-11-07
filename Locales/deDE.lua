@@ -1,6 +1,8 @@
 local _, W = ...
 
 W.Locales.deDE = {
+    ZONE_COMPLETE = "Gebiet abgeschlossen",
+    WAITING_FOR_ZONE_COMPLETE = "Warte auf den Sieg in der letzten Begegnung des aktuellen Gebiets.",
     THIS_HEIRLOOM_IS_ALREADY_OWNED = "Dieses Erbstück ist bereits in deinen Taschen oder von diesem Helden angelegt.",
     SCROLL_HORIZONTAL_HINT = "Zum Durchsehen seitlich scrollen",
     SCROLL_VERTICAL_HINT = "Zum Durchsehen scrollen",

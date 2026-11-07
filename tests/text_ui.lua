@@ -129,3 +129,16 @@ test("Equipment help omits zero attributes and distinguishes an empty outfit", f
     W.Widgets.Tooltip = tooltip
     assert(ok, message)
 end)
+
+test("Route destinations default to zone completion without milestone controls", function()
+    local W, state, ui = setup()
+    state.routes.owned = true
+    state.ui.compact = false
+    ui:SetTab("routes")
+    ui.routeAdd:GetScript("OnClick")(ui.routeAdd)
+    assert(ui.routeDraft.steps[1].trigger.kind == "complete")
+    assert(ui.routeSteps[1].target == nil and ui.routeSteps[1].value == nil)
+    ui.routeSave:GetScript("OnClick")(ui.routeSave)
+    assert(state.routes.templates[1].steps[1].trigger.kind == "complete")
+    assert(W.Game.ValidateRoutes(state))
+end)

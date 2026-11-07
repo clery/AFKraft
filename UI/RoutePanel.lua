@@ -189,6 +189,7 @@ function R.Draw(ui, parent, state)
         end
     end
     local kinds = {
+        { id = "complete", name = L.ZONE_COMPLETE },
         { id = "boss", name = L.ZONE_BOSS },
         { id = "level", name = L.HERO_LEVEL },
         { id = "unlock", name = L.UNLOCK_ZONE },
@@ -215,7 +216,8 @@ function R.Draw(ui, parent, state)
         )
         row.kind = U.Choice(
             frame,
-            trigger.kind == "boss" and L.ZONE_BOSS
+            trigger.kind == "complete" and L.ZONE_COMPLETE
+                or trigger.kind == "boss" and L.ZONE_BOSS
                 or trigger.kind == "level" and L.HERO_LEVEL
                 or trigger.kind == "material" and L.MATERIAL_STOCK
                 or trigger.kind == "collection" and L.DISCOVERY
@@ -226,7 +228,8 @@ function R.Draw(ui, parent, state)
             kinds,
             trigger.kind,
             function(value)
-                step.trigger = value == "boss" and { kind = value, zone = state.zone, stage = 5 }
+                step.trigger = value == "complete" and { kind = value }
+                    or value == "boss" and { kind = value, zone = state.zone, stage = 5 }
                     or value == "level" and { kind = value, hero = 1, level = 5 }
                     or value == "material" and { kind = value, material = "timber", amount = 100 }
                     or value == "collection" and {
@@ -317,7 +320,7 @@ function R.Draw(ui, parent, state)
                     ui:Refresh()
                 end
             )
-        else
+        elseif trigger.kind ~= "complete" then
             row.target = U.Choice(
                 frame,
                 zoneName(trigger.zone),
@@ -361,7 +364,7 @@ function R.Draw(ui, parent, state)
         for _, zone in ipairs(C.zones) do
             if not used[zone.id] then
                 preview.steps[#preview.steps + 1] =
-                    { destination = zone.id, trigger = { kind = "unlock", zone = zone.id } }
+                    { destination = zone.id, trigger = { kind = "complete" } }
                 break
             end
         end

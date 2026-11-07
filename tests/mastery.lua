@@ -98,7 +98,7 @@ case(
 
 case("Victory continues to grant Mastery at the character level cap", function()
     local state, h = hero(60)
-    state.stage = 96 -- A level 20 encounter in the starting destination.
+    state.zone, state.stage = "blackrock_mountain", 11 -- A level 20 encounter.
     G.StartBattle(state)
     for _, enemy in ipairs(state.battle.enemies) do
         enemy.hp = 0

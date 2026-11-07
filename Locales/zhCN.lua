@@ -1,6 +1,8 @@
 local _, W = ...
 
 W.Locales.zhCN = {
+    ZONE_COMPLETE = "区域完成",
+    WAITING_FOR_ZONE_COMPLETE = "等待通关当前区域的最后一场战斗。",
     THIS_HEIRLOOM_IS_ALREADY_OWNED = "此传家宝已在背包中或已由此英雄装备。",
     SCROLL_HORIZONTAL_HINT = "横向滚动以浏览",
     SCROLL_VERTICAL_HINT = "滚动以浏览",

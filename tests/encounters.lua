@@ -6,6 +6,43 @@ local C, G = W.Content, W.Game
 local cases = {}
 
 cases[#cases + 1] = {
+    "Zone caps unlock the next tier and repeat without losing old checkpoints",
+    function()
+        for _, zone in ipairs(C.zones) do
+            assert(zone.maxStage >= 5 and zone.maxStage % 5 == 0)
+            local finalLevel = zone.level + math.floor((zone.maxStage - 1) / 5)
+            local nextLevel = C.transcendenceBoss.level
+            for _, destination in ipairs(C.zones) do
+                if destination.level > zone.level then
+                    nextLevel = math.min(nextLevel, destination.unlockLevel - 1)
+                end
+            end
+            assert(finalLevel >= nextLevel and finalLevel <= nextLevel + 1)
+        end
+        local state = G.New(1000)
+        assert(G.AddHero(state, "WARRIOR"))
+        local cap = C.zoneByID.elwynn.maxStage
+        state.stage = cap
+        G.StartBattle(state)
+        for _, enemy in ipairs(state.battle.enemies) do
+            enemy.hp = 0
+        end
+        G.Step(state, 0.25)
+        assert(state.stage == cap and state.safe.elwynn == cap)
+        assert(G.IsUnlocked(state, C.zoneByID.westfall))
+        G.StartBattle(state)
+        assert(state.battle.stage == cap and state.battle.boss)
+        state.battle = nil
+        state.safe.elwynn, state.stage = 100, 101
+        local loaded = assert(G.Load(G.Copy(state), 1000))
+        G.StartBattle(loaded)
+        assert(loaded.battle.stage == cap and loaded.safe.elwynn == 100)
+        assert(G.Travel(loaded, "westfall"))
+        assert(G.Travel(loaded, "elwynn") and loaded.stage == cap)
+    end,
+}
+
+cases[#cases + 1] = {
     "Every destination gains six opponents with bounded frontier unlocks",
     function()
         local total = 0
@@ -30,7 +67,7 @@ cases[#cases + 1] = {
 }
 
 cases[#cases + 1] = {
-    "Frontiers one through sixty never select locked creatures or mismatched families",
+    "Bounded zone frontiers never select locked creatures or mismatched families",
     function()
         local state = G.New(1000)
         for _ = 1, 3 do
@@ -39,7 +76,7 @@ cases[#cases + 1] = {
         for _, zone in ipairs(C.zones) do
             state.zone = zone.id
             local seen = {}
-            for stage = 1, (60 - zone.level + 1) * 5 do
+            for stage = 1, zone.maxStage do
                 state.stage = stage
                 G.StartBattle(state)
                 local battle = state.battle
@@ -61,7 +98,9 @@ cases[#cases + 1] = {
                 end
             end
             for _, entry in ipairs(C.encounterAdditions[zone.id]) do
-                assert(seen[entry.name], zone.id .. " never encounters " .. entry.name .. " by 60")
+                if entry.level <= zone.level + math.floor((zone.maxStage - 1) / 5) then
+                    assert(seen[entry.name], zone.id .. " never encounters " .. entry.name)
+                end
             end
         end
     end,
@@ -72,9 +111,9 @@ cases[#cases + 1] = {
     function()
         local state = G.New(1000)
         assert(G.AddHero(state, "HUNTER"))
-        state.stage = 100
+        state.zone, state.stage = "blackrock_mountain", 100
         G.StartBattle(state)
-        assert(state.battle.enemies[1].name == "Eastvale packleader")
+        assert(state.battle.enemies[1].name == C.encounterAdditions.blackrock_mountain[4].name)
         local loaded = assert(G.Load(G.Copy(state), 1000))
         assert(loaded.battle.enemies[1].name == state.battle.enemies[1].name)
         for _ = 1, 8 do

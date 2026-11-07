@@ -150,6 +150,7 @@ function G.StartBattle(state)
     state.encounter = (state.encounter or 0) + 1
     local difficulty = G.DifficultyModifiers(state)
     local zone = C.zoneByID[state.zone]
+    state.stage = min(state.stage, zone.maxStage)
     local level = zone.level + floor((state.stage - 1) / 5)
     local boss = state.stage % 5 == 0
     local champion
@@ -435,7 +436,7 @@ function G.CombatVictory(state, battle)
     G.ProfessionUnlocks(state)
     G.DifficultyVictory(state, battle)
     if not state.farming then
-        state.stage = state.stage + 1
+        state.stage = min(state.stage + 1, z.maxStage)
     end
     G.Emit(state, "victory", { gold = gold, xp = xp, boss = battle.boss })
     state.battle = nil

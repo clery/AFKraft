@@ -29,6 +29,18 @@ local function route(state, steps)
     return id
 end
 
+case("Completion routes wait for the final victory and retain saved progress", function()
+    local state = party()
+    local cap = W.Content.zoneByID.elwynn.maxStage
+    route(state, { step("westfall", { kind = "complete" }) })
+    state.safe.elwynn, state.encounter = cap - 1, 1
+    assert(not G.RouteBoundary(state))
+    state.safe.elwynn, state.runBest, state.encounter = cap, 6, 2
+    assert(G.RouteBoundary(state) and state.zone == "westfall")
+    assert(state.routes.run.cursor == 2 and G.ValidateRoutes(state))
+    assert(G.Load(G.Copy(state), 0))
+end)
+
 case("Route planning is a permanent atomic purchase and defaults disabled", function()
     local state = G.New(0)
     state.difficulty.unlocked, state.difficulty.maxTier = true, 3

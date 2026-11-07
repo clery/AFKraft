@@ -432,7 +432,8 @@ case("Runic offline boss rewards reconcile once into return totals", function()
     local s = party(60)
     s.tier, s.difficulty.maxTier, s.difficulty.unlocked = 2, 2, true
     s.professions.recipes.runicFury = true
-    s.safe.elwynn, s.stage = 100, 100
+    s.zone = "blackrock_mountain"
+    s.safe.blackrock_mountain, s.stage = 100, 100
     local job = assert(G.BeginCatchup(s, 60))
     G.StartBattle(job.state)
     for _, enemy in ipairs(job.state.battle.enemies) do

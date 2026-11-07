@@ -706,7 +706,7 @@ case("Milestone logs notify once while routine XP stays quiet", function()
         equal(s.stats.victories, victories + 1)
         assert(s.gold > gold)
         equal(s.safe.durotar, 5)
-        s.rest, s.stage = 0, 55
+        s.zone, s.rest, s.stage = "westfall", 0, 45
         G.StartBattle(s)
         s.battle.enemies[1].hp = 0
         G.Step(s, 0.25)

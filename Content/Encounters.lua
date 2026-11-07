@@ -409,3 +409,17 @@ C.transcendenceBoss = {
     level = finalChampion.level,
     stage = math.ceil(((finalChampion.level - finalZone.level) * 5 + 1) / 10) * 10,
 }
+
+-- Finish on the boss that opens the next stronger destination tier.
+for _, zone in ipairs(C.zones) do
+    local finalLevel = C.transcendenceBoss.level
+    for _, destination in ipairs(C.zones) do
+        if destination.level > zone.level then
+            finalLevel = math.min(finalLevel, destination.unlockLevel - 1)
+        end
+    end
+    zone.maxStage = (finalLevel - zone.level + 1) * 5
+    if finalLevel == C.transcendenceBoss.level then
+        zone.maxStage = math.ceil(zone.maxStage / 10) * 10
+    end
+end

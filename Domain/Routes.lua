@@ -78,7 +78,7 @@ local function validSteps(steps, saved)
             if not identifier(trigger.zone) then
                 return false
             end
-        else
+        elseif trigger.kind ~= "complete" then
             return false
         end
     end
@@ -326,7 +326,11 @@ function G.RouteStatus(state)
         end
     end
     local trigger = step.trigger
-    if trigger.kind == "boss" then
+    if trigger.kind == "complete" then
+        if (state.safe[state.zone] or 0) < C.zoneByID[state.zone].maxStage then
+            return false, L.WAITING_FOR_ZONE_COMPLETE, step
+        end
+    elseif trigger.kind == "boss" then
         local zone = C.zoneByID[trigger.zone]
         if not zone then
             return false, L.MILESTONE_DESTINATION_UNAVAILABLE_PREFIX .. trigger.zone, step

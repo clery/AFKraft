@@ -1,6 +1,8 @@
 local _, W = ...
 
 W.Locales.ruRU = {
+    ZONE_COMPLETE = "Зона пройдена",
+    WAITING_FOR_ZONE_COMPLETE = "Ожидание победы в последнем бою текущей зоны.",
     THIS_HEIRLOOM_IS_ALREADY_OWNED = "Эта реликвия уже в сумках или надета на этого героя.",
     SCROLL_HORIZONTAL_HINT = "Прокручивайте вбок для просмотра",
     SCROLL_VERTICAL_HINT = "Прокручивайте для просмотра",

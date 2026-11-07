@@ -717,7 +717,7 @@ function G.Travel(state, zone, automatic)
         end
     end
     state.battle, state.rest = nil, 0
-    state.zone, state.stage = zone, (state.safe[zone] or 0) + 1
+    state.zone, state.stage = zone, math.min((state.safe[zone] or 0) + 1, z.maxStage)
     state.guide.traveled = true
     G.Emit(state, "travel")
     state.farming = false
@@ -796,7 +796,7 @@ function G.Retry(state)
         end
     end
     state.battle, state.rest = nil, 0
-    state.stage = (state.safe[state.zone] or 0) + 1
+    state.stage = math.min((state.safe[state.zone] or 0) + 1, C.zoneByID[state.zone].maxStage)
     state.farming, state.lastDefeat = false, nil
     return true
 end

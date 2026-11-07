@@ -16,7 +16,9 @@ case("Enemy growth preserves opening levels one through eight exactly", function
                 for _ = 1, count do
                     assert(G.AddHero(state, "WARRIOR"))
                 end
-                state.stage = (level - 1) * 5 + (boss and 5 or 1)
+                local zone = level <= 5 and C.zoneByID.elwynn or C.zoneByID.westfall
+                state.zone = zone.id
+                state.stage = (level - zone.level) * 5 + (boss and 5 or 1)
                 G.StartBattle(state)
                 local enemy = state.battle.enemies[1]
                 local health = math.floor(
@@ -158,7 +160,7 @@ end)
 case("Post-opening enemy growth creates an early prestige wall without changing rewards", function()
     local state = G.New(0)
     assert(G.AddHero(state, "WARRIOR"))
-    state.stage = 100
+    state.zone, state.stage = "blackrock_mountain", 100
     G.StartBattle(state)
     local level, enemy = state.battle.level, state.battle.enemies[1]
     local openingHP = (60 + level * 24) * 1.16 ^ 7
