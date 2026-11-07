@@ -26,6 +26,7 @@
     "hooksecurefunc",
     "GetServerTime",
     "GetTime",
+    "GetTimePreciseSec",
     "GetCVar",
     "SetCVar",
     "time",

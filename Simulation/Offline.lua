@@ -52,15 +52,18 @@ function G.BeginCatchup(state, now)
     }
 end
 
-function G.CatchupBatch(job, steps)
+function G.CatchupBatch(job, steps, shouldYield)
     if job.finished then
         return true
     end
     local n = min(job.remaining, steps or 1600)
     for _ = 1, n do
         G.Step(job.state, 0.25)
+        job.remaining = job.remaining - 1
+        if shouldYield and shouldYield() then
+            break
+        end
     end
-    job.remaining = job.remaining - n
     job.state.events = {}
     return job.remaining == 0
 end

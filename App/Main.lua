@@ -229,7 +229,16 @@ function root.Update(_, dt)
         return
     end
     if W.catchup then
-        if G.CatchupBatch(W.catchup, 1200) then
+        local now = GetTimePreciseSec()
+        if now < (W.catchup.nextBatch or 0) then
+            return
+        end
+        -- Limit catch-up to 2 ms, then leave at least 50 ms for the game.
+        local done = G.CatchupBatch(W.catchup, 1200, function()
+            return GetTimePreciseSec() - now >= 0.002
+        end)
+        W.catchup.nextBatch = GetTimePreciseSec() + 0.05
+        if done then
             G.FinishCatchup(W.state, W.catchup)
             W.catchup = nil
             local summary = W.state.lastOfflineSummary
