@@ -18,6 +18,7 @@
     "CreateFrame",
     "Settings",
     "UIParent",
+    "AlertFrame",
     "Minimap",
     "GameTooltip",
     "HelpTip",

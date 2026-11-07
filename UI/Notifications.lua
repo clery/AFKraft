@@ -79,7 +79,13 @@ local function create()
     local frame = CreateFrame("Frame", "AFKraftRewardToast", UIParent, "BackdropTemplate")
     N.frame = frame
     frame:SetSize(380, 132)
-    frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -32, 180)
+    frame:SetPoint(
+        "BOTTOM",
+        AlertFrame or UIParent,
+        AlertFrame and "TOP" or "BOTTOM",
+        0,
+        AlertFrame and 10 or 148
+    )
     frame:SetFrameStrata("FULLSCREEN_DIALOG")
     frame:SetClampedToScreen(true)
     frame:EnableMouse(true)
@@ -98,8 +104,13 @@ local function create()
     frame.title = U.SingleLine(U.Text(frame, "", 74, 39, 14), 286, 24)
     frame.detail = U.SingleLine(U.Text(frame, "", 74, 65, 12, T.green), 286, 22)
     frame.action = U.Button(frame, L.EQUIP, 246, 96, 114, 24, activate)
-    frame.close = U.Button(frame, "×", 342, 10, 24, 24, dismiss)
-    U.Tooltip(frame.close, L.CLOSE, "")
+    local function onMouseUp(_, button)
+        if button == "RightButton" then
+            dismiss()
+        end
+    end
+    frame:SetScript("OnMouseUp", onMouseUp)
+    frame.action:SetScript("OnMouseUp", onMouseUp)
     frame:SetScript("OnUpdate", function(self, dt)
         if N.state ~= W.state or W.catchup or not W.state.settings.rewardToasts then
             N.Clear()
