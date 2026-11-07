@@ -2499,6 +2499,7 @@ W.Locales.zhCN = {
     TALENTS = "天赋",
     TALENT_POINTS_DESCRIPTION = "通过英雄等级纪录和每三级精通获得永久点数。在前排累计投入5/10/15/20/25点，依次解锁第2–6排。左键增加一级；右键免费返还一级。点数与选择在两种重置后均保留。\n\n",
     CLASS_PRESETS = "职业预设",
+    CUSTOM = "自定义",
     RECOVER_BELOW_PREFIX = "恢复阈值 ",
     SPECIAL_AT_PREFIX = "特殊技能阈值 ",
     ENEMIES = "个以上敌人",

@@ -2499,6 +2499,7 @@ W.Locales.frFR = {
     TALENTS = "Talents",
     TALENT_POINTS_DESCRIPTION = "Gagnez des points permanents grâce aux records de niveau et tous les trois rangs de maîtrise. Investissez 5/10/15/20/25 points au total dans les rangées précédentes pour ouvrir les rangées 2 à 6. Clic gauche : ajouter un rang ; clic droit : rembourser un rang gratuitement. Points et choix survivent aux deux réinitialisations.\n\n",
     CLASS_PRESETS = "Préréglages de classe",
+    CUSTOM = "Personnalisé",
     RECOVER_BELOW_PREFIX = "Récupérer ci-dessous ",
     SPECIAL_AT_PREFIX = "Spécial à ",
     ENEMIES = "+ ennemis",

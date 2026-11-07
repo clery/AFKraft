@@ -195,3 +195,46 @@ test("Talent tooltips show current and next-rank bonuses instead of maximum-only
     W.Widgets.Tooltip = original
     assert(ok, reason)
 end)
+
+test("Class presets track matching settings and show Custom after manual changes", function()
+    local W, state, ui = setup()
+    local original = W.Widgets.Choice
+    local selected, label, choosePreset
+    W.Widgets.Choice = function(parent, text, x, y, width, options, value, choose)
+        if options[1].id == "balanced" then
+            selected, label, choosePreset = value, text, choose
+            assertEquals("custom", options[#options].id)
+        end
+        return original(parent, text, x, y, width, options, value, choose)
+    end
+    local ok, message = pcall(function()
+        for _, preset in ipairs(W.Game.PriorityPresets(state.heroes[1])) do
+            assert(W.Game.ConfigurePreset(state, 1, preset.id))
+            ui:Refresh()
+            assertEquals(preset.id, selected)
+            assertEquals(preset.name, label)
+            for _, change in ipairs({
+                { "priority", "attack" },
+                { "healBelow", 55 },
+                { "specialCount", 2 },
+            }) do
+                if state.heroes[1][change[1]] ~= change[2] then
+                    assert(W.Game.Configure(state, 1, change[1], change[2]))
+                    ui:Refresh()
+                    assertEquals("custom", selected)
+                    assertEquals(W.L.CUSTOM, label)
+                    choosePreset("custom")
+                    assertEquals(change[2], state.heroes[1][change[1]])
+                    choosePreset(preset.id)
+                    assertEquals(preset.id, selected)
+                end
+            end
+        end
+        assert(W.Game.ConfigurePreset(state, 2, "offense"))
+        ui.selected = 2
+        ui:Refresh()
+        assertEquals("offense", selected)
+    end)
+    W.Widgets.Choice = original
+    assertTrue(ok, message)
+end)

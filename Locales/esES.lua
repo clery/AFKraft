@@ -2499,6 +2499,7 @@ W.Locales.esES = {
     TALENTS = "Talentos",
     TALENT_POINTS_DESCRIPTION = "Gana puntos permanentes con nuevos récords de nivel y cada tres rangos de maestría. Invierte un total de 5/10/15/20/25 puntos en las filas anteriores para abrir las filas 2–6. Clic izquierdo: añadir un rango; clic derecho: recuperar uno gratis. Los puntos y las elecciones sobreviven a ambos reinicios.\n\n",
     CLASS_PRESETS = "Preajustes de clase",
+    CUSTOM = "Personalizado",
     RECOVER_BELOW_PREFIX = "Recuperar a continuación ",
     SPECIAL_AT_PREFIX = "Especial en ",
     ENEMIES = "+ enemigos",

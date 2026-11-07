@@ -732,8 +732,22 @@ function P.talents(ui, p, s)
     U.Help(p, L.TALENTS, 688, 0, L.TALENT_POINTS_DESCRIPTION .. hint)
     W.TalentPanel.Draw(ui, p, h, index)
     text(p, L.COMBAT_PRIORITIES_HEADING, 0, 490, 12, T.gold)
-    U.Choice(p, L.CLASS_PRESETS, 0, 510, 180, G.PriorityPresets(h), nil, function(id)
-        W.Action(G.ConfigurePreset, index, id)
+    local presets, presetID, presetName = G.PriorityPresets(h), "custom", L.CUSTOM
+    for _, preset in ipairs(presets) do
+        if
+            h.priority == preset.priority
+            and h.healBelow == preset.healBelow
+            and h.specialCount == preset.specialCount
+        then
+            presetID, presetName = preset.id, preset.name
+            break
+        end
+    end
+    presets[#presets + 1] = { id = "custom", name = L.CUSTOM }
+    U.Choice(p, presetName, 0, 510, 180, presets, presetID, function(id)
+        if id ~= "custom" then
+            W.Action(G.ConfigurePreset, index, id)
+        end
     end)
     local priorities, thresholds = {}, {}
     for _, id in ipairs(C.priorityModes) do

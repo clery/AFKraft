@@ -2499,6 +2499,7 @@ W.Locales.enUS = {
     TALENTS = "Talents",
     TALENT_POINTS_DESCRIPTION = "Earn permanent points from hero level records and every three Mastery ranks. Invest 5/10/15/20/25 points across earlier rows to open rows 2–6. Left-click adds a rank; right-click refunds one for free. Points and choices survive both resets.\n\n",
     CLASS_PRESETS = "Class presets",
+    CUSTOM = "Custom",
     RECOVER_BELOW_PREFIX = "Recover below ",
     SPECIAL_AT_PREFIX = "Special at ",
     ENEMIES = "+ enemies",

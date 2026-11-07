@@ -2499,6 +2499,7 @@ W.Locales.deDE = {
     TALENTS = "Talente",
     TALENT_POINTS_DESCRIPTION = "Dauerhafte Punkte gibt es für neue Heldenstufenrekorde und je drei Meisterschaftsränge. Investiert insgesamt 5/10/15/20/25 Punkte in frühere Reihen, um die Reihen 2–6 zu öffnen. Linksklick erhöht einen Rang, Rechtsklick erstattet ihn kostenlos. Punkte und Auswahl bleiben bei beiden Neustarts erhalten.\n\n",
     CLASS_PRESETS = "Klassenvoreinstellungen",
+    CUSTOM = "Benutzerdefiniert",
     RECOVER_BELOW_PREFIX = "Unten erholen ",
     SPECIAL_AT_PREFIX = "Speziell bei ",
     ENEMIES = "+ Feinde",
