@@ -8,6 +8,23 @@ This pass follows the production/cost comparison and reset-loop modeling describ
 
 ## Evidence freshness
 
+### Heirloom improvements after heritage
+
+Paid enhancement ranks, forge ranks/potential, enchantment identity and saved enchantment stats survive both reset types. Enchantment strength now has a floor at its purchased value, rather than losing up to 59/60 of its effect at level one. Base equipment stats still follow hero level; enhancement and forge multipliers remain intact. Reapplying the same enchantment at equal or weaker strength is refused without payment or profession work credit.
+
+The heirloom enchantment multiplier is `max(1, heroLevel / max(10, enchantLevel))`. The level-ten denominator matches the existing quote curve `max(1, level / 10)`, removing the former tenfold advantage of buying an enchantment at level one and leveling to 60. No stored investments are rewritten. Higher-level paid enchantments retain their full bonus on rebuild; enchants bought earlier still grow with the hero. Prices and enemy curves remain unchanged so permanent investment accelerates rebuilding rather than being canceled by stronger enemies.
+
+`lua scripts/balance_heirlooms.lua` checks 16 funded combat scenarios: seeds 17/91, both resets, and hero/boss levels 1/10/30/60. Its declared prior account pays for 50 heirlooms, 50 enhancements, 50 enchants and 50 forge steps, with retained level-earned talents, no Mastery or prestige strength and no post-reset funding. It is a synthetic comparison, not an earned progression timeline. Current before/after results:
+
+| Hero/boss level | Weapon enchant AP before → after | Party equipment power before → after | Boss seconds before → after |
+| --- | --- | --- | --- |
+| 1 | 0.6 → 36 | 213.5 → 1708.6 | 0.75 → 0.50 |
+| 10 | 6 → 36 | 2132.3 → 3399.7 | 1.75 → 0.75 |
+| 30 | 18 → 36 | 6397.0 → 7157.0 | 36.75–37.50 → 32.75 |
+| 60 | 36 → 36 | 14691.5 → 14691.5 | Both time out at 180 |
+
+These results support faster early rebuilding without raising the tested level-60 ceiling. Unit checks cover all 60 enchant purchase levels, repeated ordinary/deep resets, save/reload retention and refusal of weaker repeat purchases. The older `balance_rebuild.lua` currently fails before simulation because its hand-maintained load list omits `Domain/Journal.lua`; its historical timings below were not refreshed by this comparison. Long-horizon acquisition pacing and actual-client feel remain unmeasured for this change.
+
 The long-horizon journey, matrix and intervention figures below record the balance pass before the later class-stat scoring correction. They remain useful scenario evidence, but are not current-code or live-client guarantees. Rerun the relevant scenario before tuning from those figures; the 100-hour journey and tier-nine/ten acquisition have not been revalidated in this text pass.
 
 Current-code rechecks on 2026-11-04:

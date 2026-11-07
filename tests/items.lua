@@ -673,28 +673,52 @@ case(
     end
 )
 
-case(
-    "Crafted upgrades replace only the selected hero's gear and preserve equal or weaker gear",
-    function()
-        for _, heirloom in ipairs({ false, true }) do
-            local s = state()
-            local hero = s.heroes[2]
-            s.gold, s.materials.ore, s.recipes[1] = 10000, 10000, true
-            local previous = assert(G.CraftItem(hero, 1, heirloom, s))
-            previous.stats = { weaponDPS = 0.01 }
-            hero.gear[1] = previous
-            assert(G.Craft(s, 2, 1, "ore", heirloom))
-            local equipped = hero.gear[1]
-            assert(equipped ~= previous and s.inventory[1] == previous)
-            assert(s.heroes[1].gear[1] == nil)
-            assert(G.Craft(s, 2, 1, "ore", heirloom))
-            assert(hero.gear[1] == equipped and #s.inventory == 2)
-            equipped.stats = { weaponDPS = 100000 }
-            assert(G.Craft(s, 2, 1, "ore", heirloom))
-            assert(hero.gear[1] == equipped and #s.inventory == 3)
+case("Ordinary crafted upgrades preserve displaced, equal and stronger gear", function()
+    local s = state()
+    local hero = s.heroes[2]
+    s.gold, s.materials.ore = 10000, 10000
+    local previous = assert(G.CraftItem(hero, 1, false, s))
+    previous.stats = { weaponDPS = 0.01 }
+    hero.gear[1] = previous
+    assert(G.Craft(s, 2, 1, "ore", false))
+    local equipped = hero.gear[1]
+    assert(equipped ~= previous and s.inventory[1] == previous)
+    assert(s.heroes[1].gear[1] == nil)
+    assert(G.Craft(s, 2, 1, "ore", false))
+    assert(hero.gear[1] == equipped and #s.inventory == 2)
+    equipped.stats = { weaponDPS = 100000 }
+    assert(G.Craft(s, 2, 1, "ore", false))
+    assert(hero.gear[1] == equipped and #s.inventory == 3)
+end)
+
+case("Heirloom crafting rejects bag and selected-hero duplicates without payment", function()
+    for _, equipped in ipairs({ false, true }) do
+        local s = state()
+        local hero = s.heroes[1]
+        s.gold, s.materials.ore, s.recipes[1] = 10000, 10000, true
+        local item = assert(G.CraftItem(hero, 1, true, s))
+        item.upgrade, item.count = 5, not equipped and 2 or nil
+        if equipped then
+            hero.gear[1] = item
+        else
+            s.inventory = { item }
+        end
+        local gold, ore, nextItem = s.gold, s.materials.ore, s.nextItem
+        local preview, reason = G.CraftItem(hero, 1, true, s)
+        assert(not preview and reason == W.L.THIS_HEIRLOOM_IS_ALREADY_OWNED)
+        assert(not G.Craft(s, 1, 1, "ore", true))
+        assert(s.gold == gold and s.materials.ore == ore and s.nextItem == nextItem)
+        assert(s.professions.xp.crafting == 0 and item.upgrade == 5)
+        assert(G.CraftItem(hero, 1, false, s))
+        if equipped then
+            assert(G.AddHero(s, "WARRIOR"))
+            assert(G.Craft(s, 3, 1, "ore", true))
+        else
+            s.inventory = {}
+            assert(G.Craft(s, 1, 1, "ore", true))
         end
     end
-)
+end)
 
 case("Heirloom crafting guidance requires a known recipe and its exact affordable cost", function()
     local s = state()

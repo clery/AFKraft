@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.ruRU = {
+    THIS_HEIRLOOM_IS_ALREADY_OWNED = "Эта реликвия уже в сумках или надета на этого героя.",
     SCROLL_HORIZONTAL_HINT = "Прокручивайте вбок для просмотра",
     SCROLL_VERTICAL_HINT = "Прокручивайте для просмотра",
 

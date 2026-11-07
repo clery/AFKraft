@@ -67,6 +67,17 @@ test("Forge offers both crafts together and keeps heirloom requirements separate
     assertTrue(ui.craftControls.heirloom.craft:IsEnabled())
     ui.craftControls.heirloom.craft:GetScript("OnClick")()
     assertTrue(state.heroes[1].gear[1].heirloom)
+    assertFalse(ui.craftControls.heirloom.craft:IsEnabled())
+    local heirloom = state.heroes[1].gear[1]
+    state.heroes[1].gear[1] = nil
+    state.inventory = { heirloom }
+    ui:Refresh()
+    assertFalse(ui.craftControls.heirloom.craft:IsEnabled())
+    state.inventory = {}
+    ui:Refresh()
+    assertTrue(ui.craftControls.heirloom.craft:IsEnabled())
+    state.heroes[1].gear[1] = heirloom
+    ui:Refresh()
     local gold = state.gold
     local cost = G.Cost(state, state.heroes[1], false)
     ui.craftControls.ordinary.craft:GetScript("OnClick")()

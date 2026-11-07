@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.deDE = {
+    THIS_HEIRLOOM_IS_ALREADY_OWNED = "Dieses Erbstück ist bereits in deinen Taschen oder von diesem Helden angelegt.",
     SCROLL_HORIZONTAL_HINT = "Zum Durchsehen seitlich scrollen",
     SCROLL_VERTICAL_HINT = "Zum Durchsehen scrollen",
 

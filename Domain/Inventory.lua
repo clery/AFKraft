@@ -509,6 +509,17 @@ function G.CraftItem(hero, slot, heirloom, state)
     if not template then
         return nil, L.NO_USABLE_EQUIPMENT_RECIPE_IS_AVAILABLE_FOR_THIS_HERO
     end
+    if heirloom and state then
+        local equipped = hero.gear and hero.gear[slot]
+        if equipped and equipped.heirloom and equipped.itemID == template.itemID then
+            return nil, L.THIS_HEIRLOOM_IS_ALREADY_OWNED
+        end
+        for _, stored in ipairs(state.inventory) do
+            if stored.heirloom and stored.itemID == template.itemID then
+                return nil, L.THIS_HEIRLOOM_IS_ALREADY_OWNED
+            end
+        end
+    end
     local item = G.Item({ nextItem = 0 }, slot, heirloom and 1 or hero.level, 3, heirloom, template)
     if not item then
         return nil, L.THIS_EQUIPMENT_RECIPE_IS_UNAVAILABLE

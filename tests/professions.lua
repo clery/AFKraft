@@ -212,6 +212,56 @@ case("Heirloom enchant and forge investments survive ordinary prestige", functio
 end)
 
 case(
+    "Both resets preserve paid heirloom improvements without charging for weaker enchants",
+    function()
+        for _, deep in ipairs({ false, true }) do
+            local s, hero = party()
+            local item = assert(G.CraftItem(hero, 1, true, s))
+            hero.gear[1] = item
+            assert(G.Upgrade(s, 1, 1))
+            assert(G.Enchant(s, 1, 1, "offense"))
+            assert(G.Titanforge(s, 1, 1))
+            local saved, bonus = G.Copy(item), G.ProfessionStatBonus(item, hero).attackPower
+            for _ = 1, 2 do
+                assert(G.ResetAdventure(s, deep))
+                assert(hero.gear[1] == item and item.upgrade == saved.upgrade)
+                assert(item.forge == saved.forge and item.forgePower == saved.forgePower)
+                assert(item.enchant.level == saved.enchant.level)
+                assert(G.ProfessionStatBonus(item, hero).attackPower == bonus)
+                local gold, relic, xp = s.gold, s.materials.relic, s.professions.xp.enchanting
+                assert(not G.EnchantQuote(s, 1, 1, "offense"))
+                assert(not G.Enchant(s, 1, 1, "offense"))
+                assert(s.gold == gold and s.materials.relic == relic)
+                assert(s.professions.xp.enchanting == xp)
+                s = assert(G.Load(G.Copy(s), 0))
+                hero, item = s.heroes[1], s.heroes[1].gear[1]
+                assert(G.ProfessionStatBonus(item, hero).attackPower == bonus)
+            end
+        end
+    end
+)
+
+case(
+    "Heirloom enchanting at any level follows the quoted curve without early-level amplification",
+    function()
+        for level = 1, 60 do
+            local s, hero = party()
+            hero.level = level
+            local item = assert(G.CraftItem(hero, 1, true, s))
+            hero.gear[1] = item
+            assert(G.Enchant(s, 1, 1, "offense"))
+            local paid = G.ProfessionStatBonus(item, hero).attackPower
+            assert(math.abs(paid - 6 * math.max(1, level / 10)) < 0.000001)
+            hero.level = 1
+            assert(G.ProfessionStatBonus(item, hero).attackPower == paid)
+            hero.level = 60
+            assert(math.abs(G.ProfessionStatBonus(item, hero).attackPower - 36) < 0.000001)
+            assert(not G.EnchantQuote(s, 1, 1, "offense"))
+        end
+    end
+)
+
+case(
     "Forge and enchanting specializations change quoted output without changing existing investment",
     function()
         local s, _, item = party()
@@ -288,7 +338,7 @@ case(
                 and item.forgePower == invested
                 and item.enchant.stats.attackPower == flat
         )
-        assert(math.abs(G.ProfessionStatBonus(item, hero).attackPower - flat / 60) < 0.000001)
+        assert(G.ProfessionStatBonus(item, hero).attackPower == flat)
         assert(G.Load(G.Copy(s), 10))
     end
 )

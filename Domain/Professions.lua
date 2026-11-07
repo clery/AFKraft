@@ -391,6 +391,7 @@ function G.EnchantQuote(state, heroIndex, slot, enchantID)
     local bonus = modifiers["enchant" .. branch:sub(1, 1):upper() .. branch:sub(2)]
     local scale = math.max(1, (item.heirloom and hero.level or item.level) / 10) * bonus
     local preview, same = G.Copy(item), item.enchant and item.enchant.id == enchantID
+    local current = G.ProfessionStatBonus(item, hero)
     preview.enchant =
         { id = enchantID, level = item.heirloom and hero.level or item.level, stats = {} }
     for stat, value in pairs(enchant.stats) do
@@ -398,7 +399,7 @@ function G.EnchantQuote(state, heroIndex, slot, enchantID)
         if
             not item.enchant
             or not item.enchant.stats
-            or item.enchant.stats[stat] ~= preview.enchant.stats[stat]
+            or preview.enchant.stats[stat] > (current[stat] or 0) + 0.000001
         then
             same = false
         end
@@ -440,7 +441,8 @@ function G.ProfessionStatBonus(item, hero)
         and type(hero.level) == "number"
         and whole(item.enchant.level, 1, C.heroLevelCap)
     then
-        scale = math.max(1, hero.level) / item.enchant.level
+        -- Keep paid strength through resets; growth follows the same level-ten floor as quotes.
+        scale = math.max(1, hero.level / math.max(10, item.enchant.level))
     end
     for stat in pairs(C.enchantByID[item.enchant.id].stats) do
         local value = item.enchant.stats[stat]

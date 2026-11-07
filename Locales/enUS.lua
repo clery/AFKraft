@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.enUS = {
+    THIS_HEIRLOOM_IS_ALREADY_OWNED = "This heirloom is already in your bags or equipped by this hero.",
     SCROLL_HORIZONTAL_HINT = "Scroll sideways to browse",
     SCROLL_VERTICAL_HINT = "Scroll to browse",
 

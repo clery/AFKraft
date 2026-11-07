@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.esES = {
+    THIS_HEIRLOOM_IS_ALREADY_OWNED = "Esta reliquia ya está en tus bolsas o equipada por este héroe.",
     SCROLL_HORIZONTAL_HINT = "Desplázate horizontalmente para explorar",
     SCROLL_VERTICAL_HINT = "Desplázate para explorar",
 

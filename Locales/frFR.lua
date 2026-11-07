@@ -1,6 +1,7 @@
 local _, W = ...
 
 W.Locales.frFR = {
+    THIS_HEIRLOOM_IS_ALREADY_OWNED = "Cet héritage est déjà dans vos sacs ou équipé par ce héros.",
     SCROLL_HORIZONTAL_HINT = "Faites défiler horizontalement pour parcourir",
     SCROLL_VERTICAL_HINT = "Faites défiler pour parcourir",
 
