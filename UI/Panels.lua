@@ -904,6 +904,19 @@ function P.crafting(ui, p, s)
             .. requirement
     end
     text(p, description, 850, 58, 14, T.muted, 450)
+    if preview then
+        local current = G.ItemPower(h.gear[slot], h)
+        local delta = G.ItemPower(preview, h) - current
+        ui.craftControls.comparison = text(
+            p,
+            L.CURRENT_POWER_PREFIX .. current .. "  ·  " .. string.format("%+.1f", delta),
+            850,
+            106,
+            14,
+            delta > 0 and T.green or T.muted,
+            450
+        )
+    end
     text(
         p,
         cost.gold .. L.FRAGMENT_GOLD_4 .. cost.material .. " " .. C.materials[material],
