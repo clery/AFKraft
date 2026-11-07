@@ -43,6 +43,24 @@ function G.ResetAdventure(state, deep)
     for _, hero in ipairs(state.heroes) do
         G.ReturnUnusableGear(state, hero)
     end
+    for heroIndex, hero in ipairs(state.heroes) do
+        for _, slot in ipairs(W.Content.equipmentSlots) do
+            if not hero.gear[slot] then
+                local bestIndex, bestPower = nil, -1
+                for index, item in ipairs(state.inventory) do
+                    if item.slot == slot and G.CanEquip(hero, item) then
+                        local power = G.ItemPower(item, hero)
+                        if power > bestPower then
+                            bestIndex, bestPower = index, power
+                        end
+                    end
+                end
+                if bestIndex then
+                    G.Equip(state, heroIndex, bestIndex)
+                end
+            end
+        end
+    end
     state.professions.fragments = 0
     state.gold = 0
     state.materials = { timber = 0, hide = 0, ore = 0, relic = 0 }

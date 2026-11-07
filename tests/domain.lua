@@ -554,8 +554,37 @@ case("Prestige retains Essence, discoveries, and heirlooms", function()
     assert(s.discoveries.test and s.recipes[1])
     equal(s.heroes[1].gear[1], heirloom)
     assert(not s.heroes[1].gear[2])
-    equal(#s.inventory, 1)
+    equal(#s.inventory, 0)
+    assert(s.heroes[1].gear[4].heirloom)
     assert(G.ItemPower(heirloom, s.heroes[1]) < before)
+end)
+case("Both resets equip stored heirlooms and preserve previous owners and spare stacks", function()
+    for _, deep in ipairs({ false, true }) do
+        local s = G.New(1000)
+        assert(G.AddHero(s, "WARRIOR"))
+        assert(G.AddHero(s, "WARRIOR"))
+        local first, second = s.heroes[1], s.heroes[2]
+        first.level, second.level = 60, 60
+        local worn = assert(G.CraftItem(second, 1, true, s))
+        second.gear[1] = worn
+        local weak = assert(G.CraftItem(first, 1, true, s))
+        local strong = G.Copy(weak)
+        strong.upgrade, strong.count = 5, 2
+        local spare = assert(G.CraftItem(first, 4, true, s))
+        spare.count = 3
+        s.inventory = { weak, strong, spare, G.Item(s, 3, 1, 3) }
+        assert(G.ResetAdventure(s, deep))
+        equal(first.gear[1].upgrade, 5)
+        equal(second.gear[1], worn)
+        assert(first.gear[4].heirloom and second.gear[4].heirloom)
+        equal(#s.inventory, 3)
+        equal(weak, s.inventory[1])
+        equal(strong.count, 1)
+        equal(spare.count, 1)
+        for _, item in ipairs(s.inventory) do
+            assert(item.heirloom)
+        end
+    end
 end)
 case("Empty resets never grant power or Legacy", function()
     local s = party()
