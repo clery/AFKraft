@@ -1,6 +1,8 @@
 local _, W = ...
 
 W.Locales.frFR = {
+    RECIPE_REQUIRES_MATERIAL = "Cette recette nécessite : %s.",
+    CRAFT_MATERIAL_ROLES = "Bois : bâtons, arcs et arbalètes. Peaux : cuir et capes. Minerai : armes en métal, mailles et plaques. Poussière de relique : tissu et baguettes. Amélioration : minerai ; enchantement : poussière ; forge des titans : les deux.",
     ZONE_SPOILS_PREFIX = "Butin : ",
     ZONE_COMPLETE = "Zone terminée",
     WAITING_FOR_ZONE_COMPLETE = "En attente de la victoire lors du dernier combat de la zone actuelle.",

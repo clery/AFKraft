@@ -53,9 +53,12 @@ function B.party(level, classes, path, geared, tier, strength)
         if geared then
             for _, slot in ipairs(C.equipmentSlots) do
                 local quote = G.Cost(s, hero, false)
-                local gold, ore = s.gold, s.materials.ore
-                assert(G.Craft(s, index, slot, "ore", false))
-                assert(s.gold == gold - quote.gold and s.materials.ore == ore - quote.material)
+                local material = G.CraftMaterial(G.CraftItem(hero, slot, false, s))
+                local gold, stock = s.gold, s.materials[material]
+                assert(G.Craft(s, index, slot, material, false))
+                assert(
+                    s.gold == gold - quote.gold and s.materials[material] == stock - quote.material
+                )
                 assert(G.Equip(s, index, #s.inventory))
             end
         end

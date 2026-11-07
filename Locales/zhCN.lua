@@ -1,6 +1,8 @@
 local _, W = ...
 
 W.Locales.zhCN = {
+    RECIPE_REQUIRES_MATERIAL = "此配方需要：%s。",
+    CRAFT_MATERIAL_ROLES = "木材：法杖、弓和弩。兽皮：皮甲和披风。矿石：金属武器、锁甲和板甲。遗物之尘：布甲和魔杖。强化消耗矿石，附魔消耗遗物之尘，泰坦锻造消耗两者。",
     ZONE_SPOILS_PREFIX = "战利品：",
     ZONE_COMPLETE = "区域已通关",
     WAITING_FOR_ZONE_COMPLETE = "等待通关当前区域的最后一场战斗。",

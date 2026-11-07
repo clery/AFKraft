@@ -384,14 +384,6 @@ function Tutorial.Refresh(ui)
                     .. C.slots[craft.slot]
                     .. L.TO_CRAFT_AN_UPGRADE_FOR_THIS_EQUIPMENT_SLOT_SUFFIX
             )
-        elseif (ui.craftMaterial or "timber") ~= craft.material then
-            show(
-                ui,
-                controls.materials[craft.material],
-                L.CLICK_PREFIX
-                    .. C.materials[craft.material]
-                    .. L.YOU_HAVE_ENOUGH_OF_THIS_MATERIAL_FOR_THE_RECIPE
-            )
         else
             local h = s.heroes[hero]
             local gain = G.ItemPower(craft.item, h) - G.ItemPower(h.gear[craft.slot], h)

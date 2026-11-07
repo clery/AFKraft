@@ -11,7 +11,10 @@ test(
         W.Game.AddHero(state, "WARRIOR")
         state.heroes[1].level = 60
         state.guide.dismissed = true
-        state.essence, state.gold, state.materials.timber = 10000, 10000, 10000
+        state.essence, state.gold = 10000, 10000
+        for _, id in ipairs(W.Content.materialOrder) do
+            state.materials[id] = 10000
+        end
         W.state = state
         local ui = W.UI
         ui.selected, ui.craftSlot, ui.craftMaterial = 1, 1, "timber"

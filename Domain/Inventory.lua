@@ -535,6 +535,24 @@ function G.CraftItem(hero, slot, heirloom, state)
     return item
 end
 
+function G.CraftMaterial(item)
+    if not item then
+        return nil
+    end
+    local weapon = G.ItemWeaponType(item)
+    if weapon then
+        if weapon == "staff" or weapon == "bow" or weapon == "crossbow" then
+            return "timber"
+        end
+        return weapon == "wand" and "relic" or "ore"
+    end
+    local armor = G.ItemArmorType(item)
+    if item.slot == 4 or armor == "leather" then
+        return "hide"
+    end
+    return armor == "cloth" and "relic" or "ore"
+end
+
 function G.CraftingOpportunity(state, heroIndex)
     local hero = state.heroes[heroIndex]
     if not hero then
@@ -544,16 +562,7 @@ function G.CraftingOpportunity(state, heroIndex)
     for mode = 1, 2 do
         local heirloom = mode == 2
         local cost = G.Cost(state, hero, heirloom)
-        local material
         if state.gold >= cost.gold then
-            for _, id in ipairs(C.materialOrder) do
-                if state.materials[id] >= cost.material then
-                    material = id
-                    break
-                end
-            end
-        end
-        if material then
             if not best then
                 best = {}
                 for _, slot in ipairs(C.equipmentSlots) do
@@ -568,7 +577,8 @@ function G.CraftingOpportunity(state, heroIndex)
             for _, slot in ipairs(C.equipmentSlots) do
                 if not heirloom or state.recipes[slot] then
                     local item = G.CraftItem(hero, slot, heirloom, state)
-                    if item then
+                    local material = G.CraftMaterial(item)
+                    if item and state.materials[material] >= cost.material then
                         local power = G.ItemPower(item, hero)
                         if power > best[slot] then
                             return {
@@ -593,13 +603,16 @@ function G.Craft(state, index, slot, material, heirloom)
     if heirloom and not state.recipes[slot] then
         return false, L.UNLOCK_THIS_HEIRLOOM_RECIPE_WITH_HERITAGE_FIRST
     end
-    local cost = G.Cost(state, hero, heirloom)
-    if state.gold < cost.gold or state.materials[material] < cost.material then
-        return false, L.YOU_NEED_MORE_GOLD_OR_IDLE_MATERIALS
-    end
     local item, reason = G.CraftItem(hero, slot, heirloom, state)
     if not item then
         return false, reason
+    end
+    if material ~= G.CraftMaterial(item) then
+        return false, string.format(L.RECIPE_REQUIRES_MATERIAL, C.materials[G.CraftMaterial(item)])
+    end
+    local cost = G.Cost(state, hero, heirloom)
+    if state.gold < cost.gold or state.materials[material] < cost.material then
+        return false, L.YOU_NEED_MORE_GOLD_OR_IDLE_MATERIALS
     end
     item.uid = state.nextItem
     state.nextItem = state.nextItem + 1

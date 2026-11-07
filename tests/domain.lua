@@ -463,14 +463,15 @@ case("Locked destinations cannot be selected", function()
 end)
 case("Crafting is atomic when resources are insufficient", function()
     local s = party()
+    local material = G.CraftMaterial(G.CraftItem(s.heroes[1], 1, false, s))
     s.gold = 100
-    s.materials.ore = 0
+    s.materials[material] = 0
     local gold = s.gold
-    assert(not G.Craft(s, 1, 1, "ore", false))
+    assert(not G.Craft(s, 1, 1, material, false))
     equal(s.gold, gold)
     equal(#s.inventory, 0)
-    s.materials.ore = 50
-    assert(G.Craft(s, 1, 1, "ore", false))
+    s.materials[material] = 50
+    assert(G.Craft(s, 1, 1, material, false))
     equal(s.essence, 0)
     equal(#s.inventory, 0)
     assert(s.heroes[1].gear[1])

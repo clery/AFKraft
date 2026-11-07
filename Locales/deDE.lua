@@ -1,6 +1,8 @@
 local _, W = ...
 
 W.Locales.deDE = {
+    RECIPE_REQUIRES_MATERIAL = "Dieses Rezept benötigt %s.",
+    CRAFT_MATERIAL_ROLES = "Holz: Stäbe, Bögen und Armbrüste. Häute: Leder und Umhänge. Erz: Metallwaffen, Kette und Platte. Reliktstaub: Stoff und Zauberstäbe. Verbesserung verbraucht Erz, Verzauberung Reliktstaub und Titanschmieden beides.",
     ZONE_SPOILS_PREFIX = "Beute: ",
     ZONE_COMPLETE = "Gebiet abgeschlossen",
     WAITING_FOR_ZONE_COMPLETE = "Warte auf den Sieg im letzten Kampf des aktuellen Gebiets.",

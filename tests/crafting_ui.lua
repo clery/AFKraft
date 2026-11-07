@@ -50,7 +50,10 @@ test("Forge offers both crafts together and keeps heirloom requirements separate
     local state = G.New(W.Client.Now())
     G.AddHero(state, "WARRIOR")
     state.guide.dismissed = true
-    state.gold, state.materials.timber = 10000, 10000
+    state.gold = 10000
+    for _, id in ipairs(W.Content.materialOrder) do
+        state.materials[id] = 10000
+    end
     W.state = state
     ui.selected, ui.craftSlot, ui.craftMaterial = 1, 1, "timber"
     ui.frame:Show()
@@ -87,4 +90,30 @@ test("Forge offers both crafts together and keeps heirloom requirements separate
         ordinary = ordinary or not item.heirloom
     end
     assertTrue(ordinary)
+end)
+
+test("Forge derives ingredients from the preview and cannot spend substitutes", function()
+    local W = AFKraft
+    W.Initialize()
+    local G, ui = W.Game, W.UI
+    local s = G.New(W.Client.Now())
+    G.AddHero(s, "WARRIOR")
+    s.guide.dismissed, s.gold = true, 10000
+    s.materials.ore = 10000
+    W.state = s
+    ui.selected, ui.craftSlot, ui.craftMaterial = 1, 1, "ore"
+    ui.frame:Show()
+    ui:SetTab("crafting")
+    local item = G.CraftItem(s.heroes[1], 1, false, s)
+    assertEquals("timber", G.CraftMaterial(item))
+    assertFalse(ui.craftControls.craft:IsEnabled())
+    assertTrue(
+        ui.craftControls.ordinary.cost:GetText():find(W.Content.materials.timber, 1, true) ~= nil
+    )
+    s.materials.timber = 10000
+    ui:Refresh()
+    assertTrue(ui.craftControls.craft:IsEnabled())
+    ui.craftControls.craft:GetScript("OnClick")()
+    assertEquals(10000, s.materials.ore)
+    assertTrue(s.materials.timber < 10000)
 end)

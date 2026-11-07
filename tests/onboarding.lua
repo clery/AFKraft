@@ -365,39 +365,34 @@ test(
     end
 )
 
-test(
-    "Crafting lesson waits for an upgrade and follows slot, material and automatic equipment",
-    function()
-        local W, s, ui = opening()
-        s.guide.equipped, s.guide.talent, s.guide.traveled = true, true, true
-        ui:Refresh(false)
-        assertTrue(ui.guideTip == nil)
-        s.essence, s.gold, s.materials.timber = 100, 100, 100
-        ui:Refresh(false)
-        assertEquals(5, W.Panels.GuideStep(s, ui.selected))
-        assertEquals(ui.tabs.crafting, ui.guideTarget)
-        s.difficulty.unlocked, s.difficulty.maxTier = true, 4
-        ui.craftSlot, ui.craftMaterial = 6, "ore"
-        click(ui.tabs.crafting)
-        assertEquals(ui.craftControls.slots[1], ui.guideTarget)
-        click(ui.guideTarget)
-        assertEquals(ui.craftControls.materials.timber, ui.guideTarget)
-        click(ui.guideTarget)
-        assertEquals(ui.craftControls.craft, ui.guideTarget)
-        click(ui.guideTarget)
-        assertTrue(s.guide.crafted)
-        local uid = s.heroes[1].gear[1].uid
-        assertTrue(s.guide.craftItem == nil)
-        assertTrue(W.Panels.GuideStep(s, ui.selected) == nil)
-        W.state = assert(W.Game.Load(s, W.Client.Now()))
-        ui:Refresh(false)
-        assertEquals(uid, W.state.heroes[1].gear[1].uid)
-        local nextLesson = W.Tutorial.NextLesson(s)
-        assertNotNil(nextLesson)
-        assertEquals(nextLesson.message, ui.guideTip.text)
-        assertEquals(ui.tabs[nextLesson.tab], ui.guideTarget)
-    end
-)
+test("Crafting lesson waits for an upgrade and follows slot and automatic equipment", function()
+    local W, s, ui = opening()
+    s.guide.equipped, s.guide.talent, s.guide.traveled = true, true, true
+    ui:Refresh(false)
+    assertTrue(ui.guideTip == nil)
+    s.essence, s.gold, s.materials.timber = 100, 100, 100
+    ui:Refresh(false)
+    assertEquals(5, W.Panels.GuideStep(s, ui.selected))
+    assertEquals(ui.tabs.crafting, ui.guideTarget)
+    s.difficulty.unlocked, s.difficulty.maxTier = true, 4
+    ui.craftSlot, ui.craftMaterial = 6, "ore"
+    click(ui.tabs.crafting)
+    assertEquals(ui.craftControls.slots[1], ui.guideTarget)
+    click(ui.guideTarget)
+    assertEquals(ui.craftControls.craft, ui.guideTarget)
+    click(ui.guideTarget)
+    assertTrue(s.guide.crafted)
+    local uid = s.heroes[1].gear[1].uid
+    assertTrue(s.guide.craftItem == nil)
+    assertTrue(W.Panels.GuideStep(s, ui.selected) == nil)
+    W.state = assert(W.Game.Load(s, W.Client.Now()))
+    ui:Refresh(false)
+    assertEquals(uid, W.state.heroes[1].gear[1].uid)
+    local nextLesson = W.Tutorial.NextLesson(s)
+    assertNotNil(nextLesson)
+    assertEquals(nextLesson.message, ui.guideTip.text)
+    assertEquals(ui.tabs[nextLesson.tab], ui.guideTarget)
+end)
 
 test("First hunt lesson waits for verified sources and retains its acknowledgement", function()
     local W, s, ui = advanced()

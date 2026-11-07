@@ -654,6 +654,7 @@ case(
         local s = state()
         local hero = s.heroes[1]
         s.essence, s.gold, s.materials.ore = 1000, 1000, 1000
+        s.materials.timber, s.materials.relic = 1000, 1000
         for slot = 1, #C.slots do
             hero.gear[slot] = G.CraftItem(hero, slot, false)
         end
@@ -676,18 +677,18 @@ case(
 case("Ordinary crafted upgrades preserve displaced, equal and stronger gear", function()
     local s = state()
     local hero = s.heroes[2]
-    s.gold, s.materials.ore = 10000, 10000
+    s.gold, s.materials.timber = 10000, 10000
     local previous = assert(G.CraftItem(hero, 1, false, s))
     previous.stats = { weaponDPS = 0.01 }
     hero.gear[1] = previous
-    assert(G.Craft(s, 2, 1, "ore", false))
+    assert(G.Craft(s, 2, 1, "timber", false))
     local equipped = hero.gear[1]
     assert(equipped ~= previous and s.inventory[1] == previous)
     assert(s.heroes[1].gear[1] == nil)
-    assert(G.Craft(s, 2, 1, "ore", false))
+    assert(G.Craft(s, 2, 1, "timber", false))
     assert(hero.gear[1] == equipped and #s.inventory == 2)
     equipped.stats = { weaponDPS = 100000 }
-    assert(G.Craft(s, 2, 1, "ore", false))
+    assert(G.Craft(s, 2, 1, "timber", false))
     assert(hero.gear[1] == equipped and #s.inventory == 3)
 end)
 
@@ -723,12 +724,12 @@ end)
 case("Heirloom crafting guidance requires a known recipe and its exact affordable cost", function()
     local s = state()
     s.heroes[1].level = 30
-    s.essence, s.gold, s.materials.hide = 45, 30, 12
+    s.essence, s.gold, s.materials.ore = 45, 30, 12
     assert(not G.CraftingOpportunity(s, 1))
     s.recipes[1] = true
     local craft = assert(G.CraftingOpportunity(s, 1))
-    assert(craft.heirloom and craft.slot == 1 and craft.material == "hide")
-    s.materials.hide = 11
+    assert(craft.heirloom and craft.slot == 1 and craft.material == "ore")
+    s.materials.ore = 11
     assert(not G.CraftingOpportunity(s, 1))
 end)
 
@@ -738,10 +739,10 @@ case("Crafting automatically completes equipment guidance and survives reload", 
     s.guide.craftItem, s.guide.craftHero = "bad", -1
     assert(G.Load(s, 1000))
     assert(s.guide.crafted == false and s.guide.craftItem == nil and s.guide.craftHero == nil)
-    assert(not G.Craft(s, 1, 1, "ore", false))
+    assert(not G.Craft(s, 1, 1, "timber", false))
     assert(not s.guide.crafted)
-    s.essence, s.gold, s.materials.ore = 100, 100, 100
-    assert(G.Craft(s, 1, 1, "ore", false))
+    s.essence, s.gold, s.materials.timber = 100, 100, 100
+    assert(G.Craft(s, 1, 1, "timber", false))
     local uid = s.heroes[1].gear[1].uid
     assert(#s.inventory == 0 and s.guide.equipped)
     assert(s.guide.crafted and s.guide.craftItem == nil and s.guide.craftHero == nil)
@@ -775,4 +776,57 @@ case(
         assert(text:find("|cffffffff+6.0 Stamina|r", 1, true))
     end
 )
+case("Every recipe has a specific ingredient and rejects substitutes without spending", function()
+    local expected = { staff = "timber", bow = "timber", crossbow = "timber", wand = "relic" }
+    local armor = { cloth = "relic", leather = "hide", mail = "ore", plate = "ore" }
+    local seen = {}
+    for _, item in ipairs(C.items) do
+        local material = item.slot == 1 and (expected[item.weaponType] or "ore")
+            or item.slot == 4 and "hide"
+            or armor[item.armorType]
+        assert(G.CraftMaterial(item) == material)
+        seen[material] = true
+    end
+    for _, material in ipairs(C.materialOrder) do
+        assert(seen[material])
+    end
+    assert(G.CraftMaterial(nil) == nil)
+    for _, class in ipairs(C.classes) do
+        for _, level in ipairs({ 1, 40, 60 }) do
+            for _, heirloom in ipairs({ false, true }) do
+                for _, slot in ipairs(C.equipmentSlots) do
+                    local s = G.New(0)
+                    assert(G.AddHero(s, class.id))
+                    s.heroes[1].level, s.gold, s.recipes[slot] = level, 100000, true
+                    local item = G.CraftItem(s.heroes[1], slot, heirloom, s)
+                    if item then
+                        local required = G.CraftMaterial(item)
+                        for _, material in ipairs(C.materialOrder) do
+                            s.materials[material] = 1000
+                        end
+                        local before = G.Copy(s)
+                        for _, material in ipairs(C.materialOrder) do
+                            if material ~= required then
+                                assert(not G.Craft(s, 1, slot, material, heirloom))
+                                assert(s.gold == before.gold and s.nextItem == before.nextItem)
+                                assert(s.professions.xp.crafting == 0 and not s.guide.crafted)
+                                assert(s.materials[material] == before.materials[material])
+                            end
+                        end
+                        local cost = G.Cost(s, s.heroes[1], heirloom)
+                        s.materials[required] = cost.material - 1
+                        assert(not G.Craft(s, 1, slot, required, heirloom))
+                        s.materials[required] = cost.material
+                        assert(G.Craft(s, 1, slot, required, heirloom))
+                        assert(s.materials[required] == 0 and s.gold == before.gold - cost.gold)
+                        assert(G.Load(s, 0))
+                    else
+                        assert(not G.Craft(s, 1, slot, "ore", heirloom))
+                    end
+                end
+            end
+        end
+    end
+end)
+
 return cases

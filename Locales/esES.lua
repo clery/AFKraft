@@ -1,6 +1,8 @@
 local _, W = ...
 
 W.Locales.esES = {
+    RECIPE_REQUIRES_MATERIAL = "Esta receta requiere %s.",
+    CRAFT_MATERIAL_ROLES = "Madera: bastones, arcos y ballestas. Pieles: cuero y capas. Mineral: armas de metal, malla y placas. Polvo de reliquia: tela y varitas. Mejorar usa mineral; encantar usa polvo; la forja titánica usa ambos.",
     ZONE_SPOILS_PREFIX = "Botín: ",
     ZONE_COMPLETE = "Zona completada",
     WAITING_FOR_ZONE_COMPLETE = "Esperando a superar el último encuentro de la zona actual.",

@@ -110,7 +110,15 @@ local function established(seed)
         end
         hero.priority = C.classByID[class].role == "healer" and "heal" or "special"
         for _, slot in ipairs(C.equipmentSlots) do
-            assert(G.Craft(state, index, slot, "ore", true))
+            assert(
+                G.Craft(
+                    state,
+                    index,
+                    slot,
+                    G.CraftMaterial(G.CraftItem(state.heroes[index], slot, true, state)),
+                    true
+                )
+            )
             assert(G.Equip(state, index, #state.inventory))
         end
         assert(G.Enchant(state, index, 1, "offense"))
@@ -119,7 +127,9 @@ local function established(seed)
     assert(G.AllocateProfession(state, "crafting", "efficiency"))
     assert(G.AllocateProfession(state, "enchanting", "offense"))
     assert(G.AllocateProfession(state, "titanforging", "potential"))
-    assert(G.Craft(state, 1, 1, "ore", false)) -- Ordinary investment must be lost.
+    assert(
+        G.Craft(state, 1, 1, G.CraftMaterial(G.CraftItem(state.heroes[1], 1, false, state)), false)
+    ) -- Ordinary investment must be lost.
     state.prestigeUnlocked, state.stage, state.safe.elwynn = true, 300, 300
     state.encounter = state.encounter + 1
     assert(

@@ -858,8 +858,7 @@ end
 function P.crafting(ui, p, s)
     local h, index = selected(ui, s)
     local slot = ui.craftSlot or 1
-    local material = ui.craftMaterial or "timber"
-    ui.craftControls = { slots = {}, materials = {} }
+    ui.craftControls = { slots = {} }
     local heroes = {}
     for heroIndex, hero in ipairs(s.heroes) do
         heroes[#heroes + 1] = { id = heroIndex, name = hero.name }
@@ -886,27 +885,14 @@ function P.crafting(ui, p, s)
         )
     end
     text(p, L.MATERIAL_HEADING, 0, 330, 11, T.gold)
-    for i, id in ipairs(C.materialOrder) do
-        ui.craftControls.materials[id] = U.SelectButton(
-            p,
-            C.materials[id] .. " · " .. s.materials[id],
-            0,
-            365 + (i - 1) * 42,
-            425,
-            32,
-            function()
-                ui.craftMaterial = id
-                ui:Refresh()
-            end,
-            material == id
-        )
-    end
+    text(p, L.CRAFT_MATERIAL_ROLES, 0, 365, 14, T.muted, 425)
     for mode = 1, 2 do
         local heirloom = mode == 2
         local x = heirloom and 900 or 480
         local hint = heirloom and G.FeatureHint(s, "heirlooms")
         local cost = G.Cost(s, h, heirloom)
         local preview, unavailable = G.CraftItem(h, slot, heirloom, s)
+        local material = G.CraftMaterial(preview)
         local controls = {}
         ui.craftControls[heirloom and "heirloom" or "ordinary"] = controls
         if heirloom then
@@ -951,9 +937,14 @@ function P.crafting(ui, p, s)
                 390
             )
         end
-        text(
+        controls.cost = text(
             p,
-            cost.gold .. L.FRAGMENT_GOLD_4 .. cost.material .. " " .. C.materials[material],
+            cost.gold
+                .. L.FRAGMENT_GOLD_4
+                .. cost.material
+                .. " "
+                .. (C.materials[material] or "")
+                .. (material and " (" .. s.materials[material] .. ")" or ""),
             x,
             225,
             16,

@@ -62,9 +62,13 @@ local function snapshot(seed)
         end
         for _, slot in ipairs(C.equipmentSlots) do
             local cost = G.Cost(state, hero, false)
-            local gold, ore = state.gold, state.materials.ore
-            assert(G.Craft(state, index, slot, "ore", false))
-            assert(state.gold == gold - cost.gold and state.materials.ore == ore - cost.material)
+            local material = G.CraftMaterial(G.CraftItem(hero, slot, false, state))
+            local gold, stock = state.gold, state.materials[material]
+            assert(G.Craft(state, index, slot, material, false))
+            assert(
+                state.gold == gold - cost.gold
+                    and state.materials[material] == stock - cost.material
+            )
             assert(G.Equip(state, index, #state.inventory))
         end
         assert(G.ConfigurePreset(state, index, class == "PRIEST" and "support" or "offense"))

@@ -287,7 +287,15 @@ elseif mode == "professions" then
                 local gold, ore, relic = s.gold, s.materials.ore, s.materials.relic
                 for index in ipairs(s.heroes) do
                     for _, slot in ipairs(C.equipmentSlots) do
-                        assert(G.Craft(s, index, slot, "ore", false))
+                        assert(
+                            G.Craft(
+                                s,
+                                index,
+                                slot,
+                                G.CraftMaterial(G.CraftItem(s.heroes[index], slot, false, s)),
+                                false
+                            )
+                        )
                         assert(G.Equip(s, index, #s.inventory))
                         assert(G.Enchant(s, index, slot, enchant))
                         for _ = 1, 2 do

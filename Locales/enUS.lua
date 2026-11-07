@@ -1,6 +1,8 @@
 local _, W = ...
 
 W.Locales.enUS = {
+    RECIPE_REQUIRES_MATERIAL = "This recipe requires %s.",
+    CRAFT_MATERIAL_ROLES = "Timber: staves, bows and crossbows. Hide: leather and cloaks. Ore: metal weapons, mail and plate. Relic dust: cloth and wands. Enhancement uses ore; enchanting uses Relic dust; titanforging uses both.",
     ZONE_SPOILS_PREFIX = "Spoils: ",
     ZONE_COMPLETE = "Zone complete",
     WAITING_FOR_ZONE_COMPLETE = "Waiting to clear the current zone’s final encounter.",

@@ -35,7 +35,7 @@ case("Routine equipment and heirlooms need no Essence at every production step",
     assert(G.Titanforge(state, 1, 1))
     state.difficulty.unlocked, state.difficulty.maxTier = true, 4
     assert(G.UnlockRecipe(state, 1))
-    assert(G.Craft(state, 1, 1, "timber", true))
+    assert(G.Craft(state, 1, 1, "ore", true))
     assert(hero.gear[1].heirloom or state.inventory[#state.inventory].heirloom)
     assert(state.essence == 0 and state.gold < 100000 and state.materials.relic < 100000)
 end)

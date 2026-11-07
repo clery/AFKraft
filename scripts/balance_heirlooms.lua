@@ -13,7 +13,15 @@ for _, deep in ipairs({ false, true }) do
         for index, hero in ipairs(s.heroes) do
             for _, slot in ipairs(C.equipmentSlots) do
                 s.recipes[slot] = true -- Declared prior-account entitlement, not earned access.
-                assert(G.Craft(s, index, slot, "ore", true))
+                assert(
+                    G.Craft(
+                        s,
+                        index,
+                        slot,
+                        G.CraftMaterial(G.CraftItem(s.heroes[index], slot, true, s)),
+                        true
+                    )
+                )
                 assert(hero.gear[slot] and hero.gear[slot].heirloom)
                 assert(G.Upgrade(s, index, slot))
                 assert(G.Enchant(s, index, slot, "offense"))
