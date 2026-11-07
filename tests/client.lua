@@ -413,15 +413,22 @@ case("Actor loading binds through its XML template without frame script methods"
     assert(refreshed == 2 and dressed == 0 and called == 3)
     model.nativeAppearance = true
     model.equipmentAppliedKey = "equipped"
+    model.applyingEquipment = true
+    model.appearanceSource.scripts.OnModelLoaded()
+    assert(called == 3 and model.equipmentAppliedKey == "equipped")
+    model.applyingEquipment = false
+    model.appearanceSource.scripts.OnModelLoaded()
+    assert(called == 4 and model.equipmentAppliedKey == "equipped")
+    assert(model.adventureScene.scripts.OnUpdate)
     model.appearanceSource.scripts.OnHide()
     assert(model.equipmentAppliedKey == nil)
     model.equipmentAppliedKey = "stale"
     model.appearanceSource.scripts.OnShow()
-    assert(model.equipmentAppliedKey == nil and called == 4)
+    assert(model.equipmentAppliedKey == nil and called == 5)
     assert(model.adventureScene.scripts.OnUpdate)
     model.nativeAppearance = false
     model.appearanceSource.scripts.OnShow()
-    assert(called == 4)
+    assert(called == 5)
     -- Older clients may not expose native scene overlap control.
     methods.SetAllowOverlappedModels = nil
     creates = 0
@@ -663,6 +670,7 @@ case("Missing source models are requested again without clearing loaded geometry
                 SetAlpha = function() end,
             },
             adventureScene = {
+                Show = function() end,
                 SetScript = function(_, _, callback)
                     update = callback
                 end,
@@ -696,8 +704,11 @@ end)
 
 case("Geometry retries stop after success or a bounded loading window", function()
     local client = adapter("12.1.5")
-    local update, calls, finishAt = nil, 0, nil
+    local update, calls, finishAt, shown = nil, 0, nil, false
     local scene = {
+        Show = function()
+            shown = true
+        end,
         SetScript = function(_, script, callback)
             assert(script == "OnUpdate")
             update = callback
@@ -713,6 +724,7 @@ case("Geometry retries stop after success or a bounded loading window", function
         end,
     }
     client.AwaitAdventureModel(model)
+    assert(shown)
     for _ = 1, 50 do
         assert(update)
         update(scene, 0.1)

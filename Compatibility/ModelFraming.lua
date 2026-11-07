@@ -212,7 +212,8 @@ function A.CreateAdventureModel(parent, loaded)
         if model.applyingEquipment then
             return
         end
-        model.equipmentAppliedKey = nil
+        -- Delayed equipment loads also fire this callback; do not dress again.
+        A.AwaitAdventureModel(model)
         source:SetAlpha(0)
         loaded()
     end)
@@ -268,6 +269,8 @@ end
 
 function A.AwaitAdventureModel(model)
     local elapsed, attempts = 0, 0
+    -- Successful native framing hides this scene, including its retry handler.
+    model.adventureScene:Show()
     -- Geometry can become available after OnModelLoaded. Retry only while loading,
     -- with a bounded window; successful framing removes this update handler.
     model.adventureScene:SetScript("OnUpdate", function(scene, delta)
