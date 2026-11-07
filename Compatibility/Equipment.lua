@@ -29,14 +29,13 @@ function A.ApplyModelEquipment(model, spec)
     model.equipmentAppliedKey = spec.equipmentKey
     model.applyingEquipment = true
     model.equipmentErrors = {}
-    local complete = true
     source:Undress()
     for _, id in ipairs(spec.equipment) do
         local cached = not C_Item
             or not C_Item.IsItemDataCachedByID
             or C_Item.IsItemDataCachedByID(id)
         if not cached and C_Item.RequestLoadItemDataByID then
-            complete = false
+            -- Missing client items must not keep the entire companion hidden.
             model.pendingEquipment = model.pendingEquipment or {}
             if not model.pendingEquipment[id] then
                 model.pendingEquipment[id] = true
@@ -46,14 +45,10 @@ function A.ApplyModelEquipment(model, spec)
             -- Strings are physical item IDs; numeric TryOn arguments are appearance IDs.
             local ok, message = pcall(source.TryOn, source, "item:" .. id)
             if not ok then
-                complete = false
                 model.equipmentErrors[id] = message
             end
         end
     end
-    if not complete then
-        model.equipmentAppliedKey = nil
-    end
     model.applyingEquipment = false
-    return complete
+    return true
 end

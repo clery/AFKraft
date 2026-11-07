@@ -314,8 +314,7 @@ function A.FrameAdventureModel(model, enemy, spec)
             return false
         end
         if not A.ApplyModelEquipment(model, spec) then
-            -- Keep the drawable loader alive until geometry and item data are
-            -- ready; expanding it now can expose an undressed character.
+            -- Keep the drawable loader alive until character geometry is ready.
             A.PrepareAppearanceLoad(model)
             scene:Show()
             return false

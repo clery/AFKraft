@@ -429,6 +429,11 @@ case("Actor loading binds through its XML template without frame script methods"
     model.nativeAppearance = false
     model.appearanceSource.scripts.OnShow()
     assert(called == 5)
+    model.pendingEquipment = { [13101] = true }
+    model.equipmentAppliedKey = "partial"
+    model.scripts.OnEvent(model, "ITEM_DATA_LOAD_RESULT", 13101, true)
+    assert(model.pendingEquipment[13101] == nil and model.equipmentAppliedKey == nil)
+    assert(called == 6 and model.adventureScene.scripts.OnUpdate)
     -- Older clients may not expose native scene overlap control.
     methods.SetAllowOverlappedModels = nil
     creates = 0
@@ -893,7 +898,7 @@ case("Every new hero and the main character have stat-free clothing in empty slo
     end
 end)
 
-case("Uncached equipment requests data once and dresses only after data arrives", function()
+case("Uncached equipment does not block characters and dresses when data arrives", function()
     local cached, requests, tried = false, 0, 0
     local geometry = false
     local client = adapter("12.1.5", {
@@ -923,14 +928,43 @@ case("Uncached equipment requests data once and dresses only after data arrives"
     assert(client.ApplyModelEquipment(model, spec) == false)
     assert(requests == 0 and tried == 0 and model.equipmentAppliedKey == nil)
     geometry = true
-    assert(not client.ApplyModelEquipment(model, spec))
-    assert(not client.ApplyModelEquipment(model, spec))
+    assert(client.ApplyModelEquipment(model, spec))
+    assert(client.ApplyModelEquipment(model, spec))
     assert(requests == 1 and tried == 0 and model.pendingEquipment[25])
-    assert(model.equipmentAppliedKey == nil)
+    assert(model.equipmentAppliedKey == spec.equipmentKey)
     cached = true
+    -- ITEM_DATA_LOAD_RESULT invalidates the outfit when the requested item arrives.
+    model.equipmentAppliedKey = nil
     assert(client.ApplyModelEquipment(model, spec))
     assert(requests == 1 and tried == 1)
 end)
+
+case(
+    "Unavailable equipment preserves the character and other wearable items on both clients",
+    function()
+        for _, version in ipairs({ "12.1.5", "1.60.1" }) do
+            local client = adapter(version)
+            local tried = {}
+            local model = {
+                appearanceSource = {
+                    Undress = function() end,
+                    TryOn = function(_, link)
+                        tried[#tried + 1] = link
+                        if link == "item:13101" then
+                            error("Unavailable item")
+                        end
+                    end,
+                },
+            }
+            local spec = { equipmentKey = "13101;25", equipment = { 13101, 25 } }
+            assert(client.ApplyModelEquipment(model, spec))
+            assert(#tried == 2 and tried[2] == "item:25")
+            assert(model.equipmentErrors[13101])
+            assert(not model.applyingEquipment)
+            assert(client.ApplyModelEquipment(model, spec) and #tried == 2)
+        end
+    end
+)
 
 case("Continent title tiles use unlabeled Retail artwork without replacing decorations", function()
     local client = adapter("12.1.5")
