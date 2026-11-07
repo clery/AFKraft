@@ -238,6 +238,24 @@ case("Critical output follows the weighted curve without multiplying critical ti
         assert(G.CriticalResult(s, h, 100, false) == 375)
     end)
 end)
+case(
+    "Offline critical damage and healing use their weighted probabilities without rolls",
+    function()
+        local s, h = setup("MAGE")
+        selectEffect(h, "criticalChance")
+        selectEffect(h, "superCriticalChance")
+        s.offline = true
+        local seed = s.seed
+        assert(math.abs(G.CriticalResult(s, h, 100, false) - 114) < 0.000001)
+        selectEffect(h, "superCriticalDamage")
+        assert(math.abs(G.CriticalResult(s, h, 100, false) - 117) < 0.000001)
+        local effects = G.TalentEffects(h)
+        local expected = 100 * (1 + effects.criticalChance * 0.5 + effects.superCriticalChance * 2)
+        assert(math.abs(G.CriticalResult(s, h, 100, true) - expected) < 0.000001)
+        assert(s.seed == seed)
+    end
+)
+
 case("Damage-linked healing uses actual critical damage without a second critical roll", function()
     local s, h = setup("PRIEST")
     selectEffect(h, "criticalChance")

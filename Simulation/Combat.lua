@@ -274,7 +274,7 @@ local function heal(state, target, amount, source, passive)
     return amount
 end
 
-local function victory(state, battle)
+function G.CombatVictory(state, battle)
     local z = C.zoneByID[state.zone]
     local difficulty = G.DifficultyModifiers(state)
     local development = G.DevelopmentModifiers(state)
@@ -708,7 +708,7 @@ function G.Step(state, seconds)
         end
     end
     if #living(battle.enemies) == 0 then
-        victory(state, battle)
+        G.CombatVictory(state, battle)
         return
     end
     for _, enemy in ipairs(battle.enemies) do
@@ -760,7 +760,7 @@ function G.Step(state, seconds)
         end
     end
     if #living(battle.enemies) == 0 then
-        victory(state, battle)
+        G.CombatVictory(state, battle)
         return
     end
     if #living(battle.heroes) == 0 or battle.elapsed >= 180 then

@@ -339,7 +339,7 @@ Automatic prestige is outside the initial route-planning scope. A later version 
 - Earn up to 24 hours of offline rewards per absence.
 - Calculate earnings when the addon next loads; no code runs while WoW is closed.
 - Farm saved safe encounters offline. Optional offline routes can visit only checkpoints cleared before departure in the current run and tier. New bosses and destination decisions remain online.
-- Use the same combat rules for online and offline outcomes, with bounded catch-up batches and no rendering.
+- Offline combat uses probability-weighted critical damage and healing. Catch-up samples fights and reuses their duration and outcome while starting health, hero levels, destination, difficulty and boost state match; boost transitions require fresh simulation. Each victory still executes the normal progression, loot and route rules. Work remains time-budgeted, and an open window blocks management with a calculating-results view until completion.
 - Apply rewards once, advance the saved timestamp, and display a return summary. No manual claim is needed to resume.
 - Handle negative elapsed time, reloads, and character switches without duplicate rewards.
 - Boosts and ordered rules use the same commands and simulation timeline during eligible offline farming. In the revised collection model, offline simulation grants no outdoor discoveries; the simulated collection behavior is retired. Do not estimate a full day at permanent boosted power or award manual activations the player never made.

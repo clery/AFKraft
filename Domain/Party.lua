@@ -380,6 +380,11 @@ function G.CriticalResult(state, hero, amount, healing)
     if criticalChance + superChance <= 0 then
         return amount
     end
+    -- Offline farming uses expected output so repeated fights can be fast-forwarded.
+    if state.offline then
+        return amount
+            * (1 + criticalChance * (0.5 + criticalPower) + superChance * (2 + superPower))
+    end
     local roll = G.Random(state, 10000)
     if roll <= floor(superChance * 10000 + 0.5) then
         return amount * (3 + superPower), "supercritical"

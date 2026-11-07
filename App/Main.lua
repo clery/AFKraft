@@ -234,7 +234,7 @@ function root.Update(_, dt)
             return
         end
         -- Limit catch-up to 2 ms, then leave at least 50 ms for the game.
-        local done = G.CatchupBatch(W.catchup, 1200, function()
+        local done = G.CatchupBatch(W.catchup, W.catchup.remaining, function()
             return GetTimePreciseSec() - now >= 0.002
         end)
         W.catchup.nextBatch = GetTimePreciseSec() + 0.05

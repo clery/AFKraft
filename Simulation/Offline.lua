@@ -52,14 +52,102 @@ function G.BeginCatchup(state, now)
     }
 end
 
+-- Builds cannot be edited inside a catch-up snapshot. Only these combat inputs change.
+local function combatKey(state)
+    local key = { state.zone, state.stage, state.tier, G.CompanionSlots(state) }
+    local boundary = math.huge
+    local id = state.boosts.equipped
+    local config = id and state.boosts.automation.abilities[id]
+    for boost, deadline in pairs(state.boosts.activeUntil) do
+        if deadline > state.clock then
+            key[#key + 1] = boost
+            boundary = min(boundary, deadline)
+        end
+    end
+    if config and config.enabled and state.boosts.automation.enabled then
+        local readyAt = state.boosts.readyAt[id] or 0
+        key[#key + 1] = readyAt <= state.clock and "ready" or "cooldown"
+        if readyAt > state.clock then
+            boundary = min(boundary, readyAt)
+        end
+    end
+    for i, hero in ipairs(state.heroes) do
+        key[#key + 1] = hero.level
+        key[#key + 1] = state.battle.heroes[i].hp
+    end
+    return table.concat(key, ":"), boundary
+end
+
+local function catchupStep(job, available)
+    local state, battle = job.state, job.state.battle
+    if (state.rest or 0) > 0 then
+        local ticks = min(available, math.ceil(state.rest / 0.25))
+        state.clock = state.clock + ticks * 0.25
+        state.rest = max(0, state.rest - ticks * 0.25)
+        job.skippedTicks = (job.skippedTicks or 0) + ticks
+        return ticks
+    end
+    if battle and battle.elapsed == 0 then
+        local key, boundary = combatKey(state)
+        if key then
+            local sample = job.combats and job.combats[key]
+            if
+                sample
+                and sample.ticks <= available
+                and state.clock + sample.ticks * 0.25 <= boundary
+            then
+                state.clock = state.clock + sample.ticks * 0.25
+                state.battle = copy(sample.battle)
+                G.CombatVictory(state, state.battle)
+                job.skippedTicks = (job.skippedTicks or 0) + sample.ticks
+                return sample.ticks
+            end
+            job.sample = {
+                key = key,
+                battle = battle,
+                clock = state.clock,
+                boundary = boundary,
+                victories = state.stats.victories,
+                boostUses = state.stats.boostUses,
+            }
+        end
+    end
+    G.Step(state, 0.25)
+    local sample = job.sample
+    if sample and not state.battle then
+        job.sample = nil
+        if
+            state.stats.victories == sample.victories + 1
+            and state.stats.boostUses == sample.boostUses
+            and state.clock <= sample.boundary
+        then
+            sample.ticks = floor((state.clock - sample.clock) / 0.25 + 0.5)
+            job.combats = job.combats or {}
+            job.combatKeys = job.combatKeys or {}
+            if not job.combats[sample.key] then
+                -- Bound transient memory even when health never settles into a short cycle.
+                local slot = (job.combatCursor or 0) % 512 + 1
+                local previous = job.combatKeys[slot]
+                if previous then
+                    job.combats[previous] = nil
+                end
+                job.combatKeys[slot], job.combatCursor = sample.key, slot
+            end
+            job.combats[sample.key] = sample
+        end
+    end
+    return 1
+end
+
 function G.CatchupBatch(job, steps, shouldYield)
     if job.finished then
         return true
     end
     local n = min(job.remaining, steps or 1600)
-    for _ = 1, n do
-        G.Step(job.state, 0.25)
-        job.remaining = job.remaining - 1
+    while n > 0 do
+        local processed = catchupStep(job, n)
+        n = n - processed
+        job.remaining = job.remaining - processed
         if shouldYield and shouldYield() then
             break
         end

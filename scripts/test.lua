@@ -52,6 +52,7 @@ local cases = {}
 for _, file in ipairs({
     "tests/localization.lua",
     "tests/domain.lua",
+    "tests/offline_fastforward.lua",
     "tests/encounters.lua",
     "tests/progression.lua",
     "tests/positioning.lua",

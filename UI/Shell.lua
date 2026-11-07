@@ -176,7 +176,7 @@ function UI:Layout()
         control:SetShown(not compact and forge and not W.Tutorial.MenuHint(W.state, id))
     end
     self.scene:Layout(compact, management)
-    self.scene.frame:SetShown(compact or not management)
+    self.scene.frame:SetShown(not W.catchup and (compact or not management))
     if not compact then
         self.scene.frame:ClearAllPoints()
         self.scene.frame:SetPoint("TOPLEFT", self.workspace, "TOPLEFT", 0, -151)
@@ -193,8 +193,8 @@ function UI:Layout()
         forge and -211 or management and (heroPage and -251 or -155) or -620
     )
     self.panel:SetSize(1296, forge and 639 or management and (heroPage and 599 or 695) or 240)
-    self.expanded:SetShown(not compact)
-    self.compact:SetShown(compact)
+    self.expanded:SetShown(not W.catchup and not compact)
+    self.compact:SetShown(not W.catchup and compact)
     for tab, frame in pairs({
         journal = self.journalBorder,
         chests = self.chestFrame,
@@ -217,11 +217,11 @@ function UI:Layout()
         )
     end
     self.adventureCompact.frame:EnableMouse(not W.state.ui.locked)
-    self.grip:SetShown(not self.fullscreen or compact)
+    self.grip:SetShown(not W.catchup and (not self.fullscreen or compact))
     self.scene.frame:EnableMouse(not W.state.ui.locked)
     self.frame:EnableMouse(not compact or not W.state.ui.locked)
     if self.drag then
-        self.drag:EnableMouse(not W.state.ui.locked)
+        self.drag:EnableMouse(not W.catchup and not W.state.ui.locked)
     end
 end
 
@@ -285,6 +285,23 @@ function UI:Refresh(redraw)
     local s = W.state
     if not s then
         return
+    end
+    local calculating = self.calculating:IsShown()
+    self.calculating:SetShown(W.catchup ~= nil)
+    if W.catchup then
+        self.expanded:Hide()
+        self.compact:Hide()
+        self.scene.frame:Hide()
+        self.grip:Hide()
+        self.drag:EnableMouse(false)
+        if self.map then
+            self.map:Hide()
+        end
+        W.Tutorial.Hide(self)
+        W.Audio.Stop()
+        return
+    elseif calculating then
+        self:Layout()
     end
     if self.returnReportPending then
         if self.returnReportPending ~= s.lastOfflineSummary then
@@ -919,6 +936,28 @@ function W.CreateUI()
         f:StopMovingOrSizing()
         ui:SaveGeometry()
     end)
+    local calculating = CreateFrame("Frame", nil, f)
+    ui.calculating = calculating
+    calculating:SetAllPoints(f)
+    calculating:SetFrameLevel(f:GetFrameLevel() + 500)
+    calculating:EnableMouse(true)
+    calculating:EnableMouseWheel(true)
+    local calculationBackground = calculating:CreateTexture(nil, "BACKGROUND")
+    calculationBackground:SetAllPoints()
+    calculationBackground:SetColorTexture(unpack(T.bg))
+    U.FrameTreatment(calculating)
+    local calculationText = U.Text(calculating, L.RESOLVING_OFFLINE_PROGRESS, 0, 0, 24, T.gold)
+    ui.calculationText = calculationText
+    calculationText:ClearAllPoints()
+    calculationText:SetPoint("LEFT", calculating, "LEFT", 24, 0)
+    calculationText:SetPoint("RIGHT", calculating, "RIGHT", -24, 0)
+    calculationText:SetJustifyH("CENTER")
+    ui.calculationClose = U.Button(calculating, L.CLOSE, 0, 0, 110, 32, function()
+        f:Hide()
+    end)
+    ui.calculationClose:ClearAllPoints()
+    ui.calculationClose:SetPoint("TOPRIGHT", -16, -16)
+    calculating:Hide()
     f:SetScript("OnSizeChanged", function()
         if f:GetWidth() > 0 and f:GetHeight() > 0 then
             ui:Layout()
