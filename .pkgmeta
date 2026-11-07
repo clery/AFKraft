@@ -1,0 +1,19 @@
+package-as: AFKraft
+enable-nolib-creation: no
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+ignore:
+  - AGENTS.md
+  - ARCHITECTURE.md
+  - BALANCE.md
+  - DESIGN.md
+  - HANDOFF.md
+  - MAPS.md
+  - TOOLING.md
+  - Images
+  - artifacts
+  - scripts
+  - tests
