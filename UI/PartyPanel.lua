@@ -219,7 +219,15 @@ local function equipment(ui, p, s, hero, index)
                     W.Notify(hero.name .. "’s " .. name .. L.GAINED_10_BASE_STATS_SUFFIX)
                 end
             end, false, "selection")
-            U.Enabled(upgrade, affordable(s, cost))
+            local canUpgrade = affordable(s, cost)
+            U.Enabled(upgrade, canUpgrade)
+            upgrade.text:Hide()
+            local content = upgrade.content or upgrade
+            U.Begin(content)
+            local color = canUpgrade and T.gold or T.muted
+            U.Rect(content, 8, 13, 14, 3, color, 1, "OVERLAY")
+            U.Rect(content, 13, 8, 3, 14, color, 1, "OVERLAY")
+            U.EndBuild(content)
             upgrade:SetMotionScriptsWhileDisabled(true)
             U.Tooltip(
                 upgrade,
