@@ -131,7 +131,8 @@ test("Journal bonus progress remains visible after pooled redraws", function()
     for _ = 1, 3 do
         ui:Refresh()
         assertEquals("ARTWORK", ui.journalProgress:GetDrawLayer())
-        assertEquals(510, ui.journalProgress:GetWidth())
+        assertEquals(0.6, ui.journalProgress:GetParent():GetValue())
+        assertEquals(510, ui.journalProgress:GetParent().clip:GetWidth())
     end
 end)
 
@@ -245,3 +246,152 @@ test(
         assertEquals(7 * 208, track.scroll:GetHorizontalScroll())
     end
 )
+
+test(
+    "Journal textured bars clip their animation and stop when empty, complete or released",
+    function()
+        local W, s, ui = fixture()
+        s.journal.xp = 120
+        ui:Refresh()
+        local bar = ui.journalProgress:GetParent()
+        assertNotNil(ui.journalProgress:GetTexture())
+        assertTrue(bar.clip:IsShown())
+        assertEquals(850 * bar:GetValue(), bar.clip:GetWidth())
+        local phase = bar.phase
+        bar:GetScript("OnUpdate")(bar, 0.2)
+        assertTrue(bar.phase ~= phase)
+        ui:SetTab("adventure")
+        assertFalse(bar:IsShown())
+        ui:SetTab("journal")
+        s.journal.xp = 0
+        ui:Refresh()
+        bar = ui.journalProgress:GetParent()
+        assertFalse(bar.clip:IsShown())
+        assertEquals(nil, bar:GetScript("OnUpdate"))
+        for _, contract in ipairs(s.journal.days[1].ids) do
+            s.journal.days[1].progress[contract] = W.Content.contractByID[contract].daily
+        end
+        ui:Refresh()
+        for active in ui.panel._pool.journalBar:EnumerateActive() do
+            if active:GetValue() == 1 then
+                assertFalse(active.clip:IsShown())
+                assertTrue(active.glowRemaining > 0)
+                active:GetScript("OnUpdate")(active, 0.6)
+                assertTrue(active.glow:GetAlpha() > 0)
+                active:GetScript("OnUpdate")(active, 1.3)
+                assertEquals(0, active.glow:GetAlpha())
+                assertEquals(nil, active:GetScript("OnUpdate"))
+            end
+        end
+    end
+)
+
+test("Journal preview follows upcoming, saved and bonus rewards and opens the track", function()
+    local W, s, ui = fixture()
+    assertEquals(W.Game.JournalReward(1, s, 1), ui.journalPreview.reward:GetText())
+    click(ui.journalPreview)
+    assertEquals("track", ui.journalMode)
+    s.journal.pending[5] = 1
+    ui:Refresh()
+    assertEquals(W.Game.JournalReward(5, s, 1), ui.journalPreview.reward:GetText())
+    assertTrue(ui.journalPreview.status:GetText():find("1", 1, true) ~= nil)
+    s.journal.pending = {}
+    s.journal.xp = W.Content.journal.ranks * W.Content.journal.xpPerRank
+    s.journal.claimed = W.Content.journal.ranks
+    ui:Refresh()
+    assertEquals(W.L.JOURNAL_EXTRA_SUPPLIES, ui.journalPreview.reward:GetText())
+    ui:SetTab("adventure")
+    assertFalse(ui.journalPreview:IsShown())
+end)
+
+test("Completed contracts do not replay their glow on first display or redraw", function()
+    local W, s, ui = fixture()
+    local entry = s.journal.weekly
+    local id = entry.ids[1]
+    entry.progress[id] = W.Content.contractByID[id].weekly
+    ui.journalObserved = nil
+    ui:Refresh()
+    for bar in ui.panel._pool.journalBar:EnumerateActive() do
+        assertEquals(0, bar.glowRemaining)
+    end
+    ui:Refresh()
+    for bar in ui.panel._pool.journalBar:EnumerateActive() do
+        assertEquals(0, bar.glowRemaining)
+    end
+end)
+
+test("Daily bonus stamps follow the selected set and stop at two completed contracts", function()
+    local W, s, ui = fixture()
+    ui.journalMode = "contracts"
+    ui:Refresh()
+    local entry = s.journal.days[ui.journalDay]
+    for completed = 0, 3 do
+        for index, id in ipairs(entry.ids) do
+            entry.progress[id] = index <= completed and W.Content.contractByID[id].daily or 0
+        end
+        entry.bonus = completed >= 2
+        ui:Refresh()
+        assertEquals(completed >= 1, ui.journalBonusStamps[1]:IsShown())
+        assertEquals(completed >= 2, ui.journalBonusStamps[2]:IsShown())
+        assertEquals(entry.bonus, ui.journalBonusSeal:IsShown())
+    end
+    W.Game.RefreshJournal(s, W.Client.Now() + 86400)
+    ui.journalDay = #s.journal.days
+    ui:Refresh()
+    assertFalse(ui.journalBonusStamps[1]:IsShown())
+    assertFalse(ui.journalBonusStamps[2]:IsShown())
+    assertFalse(ui.journalBonusSeal:IsShown())
+    click(ui.journalDays[1])
+    assertTrue(ui.journalBonusStamps[1]:IsShown())
+    assertTrue(ui.journalBonusStamps[2]:IsShown())
+    assertTrue(ui.journalBonusSeal:IsShown())
+    ui:SetTab("adventure")
+    assertFalse(ui.journalBonusSeal:IsShown())
+end)
+
+test("Completed Journal cards keep a text label as well as their colored progress", function()
+    local W, s, ui = fixture()
+    ui.journalMode = "contracts"
+    ui:Refresh()
+    local entry = s.journal.days[ui.journalDay]
+    local id = entry.ids[1]
+    entry.progress[id] = W.Content.contractByID[id].daily
+    ui:Refresh()
+    local function labels()
+        local count = 0
+        for _, region in ipairs({ ui.panel:GetRegions() }) do
+            if region:IsShown() and region.GetText and region:GetText() == W.L.COMPLETE then
+                count = count + 1
+            end
+        end
+        return count
+    end
+    assertEquals(1, labels())
+    ui:Refresh()
+    assertEquals(1, labels())
+    entry.progress[id] = 0
+    ui:Refresh()
+    assertEquals(0, labels())
+    click(ui.journalTabs.achievements)
+    local earned = 0
+    for _ in pairs(s.journal.achievements) do
+        earned = earned + 1
+    end
+    assertEquals(earned, labels())
+end)
+
+test("Reward milestones use larger framed medallions without changing scroll alignment", function()
+    local _, _, ui = fixture()
+    click(ui.journalTabs.track)
+    for rank, node in ipairs(ui.journalTrack.nodes) do
+        local milestone = rank % 5 == 0
+        assertEquals(milestone and 96 or 82, node.icon:GetWidth())
+        assertEquals(milestone, node.milestone ~= nil)
+        if milestone then
+            assertEquals(132, node.milestone:GetWidth())
+            assertTrue(node.milestone:IsShown())
+        end
+    end
+    click(ui.journalTabs.contracts)
+    assertFalse(ui.journalTrack:IsShown())
+end)

@@ -19,28 +19,105 @@ local function line(parent, text, x, y, size, color, width)
     return U.SingleLine(U.Text(parent, text, x, y, size, color, width), width, size + 8)
 end
 
-local function progress(parent, x, y, width, value, target)
-    U.Rect(parent, x, y, width, 10, T.panel)
-    return U.Rect(
-        parent,
-        x,
-        y,
-        math.max(0.01, width * math.min(value, target) / target),
-        10,
-        T.gold,
-        1,
-        "ARTWORK"
-    )
+local function progress(parent, x, y, width, value, target, glowUntil)
+    parent._pool = parent._pool or {}
+    if not parent._pool.journalBar then
+        parent._pool.journalBar = CreateObjectPool(function()
+            local bar = U.Bar(parent, 0, 0, 1, 12, T.gold)
+            bar.clip = CreateFrame("Frame", nil, bar)
+            bar.clip:SetPoint("TOPLEFT")
+            bar.clip:SetClipsChildren(true)
+            bar.sheen = bar.clip:CreateTexture(nil, "ARTWORK")
+            bar.sheen:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
+            bar.sheen:SetBlendMode("ADD")
+            bar.sheen:SetSize(40, 24)
+            bar.sheen:SetAlpha(0.28)
+            bar.glow = bar:CreateTexture(nil, "OVERLAY")
+            bar.glow:SetColorTexture(1, 0.8, 0.35)
+            bar.glow:SetBlendMode("ADD")
+            bar.glow:SetPoint("TOPLEFT", -14, 76)
+            bar.glow:SetSize(624, 100)
+            bar.glow:SetAlpha(0)
+            bar.phase = 0
+            bar.animate = function(self, elapsed)
+                self.glowRemaining = math.max(0, self.glowRemaining - elapsed)
+                self.glow:SetAlpha(0.2 * math.sin(self.glowRemaining / 1.2 * math.pi))
+                if self.glowRemaining == 0 and not self.clip:IsShown() then
+                    self:SetScript("OnUpdate", nil)
+                end
+                self.phase = (self.phase + elapsed / 3.5) % 1
+                self.sheen:ClearAllPoints()
+                self.sheen:SetPoint(
+                    "CENTER",
+                    self.clip,
+                    "LEFT",
+                    self.phase * (self.clip:GetWidth() + 40) - 20,
+                    0
+                )
+            end
+            return bar
+        end, function(_, bar)
+            bar:Hide()
+            bar:ClearAllPoints()
+        end)
+    end
+    local bar = parent._pool.journalBar:Acquire()
+    local fraction = math.max(0, math.min(1, value / target))
+    bar:ClearAllPoints()
+    bar:SetPoint("TOPLEFT", x, -y)
+    bar:SetSize(width, 12)
+    bar:SetValue(fraction)
+    bar:SetStatusBarColor(unpack(fraction == 1 and T.green or T.gold))
+    bar.clip:SetSize(math.max(0.01, width * fraction), 12)
+    bar.clip:SetShown(fraction > 0 and fraction < 1)
+    bar.glowRemaining = math.max(0, (glowUntil or 0) - GetTime())
+    bar.glow:SetAlpha(0.2 * math.sin(bar.glowRemaining / 1.2 * math.pi))
+    bar:SetScript("OnUpdate", (bar.clip:IsShown() or bar.glowRemaining > 0) and bar.animate or nil)
+    bar:Show()
+    return bar:GetStatusBarTexture()
 end
 
-local function contract(parent, entry, id, x, y)
+local function checkmark(parent, x, y, size)
+    local check = U.Rect(parent, x, y, size, size, { 1, 1, 1 }, 1, "OVERLAY")
+    check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    return check
+end
+
+local function card(parent, x, y, width, height, complete)
+    U.Rect(parent, x, y, width, height, complete and T.bg or T.panel, 0.95)
+    U.Rect(parent, x, y, 3, height, complete and T.green or T.line)
+    if complete then
+        checkmark(parent, x + width - 120, y + 12, 22)
+        line(parent, L.COMPLETE, x + width - 96, y + 12, 11, T.text, 82)
+    end
+end
+
+local function contract(ui, parent, entry, id, x, y)
     local definition = C.contractByID[id]
     local target = definition[entry.weekly and "weekly" or "daily"]
     local value = entry.progress[id] or 0
     local xp = entry.weekly and C.journal.weeklyXP or C.journal.dailyXP
-    U.Rect(parent, x, y, 624, 100, T.panel, 0.8)
+    ui.journalObserved = ui.journalObserved or setmetatable({}, { __mode = "k" })
+    local observed = ui.journalObserved[entry] or {}
+    ui.journalObserved[entry] = observed
+    local previous = observed[id]
+    local complete = value >= target
+    local glowUntil = previous and previous.glowUntil
+    if previous and not previous.complete and complete then
+        glowUntil = GetTime() + 1.2
+    end
+    observed[id] = { complete = complete, glowUntil = glowUntil }
+    card(parent, x, y, 624, 100, complete)
     U.Icon(parent, definition.icon, x + 14, y + 14, 36)
-    line(parent, definition.name, x + 64, y + 12, 15, value == target and T.green or T.text, 544)
+    line(
+        parent,
+        definition.name,
+        x + 64,
+        y + 12,
+        15,
+        complete and T.green or T.text,
+        complete and 420 or 544
+    )
     line(
         parent,
         value .. "/" .. target .. " · +" .. xp .. " " .. L.JOURNAL_XP,
@@ -50,7 +127,7 @@ local function contract(parent, entry, id, x, y)
         T.muted,
         544
     )
-    progress(parent, x + 14, y + 76, 594, value, target)
+    progress(parent, x + 14, y + 76, 594, value, target, glowUntil)
 end
 
 local rankSpacing = 208
@@ -149,13 +226,24 @@ local function createTrack(parent)
         node:EnableMouse(true)
         node:EnableMouseWheel(true)
         node:SetScript("OnMouseWheel", wheel)
-        circle(node, 108, "BACKGROUND", T.bg)
-        node.rim = circle(node, 100, "BORDER", { 1, 1, 1 })
-        circle(node, 90, "ARTWORK", T.bg)
-        node.icon = circle(node, 82, "OVERLAY", { 1, 1, 1 })
+        local milestone = rank % 5 == 0
+        circle(node, milestone and 132 or 108, "BACKGROUND", T.bg)
+        node.rim = circle(node, milestone and 120 or 100, "BORDER", { 1, 1, 1 })
+        circle(node, milestone and 108 or 90, "ARTWORK", T.bg)
+        node.icon = circle(node, milestone and 96 or 82, "OVERLAY", { 1, 1, 1 })
+        if milestone then
+            node.milestone = U.FrameTreatment(node)
+            node.milestone:ClearAllPoints()
+            node.milestone:SetPoint("TOPLEFT", 30, -74)
+            node.milestone:SetSize(132, 132)
+        end
         node.icon:SetTexture("Interface\\Icons\\" .. rewardIcon(rank))
-        node.rank =
-            U.SingleLine(U.Text(node, L.RANK_PREFIX .. rank, 0, 40, 18, T.gold), 192, 30, "CENTER")
+        node.rank = U.SingleLine(
+            U.Text(node, L.RANK_PREFIX .. rank, 0, 40, milestone and 20 or 18, T.gold),
+            192,
+            30,
+            "CENTER"
+        )
         node.reward = U.Text(node, "", 0, 208, 14, T.text, 192)
         node.reward:SetHeight(64)
         node.reward:SetJustifyH("CENTER")
@@ -179,6 +267,9 @@ local function drawTrack(ui, parent, state, rank)
         local claimed, earned = rewardRank <= j.claimed, rewardRank <= rank
         local color = claimed and T.green or earned and T.gold or T.muted
         node.rim:SetVertexColor(unpack(color))
+        if node.milestone then
+            node.milestone:SetBackdropBorderColor(unpack(earned and T.gold or T.muted))
+        end
         node.icon:SetDesaturated(not earned)
         node.icon:SetAlpha(earned and 1 or 0.45)
         node.rank:SetTextColor(unpack(color))
@@ -229,7 +320,7 @@ function P.Draw(ui, parent, state)
     for _, slot in ipairs(C.equipmentSlots) do
         slots[#slots + 1] = { id = slot, name = C.slots[slot] }
     end
-    line(parent, L.JOURNAL_NAME .. " · " .. L.RANK_PREFIX .. rank .. "/20", 0, 0, 22, T.gold, 850)
+    line(parent, L.JOURNAL_NAME .. " · " .. L.RANK_PREFIX .. rank .. "/20", 0, 0, 22, T.gold, 430)
     local currentXP = rank == 20 and j.bonusXP or j.xp % C.journal.xpPerRank
     local targetXP = rank == 20 and C.journal.bonusEveryXP or C.journal.xpPerRank
     local xpLabel = rank == 20 and L.JOURNAL_EXTRA_SUPPLIES or L.JOURNAL_XP
@@ -263,16 +354,68 @@ function P.Draw(ui, parent, state)
     ui.journalTitle = U.Choice(
         parent,
         j.title == 0 and L.JOURNAL_NO_TITLE or C.journalTitles[j.title / 5].name,
-        900,
+        450,
         0,
-        396,
+        400,
         options,
         j.title,
         function(value)
             W.Action(G.SetJournalTitle, value)
         end
     )
-    U.Help(parent, L.JOURNAL_NAME, 1260, 52, L.JOURNAL_PERMANENT .. " " .. L.JOURNAL_ELIGIBILITY)
+    parent._pool.journalPreview = parent._pool.journalPreview
+        or CreateObjectPool(function()
+            local preview = CreateFrame("Button", nil, parent, "BackdropTemplate")
+            preview:SetBackdrop({
+                bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+                edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
+                edgeSize = 16,
+                insets = { left = 4, right = 4, top = 4, bottom = 4 },
+            })
+            preview.icon = U.Icon(preview, "INV_Misc_Coin_01", 14, 23, 36)
+            preview.heading = line(preview, "", 64, 10, 12, T.gold, 316)
+            preview.reward = line(preview, "", 64, 31, 15, T.text, 316)
+            preview.status = line(preview, "", 64, 56, 11, T.muted, 316)
+            return preview
+        end, function(_, preview)
+            preview:Hide()
+            preview:ClearAllPoints()
+        end)
+    local preview = parent._pool.journalPreview:Acquire()
+    ui.journalPreview = preview
+    local previewRank = nextReward or math.min(C.journal.ranks, rank + 1)
+    local bonus = not nextReward and rank >= C.journal.ranks
+    preview:SetPoint("TOPLEFT", 900, 0)
+    preview:SetSize(396, 82)
+    preview.icon:SetTexture(
+        "Interface\\Icons\\" .. (bonus and "INV_Misc_Coin_01" or rewardIcon(previewRank))
+    )
+    preview.heading:SetText(
+        bonus and L.JOURNAL_EXTRA_SUPPLIES
+            or L.JOURNAL_REWARD .. " · " .. L.RANK_PREFIX .. previewRank
+    )
+    preview.reward:SetText(
+        bonus and L.JOURNAL_EXTRA_SUPPLIES or G.JournalReward(previewRank, state, ui.journalHero)
+    )
+    preview.status:SetText(
+        nextReward
+                and (saved and string.format(
+                    L.JOURNAL_SAVED_REWARDS,
+                    G.JournalRewardsWaiting(state)
+                ) or L.AVAILABLE)
+            or currentXP .. "/" .. targetXP .. " " .. L.JOURNAL_XP
+    )
+    preview.status:SetTextColor(unpack(nextReward and T.green or T.muted))
+    preview:SetScript("OnClick", function()
+        ui.journalMode = "track"
+        ui:Refresh()
+    end)
+    U.Tooltip(
+        preview,
+        L.JOURNAL_TRACK,
+        L.JOURNAL_PERMANENT .. " " .. L.JOURNAL_ELIGIBILITY .. " " .. L.JOURNAL_TARGET_HELP
+    )
+    preview:Show()
     ui.journalTabs = {}
     for index, entry in ipairs({
         { "contracts", L.JOURNAL_CONTRACTS },
@@ -316,7 +459,7 @@ function P.Draw(ui, parent, state)
         nextReward and G.JournalReward(nextReward, state, ui.journalHero) or L.COMPLETE
     )
     if ui.journalMode == "contracts" then
-        line(parent, L.JOURNAL_DAILY, 0, 152, 18, T.gold, 624)
+        line(parent, L.JOURNAL_DAILY, 0, 152, 18, T.gold, 480)
         line(parent, L.JOURNAL_WEEKLY, 672, 152, 18, T.gold, 624)
         ui.journalDay = math.min(ui.journalDay or #j.days, #j.days)
         ui.journalDays = {}
@@ -337,8 +480,8 @@ function P.Draw(ui, parent, state)
         end
         local daily = j.days[ui.journalDay]
         for index = 1, 3 do
-            contract(parent, daily, daily.ids[index], 0, 232 + (index - 1) * 116)
-            contract(parent, j.weekly, j.weekly.ids[index], 672, 232 + (index - 1) * 116)
+            contract(ui, parent, daily, daily.ids[index], 0, 232 + (index - 1) * 116)
+            contract(ui, parent, j.weekly, j.weekly.ids[index], 672, 232 + (index - 1) * 116)
         end
         local completed = 0
         for _, id in ipairs(daily.ids) do
@@ -346,6 +489,17 @@ function P.Draw(ui, parent, state)
                 completed = completed + 1
             end
         end
+        ui.journalBonusStamps = {}
+        for index = 1, 2 do
+            local x = 500 + (index - 1) * 34
+            local outline = U.Rect(parent, x, 148, 32, 32, { 1, 1, 1 }, 1, "ARTWORK")
+            outline:SetTexture("Interface\\Buttons\\UI-CheckBox-Up")
+            local check = checkmark(parent, x, 148, 32)
+            check:SetShown(index <= completed)
+            ui.journalBonusStamps[index] = check
+        end
+        ui.journalBonusSeal = U.Icon(parent, "INV_Misc_Ribbon_01", 580, 148, 32)
+        ui.journalBonusSeal:SetShown(daily.bonus == true)
         line(
             parent,
             string.format(L.JOURNAL_BONUS_PROGRESS, math.min(2, completed), C.journal.bonusXP),
@@ -369,8 +523,16 @@ function P.Draw(ui, parent, state)
             local earned = j.achievements[achievement.id]
             local value = earned and achievement.target
                 or math.min(achievement.target, G.JournalMetric(state, achievement.metric))
-            U.Rect(parent, x, y, 416, 112, T.panel, 0.8)
-            line(parent, achievement.name, x + 14, y + 12, 15, earned and T.green or T.gold, 388)
+            card(parent, x, y, 416, 112, earned)
+            line(
+                parent,
+                achievement.name,
+                x + 14,
+                y + 12,
+                15,
+                earned and T.green or T.gold,
+                earned and 276 or 388
+            )
             line(parent, goals[achievement.metric], x + 14, y + 42, 12, T.text, 388)
             line(
                 parent,
