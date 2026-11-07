@@ -3,6 +3,15 @@ local L = W.L
 local C, G, P = W.Content, W.Game, W.CombatPosition
 local min, max, floor = math.min, math.max, math.floor
 
+local function hasLiving(units)
+    for _, unit in ipairs(units) do
+        if unit.hp > 0 then
+            return true
+        end
+    end
+    return false
+end
+
 local function living(units)
     local out = {}
     for _, unit in ipairs(units) do
@@ -707,7 +716,7 @@ function G.Step(state, seconds)
             end
         end
     end
-    if #living(battle.enemies) == 0 then
+    if not hasLiving(battle.enemies) then
         G.CombatVictory(state, battle)
         return
     end
@@ -715,8 +724,7 @@ function G.Step(state, seconds)
         if enemy.hp > 0 then
             enemy.attackCD = max(0, enemy.attackCD - seconds)
             if enemy.attackCD == 0 then
-                local allies = living(battle.heroes)
-                if #allies == 0 then
+                if not hasLiving(battle.heroes) then
                     break
                 end
                 local target = P.Target(state, battle, true)
@@ -759,11 +767,12 @@ function G.Step(state, seconds)
             end
         end
     end
-    if #living(battle.enemies) == 0 then
+    if not hasLiving(battle.enemies) then
         G.CombatVictory(state, battle)
         return
     end
-    if #living(battle.heroes) == 0 or battle.elapsed >= 180 then
+    local wiped = not hasLiving(battle.heroes)
+    if wiped or battle.elapsed >= 180 then
         state.farming = true
         state.stage = max(1, (state.safe[state.zone] or 1))
         state.battle = nil
@@ -771,7 +780,6 @@ function G.Step(state, seconds)
         for _, hero in ipairs(state.heroes) do
             hero.health = 1
         end
-        local wiped = #living(battle.heroes) == 0
         local enemyHealth, enemyMaximum = 0, 0
         for _, enemy in ipairs(battle.enemies) do
             enemyHealth = enemyHealth + max(0, enemy.hp)

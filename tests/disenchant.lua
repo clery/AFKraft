@@ -122,4 +122,31 @@ case("Disenchant all skips protected and heirloom stacks and awards exactly once
     assert(s.gold == total.gold)
 end)
 
+case("Bulk disenchant retains inventory identity, survivor order and invalid items", function()
+    local s = G.New(0)
+    local inventory, survivors = s.inventory, {}
+    for i = 1, 30 do
+        local item = G.Item(s, 2, 1, 2)
+        inventory[i] = item
+        if i % 3 == 0 then
+            item.protected = true
+            survivors[#survivors + 1] = item
+        elseif i % 5 == 0 then
+            item.count = 0
+            survivors[#survivors + 1] = item
+        end
+    end
+    s.guide.craftItem, s.guide.craftHero = survivors[1].uid, 1
+    local total = G.DisenchantAllReward(s)
+    assert(G.DisenchantAll(s))
+    assert(s.inventory == inventory and #inventory == #survivors)
+    for i, item in ipairs(survivors) do
+        assert(inventory[i] == item)
+    end
+    assert(s.gold == total.gold and s.materials.relic == total.relic)
+    assert(s.guide.craftItem == survivors[1].uid and s.guide.craftHero == 1)
+    assert(not G.DisenchantAll(s))
+    assert(s.gold == total.gold and #inventory == #survivors)
+end)
+
 return cases

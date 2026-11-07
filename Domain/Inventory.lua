@@ -297,14 +297,19 @@ function G.DisenchantAll(state)
     if total.count == 0 then
         return false, L.NO_UNPROTECTED_EQUIPMENT_TO_DISENCHANT
     end
-    for index = #state.inventory, 1, -1 do
-        local item = state.inventory[index]
+    local kept = 0
+    for _, item in ipairs(state.inventory) do
         if G.DisenchantReward(item) then
-            table.remove(state.inventory, index)
             if state.guide.craftItem == item.uid then
                 state.guide.craftItem, state.guide.craftHero = nil, nil
             end
+        else
+            kept = kept + 1
+            state.inventory[kept] = item
         end
+    end
+    for index = #state.inventory, kept + 1, -1 do
+        state.inventory[index] = nil
     end
     state.gold = state.gold + total.gold
     state.materials.relic = state.materials.relic + total.relic
@@ -656,16 +661,12 @@ end
 function G.InventoryEntries(state, hero, slot, options)
     options = options or {}
     local entries = {}
+    local availability, trait = options.availability, options.trait
+    local equippedPower = {}
     for index, item in ipairs(state.inventory) do
-        local power = G.ItemPower(item, hero)
-        local usable = G.CanEquip(hero, item)
-        local upgrade = hero and power > G.ItemPower(hero.gear[item.slot], hero)
-        local availability = options.availability
-        local trait = options.trait
         if
             (not slot or slot == 0 or item.slot == slot)
             and (not options.quality or options.quality == 0 or item.quality == options.quality)
-            and (not availability or availability == "all" or (availability == "usable" and usable) or (availability == "locked" and not usable) or (availability == "upgrades" and usable and upgrade))
             and (
                 not trait
                 or trait == "all"
@@ -675,7 +676,22 @@ function G.InventoryEntries(state, hero, slot, options)
                 or (trait == "upgraded" and (item.upgrade or 0) > 0)
             )
         then
-            entries[#entries + 1] = { index = index, item = item, power = power }
+            local usable = not availability or availability == "all" or G.CanEquip(hero, item)
+            if
+                not availability
+                or availability == "all"
+                or (availability == "usable" and usable)
+                or (availability == "locked" and not usable)
+                or (availability == "upgrades" and usable)
+            then
+                local power = G.ItemPower(item, hero)
+                if availability == "upgrades" and equippedPower[item.slot] == nil then
+                    equippedPower[item.slot] = G.ItemPower(hero.gear[item.slot], hero)
+                end
+                if availability ~= "upgrades" or power > equippedPower[item.slot] then
+                    entries[#entries + 1] = { index = index, item = item, power = power }
+                end
+            end
         end
     end
     local sort = options.sort or "power"

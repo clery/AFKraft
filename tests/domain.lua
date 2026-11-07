@@ -342,6 +342,27 @@ case("Inventory sorting supports both directions without changing equip indices"
     end
 end)
 
+case("Inventory upgrade comparisons follow gear and heirloom level changes", function()
+    local s = party()
+    local hero = s.heroes[1]
+    local item = G.Item(s, 1, 1, 3, true, C.itemByID[25])
+    s.inventory = { item, G.Item(s, 1, 60, 3, false, C.itemByID[25]) }
+    local options = { availability = "upgrades" }
+    local entries = G.InventoryEntries(s, hero, 1, options)
+    equal(#entries, 1)
+    local power = entries[1].power
+    hero.level = 20
+    entries = G.InventoryEntries(s, hero, 1, options)
+    equal(#entries, 1)
+    assert(entries[1].power > power)
+    hero.gear[1] = G.Copy(item)
+    equal(#G.InventoryEntries(s, hero, 1, options), 0)
+    hero.gear[1] = nil
+    equal(#G.InventoryEntries(s, hero, 1, options), 1)
+    equal(#G.InventoryEntries(s, nil, 1, options), 0)
+    equal(#G.InventoryEntries(s, nil, 1), 2)
+end)
+
 case("Auto equip selects usable effective power and preserves stacks and other heroes", function()
     local s = party()
     local hero = s.heroes[1]

@@ -94,7 +94,7 @@ test(
 test(
     "Locked feature shortcuts stay hidden while sidebar discoveries and unaffordable actions remain",
     function()
-        local W, s, ui = advanced()
+        local _, s, ui = advanced()
         ui:Refresh()
         assertTrue(ui.tabs.boosts:IsShown())
         assertTrue(ui.tabs.development:IsShown())
