@@ -34,6 +34,8 @@ Questing, gathering, and fighting eligible enemies with your real WoW character 
 
 Collections give you another reason to visit particular creatures and places. Find pieces through eligible kills, complete sets, and choose a set effect for your party.
 
+The Adventure Journal turns real WoW activities into daily and weekly contracts, alongside permanent achievements. Work through a free monthly 20-rank reward track for supplies, equipment enhancements, heirloom recipes, heirloom equipment, and cosmetic company titles. Earned rewards that need a hero or slot choice stay available across monthly resets.
+
 The idle party also has its own progression through battles, loot, and crafting. Its levels, equipment, and currencies are separate from your WoW character's.
 
 ## Come back to something
