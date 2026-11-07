@@ -900,7 +900,18 @@ function P.crafting(ui, p, s)
             U.Help(p, L.HEIRLOOMS, x + 360, 4, L.HEIRLOOM_RECIPES_DESCRIPTION)
         end
         text(p, heirloom and L.HEIRLOOM or L.ORDINARY, x, 8, 20, heirloom and T.gold or T.text, 350)
-        text(p, preview and G.ItemName(preview) or L.RECIPE_UNAVAILABLE, x, 52, 20, T.text, 390)
+        if preview then
+            U.Icon(p, preview.icon, x, 52, 44)
+        end
+        text(
+            p,
+            preview and G.ItemName(preview) or L.RECIPE_UNAVAILABLE,
+            x + 56,
+            52,
+            20,
+            T.text,
+            334
+        )
         local description = unavailable
         if preview then
             description = (heirloom and L.HEIRLOOM or C.qualityNames[preview.quality])
