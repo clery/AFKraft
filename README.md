@@ -60,6 +60,6 @@ This is a pet project. Yes, artificial intelligence was used extensively on this
 
 ## License and credits
 
-AFKraft is **All Rights Reserved**. See [LICENSE](LICENSE).
+AFKraft is **All Rights Reserved**. See [LICENSE](https://github.com/clery/AFKraft/raw/refs/heads/main/LICENSE).
 
-Bundled libraries retain their own licenses and notices. See [library credits](Libs/README.md) and [landscape artwork credits](Assets/Backdrops/SOURCES.md) for the applicable terms and attribution.
+Bundled libraries retain their own licenses and notices. See [library credits](https://github.com/clery/AFKraft/raw/refs/heads/main/Libs/README.md) and [landscape artwork credits](https://github.com/clery/AFKraft/raw/refs/heads/main/Assets/Backdrops/SOURCES.md) for the applicable terms and attribution.
