@@ -410,11 +410,7 @@ function P.Draw(ui, parent, state)
         ui.journalMode = "track"
         ui:Refresh()
     end)
-    U.Tooltip(
-        preview,
-        L.JOURNAL_TRACK,
-        L.JOURNAL_PERMANENT .. " " .. L.JOURNAL_ELIGIBILITY .. " " .. L.JOURNAL_TARGET_HELP
-    )
+    U.Tooltip(preview, L.JOURNAL_TRACK, L.JOURNAL_PERMANENT)
     preview:Show()
     ui.journalTabs = {}
     for index, entry in ipairs({
@@ -515,7 +511,7 @@ function P.Draw(ui, parent, state)
             L.JOURNAL_CONTRACTS,
             1260,
             626,
-            L.JOURNAL_RULES .. " " .. L.JOURNAL_ELIGIBILITY
+            L.JOURNAL_RULES .. "\n\n" .. L.JOURNAL_ELIGIBILITY
         )
     elseif ui.journalMode == "achievements" then
         for index, achievement in ipairs(C.journalAchievements) do

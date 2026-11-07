@@ -434,11 +434,7 @@ function UI:Refresh(redraw)
         button.notice:SetShown(not hint)
         button.bubble:SetShown(not hint and attention[id] == true)
         if button.menuHint ~= hint then
-            U.Tooltip(
-                button,
-                hint and "???" or button.menuLabel,
-                hint or (L.OPEN_PREFIX .. button.menuLabel)
-            )
+            U.Tooltip(button, hint and "???" or button.menuLabel, hint or "")
             button.menuHint = hint
         end
     end
@@ -459,11 +455,7 @@ function UI:Refresh(redraw)
             hint and "|TInterface\\Icons\\INV_Misc_QuestionMark:18|t ???" or control.menuLabel
         )
         if control.menuHint ~= hint then
-            U.Tooltip(
-                control,
-                hint and "???" or control.menuLabel,
-                hint or (L.OPEN_PREFIX .. control.menuLabel)
-            )
+            U.Tooltip(control, hint and "???" or control.menuLabel, hint or "")
             control.menuHint = hint
         end
     end
@@ -783,7 +775,7 @@ function W.CreateUI()
         tab.menuLabel = entry[2]
         tab.icon = U.Icon(tab.content or tab, tabIcons[id], 12, 10, 20)
         tab.notice = U.SingleLine(U.Text(tab, "", 42, 25, 10, T.gold), 170, 12)
-        U.Tooltip(tab, entry[2], L.OPEN_PREFIX .. entry[2])
+        U.Tooltip(tab, entry[2], "")
         tab.bubble = W.Minimap.CreateBubble(tab, -9, -9)
         ui.tabs[id] = tab
         y = y + 40

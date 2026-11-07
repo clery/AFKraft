@@ -391,12 +391,13 @@ function U.Tooltip(frame, title, text, width)
             enter(self)
         end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        if width then
-            U.SetTooltipWidth(width)
+        local description = type(text) == "function" and text() or text
+        description = description:gsub("^%s+", ""):gsub("%s+$", ""):gsub("\n\n+", "\n\n")
+        if description ~= "" then
+            U.SetTooltipWidth(width or 320)
         end
         GameTooltip:SetText(title, unpack(T.gold))
-        local description = type(text) == "function" and text() or text
-        if width then
+        if description ~= "" then
             for value in (description .. "\n"):gmatch("([^\n]*)\n") do
                 local red, green, blue = value:match("^|c%x%x(%x%x)(%x%x)(%x%x)")
                 if red then
@@ -411,8 +412,6 @@ function U.Tooltip(frame, title, text, width)
                     GameTooltip:AddLine(value ~= "" and value or " ", 0.8, 0.85, 0.85, true)
                 end
             end
-        else
-            GameTooltip:AddLine(description, 0.8, 0.85, 0.85, true)
         end
         GameTooltip:Show()
     end)

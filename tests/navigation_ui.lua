@@ -159,10 +159,11 @@ test("Help is readable, separates paragraphs and reuses pooled controls", functi
     U.EndBuild(parent)
     assertEquals(28, help:GetWidth())
     assertNotNil(help.icon:GetTexture())
-    local addLine, lines = GameTooltip.AddLine, {}
-    GameTooltip.AddLine = function(self, value, ...)
+    local addLine, lines, styles = GameTooltip.AddLine, {}, {}
+    GameTooltip.AddLine = function(self, value, red, green, blue, wrap)
         lines[#lines + 1] = value
-        return addLine(self, value, ...)
+        styles[#styles + 1] = { red, green, blue, wrap }
+        return addLine(self, value, red, green, blue, wrap)
     end
     local ok, message = pcall(function()
         help:GetScript("OnClick")(help)
@@ -173,6 +174,23 @@ test("Help is readable, separates paragraphs and reuses pooled controls", functi
         description, lines = "Updated help.", {}
         help:GetScript("OnEnter")(help)
         assertEquals("Updated help.", lines[1])
+        help:GetScript("OnLeave")(help)
+        lines, styles = {}, {}
+        U.Tooltip(help, "Guide", "\nFirst line\n\n\n|cffff0000Warning|r\n")
+        help:GetScript("OnEnter")(help)
+        assertEquals(320, GameTooltip:GetMinimumWidth())
+        assertEquals(3, #lines)
+        assertEquals("First line", lines[1])
+        assertEquals(" ", lines[2])
+        assertEquals(1, styles[3][1])
+        assertEquals(0, styles[3][2])
+        assertTrue(styles[1][4])
+        assertTrue(styles[3][4])
+        help:GetScript("OnLeave")(help)
+        lines = {}
+        U.Tooltip(help, "Close", "")
+        help:GetScript("OnEnter")(help)
+        assertEquals(0, #lines)
     end)
     GameTooltip.AddLine = addLine
     GameTooltip:Hide()
