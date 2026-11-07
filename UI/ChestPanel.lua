@@ -23,6 +23,7 @@ local function mergeReport(previous, report)
         "ore",
         "equipped",
         "disenchanted",
+        "disenchantGold",
         "relic",
         "powerGain",
     }) do
@@ -395,7 +396,16 @@ function P.Draw(ui, parent, state)
             960,
             24
         )
-        local pages = math.max(1, math.ceil(#report.entries / 9))
+        local entries = {}
+        if (report.disenchanted or 0) > 0 then
+            entries[1] = { materials = true }
+        end
+        for _, entry in ipairs(report.entries) do
+            if entry.count > (entry.disenchanted or 0) then
+                entries[#entries + 1] = entry
+            end
+        end
+        local pages = math.max(1, math.ceil(#entries / 9))
         ui.chestPage = math.max(0, math.min(ui.chestPage or 0, pages - 1))
         ui.chestCarousel = U.Carousel(
             frame,
@@ -407,105 +417,137 @@ function P.Draw(ui, parent, state)
             pages,
             function(pane, pageIndex, visiblePage, carousel)
                 for position = 1, 9 do
-                    local entry = report.entries[pageIndex * 9 + position]
+                    local entry = entries[pageIndex * 9 + position]
                     if entry then
                         local x, y = (position - 1) % 3 * 308, math.floor((position - 1) / 3) * 92
-                        local item = entry.item
-                        local stored = entry.uid and storedItem(state, entry.uid)
-                        local recipient, gain
-                        if stored then
-                            recipient, gain = G.UpgradeRecipient(state, stored)
+                        if entry.materials then
+                            local card = U.Card(pane, x, y, 292, 84)
+                            U.CarouselItem(card, carousel)
+                            card:EnableMouse(false)
+                            U.Begin(card)
+                            U.Icon(card, "INV_Enchant_DustSoul", 10, 10, 32)
+                                :SetParent(card.content or card)
+                            U.SingleLine(U.Text(card, L.MATERIALS, 52, 5, 14, T.gold), 230, 24)
+                            U.SingleLine(
+                                U.Text(
+                                    card,
+                                    report.disenchantGold .. L.GOLD_SUFFIX_3,
+                                    52,
+                                    29,
+                                    12,
+                                    T.muted
+                                ),
+                                230,
+                                22
+                            )
+                            U.SingleLine(
+                                U.Text(
+                                    card,
+                                    report.relic .. L.RELIC_DUST_SUFFIX_2,
+                                    52,
+                                    51,
+                                    12,
+                                    T.muted
+                                ),
+                                230,
+                                22
+                            )
+                            U.EndBuild(card)
+                        else
+                            local item = entry.item
+                            local stored = entry.uid and storedItem(state, entry.uid)
+                            local recipient, gain
+                            if stored then
+                                recipient, gain = G.UpgradeRecipient(state, stored)
+                            end
+                            local card = U.Card(pane, x, y, 292, 84)
+                            U.CarouselItem(card, carousel)
+                            card:EnableMouse(visiblePage)
+                            U.Begin(card)
+                            local color = C.qualityColors[item.quality]
+                            U.Rect(card, 0, 0, 3, 84, color)
+                            local highlight = U.Rect(card, 3, 0, 289, 84, color, 0.2)
+                            highlight:SetAlpha(0)
+                            ui.chestHighlights[#ui.chestHighlights + 1] = highlight
+                            U.Icon(card, item.icon, 10, 10, 32):SetParent(card.content or card)
+                            U.SingleLine(
+                                U.Text(
+                                    card,
+                                    G.ItemName(item)
+                                        .. " ×"
+                                        .. (entry.count - (entry.disenchanted or 0)),
+                                    52,
+                                    5,
+                                    14,
+                                    C.qualityColors[item.quality]
+                                ),
+                                230,
+                                24
+                            )
+                            U.SingleLine(
+                                U.Text(
+                                    card,
+                                    C.zoneByID[entry.zone].name
+                                        .. " · "
+                                        .. C.qualityNames[item.quality],
+                                    52,
+                                    27,
+                                    12,
+                                    T.muted
+                                ),
+                                230,
+                                22
+                            )
+                            U.SingleLine(
+                                U.Text(
+                                    card,
+                                    recipient
+                                            and string.format(
+                                                L.UPGRADE_SPOTLIGHT_GAIN,
+                                                state.heroes[recipient].name,
+                                                gain
+                                            )
+                                        or entry.equipped and (L.EQUIPPED_PREFIX .. entry.equipped)
+                                        or not entry.kept and L.CHEST_ITEM_SALVAGED
+                                        or stored and L.CHEST_ITEM_STORED
+                                        or L.CHEST_ITEM_COLLECTED,
+                                    10,
+                                    53,
+                                    12,
+                                    recipient and T.green or T.muted
+                                ),
+                                recipient and 192 or 272,
+                                28
+                            )
+                            if recipient then
+                                local equip = U.Button(card, L.EQUIP, 210, 50, 72, 28, function()
+                                    local current, inventoryIndex = storedItem(state, entry.uid)
+                                    local hero = state.heroes[recipient]
+                                    if
+                                        current
+                                        and G.CanEquip(hero, current)
+                                        and G.ItemPower(current, hero)
+                                            > G.ItemPower(hero.gear[current.slot], hero)
+                                    then
+                                        W.Action(G.Equip, recipient, inventoryIndex)
+                                    end
+                                end)
+                                U.CarouselItem(equip, carousel)
+                                equip:EnableMouse(visiblePage)
+                                ui.chestResultButtons[#ui.chestResultButtons + 1] = equip
+                            end
+                            U.EndBuild(card)
+                            U.Tooltip(
+                                card,
+                                G.ItemName(item),
+                                G.ItemDescription(
+                                    item,
+                                    recipient and state.heroes[recipient] or nil,
+                                    recipient ~= nil
+                                ),
+                                370
+                            )
                         end
-                        local card = U.Card(pane, x, y, 292, 84)
-                        U.CarouselItem(card, carousel)
-                        card:EnableMouse(visiblePage)
-                        U.Begin(card)
-                        local color = C.qualityColors[item.quality]
-                        U.Rect(card, 0, 0, 3, 84, color)
-                        local highlight = U.Rect(card, 3, 0, 289, 84, color, 0.2)
-                        highlight:SetAlpha(0)
-                        ui.chestHighlights[#ui.chestHighlights + 1] = highlight
-                        U.Icon(card, item.icon, 10, 10, 32):SetParent(card.content or card)
-                        U.SingleLine(
-                            U.Text(
-                                card,
-                                G.ItemName(item) .. " ×" .. entry.count,
-                                52,
-                                5,
-                                14,
-                                C.qualityColors[item.quality]
-                            ),
-                            230,
-                            24
-                        )
-                        U.SingleLine(
-                            U.Text(
-                                card,
-                                C.zoneByID[entry.zone].name
-                                    .. " · "
-                                    .. C.qualityNames[item.quality],
-                                52,
-                                27,
-                                12,
-                                T.muted
-                            ),
-                            230,
-                            22
-                        )
-                        U.SingleLine(
-                            U.Text(
-                                card,
-                                recipient
-                                        and string.format(
-                                            L.UPGRADE_SPOTLIGHT_GAIN,
-                                            state.heroes[recipient].name,
-                                            gain
-                                        )
-                                    or entry.equipped and string.format(
-                                        L.CHEST_AUTO_ITEM,
-                                        entry.equipped,
-                                        entry.disenchanted or 0
-                                    )
-                                    or entry.disenchanted and L.CHEST_ITEM_DISENCHANTED
-                                    or not entry.kept and L.CHEST_ITEM_SALVAGED
-                                    or stored and L.CHEST_ITEM_STORED
-                                    or L.CHEST_ITEM_COLLECTED,
-                                10,
-                                53,
-                                12,
-                                recipient and T.green or T.muted
-                            ),
-                            recipient and 192 or 272,
-                            28
-                        )
-                        if recipient then
-                            local equip = U.Button(card, L.EQUIP, 210, 50, 72, 28, function()
-                                local current, inventoryIndex = storedItem(state, entry.uid)
-                                local hero = state.heroes[recipient]
-                                if
-                                    current
-                                    and G.CanEquip(hero, current)
-                                    and G.ItemPower(current, hero)
-                                        > G.ItemPower(hero.gear[current.slot], hero)
-                                then
-                                    W.Action(G.Equip, recipient, inventoryIndex)
-                                end
-                            end)
-                            U.CarouselItem(equip, carousel)
-                            equip:EnableMouse(visiblePage)
-                            ui.chestResultButtons[#ui.chestResultButtons + 1] = equip
-                        end
-                        U.EndBuild(card)
-                        U.Tooltip(
-                            card,
-                            G.ItemName(item),
-                            G.ItemDescription(
-                                item,
-                                recipient and state.heroes[recipient] or nil,
-                                recipient ~= nil
-                            ),
-                            370
-                        )
                     end
                 end
             end,

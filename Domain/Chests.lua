@@ -173,7 +173,7 @@ end
 local function equipOpening(state, report)
     local changed, before = {}, 0
     report.equipped, report.disenchanted, report.relic = 0, 0, 0
-    local relic = state.materials.relic
+    local gold, relic = state.gold, state.materials.relic
     for _, slot in ipairs(C.equipmentSlots) do
         local candidates, originals = {}, {}
         for _, hero in ipairs(state.heroes) do
@@ -242,6 +242,7 @@ local function equipOpening(state, report)
             end
         end
     end
+    report.disenchantGold = state.gold - gold
     report.powerGain, report.relic = math.max(0, after - before), state.materials.relic - relic
     if report.equipped > 0 then
         G.Emit(state, "equip")

@@ -415,3 +415,49 @@ test("Leaving chest results clears the session without consuming unopened chests
     assertEquals(1, ui.chestReport.count)
     assertEquals(2, state.inventory[1].count)
 end)
+
+test("Chest results replace disenchanted copies with one leading materials slot", function()
+    local W, state, ui = fixture()
+    state.settings.chestAutoEquip, state.settings.instantChestReveal = true, true
+    drop(W, state, 3, 3)
+    ui.chestControls.all:GetScript("OnClick")()
+    local function texts(frame, result)
+        result = result or {}
+        for _, region in ipairs({ frame:GetRegions() }) do
+            if region.GetText and region:IsShown() then
+                result[#result + 1] = region:GetText()
+            end
+        end
+        for _, child in ipairs({ frame:GetChildren() }) do
+            if child:IsShown() then
+                texts(child, result)
+            end
+        end
+        return result
+    end
+    local function check()
+        local cards = {}
+        for card in ui.chestCarousel.currentPane._pool.card:EnumerateActive() do
+            cards[#cards + 1] = card
+        end
+        table.sort(cards, function(a, b)
+            return select(4, a:GetPoint()) < select(4, b:GetPoint())
+        end)
+        for index, card in ipairs(cards) do
+            cards[index] = table.concat(texts(card), "\n")
+        end
+        assertEquals(2, #cards)
+        assertTrue(cards[1]:find(W.L.MATERIALS, 1, true) ~= nil)
+        assertTrue(
+            cards[1]:find(ui.chestReport.disenchantGold .. W.L.GOLD_SUFFIX_3, 1, true) ~= nil
+        )
+        assertTrue(cards[1]:find(ui.chestReport.relic .. W.L.RELIC_DUST_SUFFIX_2, 1, true) ~= nil)
+        assertTrue(cards[2]:find("×1", 1, true) ~= nil)
+        assertFalse(cards[2]:find(W.L.CHEST_ITEM_DISENCHANTED, 1, true) ~= nil)
+    end
+    check()
+    drop(W, state, 2, 3)
+    ui.chestControls.all:GetScript("OnClick")()
+    assertEquals(4, ui.chestReport.disenchanted)
+    check()
+end)
