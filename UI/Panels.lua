@@ -845,10 +845,6 @@ function P.crafting(ui, p, s)
     local h, index = selected(ui, s)
     local slot = ui.craftSlot or 1
     local material = ui.craftMaterial or "timber"
-    local heirloom = ui.craftHeirloom and not G.FeatureHint(s, "heirlooms") or false
-    ui.craftHeirloom = heirloom
-    local cost = G.Cost(s, h, heirloom)
-    local preview, unavailable = G.CraftItem(h, slot, heirloom, s)
     ui.craftControls = { slots = {}, materials = {} }
     local heroes = {}
     for heroIndex, hero in ipairs(s.heroes) do
@@ -875,14 +871,14 @@ function P.crafting(ui, p, s)
             slot == i
         )
     end
-    text(p, L.MATERIAL_HEADING, 480, 0, 11, T.gold)
+    text(p, L.MATERIAL_HEADING, 0, 330, 11, T.gold)
     for i, id in ipairs(C.materialOrder) do
         ui.craftControls.materials[id] = U.SelectButton(
             p,
             C.materials[id] .. " · " .. s.materials[id],
-            480,
-            48 + (i - 1) * 64,
-            310,
+            0,
+            365 + (i - 1) * 42,
+            425,
             32,
             function()
                 ui.craftMaterial = id
@@ -891,76 +887,81 @@ function P.crafting(ui, p, s)
             material == id
         )
     end
-    text(p, preview and G.ItemName(preview) or L.RECIPE_UNAVAILABLE, 850, 0, 23, T.text, 450)
-    local description = unavailable
-    if preview then
-        local quality = heirloom and L.HEIRLOOM or C.qualityNames[preview.quality]
-        local requirement = heirloom and L.SCALES_WITH_YOUR_HERO_SURVIVES_CHAPTER_RESETS
-            or L.IDLE_LEVEL_PREFIX .. preview.level
-        description = quality
-            .. " · "
-            .. G.ItemPower(preview, h)
-            .. L.FRAGMENT_POWER
-            .. requirement
-    end
-    text(p, description, 850, 58, 14, T.muted, 450)
-    if preview then
-        local current = G.ItemPower(h.gear[slot], h)
-        local delta = G.ItemPower(preview, h) - current
-        ui.craftControls.comparison = text(
+    for mode = 1, 2 do
+        local heirloom = mode == 2
+        local x = heirloom and 900 or 480
+        local hint = heirloom and G.FeatureHint(s, "heirlooms")
+        local cost = G.Cost(s, h, heirloom)
+        local preview, unavailable = G.CraftItem(h, slot, heirloom, s)
+        local controls = {}
+        ui.craftControls[heirloom and "heirloom" or "ordinary"] = controls
+        if heirloom then
+            U.Rect(p, x - 12, 0, 412, 430, T.selected)
+            U.Help(p, L.HEIRLOOMS, x + 360, 4, L.HEIRLOOM_RECIPES_DESCRIPTION)
+        end
+        text(p, heirloom and L.HEIRLOOM or L.ORDINARY, x, 8, 20, heirloom and T.gold or T.text, 350)
+        text(p, preview and G.ItemName(preview) or L.RECIPE_UNAVAILABLE, x, 52, 20, T.text, 390)
+        local description = unavailable
+        if preview then
+            description = (heirloom and L.HEIRLOOM or C.qualityNames[preview.quality])
+                .. " · "
+                .. G.ItemPower(preview, h)
+                .. L.FRAGMENT_POWER
+                .. (
+                    heirloom and L.SCALES_WITH_YOUR_HERO_SURVIVES_CHAPTER_RESETS
+                    or L.IDLE_LEVEL_PREFIX .. preview.level
+                )
+        end
+        text(p, description, x, 108, 14, heirloom and T.gold or T.muted, 390)
+        if preview then
+            local current = G.ItemPower(h.gear[slot], h)
+            local delta = G.ItemPower(preview, h) - current
+            controls.comparison = text(
+                p,
+                L.CURRENT_POWER_PREFIX .. current .. "  ·  " .. string.format("%+.1f", delta),
+                x,
+                185,
+                14,
+                delta > 0 and T.green or T.muted,
+                390
+            )
+        end
+        text(
             p,
-            L.CURRENT_POWER_PREFIX .. current .. "  ·  " .. string.format("%+.1f", delta),
-            850,
-            106,
-            14,
-            delta > 0 and T.green or T.muted,
-            450
+            cost.gold .. L.FRAGMENT_GOLD_4 .. cost.material .. " " .. C.materials[material],
+            x,
+            225,
+            16,
+            T.gold,
+            390
         )
+        controls.craft = button(p, L.CRAFT_FOR_PREFIX .. h.name, x, 280, 390, function()
+            W.Action(G.Craft, index, slot, material, heirloom)
+        end, false, heirloom and "primary" or nil)
+        U.Enabled(
+            controls.craft,
+            preview ~= nil
+                and not hint
+                and s.gold >= cost.gold
+                and s.materials[material] >= cost.material
+                and (not heirloom or s.recipes[slot])
+        )
+        U.Tooltip(
+            controls.craft,
+            L.CRAFT_TARGETED_EQUIPMENT,
+            (preview and G.ItemDescription(preview, h) .. "\n\n" or "")
+                .. L.GOLD_AND_IDLE_MATERIALS_PAY_THE_FULL_COST_SHOWN
+        )
+        if heirloom and not s.recipes[slot] then
+            text(p, hint or L.RECIPE_LOCKED, x, 330, 13, T.gold, 390)
+            controls.recipe = button(p, L.VIEW_RECIPE_IN_HERITAGE, x, 380, 390, function()
+                ui.legacySlot = slot
+                ui:SetTab("legacy")
+            end)
+        end
     end
-    text(
-        p,
-        cost.gold .. L.FRAGMENT_GOLD_4 .. cost.material .. " " .. C.materials[material],
-        850,
-        141,
-        16,
-        T.gold,
-        450
-    )
-    local craft = button(p, L.CRAFT_FOR_PREFIX .. h.name, 850, 233, 446, function()
-        W.Action(G.Craft, index, slot, material, heirloom)
-    end, false, "primary")
-    ui.craftControls.craft = craft
-    U.Enabled(
-        craft,
-        preview ~= nil
-            and s.gold >= cost.gold
-            and s.materials[material] >= cost.material
-            and (not heirloom or s.recipes[slot])
-    )
-    U.Tooltip(
-        craft,
-        L.CRAFT_TARGETED_EQUIPMENT,
-        (preview and G.ItemDescription(preview, h) .. "\n\n" or "")
-            .. L.GOLD_AND_IDLE_MATERIALS_PAY_THE_FULL_COST_SHOWN
-    )
-    if heirloom and not s.recipes[slot] then
-        text(p, L.RECIPE_LOCKED, 850, 285, 13, T.gold, 446)
-    end
-    ui.craftControls.ordinary = U.SelectButton(p, L.ORDINARY, 0, 309, 205, 32, function()
-        ui.craftHeirloom = false
-        ui:Refresh()
-    end, not heirloom)
-    ui.craftControls.heirloom = U.SelectButton(p, L.HEIRLOOM, 220, 309, 205, 32, function()
-        ui.craftHeirloom = true
-        ui:Refresh()
-    end, heirloom)
-    ui.craftControls.heirloom:SetShown(not G.FeatureHint(s, "heirlooms"))
-    if heirloom and not s.recipes[slot] then
-        button(p, L.VIEW_RECIPE_IN_HERITAGE, 850, 325, 446, function()
-            ui.legacySlot = slot
-            ui:SetTab("legacy")
-        end)
-    end
+    ui.craftControls.craft = ui.craftControls.ordinary.craft
+    ui.craftControls.comparison = ui.craftControls.ordinary.comparison
 end
 
 function P.atlas(ui)
@@ -1081,7 +1082,7 @@ function P.legacy(ui, p, s)
             285,
             function()
                 if s.recipes[slot] or W.Action(G.UnlockRecipe, slot) then
-                    ui.craftSlot, ui.craftHeirloom = slot, true
+                    ui.craftSlot = slot
                     ui:SetTab("crafting")
                 end
             end,

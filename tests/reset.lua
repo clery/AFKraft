@@ -24,7 +24,7 @@ test(
         local ui = W.UI
         local frame, preferences = ui.frame, W.preferences
         ui.selected, ui.recruiting = 2, true
-        ui.bagPage, ui.bagFilter, ui.craftHeirloom, ui.confirmPrestige = 7, 6, true, true
+        ui.bagPage, ui.bagFilter, ui.confirmPrestige = 7, 6, true
         ui.message = "Old adventure message"
         local action = W.settingsOptions.args.adventure.args.reset
         assertTrue(action.confirm)
@@ -79,7 +79,7 @@ test(
         assertEquals("adventure", state.ui.tab)
         assertEquals(1, ui.selected)
         assertFalse(ui.recruiting)
-        assertTrue(ui.bagPage == nil and ui.craftHeirloom == nil and ui.message == nil)
+        assertTrue(ui.bagPage == nil and ui.message == nil)
         assertTrue(ui.frame:IsShown())
         assertEquals(3, W.Panels.GuideStep(state))
         -- Saving and reloading cannot merge the discarded offline snapshot.

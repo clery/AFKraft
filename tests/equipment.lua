@@ -14,7 +14,7 @@ test(
         state.essence, state.gold, state.materials.timber = 10000, 10000, 10000
         W.state = state
         local ui = W.UI
-        ui.selected, ui.craftSlot, ui.craftMaterial, ui.craftHeirloom = 1, 1, "timber", false
+        ui.selected, ui.craftSlot, ui.craftMaterial = 1, 1, "timber"
         ui.frame:Show()
         ui:SetTab("crafting")
         for _, slot in ipairs(W.Content.equipmentSlots) do

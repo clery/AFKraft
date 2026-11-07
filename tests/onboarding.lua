@@ -119,10 +119,11 @@ test(
         assertTrue(ui.boostAutomationPurchases.onCooldown:IsShown())
         assertFalse(ui.boostAutomationPurchases.onCooldown:IsEnabled())
         ui:SetTab("crafting")
-        assertFalse(ui.craftControls.heirloom:IsShown())
+        assertTrue(ui.craftControls.heirloom.craft:IsShown())
+        assertFalse(ui.craftControls.heirloom.craft:IsEnabled())
         s.difficulty.unlocked, s.difficulty.maxTier = true, 4
         ui:Refresh()
-        assertTrue(ui.craftControls.heirloom:IsShown())
+        assertTrue(ui.craftControls.heirloom.craft:IsShown())
     end
 )
 
@@ -365,7 +366,7 @@ test(
 )
 
 test(
-    "Crafting lesson waits for an upgrade and follows mode, slot, material and automatic equipment",
+    "Crafting lesson waits for an upgrade and follows slot, material and automatic equipment",
     function()
         local W, s, ui = opening()
         s.guide.equipped, s.guide.talent, s.guide.traveled = true, true, true
@@ -376,10 +377,8 @@ test(
         assertEquals(5, W.Panels.GuideStep(s, ui.selected))
         assertEquals(ui.tabs.crafting, ui.guideTarget)
         s.difficulty.unlocked, s.difficulty.maxTier = true, 4
-        ui.craftHeirloom, ui.craftSlot, ui.craftMaterial = true, 6, "ore"
+        ui.craftSlot, ui.craftMaterial = 6, "ore"
         click(ui.tabs.crafting)
-        assertEquals(ui.craftControls.ordinary, ui.guideTarget)
-        click(ui.guideTarget)
         assertEquals(ui.craftControls.slots[1], ui.guideTarget)
         click(ui.guideTarget)
         assertEquals(ui.craftControls.materials.timber, ui.guideTarget)

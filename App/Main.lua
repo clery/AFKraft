@@ -122,7 +122,6 @@ function W.ResetAdventure()
     local ui = W.UI
     for _, key in ipairs({
         "craftSlot",
-        "craftHeirloom",
         "craftMaterial",
         "legacySlot",
         "lootPage",

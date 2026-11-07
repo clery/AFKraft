@@ -376,15 +376,7 @@ function Tutorial.Refresh(ui)
         end
     elseif step == 5 then
         local controls = ui.craftControls
-        if (ui.craftHeirloom or false) ~= craft.heirloom then
-            show(
-                ui,
-                craft.heirloom and controls.heirloom or controls.ordinary,
-                L.CLICK_PREFIX
-                    .. (craft.heirloom and L.HEIRLOOM or L.ORDINARY)
-                    .. L.TO_USE_AN_AFFORDABLE_RECIPE_THAT_IMPROVES_THIS_HERO_SUFFIX
-            )
-        elseif (ui.craftSlot or 1) ~= craft.slot then
+        if (ui.craftSlot or 1) ~= craft.slot then
             show(
                 ui,
                 controls.slots[craft.slot],
@@ -405,7 +397,7 @@ function Tutorial.Refresh(ui)
             local gain = G.ItemPower(craft.item, h) - G.ItemPower(h.gear[craft.slot], h)
             show(
                 ui,
-                controls.craft,
+                controls[craft.heirloom and "heirloom" or "ordinary"].craft,
                 L.CLICK_CRAFT_FOR_PREFIX
                     .. h.name
                     .. L.FRAGMENT_TO_MAKE
