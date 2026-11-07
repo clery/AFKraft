@@ -36,10 +36,10 @@ local bursts = {
     DRUID = { fileID = 165794, width = 210, height = 240 }, -- Circle of renewal
 }
 
--- Native cast kits include hand attachments; these are SpellVisualKit IDs.
--- Frostbolt, Shadow Bolt, Lightning Bolt, Wrath, Smite and Flash Heal cast kits.
+-- Precast kits light the hands during the pose; release kits start too late.
+-- Frostbolt, Shadow Bolt, Lightning Bolt, Wrath, Smite and Flash Heal SpellVisualKit IDs.
 local castKits =
-    { MAGE = 202, WARLOCK = 118, SHAMAN = 72, DRUID = 3291, PRIEST = 119, PALADIN = 270 }
+    { MAGE = 194, WARLOCK = 114, SHAMAN = 124, DRUID = 3290, PRIEST = 184, PALADIN = 99 }
 
 function A.PlayCastEffect(model, class)
     local kit = castKits[class]

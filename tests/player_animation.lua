@@ -69,12 +69,12 @@ test("Cast hand effects attach once to the visible model with client and API fal
         client.flavor = "retail"
         local actor = { SetSpellVisualKit = apply }
         for class, kit in pairs({
-            MAGE = 202,
-            WARLOCK = 118,
-            SHAMAN = 72,
-            DRUID = 3291,
-            PRIEST = 119,
-            PALADIN = 270,
+            MAGE = 194,
+            WARLOCK = 114,
+            SHAMAN = 124,
+            DRUID = 3290,
+            PRIEST = 184,
+            PALADIN = 99,
         }) do
             assertTrue(client.PlayCastEffect({ adventureActor = actor }, class))
             assertEquals(kit, lastKit)
@@ -119,7 +119,7 @@ test(
                     end,
                 },
             }, "PRIEST"))
-            assertEquals(119, kit)
+            assertEquals(184, kit)
             effects.Play = function(_, from, to, effect)
                 source, target, kind = from, to, effect
             end
@@ -143,6 +143,49 @@ test(
             assertEquals(166354, client.SpellEffectSpec("smite", "PRIEST").fileID)
         end)
         client.flavor, effects.Play = flavor, play
+        assertTrue(ok, message)
+    end
+)
+
+test(
+    "Caster hand effects start before the cast animation and do not replay on later frames",
+    function()
+        local W = AFKraft
+        local state = W.Game.New(W.Client.Now())
+        W.Game.AddHero(state, "PRIEST")
+        W.state = state
+        W.Game.StartBattle(state)
+        W.UI:SetTab("adventure")
+        local scene = W.UI.scene
+        scene:Refresh(state)
+        local unit = scene.units[1]
+        unit.x, unit.y = unit.combatant.x, unit.combatant.y
+        unit.velocityX, unit.velocityY = 0, 0
+        unit.modelReady, unit.moving, unit.travelling = true, false, false
+        local animate, effect = W.Client.AnimateModel, W.Client.PlayCastEffect
+        local order = {}
+        W.Client.PlayCastEffect = function(model, class)
+            assertEquals(unit.model, model)
+            assertEquals("PRIEST", class)
+            order[#order + 1] = "hands"
+            return true
+        end
+        W.Client.AnimateModel = function(model, animation)
+            if model == unit.model and animation == 53 then
+                order[#order + 1] = "cast"
+            end
+            return true, 1
+        end
+        local ok, message = pcall(function()
+            unit.pendingAnimation = 53
+            scene:Animate()
+            assertEquals("hands", order[1])
+            assertEquals("cast", order[2])
+            scene:Animate()
+            W.Scene.FinishAnimation(unit)
+            assertEquals(2, #order)
+        end)
+        W.Client.AnimateModel, W.Client.PlayCastEffect = animate, effect
         assertTrue(ok, message)
     end
 )

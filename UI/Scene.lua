@@ -693,10 +693,10 @@ function Scene:Animate(frameElapsed, simulationFraction)
             and not unit.dead
         then
             local haste = unit.combatant and unit.combatant.haste or 1
-            local _, speed = W.Client.AnimateModel(unit.model, unit.pendingAnimation, haste)
             if unit.pendingAnimation == 53 then
                 W.Client.PlayCastEffect(unit.model, unit.class)
             end
+            local _, speed = W.Client.AnimateModel(unit.model, unit.pendingAnimation, haste)
             unit.basePose = nil
             unit.actionAt = now
             -- Completion callbacks restore the stance; this bound also covers models
